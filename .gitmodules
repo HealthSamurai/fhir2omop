@@ -1,0 +1,42 @@
+[submodule "CommonDataModel"]
+	path = CommonDataModel
+	url = https://github.com/OHDSI/CommonDataModel.git
+[submodule "refs/fhir-omop-ig"]
+	path = refs/refs/fhir-omop-ig
+	url = https://github.com/HL7/fhir-omop-ig.git
+[submodule "refs/refs/FhirToCdm"]
+	path = refs/refs/FhirToCdm
+	url = https://github.com/OHDSI/FhirToCdm.git
+[submodule "refs/refs/ETL-German-FHIR-Core"]
+	path = refs/refs/ETL-German-FHIR-Core
+	url = https://github.com/OHDSI/ETL-German-FHIR-Core.git
+[submodule "refs/refs/fhir2omop-cookbook"]
+	path = refs/refs/fhir2omop-cookbook
+	url = https://github.com/CodeX-HL7-FHIR-Accelerator/fhir2omop-cookbook.git
+[submodule "refs/refs/NACHC-fhir-to-omop"]
+	path = refs/refs/NACHC-fhir-to-omop
+	url = https://github.com/NACHC-CAD/fhir-to-omop.git
+[submodule "refs/refs/omoponfhir-v54-r4"]
+	path = refs/refs/omoponfhir-v54-r4
+	url = https://github.com/omoponfhir/omoponfhir-main-v54-r4.git
+[submodule "refs/refs/omopfhirmap"]
+	path = refs/refs/omopfhirmap
+	url = https://github.com/dermatologist/omopfhirmap.git
+[submodule "refs/refs/GT-FHIR"]
+	path = refs/refs/GT-FHIR
+	url = https://github.com/gt-health/GT-FHIR.git
+[submodule "refs/refs/FHIROntopOMOP"]
+	path = refs/refs/FHIROntopOMOP
+	url = https://github.com/fhircat/FHIROntopOMOP.git
+[submodule "refs/refs/mends-on-fhir"]
+	path = refs/refs/mends-on-fhir
+	url = https://github.com/CU-DBMI/mends-on-fhir.git
+[submodule "refs/refs/fhir-reasoning-omop-ri"]
+	path = refs/refs/fhir-reasoning-omop-ri
+	url = https://github.com/HL7/fhir-reasoning-omop-ri.git
+[submodule "refs/refs/HealthcareLakeETL"]
+	path = refs/refs/HealthcareLakeETL
+	url = https://github.com/spe-uob/2020-HealthcareLakeETL.git
+[submodule "refs/refs/Vulcan-Fhir-to-OMOP-Mapping-Project"]
+	path = refs/refs/Vulcan-Fhir-to-OMOP-Mapping-Project
+	url = https://github.com/OMOP-FHIR-Terminologies-Subgroup/Vulcan-Fhir-to-OMOP-Mapping-Project.git
