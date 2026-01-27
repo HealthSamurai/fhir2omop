@@ -518,3 +518,138 @@ category[0].text: CategoryCoding.display;
 - **PHI handling**: Dates masked for de-identified output
 - **Optional references**: Encounter and asserter only included if IDs present
 - **Stop reason**: Maps to `abatementString`
+
+---
+
+## OMOP PROCEDURE_OCCURRENCE → FHIR Procedure Mapping
+
+**Note**: This project does **NOT** currently implement OMOP PROCEDURE_OCCURRENCE → FHIR Procedure mapping. The Whistle mappings cover:
+- Person → Patient
+- Measurement → Observation
+- Visit_occurrence → Encounter
+- Condition_occurrence → Condition
+
+No `ProcedureOccurrence_Procedure.wstl` file exists in the whistle-mappings directory.
+
+### Not Implemented
+
+If Procedure mapping were added, it would follow the existing pattern:
+
+```
+whistle-mappings/synthea/whistle-functions/
+├── Person_Patient.wstl
+├── Measurement_Observation.wstl
+├── Visit_Encounter.wstl
+├── ConditionOccurrence_Condition.wstl
+└── (no ProcedureOccurrence_Procedure.wstl)
+```
+
+---
+
+## OMOP DRUG_EXPOSURE → FHIR MedicationStatement Mapping
+
+**Note**: This project does **NOT** currently implement OMOP DRUG_EXPOSURE → FHIR MedicationStatement mapping. The Whistle mappings cover:
+- Person → Patient
+- Measurement → Observation
+- Visit_occurrence → Encounter
+- Condition_occurrence → Condition
+
+No `DrugExposure_MedicationStatement.wstl` file exists in the whistle-mappings directory.
+
+### Not Implemented
+
+If MedicationStatement mapping were added, it would follow the existing pattern:
+
+```
+whistle-mappings/synthea/whistle-functions/
+├── Person_Patient.wstl
+├── Measurement_Observation.wstl
+├── Visit_Encounter.wstl
+├── ConditionOccurrence_Condition.wstl
+└── (no DrugExposure_MedicationStatement.wstl)
+```
+
+---
+
+## OMOP DRUG_EXPOSURE → FHIR Immunization Mapping
+
+**Source**: Based on FHIR Resources Generated table in project documentation
+
+**Direction**: OMOP → FHIR
+
+### Overview
+
+According to the project documentation, MENDS-on-FHIR generates **FHIR Immunization** resources from OMOP `drug_exposure` records that have CVX (vaccine) codes:
+
+| FHIR Resource | Source OMOP Table | US Core Profile |
+|---------------|-------------------|-----------------|
+| Immunization | Drug_Exposure (CVX codes) | us-core-immunization |
+
+### Expected Mapping Pattern
+
+If implemented in Whistle, the mapping would follow:
+
+| FHIR Immunization Field | OMOP DRUG_EXPOSURE Source | Notes |
+|-------------------------|--------------------------|-------|
+| `id` | `drug_exposure_id` | Direct assignment |
+| `status` | (derived/hardcoded) | `"completed"` |
+| `vaccineCode` | `drug_concept_id` (CVX) | Via CodeableConcept mapping |
+| `patient` | `person_id` | Reference to Patient |
+| `encounter` | `visit_occurrence_id` | Reference to Encounter |
+| `occurrenceDateTime` | `drug_exposure_start_datetime` | When administered |
+| `lotNumber` | `lot_number` | If available |
+| `performer` | `provider_id` | Reference to Practitioner |
+
+### CVX Vocabulary Filter
+
+Immunization records are identified by filtering `drug_exposure` where the drug concept is in the CVX vocabulary:
+
+```sql
+-- Conceptual filter
+WHERE drug_concept_id IN (
+  SELECT concept_id FROM concept
+  WHERE vocabulary_id = 'CVX'
+)
+```
+
+### Notes
+
+- **Direction**: OMOP → FHIR only
+- **Vocabulary**: CVX (Vaccines Administered) codes identify immunization records
+- **Profile**: US Core Immunization (`us-core-immunization`)
+- **PHI handling**: Would use same date masking pattern as other resources
+- No explicit Whistle file exists in the analyzed codebase - implementation details are documented
+
+---
+
+## OMOP OBSERVATION → FHIR AllergyIntolerance Mapping
+
+**Note**: MENDS-on-FHIR does **NOT** currently implement OMOP → FHIR AllergyIntolerance mapping.
+
+### Not Implemented
+
+No `Observation_AllergyIntolerance.wstl` file exists in the whistle-mappings directory.
+
+If AllergyIntolerance mapping were added, it would:
+- Map from OMOP `observation` table (allergies are clinical findings)
+- Filter by observation_concept_id containing "Allerg"
+- Map observation_concept to AllergyIntolerance.code
+- Map value_as_concept to reaction manifestation
+- Follow the existing Whistle transformation patterns
+
+---
+
+## OMOP → FHIR DiagnosticReport Mapping
+
+**Note**: MENDS-on-FHIR does **NOT** currently implement OMOP → FHIR DiagnosticReport mapping.
+
+### Not Implemented
+
+No `Observation_DiagnosticReport.wstl` or similar file exists in the whistle-mappings directory.
+
+If DiagnosticReport mapping were added, it would:
+- Map from OMOP `measurement` or `observation` tables (depending on domain)
+- Filter by LOINC codes representing diagnostic study results
+- Group related observations/measurements under a single DiagnosticReport
+- Include referenced Observation resources for individual results
+- Follow the existing Whistle transformation patterns

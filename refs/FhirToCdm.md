@@ -551,3 +551,279 @@ Comments indicate intent for domain-based routing:
 - **No provider mapping**: `asserter` not mapped
 - **No status mapping**: `clinicalStatus` not mapped
 - **No stop reason**: Extension-based stop reason not implemented
+
+---
+
+## Procedure → OMOP PROCEDURE_OCCURRENCE Mapping
+
+**Source**: [`FhirToCdmMappings.cs`](https://github.com/OHDSI/FhirToCdm/blob/main/FhirToCdmMappings.cs) - `CreateProcedureOccurrence()`
+
+### FHIR Procedure → OMOP PROCEDURE_OCCURRENCE
+
+| OMOP PROCEDURE_OCCURRENCE Field | FHIR Procedure Source | C# Logic |
+|---------------------------------|----------------------|----------|
+| `PersonId` | `Procedure.Subject` | Via `GetPersonId1()` |
+| `ConceptId` | `Procedure.Code.Coding[]` | Via `LookupCode()` |
+| `SourceValue` | `Procedure.Code.Coding[].Code` | Direct |
+| `StartDate` | `Procedure.Performed.Start` | `DateTime.Parse()` |
+| `EndDate` | `Procedure.Performed.End` | `DateTime.Parse()` |
+| `TypeConceptId` | (hardcoded) | `32817` (EHR) |
+| `VisitOccurrenceId` | `Procedure.Encounter` | Via visit lookup |
+| `VisitDetailId` | `Procedure.Encounter` | Same as visit |
+
+### Notes
+
+- **Multiple codings**: Each coding creates a separate record
+- **Type concept hardcoded**: Always `32817` (EHR)
+- **Period support**: Expects `Procedure.performed` as Period
+- **Visit link**: Both `visit_occurrence_id` and `visit_detail_id` set
+- **No provider mapping**: `performer.actor` not mapped
+
+---
+
+## MedicationRequest → OMOP DRUG_EXPOSURE Mapping
+
+**Source**: [`FhirToCdmMappings.cs`](https://github.com/OHDSI/FhirToCdm/blob/main/FhirToCdmMappings.cs) - `CreateDrugExposure()`
+
+**Note**: Maps MedicationRequest (not MedicationStatement) to DRUG_EXPOSURE. Also maps Immunization.
+
+### FHIR MedicationRequest → OMOP DRUG_EXPOSURE
+
+| OMOP DRUG_EXPOSURE Field | FHIR MedicationRequest Source | C# Logic |
+|--------------------------|------------------------------|----------|
+| `PersonId` | `MedicationRequest.Subject` | Via `GetPersonId1()` |
+| `ConceptId` | `MedicationRequest.Medication.Coding[]` | Via `LookupCode()` |
+| `SourceConceptId` | Same | From lookup result |
+| `TypeConceptId` | (hardcoded) | `32817` (EHR) |
+
+### FHIR Immunization → OMOP DRUG_EXPOSURE
+
+| OMOP DRUG_EXPOSURE Field | FHIR Immunization Source | C# Logic |
+|--------------------------|--------------------------|----------|
+| `PersonId` | `Immunization.Patient` | Via `GetPersonId1()` |
+| `ConceptId` | `Immunization.VaccineCode.Coding[]` | Via `LookupCode()` |
+| `SourceConceptId` | Same | From lookup result |
+| `TypeConceptId` | (hardcoded) | `32817` (EHR) |
+
+### Implementation Code
+
+```csharp
+public IEnumerable<DrugExposure> CreateDrugExposure(
+    Bundle fhir, Dictionary<string, long> personIds, Dictionary<string, VisitOccurrence> visits)
+{
+    // MedicationRequest resources
+    foreach (var item in fhir.Entry.Where(e => e.Resource.TypeName == "MedicationRequest"))
+    {
+        var medication = (MedicationRequest)item.Resource;
+        var cc = medication.Medication as CodeableConcept;
+        if (cc == null) continue;
+
+        foreach (var code in cc.Coding)
+        {
+            var personId = GetPersonId1(medication.Subject, personIds);
+            if (!personId.HasValue) continue;
+
+            var de = new DrugExposure(new Entity())
+            {
+                PersonId = personId.Value,
+                TypeConceptId = 32817
+            };
+
+            var result = LookupCode(code);
+            if (result.Any())
+                SetConceptId(de, result[0]);
+
+            yield return de;
+        }
+    }
+
+    // Immunization resources
+    foreach (var item in fhir.Entry.Where(e => e.Resource.TypeName == "Immunization"))
+    {
+        var immunization = (Immunization)item.Resource;
+
+        foreach (var code in immunization.VaccineCode.Coding)
+        {
+            var personId = GetPersonId1(immunization.Patient, personIds);
+            if (!personId.HasValue) continue;
+
+            var de = new DrugExposure(new Entity())
+            {
+                PersonId = personId.Value,
+                TypeConceptId = 32817
+            };
+
+            var result = LookupCode(code);
+            if (result.Any())
+                SetConceptId(de, result[0]);
+
+            yield return de;
+        }
+    }
+}
+```
+
+### Comments Indicate Future Fields
+
+From source file comments:
+- `stop_reason` ← `MedicationStatement.statusReason`
+
+### Immunization Handling
+
+The `CreateDrugExposure()` method also processes Immunization resources:
+
+```csharp
+foreach (var item in fhir.Entry.Where(e => e.Resource.TypeName == "Immunization"))
+{
+    var immunization = (Immunization)item.Resource;
+
+    foreach (var code in immunization.VaccineCode.Coding)
+    {
+        var personId = GetPersonId1(immunization.Patient, personIds);
+        if (!personId.HasValue) continue;
+
+        var de = new DrugExposure(new Entity())
+        {
+            PersonId = personId.Value,
+            TypeConceptId = 32817
+        };
+
+        var result = LookupCode(code);
+        if (result.Any())
+            SetConceptId(de, result[0]);
+
+        yield return de;
+    }
+}
+```
+
+| OMOP DRUG_EXPOSURE Field | FHIR Immunization Source | C# Logic |
+|--------------------------|-------------------------|----------|
+| `PersonId` | `Immunization.Patient` | Via `GetPersonId1()` |
+| `ConceptId` | `Immunization.VaccineCode.Coding[]` | Via `LookupCode()` |
+| `SourceConceptId` | Same | From lookup result |
+| `TypeConceptId` | (hardcoded) | `32817` (EHR) |
+
+### Notes
+
+- **Immunization → DrugExposure**: Vaccines mapped to drug_exposure table
+- **Type concept hardcoded**: Always `32817` (EHR)
+- **Multiple codings**: Each coding creates a separate record
+- **Dates not mapped**: Occurrence date not currently extracted
+- **Minimal mapping**: Only person_id, concept_id, type_concept_id populated
+- `refills` ← `MedicationRequest.dispenseRequest.numberOfRepeatsAllowed`
+- `quantity` ← `MedicationRequest.dispenseRequest.quantity`
+- `days_supply` ← `MedicationRequest.dispenseRequest.expectedSupplyDuration`
+- `lot_number` ← `Medication.batch.lotNumber`
+- `route_concept_id` ← `MedicationRequest.dosageInstruction.route`
+- `provider_id` ← `MedicationRequest.requester`
+- `verbatim_end_date` ← `MedicationRequest.validityPeriod`
+
+### Notes
+
+- **MedicationRequest**: Maps prescriptions to drug_exposure
+- **Immunization**: Also maps to drug_exposure (vaccines are drugs)
+- **Type concept hardcoded**: Always `32817` (EHR)
+- **Multiple codings**: Each coding creates a separate record
+- **Dates not mapped**: Start/end dates not currently extracted
+- **Minimal mapping**: Only person_id, concept_id, type_concept_id populated
+
+---
+
+## AllergyIntolerance → OMOP OBSERVATION Mapping
+
+**Source**: [`FhirToCdmMappings.cs`](https://github.com/OHDSI/FhirToCdm/blob/main/FhirToCdmMappings.cs) - `CreateObservation()`
+
+**Note**: AllergyIntolerance maps to the OMOP **`observation`** table (not drug_exposure).
+
+### FHIR AllergyIntolerance → OMOP OBSERVATION
+
+| OMOP OBSERVATION Field | FHIR AllergyIntolerance Source | C# Logic |
+|------------------------|-------------------------------|----------|
+| `PersonId` | `AllergyIntolerance.Patient` | Via `GetPersonId1()` |
+| `ConceptId` | `AllergyIntolerance.Code.Coding[]` | Via `LookupCode()` |
+| `SourceConceptId` | Same | From lookup result |
+| `TypeConceptId` | (hardcoded) | `32817` (EHR) |
+| `StartDate` | `AllergyIntolerance.RecordedDate` | `DateTime.Parse()` |
+
+### Implementation Code
+
+```csharp
+public IEnumerable<omop.Observation> CreateObservation(
+    Bundle fhir, Dictionary<string, long> personIds, Dictionary<string, VisitOccurrence> visits)
+{
+    foreach (var item in fhir.Entry.Where(e => e.Resource.TypeName == "AllergyIntolerance"))
+    {
+        var allergy = (AllergyIntolerance)item.Resource;
+
+        foreach (var code in ((Hl7.Fhir.Model.CodeableConcept)allergy.Code).Coding)
+        {
+            var personId = GetPersonId1(allergy.Patient, personIds);
+            if (!personId.HasValue)
+                continue;
+
+            var o = new omop.Observation(new Entity())
+            {
+                PersonId = personId.Value,
+                TypeConceptId = 32817
+            };
+
+            var result = LookupCode(code);
+            if (result.Any())
+                SetConceptId(o, result[0]);
+
+            o.StartDate = DateTime.Parse(allergy.RecordedDate);
+
+            yield return o;
+        }
+    }
+}
+```
+
+### Key Design Decision: Observation vs Drug_Exposure
+
+AllergyIntolerance maps to OMOP **`observation`** table because:
+- Allergies are clinical findings/observations, not drug administrations
+- OMOP's `observation` table is designed for clinical findings
+- Consistent with OHDSI conventions for allergy recording
+
+### Notes
+
+- **Target table**: OMOP `observation` (not drug_exposure)
+- **Type concept hardcoded**: Always `32817` (EHR)
+- **Multiple codings**: Each coding creates a separate observation record
+- **RecordedDate**: Maps to observation start date
+- **Minimal mapping**: Only person_id, concept_id, type_concept_id, start_date populated
+- **No reaction mapping**: Reaction manifestations not mapped
+
+---
+
+## DiagnosticReport → OMOP Mapping
+
+**Note**: FhirToCdm does **NOT** currently implement DiagnosticReport mapping.
+
+### Not Implemented
+
+The `CreateObservation()` method only processes AllergyIntolerance resources, not DiagnosticReport. No separate method exists for DiagnosticReport mapping.
+
+### Expected Implementation
+
+If DiagnosticReport mapping were added, it would follow the existing pattern:
+
+```csharp
+// Expected pattern (not implemented)
+foreach (var item in fhir.Entry.Where(e => e.Resource.TypeName == "DiagnosticReport"))
+{
+    var report = (DiagnosticReport)item.Resource;
+    // Domain-based routing to observation/measurement/procedure
+    // LOINC code lookup for concept_id
+    // SNOMED conclusion lookup for source_concept_id
+}
+```
+
+### Target Tables
+
+Based on OHDSI conventions, DiagnosticReport would map to multiple tables:
+- `observation` (Observation domain)
+- `measurement` (Measurement domain)
+- `procedure_occurrence` (Procedure domain)

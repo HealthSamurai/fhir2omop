@@ -385,3 +385,90 @@ See: [omoponfhir-v54-r4.md](./omoponfhir-v54-r4.md) for detailed OMOP→FHIR Con
 - **Infrastructure project**: Does not implement mapping logic directly
 - **ETL-Synthea**: Handles Synthea→OMOP; see OHDSI documentation
 - **OMOPonFHIR**: Handles OMOP→FHIR; see omoponfhir-v54-r4.md
+
+---
+
+## Procedure → OMOP PROCEDURE_OCCURRENCE Mapping
+
+**Note**: This is an **infrastructure/integration project** that orchestrates existing tools. It does not implement its own Procedure mapping.
+
+### Mapping Pipeline
+
+Procedure data flows through two transformation layers:
+
+1. **Synthea CSV → OMOP CDM** (via ETL-Synthea R package)
+   - Synthea `procedures.csv` → OMOP `procedure_occurrence` table
+
+2. **OMOP CDM → FHIR R4** (via OMOPonFHIR)
+   - OMOP `procedure_occurrence` → FHIR Procedure
+
+### ETL-Synthea Procedure Mapping
+
+ETL-Synthea handles Synthea→OMOP transformation for procedures:
+
+| Synthea procedures.csv | OMOP PROCEDURE_OCCURRENCE Field |
+|-----------------------|--------------------------------|
+| `PATIENT` | `person_id` (via patient lookup) |
+| `ENCOUNTER` | `visit_occurrence_id` (via encounter lookup) |
+| `CODE` | `procedure_source_value` |
+| `CODE` | `procedure_concept_id` (via SNOMED lookup) |
+| `DATE` | `procedure_date`, `procedure_datetime` |
+| (derived) | `procedure_type_concept_id` = 38000275 (EHR order) |
+
+See full ETL-Synthea mapping: https://github.com/OHDSI/ETL-Synthea
+
+### OMOPonFHIR Component
+
+For OMOP→FHIR Procedure direction, this project uses OMOPonFHIR (port 8082).
+
+See: [omoponfhir-v54-r4.md](./omoponfhir-v54-r4.md) for detailed OMOP→FHIR Procedure mapping.
+
+### Notes
+
+- **Infrastructure project**: Does not implement mapping logic directly
+- **ETL-Synthea**: Handles Synthea→OMOP; see OHDSI documentation
+- **OMOPonFHIR**: Handles OMOP→FHIR; see omoponfhir-v54-r4.md for Procedure details
+
+---
+
+## MedicationStatement → OMOP DRUG_EXPOSURE Mapping
+
+**Note**: This is an **infrastructure/integration project** that orchestrates existing tools. It does not implement its own MedicationStatement mapping.
+
+### Mapping Pipeline
+
+Medication data flows through two transformation layers:
+
+1. **Synthea CSV → OMOP CDM** (via ETL-Synthea R package)
+   - Synthea `medications.csv` → OMOP `drug_exposure` table
+
+2. **OMOP CDM → FHIR R4** (via OMOPonFHIR)
+   - OMOP `drug_exposure` → FHIR MedicationStatement
+
+### ETL-Synthea Medication Mapping
+
+ETL-Synthea handles Synthea→OMOP transformation for medications:
+
+| Synthea medications.csv | OMOP DRUG_EXPOSURE Field |
+|------------------------|--------------------------|
+| `PATIENT` | `person_id` (via patient lookup) |
+| `ENCOUNTER` | `visit_occurrence_id` (via encounter lookup) |
+| `CODE` | `drug_source_value` |
+| `CODE` | `drug_concept_id` (via RxNorm lookup) |
+| `START` | `drug_exposure_start_date`, `drug_exposure_start_datetime` |
+| `STOP` | `drug_exposure_end_date`, `drug_exposure_end_datetime` |
+| (derived) | `drug_type_concept_id` = 38000177 (Prescription written) |
+
+See full ETL-Synthea mapping: https://github.com/OHDSI/ETL-Synthea
+
+### OMOPonFHIR Component
+
+For OMOP→FHIR MedicationStatement direction, this project uses OMOPonFHIR (port 8082).
+
+See: [omoponfhir-v54-r4.md](./omoponfhir-v54-r4.md) for detailed OMOP→FHIR MedicationStatement mapping.
+
+### Notes
+
+- **Infrastructure project**: Does not implement mapping logic directly
+- **ETL-Synthea**: Handles Synthea→OMOP; see OHDSI documentation
+- **OMOPonFHIR**: Handles OMOP→FHIR; see omoponfhir-v54-r4.md for MedicationStatement details

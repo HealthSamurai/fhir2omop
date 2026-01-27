@@ -375,3 +375,155 @@ Based on the project's architecture, when implemented it would include:
 - Would follow similar pattern to `PatientMapper` when implemented
 - No mapper class exists for conditions yet
 - Only Patient/Person mapping is currently functional in this project
+
+---
+
+## Procedure → OMOP PROCEDURE_OCCURRENCE Mapping
+
+**Status**: **NOT IMPLEMENTED** (infrastructure only)
+
+### Current State
+
+The project has JPA entity models for OMOP `procedure_occurrence` table, but **no actual bidirectional mapping logic** has been implemented yet for Procedure ↔ ProcedureOccurrence.
+
+### Infrastructure Expected
+
+Based on the project's architecture, when implemented it would include:
+
+1. **ProcedureOccurrence Entity**: JPA entity mapping to `procedure_occurrence` table
+2. **ProcedureOccurrenceService**: JPA service layer
+3. **ProcedureOccurrenceRepository**: Spring Data JPA repository
+4. **ProcedureOccurrenceFetcher**: Multi-threaded data retrieval
+5. **ProcedureMapper**: Bidirectional FHIR ↔ OMOP conversion
+
+### Notes
+
+- **To be implemented**: Procedure mapping is not currently functional
+- Would follow similar pattern to `PatientMapper` when implemented
+- No mapper class exists for procedures yet
+- Only Patient/Person mapping is currently functional in this project
+
+---
+
+## MedicationStatement → OMOP DRUG_EXPOSURE Mapping
+
+**Status**: **NOT IMPLEMENTED** (infrastructure only)
+
+### Current State
+
+The project has JPA entity models for OMOP `drug_exposure` table, but **no actual bidirectional mapping logic** has been implemented yet for MedicationStatement ↔ DrugExposure.
+
+### Infrastructure Expected
+
+Based on the project's architecture, when implemented it would include:
+
+1. **DrugExposure Entity**: JPA entity mapping to `drug_exposure` table
+2. **DrugExposureService**: JPA service layer
+3. **DrugExposureRepository**: Spring Data JPA repository
+4. **DrugExposureFetcher**: Multi-threaded data retrieval
+5. **MedicationStatementMapper**: Bidirectional FHIR ↔ OMOP conversion
+
+### Notes
+
+- **To be implemented**: MedicationStatement mapping is not currently functional
+- Would follow similar pattern to `PatientMapper` when implemented
+- No mapper class exists for medications yet
+- Only Patient/Person mapping is currently functional
+
+---
+
+## Immunization → OMOP DRUG_EXPOSURE Mapping
+
+**Status**: **NOT IMPLEMENTED** (no infrastructure)
+
+### Current State
+
+The project does **NOT** implement FHIR Immunization ↔ OMOP mapping. No entity, service, or mapper classes exist for Immunization.
+
+### Infrastructure Required
+
+If Immunization mapping were added, it would require:
+
+1. **ImmunizationMapper**: Bidirectional FHIR ↔ OMOP conversion
+2. **Reuse DrugExposure infrastructure**: Use existing DrugExposure entity filtered by CVX vocabulary
+
+### Expected Mapping Pattern
+
+| FHIR Immunization Field | OMOP DRUG_EXPOSURE Field | Notes |
+|-------------------------|--------------------------|-------|
+| `Immunization.vaccineCode` | `drug_concept_id` | CVX vocabulary filter |
+| `Immunization.occurrenceDateTime` | `drug_exposure_start_datetime` | Administration time |
+| `Immunization.patient` | `person_id` | Reference resolution |
+| `Immunization.lotNumber` | `lot_number` | Lot tracking |
+
+### Notes
+
+- Only Patient/Person mapping is currently functional in this project
+- Immunization would use same `drug_exposure` table as MedicationStatement
+- CVX vocabulary used to identify vaccine codes
+
+---
+
+## AllergyIntolerance → OMOP OBSERVATION Mapping
+
+**Status**: **NOT IMPLEMENTED** (no infrastructure)
+
+### Current State
+
+The project does **NOT** implement FHIR AllergyIntolerance ↔ OMOP mapping. No entity, service, or mapper classes exist for AllergyIntolerance.
+
+### Infrastructure Required
+
+If AllergyIntolerance mapping were added, it would require:
+
+1. **AllergyIntoleranceMapper**: Bidirectional FHIR ↔ OMOP conversion
+2. **Observation entity infrastructure**: Map to observation table
+
+### Expected Mapping Pattern
+
+| FHIR AllergyIntolerance Field | OMOP OBSERVATION Field | Notes |
+|-------------------------------|------------------------|-------|
+| `AllergyIntolerance.code` | `observation_concept_id` | Allergy type concept |
+| `AllergyIntolerance.onsetDateTime` | `observation_date` | Onset date |
+| `AllergyIntolerance.patient` | `person_id` | Reference resolution |
+| `AllergyIntolerance.reaction.manifestation` | `value_as_concept_id` | Reaction type |
+
+### Notes
+
+- Only Patient/Person mapping is currently functional in this project
+- AllergyIntolerance would map to `observation` table (not drug_exposure)
+- Allergies are clinical findings, not drug administrations
+
+---
+
+## DiagnosticReport → OMOP Mapping
+
+**Status**: **NOT IMPLEMENTED** (no infrastructure)
+
+### Current State
+
+The project does **NOT** implement FHIR DiagnosticReport ↔ OMOP mapping. No entity, service, or mapper classes exist for DiagnosticReport.
+
+### Expected Implementation
+
+If DiagnosticReport mapping were added, it would require:
+
+1. **Domain-based routing**: Route to observation, measurement, or procedure_occurrence based on LOINC code domain
+2. **Observation/Measurement/ProcedureOccurrence entities**: Reuse existing infrastructure
+3. **DiagnosticReportMapper**: Bidirectional FHIR ↔ OMOP conversion
+
+### Expected Mapping Pattern
+
+| FHIR DiagnosticReport Field | OMOP Field | Notes |
+|-----------------------------|------------|-------|
+| `DiagnosticReport.code` | `*_concept_id` | LOINC code lookup |
+| `DiagnosticReport.conclusionCode` | `*_source_concept_id` | SNOMED code lookup |
+| `DiagnosticReport.effectiveDateTime` | `*_date/datetime` | Date extraction |
+| `DiagnosticReport.subject` | `person_id` | Reference resolution |
+| `DiagnosticReport.encounter` | `visit_occurrence_id` | Reference resolution |
+
+### Notes
+
+- Only Patient/Person mapping is currently functional in this project
+- DiagnosticReport maps to multiple OMOP tables based on domain
+- Complex resource that may generate multiple OMOP records

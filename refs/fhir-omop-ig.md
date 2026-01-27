@@ -577,3 +577,350 @@ group ConditionOccurrence(source src : Condition, target tgt : ConOccTable) {
 - `condition_status_concept_id` maps from `clinicalStatus` (active, resolved, etc.)
 - Date priority: `onset` preferred over `recordedDate` when both present
 - Evidence concepts can be stored as source concepts for traceability
+
+---
+
+## Procedure → OMOP PROCEDURE_OCCURRENCE Mapping
+
+**Source**: [`input/maps/Procedure.fml`](https://github.com/HL7/fhir-omop-ig/blob/master/input/maps/Procedure.fml)
+
+### FML StructureMap
+
+```fml
+/// url = 'http://hl7.org/fhir/uv/omop/StructureMap/ProcedureMap'
+/// name = 'ProcedureMap'
+/// title = 'Mapping Procedure resource to Procedure Occurrence OMOP Domain'
+
+uses "http://hl7.org/fhir/StructureDefinition/Procedure" alias Procedure as source
+uses "http://hl7.org/fhir/uv/omop/StructureDefinition/ProcedureOccurrence" alias ProcedureTable as target
+```
+
+### Field-Level Mapping
+
+| FHIR Procedure Field | OMOP PROCEDURE_OCCURRENCE Field | FML Logic |
+|---------------------|--------------------------------|-----------|
+| `Procedure.code.coding[0].code` | `procedure_concept_id` | Direct |
+| `Procedure.code.coding[0].code` | `procedure_source_value` | Same code |
+| `Procedure.code.coding[0].code` | `procedure_source_concept_id` | Same code |
+| `Procedure.performed:dateTime` | `procedure_datetime`, `procedure_date` | Cast to dateTime |
+| `Procedure.performed:Period.start` | `procedure_datetime`, `procedure_date` | Period start |
+| `Procedure.performed:Period.end` | `procedure_end_datetime`, `procedure_end_date` | Period end |
+
+### FML Implementation
+
+```fml
+group ProcedureOccurrence(source src : Procedure, target tgt : ProcedureTable) {
+    src.code as s -> tgt then {
+        s.coding as sc -> tgt then {
+            sc.code as a -> tgt.procedure_concept_id,
+                           tgt.procedure_source_value,
+                           tgt.procedure_source_concept_id = a;
+        };
+    };
+
+    src.occurrence : dateTime as edt -> tgt.procedure_datetime = cast(edt, "dateTime"),
+                                        tgt.procedure_date = edt;
+
+    src.occurrence : Period as s -> tgt then {
+        s.start as start -> tgt.procedure_datetime = cast(start, "dateTime"),
+                            tgt.procedure_date = start;
+        s.end as end -> tgt.procedure_end_datetime,
+                        tgt.procedure_end_date = end;
+    };
+}
+```
+
+### Notes
+
+- Supports both `performed:dateTime` and `performed:Period`
+- Period end maps to `procedure_end_date/datetime` (OMOP 5.4+)
+- Same code used for concept, source value, and source concept
+- Reference resolution (person, visit, provider) requires implementation
+
+---
+
+## MedicationStatement → OMOP DRUG_EXPOSURE Mapping
+
+**Source**: [`input/maps/medication.fml`](https://github.com/HL7/fhir-omop-ig/blob/master/input/maps/medication.fml)
+
+### FML StructureMap
+
+```fml
+/// url = 'http://hl7.org/fhir/uv/omop/StructureMap/MedicationMap'
+/// name = 'MedicationMap'
+/// title = 'Mapping MedicationStatement resource to DrugExposure OMOP Domain'
+
+uses "http://hl7.org/fhir/StructureDefinition/MedicationStatement" alias MedState as source
+uses "http://hl7.org/fhir/uv/omop/StructureDefinition/DrugExposure" alias DrugExpTable as target
+```
+
+### Field-Level Mapping
+
+| FHIR MedicationStatement Field | OMOP DRUG_EXPOSURE Field | FML Logic |
+|--------------------------------|--------------------------|-----------|
+| `MedicationStatement.medication:CodeableReference.concept.coding[0].code` | `drug_concept_id` | Direct mapping |
+| `MedicationStatement.effective:dateTime` | `drug_exposure_start_datetime`, `drug_exposure_start_date` | Direct; date cast |
+| `MedicationStatement.effective:Period.start` | `drug_exposure_start_datetime`, `drug_exposure_start_date` | Direct; date cast |
+| `MedicationStatement.effective:Period.end` | `drug_exposure_end_datetime`, `drug_exposure_end_date`, `verbatim_end_date` | Direct; date cast |
+| `MedicationStatement.category.coding[0].code` | `drug_type_concept_id` | Direct |
+| `MedicationStatement.reason:CodeableReference.concept.coding[0].code` | `stop_reason` | Direct |
+
+### FML Implementation
+
+```fml
+group MedExposure(source src : MedState, target tgt : DrugExpTable) {
+    // Medication code → drug concept
+    src.medication : CodeableReference as s -> tgt then {
+      s.concept as scs -> tgt then {
+        scs.coding as sc -> tgt then {
+            sc.code as a -> tgt.drug_concept_id = a;
+        };
+      };
+    };
+
+    // Effective dateTime → start dates
+    src.effective : dateTime as edt ->
+        tgt.drug_exposure_start_datetime = edt,
+        tgt.drug_exposure_start_date = cast(edt, "date");
+
+    // Effective Period → start/end dates
+    src.effective : Period as s -> tgt then {
+        s.start as fps -> tgt.drug_exposure_start_datetime = fps,
+                          tgt.drug_exposure_start_date = cast(fps, "date");
+    };
+    src.effective : Period as s -> tgt then {
+        s.end as fpe -> tgt.drug_exposure_end_datetime = fpe,
+                        tgt.drug_exposure_end_date = cast(fps, "date");
+    };
+
+    // Category → type concept
+    src.category : CodeableConcept as s -> tgt then {
+        s.coding as sc -> tgt then {
+            sc.code as a -> tgt.drug_type_concept_id = a;
+        };
+    };
+
+    // Reason → stop reason
+    src.reason : CodeableReference as s -> tgt then {
+        s.concept as scs -> tgt then {
+            scs.coding as sc -> tgt then {
+                sc.code as a -> tgt.stop_reason = a;
+            };
+        };
+    };
+}
+```
+
+### Fields NOT Mapped (commented out in FML)
+
+- `drug_exposure_id` - Auto-generated
+- `person_id` - Requires subject reference resolution
+- `visit_occurrence_id` - Requires encounter reference resolution
+- `provider_id` - Requires requester reference resolution
+- `route_concept_id` - From `dosageInstruction.route`
+- `quantity` - From `dispenseRequest.quantity`
+- `days_supply` - From `expectedSupplyDuration`
+- `refills` - From `numberOfRepeatsAllowed`
+
+### Notes
+
+- FML maps MedicationStatement to DrugExposure (not MedicationRequest)
+- Comment indicates MedicationRequest discussion exists but no separate FML
+- Category maps to drug_type_concept_id
+- Reason (statusReason) maps to stop_reason
+- Reference resolution (person, visit, provider) requires implementation
+
+---
+
+## Immunization → OMOP DRUG_EXPOSURE Mapping
+
+**Source**: [`input/maps/ImmunizationMap.fml`](https://github.com/HL7/fhir-omop-ig/blob/master/input/maps/ImmunizationMap.fml)
+
+### FML StructureMap
+
+```fml
+/// url = 'http://hl7.org/fhir/uv/omop/StructureMap/ImmunizationMap'
+/// name = 'ImmunizationMap'
+/// title = 'Mapping Immunization resource to Drug Exposure OMOP Domain'
+
+uses "http://hl7.org/fhir/StructureDefinition/Immunization" alias Immunization as source
+uses "http://hl7.org/fhir/uv/omop/StructureDefinition/DrugExposure" alias DrugExposureTable as target
+```
+
+### Field-Level Mapping
+
+| FHIR Immunization Field | OMOP DRUG_EXPOSURE Field | FML Logic |
+|-------------------------|--------------------------|-----------|
+| `Immunization.vaccineCode.coding[0].code` | `drug_concept_id`, `drug_source_value`, `drug_source_concept_id` | Direct mapping |
+| `Immunization.doseQuantity.value` | `quantity` | Cast to decimal |
+| `Immunization.doseQuantity.code` | `dose_unit_source_value` | Cast to string |
+| `Immunization.route.text` | `route_source_value` | Cast to string |
+| `Immunization.route.coding[0].code` | `route_concept_id`, `route_source_value` | Direct mapping |
+| `Immunization.occurrence:dateTime` | `drug_exposure_start_date`, `drug_exposure_start_datetime`, `drug_exposure_end_date`, `drug_exposure_end_datetime` | Single event - same start/end |
+| `Immunization.lotNumber` | `lot_number` | Cast to string |
+
+### FML Implementation
+
+```fml
+group DrugExposure(source src: Immunization, target tgt : DrugExposureTable) {
+    // Vaccine code → drug concept
+    src.vaccineCode as s -> tgt then {
+        s.coding as sc -> tgt then {
+            sc.code -> tgt.drug_concept_id, tgt.drug_source_value, tgt.drug_source_concept_id;
+        };
+    };
+
+    // Dose quantity
+    src.doseQuantity as s -> tgt then {
+        s.value as s -> tgt.quantity = cast(s, "decimal");
+        s.code as s -> tgt.dose_unit_source_value = cast(s, "string");
+    };
+
+    // Route
+    src.route as s -> tgt then {
+        s.text as s -> tgt.route_source_value = cast(s, "string");
+        s.coding as sc -> tgt then {
+            sc.code -> tgt.route_concept_id, tgt.route_source_value;
+        };
+    };
+
+    // Occurrence date (single event - start and end are same)
+    src.occurrence : dateTime as odt ->
+        tgt.drug_exposure_start_date = cast(odt, "date"),
+        tgt.drug_exposure_start_datetime = odt,
+        tgt.drug_exposure_end_date = cast(odt, "date"),
+        tgt.drug_exposure_end_datetime = odt;
+
+    // Lot number
+    src.lotNumber as s -> tgt.lot_number = cast(s, "string");
+}
+```
+
+### Fields NOT Mapped (commented out in FML)
+
+- `drug_exposure_id` - Auto-generated
+- `person_id` - Requires patient reference resolution
+- `visit_occurrence_id` - Requires encounter reference resolution
+- `provider_id` - Requires performer.actor reference resolution
+
+### Notes
+
+- Immunization maps to DrugExposure (vaccines are drugs in OMOP)
+- Single event: start and end dates are the same
+- Route and dose quantity directly supported
+- Lot number preserved for vaccine tracking
+- Reference resolution requires implementation-specific handling
+
+---
+
+## AllergyIntolerance → OMOP OBSERVATION Mapping
+
+**Source**: [`input/maps/Allergy.fml`](https://github.com/HL7/fhir-omop-ig/blob/master/input/maps/Allergy.fml)
+
+### FML StructureMap
+
+```fml
+/// url = 'http://hl7.org/fhir/uv/omop/StructureMap/AllergyMap'
+/// name = 'AllergyMap'
+/// title = 'Mapping Allergy resource to Observation OMOP Domain'
+/// description = "This mapping maps FHIR AllergyIntolerance instances to OMOP Observation Table objects."
+
+uses "http://hl7.org/fhir/StructureDefinition/AllergyIntolerance" alias Allergy as source
+uses "http://hl7.org/fhir/uv/omop/StructureDefinition/Observation" alias ObservationTable as target
+```
+
+### Field-Level Mapping
+
+| FHIR AllergyIntolerance Field | OMOP OBSERVATION Field | FML Logic |
+|-------------------------------|------------------------|-----------|
+| `AllergyIntolerance.code.coding[0].code` | `observation_concept_id`, `observation_source_value`, `observation_source_concept_id` | Direct mapping |
+| `AllergyIntolerance.onset:dateTime` | `observation_date`, `observation_datetime` | Date extraction |
+| `AllergyIntolerance.reaction[].manifestation[].concept.coding[].code` | `value_as_concept_id`, `value_source_value` | Reaction manifestation |
+
+### FML Implementation
+
+```fml
+group Observation(source src: Allergy, target tgt : ObservationTable) {
+
+    // Allergy code → observation concept
+    src.code as s -> tgt then {
+        s.coding as sc -> tgt then {
+            sc.code -> tgt.observation_concept_id, tgt.observation_source_value, tgt.observation_source_concept_id;
+        };
+    };
+
+    // Onset date
+    src.onset : dateTime as osd -> tgt.observation_date = cast(osd, "date"), tgt.observation_datetime = osd;
+
+    // Reaction manifestation → value_as_concept
+    src.reaction as s -> tgt then {
+        s.manifestation as sman -> tgt then {
+            sman.concept as smanc -> tgt then {
+                smanc.coding as sc -> tgt then {
+                    sc.code -> tgt.value_as_concept_id, tgt.value_source_value;
+                };
+            };
+        };
+    };
+}
+```
+
+### Fields NOT Mapped (commented out in FML)
+
+- `observation_id` - Auto-generated
+- `person_id` - Requires patient reference resolution
+- `visit_occurrence_id` - Requires encounter reference resolution
+- `provider_id` - Requires recorder reference resolution
+
+### Key Design Decision: Observation vs Drug_Exposure
+
+AllergyIntolerance maps to OMOP **`observation`** table (not `drug_exposure`) because:
+- Allergies are clinical observations/findings, not drug administrations
+- OMOP's `observation` table is designed for clinical findings and observations
+- The allergy substance is stored in `value_as_concept_id`, not `drug_concept_id`
+
+### Notes
+
+- AllergyIntolerance maps to OMOP Observation table
+- Allergy code maps to observation_concept (what type of allergy)
+- Reaction manifestation maps to value_as_concept (what happens)
+- Onset date maps to observation_date/datetime
+- Reference resolution (patient, encounter, provider) requires implementation
+
+---
+
+## DiagnosticReport → OMOP Mapping
+
+**Note**: The HL7 FHIR↔OMOP Implementation Guide does **NOT** currently include a FML StructureMap for DiagnosticReport.
+
+### Not Implemented
+
+No `DiagnosticReport.fml` or `DiagnosticReportMap.fml` file exists in the `input/maps/` directory.
+
+### Expected Mapping Approach
+
+Based on OHDSI conventions and other implementations, DiagnosticReport would map to OMOP based on domain:
+
+| LOINC Code Domain | Target OMOP Table |
+|-------------------|-------------------|
+| Observation | observation |
+| Measurement | measurement |
+| Procedure | procedure |
+
+### Expected Field Mappings
+
+| OMOP Field | FHIR DiagnosticReport Source |
+|------------|------------------------------|
+| `*_concept_id` | `DiagnosticReport.code` (LOINC) |
+| `*_source_concept_id` | `DiagnosticReport.conclusionCode` (SNOMED) |
+| `*_date` | `DiagnosticReport.effectiveDateTime` |
+| `*_type_concept_id` | `DiagnosticReport.category` |
+| `person_id` | `DiagnosticReport.subject` |
+| `visit_occurrence_id` | `DiagnosticReport.encounter` |
+
+### Notes
+
+- DiagnosticReport typically represents diagnostic study results
+- Maps to multiple OMOP tables based on code domain
+- LOINC for main code, SNOMED for conclusions
+- Reference resolution required for patient, encounter

@@ -560,3 +560,127 @@ if (existingConditionOccurrence != null) {
 - **Asserter**: Only Practitioner references are processed (not Patient)
 - **Concept lookup**: Falls back to concept ID 0 if code not recognized
 - **Category**: COMPLAINT category maps to patient self-report type
+
+---
+
+## OMOP PROCEDURE_OCCURRENCE → FHIR Procedure Mapping
+
+**Source**: [`gt-fhir-entities/src/main/java/edu/gatech/i3l/fhir/dstu2/entities/ProcedureOccurrence.java`](https://github.com/gt-health/GT-FHIR/blob/master/gt-fhir-entities/src/main/java/edu/gatech/i3l/fhir/dstu2/entities/ProcedureOccurrence.java)
+
+**Note**: This is DSTU2, provides **read-only mapping** (OMOP → FHIR only). FHIR → OMOP is not implemented (`constructEntityFromResource()` returns null).
+
+### OMOP PROCEDURE_OCCURRENCE → FHIR Procedure (`getRelatedResource()`)
+
+| FHIR Procedure Field | OMOP PROCEDURE_OCCURRENCE Source | Logic |
+|----------------------|----------------------------------|-------|
+| `id` | `procedure_occurrence_id` | Direct via `getIdDt()` |
+| `subject` | `person` | Reference to Patient with display name |
+| `status` | (hardcoded) | `ProcedureStatusEnum.IN_PROGRESS` |
+| `code.coding[0].system` | `procedure_concept.vocabulary.systemUri` | Vocabulary system URI |
+| `code.coding[0].code` | `procedure_concept.conceptCode` | Concept code |
+| `code.coding[0].display` | `procedure_concept.name` | Concept name |
+| `code.text` | (derived) | `"{name}, {vocabulary}, {code}"` |
+| `performed[x]` | `procedure_date` | As DateTimeDt |
+
+### JPA Entity Fields
+
+| Entity Field | Column Name | Data Type | Notes |
+|--------------|-------------|-----------|-------|
+| `id` | `procedure_occurrence_id` | Long | PK, auto-generated |
+| `person` | `person_id` | FK | NOT NULL |
+| `procedureConcept` | `procedure_concept_id` | FK | Concept entity |
+| `date` | `procedure_date` | Date | NOT NULL |
+| `procedureTypeConcept` | `procedure_type_concept_id` | FK | Concept entity |
+| `modifierConcept` | `modifier_concept_id` | FK | Concept entity |
+| `quantity` | `quantity` | Long | |
+| `provider` | `provider_id` | FK | Provider entity |
+| `visitOccurrence` | `visit_occurrence_id` | FK | VisitOccurrence entity |
+| `procedureSourceValue` | `procedure_source_value` | String | |
+| `procedureSourceConcept` | `procedure_source_concept_id` | FK | Concept entity |
+| `qualifierSourceValue` | `qualifier_source_value` | String | |
+
+### Search Parameters
+
+```java
+switch (theSearchParam) {
+    case SP_PATIENT:
+        return "person";
+    case SP_ENCOUNTER:
+        return "visitOccurrence";
+}
+```
+
+### Fields NOT Mapped to FHIR
+
+- `procedure_type_concept_id` → (not mapped)
+- `modifier_concept_id` → (not mapped)
+- `quantity` → (not mapped)
+- `provider_id` → (not mapped to Procedure.performer)
+- `visit_occurrence_id` → (not mapped to Procedure.encounter)
+- `procedure_source_value` → (not mapped)
+- `qualifier_source_value` → (not mapped)
+
+### Notes
+
+- **FHIR Version**: DSTU2 (not R4)
+- **Read-only**: FHIR → OMOP not implemented
+- **Status**: Always set to `IN_PROGRESS` (TODO in code - revisit)
+- **Code text**: Concatenates name, vocabulary, and code
+- **Subject display**: Builds full name from given names + family name
+
+---
+
+## MedicationStatement → OMOP DRUG_EXPOSURE Mapping
+
+**Note**: GT-FHIR does **NOT** appear to implement MedicationStatement mapping in the available codebase. The project focuses on:
+- Patient ↔ Person
+- Observation ↔ Observation/Measurement
+- Encounter ↔ VisitOccurrence
+- Condition ↔ ConditionOccurrence
+- Procedure ↔ ProcedureOccurrence
+
+### Not Implemented
+
+No `DrugExposure.java` entity or `MedicationStatement` provider exists in the analyzed codebase. If medication mapping were needed, it would follow the entity pattern of other resources.
+
+---
+
+## Immunization → OMOP DRUG_EXPOSURE Mapping
+
+**Note**: GT-FHIR does **NOT** implement Immunization mapping. The project focuses on the DSTU2 resources listed above.
+
+### Not Implemented
+
+No `Immunization` entity or provider exists in the codebase. If Immunization mapping were added, it would:
+- Map to `drug_exposure` table
+- Filter by CVX vocabulary codes
+- Use type concept for administered drugs (38000179 - Physician administered drug)
+- Follow the entity pattern of other resources
+
+---
+
+## AllergyIntolerance → OMOP Mapping
+
+**Note**: GT-FHIR does **NOT** implement AllergyIntolerance mapping. The project focuses on DSTU2 resources (Patient, Observation, Encounter, Condition, Procedure, Medication).
+
+### Not Implemented
+
+No `AllergyIntolerance` entity or provider exists in the codebase. If AllergyIntolerance mapping were added, it would:
+- Map to `observation` table (allergies are clinical findings)
+- Use observation_concept_id for allergy type (food, drug, etc.)
+- Store substance in value_as_concept_id
+- Follow the entity pattern of other resources
+
+---
+
+## DiagnosticReport → OMOP Mapping
+
+**Note**: GT-FHIR does **NOT** implement DiagnosticReport mapping. The project focuses on DSTU2 resources (Patient, Observation, Encounter, Condition, Procedure, Medication).
+
+### Not Implemented
+
+No `DiagnosticReport` entity or provider exists in the codebase. If DiagnosticReport mapping were added, it would:
+- Map to multiple tables based on LOINC code domain (observation, measurement, procedure)
+- Use LOINC codes for the main concept
+- Use SNOMED codes for conclusion values
+- Follow the entity pattern of other resources

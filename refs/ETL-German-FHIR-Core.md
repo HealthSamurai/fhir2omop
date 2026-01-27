@@ -555,3 +555,351 @@ Only conditions with these clinical statuses are processed:
 - Creates linked records for body site, severity, stage
 - ICD-10-GM specific handling for German hospital data
 - Deletes existing records on incremental update before re-inserting
+
+---
+
+## Procedure → OMOP Mapping (Domain-Based Routing)
+
+**Source**: [`src/main/java/org/miracum/etl/fhirtoomop/mapper/ProcedureMapper.java`](https://github.com/OHDSI/ETL-German-FHIR-Core/blob/main/src/main/java/org/miracum/etl/fhirtoomop/mapper/ProcedureMapper.java)
+
+### Domain-Based Routing
+
+FHIR Procedure resources are routed to different OMOP tables based on the OPS/SNOMED code domain:
+
+| Concept Domain | OMOP Target Table |
+|----------------|-------------------|
+| Procedure | procedure_occurrence |
+| Drug | drug_exposure |
+| Observation | observation |
+| Measurement | measurement |
+
+### FHIR Procedure → OMOP PROCEDURE_OCCURRENCE
+
+| OMOP PROCEDURE_OCCURRENCE Field | FHIR Procedure Source | Logic |
+|---------------------------------|----------------------|-------|
+| `person_id` | `Procedure.subject` | Resolved from Patient reference |
+| `procedure_concept_id` | `Procedure.code` | Via vocabulary lookup (OPS, SNOMED, DICOM) |
+| `procedure_source_concept_id` | `Procedure.code` | Source concept from vocabulary |
+| `procedure_source_value` | `Procedure.code.coding[0].code` | Raw code |
+| `procedure_date` | `Procedure.performedDateTime` or `Period.start` | Start date |
+| `procedure_datetime` | Same | Full datetime |
+| `procedure_end_date` | `Procedure.performedPeriod.end` | End date |
+| `procedure_end_datetime` | Same | Full datetime |
+| `procedure_type_concept_id` | (default) | `CONCEPT_EHR` (32817) |
+| `visit_occurrence_id` | `Procedure.encounter` | Resolved from Encounter reference |
+| `fhir_logical_id` | `Procedure.id` | For incremental updates |
+| `fhir_identifier` | `Procedure.identifier[0]` | For duplicate detection |
+
+### Device Exposure from Procedure
+
+Creates `device_exposure` records from `Procedure.usedCode`.
+
+### Supported Vocabulary Systems
+
+| FHIR Code System | OMOP Vocabulary |
+|------------------|-----------------|
+| OPS (German) | OPS |
+| SNOMED CT | SNOMED |
+| DICOM | DICOM |
+
+### Acceptable Status Values
+
+- `completed`
+- `in-progress`
+- `on-hold`
+
+### Notes
+
+- Domain routing based on OHDSI vocabulary's `domain_id`
+- Creates linked `device_exposure` records for `usedCode`
+- Supports both bulk load and incremental load modes
+- OPS-specific handling for German hospital procedure codes
+
+---
+
+## MedicationStatement → OMOP DRUG_EXPOSURE Mapping
+
+**Source**: [`src/main/java/org/miracum/etl/fhirtoomop/mapper/MedicationStatementMapper.java`](https://github.com/OHDSI/ETL-German-FHIR-Core/blob/main/src/main/java/org/miracum/etl/fhirtoomop/mapper/MedicationStatementMapper.java)
+
+**Note**: Also supports `MedicationAdministration` via separate mapper.
+
+### FHIR MedicationStatement → OMOP DRUG_EXPOSURE
+
+| OMOP DRUG_EXPOSURE Field | FHIR MedicationStatement Source | Logic |
+|--------------------------|--------------------------------|-------|
+| `person_id` | `MedicationStatement.subject` | Resolved from Patient reference |
+| `drug_concept_id` | `MedicationStatement.medicationReference` or `medicationCodeableConcept` | Via ATC vocabulary lookup |
+| `drug_source_concept_id` | Same | Source concept from vocabulary |
+| `drug_source_value` | `MedicationStatement.medication.coding[0].code` | ATC code |
+| `drug_exposure_start_date` | `MedicationStatement.effectiveDateTime` or `effectivePeriod.start` or `dateAsserted` | Start date |
+| `drug_exposure_start_datetime` | Same | Full datetime |
+| `drug_exposure_end_date` | `MedicationStatement.effectivePeriod.end` | End date |
+| `drug_exposure_end_datetime` | Same | Full datetime |
+| `drug_type_concept_id` | (default) | `CONCEPT_CLAIM` (hardcoded) |
+| `quantity` | `MedicationStatement.dosage[].doseAndRate[].doseQuantity.value` | Dose quantity |
+| `visit_occurrence_id` | `MedicationStatement.context` | Resolved from Encounter reference |
+| `fhir_logical_id` | `MedicationStatement.id` | For incremental updates |
+| `fhir_identifier` | `MedicationStatement.identifier[0]` | For duplicate detection |
+
+### Domain-Based Routing
+
+Based on the OMOP concept domain:
+
+| Concept Domain | OMOP Target Table |
+|----------------|-------------------|
+| Drug | drug_exposure |
+| Observation | observation |
+
+### Dosage Extraction
+
+```java
+private List<BigDecimal> getDosage(MedicationStatement srcMedicationStatement, String medicationStatementId) {
+    List<BigDecimal> dosageList = new ArrayList<>();
+    for (Dosage dosage : srcMedicationStatement.getDosage()) {
+        for (DosageDoseAndRateComponent doseAndRate : dosage.getDoseAndRate()) {
+            if (doseAndRate.hasDoseQuantity()) {
+                Quantity doseQuantity = doseAndRate.getDoseQuantity();
+                dosageList.add(doseQuantity.getValue());
+            } else if (doseAndRate.hasDoseRange()) {
+                Range doseRange = doseAndRate.getDoseRange();
+                // Calculate midpoint of range
+                dosageList.add(doseRange.getHigh().getValue()
+                    .add(doseRange.getLow().getValue())
+                    .divide(BigDecimal.valueOf(2)));
+            }
+        }
+    }
+    return dosageList;
+}
+```
+
+### Date Extraction Priority
+
+1. `effectiveDateTimeType` - Use directly
+2. `effectivePeriod.start/end` - Use period bounds
+3. `dateAsserted` - Fallback if no effective date
+
+### Acceptable Status Values
+
+- `active`
+- `completed`
+- `intended`
+- `stopped`
+- `on-hold`
+- (configurable via `FHIR_RESOURCE_MEDICATION_STATEMENT_ACCEPTABLE_STATUS_LIST`)
+
+### Notes
+
+- **ATC vocabulary**: Primary vocabulary for German medication codes
+- **Domain routing**: Routes Drug domain to drug_exposure, Observation to observation
+- **Dosage calculation**: Supports both quantity and range (midpoint calculation)
+- **Multiple dosages**: Creates separate records per dosage entry
+- **Bulk/incremental**: Supports both load modes
+- **Related resources**: References Medication resources via `medicationReference`
+
+---
+
+## Immunization → OMOP DRUG_EXPOSURE Mapping
+
+**Source**: [`src/main/java/org/miracum/etl/fhirtoomop/mapper/ImmunizationMapper.java`](https://github.com/OHDSI/ETL-German-FHIR-Core/blob/main/src/main/java/org/miracum/etl/fhirtoomop/mapper/ImmunizationMapper.java)
+
+### FHIR Immunization → OMOP DRUG_EXPOSURE
+
+| OMOP DRUG_EXPOSURE Field | FHIR Immunization Source | Logic |
+|--------------------------|-------------------------|-------|
+| `person_id` | `Immunization.patient` | Resolved from Patient reference |
+| `drug_concept_id` | `Immunization.vaccineCode` | Via ATC/SNOMED vocabulary lookup |
+| `drug_source_concept_id` | Same | Source concept from vocabulary |
+| `drug_source_value` | `Immunization.vaccineCode.coding[0].code` | Raw code |
+| `drug_exposure_start_date` | `Immunization.occurrenceDateTime` or `occurrenceString` | Start date |
+| `drug_exposure_start_datetime` | Same | Full datetime |
+| `drug_exposure_end_date` | Same | Same as start (single event) |
+| `drug_exposure_end_datetime` | Same | Same as start |
+| `drug_type_concept_id` | (default) | `CONCEPT_EHR` (32817) |
+| `quantity` | `Immunization.doseQuantity.value` | Dose quantity |
+| `visit_occurrence_id` | `Immunization.encounter` | Resolved from Encounter reference |
+| `fhir_logical_id` | `Immunization.id` | For incremental updates |
+| `fhir_identifier` | `Immunization.identifier[0]` | For duplicate detection |
+
+### Domain-Based Routing
+
+Based on the OMOP concept domain:
+
+| Concept Domain | OMOP Target Table |
+|----------------|-------------------|
+| Drug | drug_exposure |
+| Observation | observation |
+
+### Supported Vocabulary Systems
+
+```java
+private final List<String> listOfImmunizationVocabularyId =
+    Arrays.asList(VOCABULARY_ATC, VOCABULARY_SNOMED);
+```
+
+- ATC (Anatomical Therapeutic Chemical)
+- SNOMED CT
+
+### Acceptable Status Values
+
+- `completed`
+- `entered-in-error`
+- `not-done`
+- (configurable via `FHIR_RESOURCE_ACCEPTABLE_EVENT_STATUS_LIST`)
+
+### Notes
+
+- **ATC/SNOMED vocabularies**: Primary vocabularies for German immunization codes
+- **Domain routing**: Routes Drug domain to drug_exposure, Observation to observation
+- **Single-day event**: Start and end dates are the same
+- **Bulk/incremental**: Supports both load modes
+- **Dose quantity**: Mapped directly from `doseQuantity`
+
+---
+
+## AllergyIntolerance → OMOP Mapping
+
+**Note**: ETL-German-FHIR-Core does **NOT** currently implement AllergyIntolerance mapping.
+
+### Not Implemented
+
+No `AllergyIntoleranceMapper.java` exists in the codebase. The project focuses on:
+- Patient → Person
+- Observation → Observation/Measurement
+- Encounter → VisitOccurrence
+- Condition → ConditionOccurrence
+- Procedure → ProcedureOccurrence
+- MedicationStatement → DrugExposure
+- Immunization → DrugExposure
+
+### Expected Implementation Pattern
+
+If AllergyIntolerance mapping were added, it would follow the existing mapper pattern:
+
+```java
+// Expected pattern (not implemented)
+@Mapper
+public class AllergyIntoleranceMapper {
+    // Map to OMOP observation table
+    // observation_concept_id from allergy code
+    // value_as_concept_id from reaction manifestation
+    // observation_date from onset
+}
+```
+
+### Target Table
+
+Per OHDSI conventions, AllergyIntolerance would map to:
+- **observation** table (allergies are clinical findings, not drug administrations)
+
+---
+
+## DiagnosticReport → OMOP Mapping (Domain-Based Routing)
+
+**Source**: [`src/main/java/org/miracum/etl/fhirtoomop/mapper/DiagnosticReportMapper.java`](https://github.com/OHDSI/ETL-German-FHIR-Core/blob/main/src/main/java/org/miracum/etl/fhirtoomop/mapper/DiagnosticReportMapper.java)
+
+### Domain-Based Routing
+
+DiagnosticReport maps to different OMOP tables based on the LOINC code's domain:
+
+| OMOP Domain | Target Table |
+|-------------|--------------|
+| Observation | observation |
+| Measurement | measurement |
+| Procedure | procedure_occurrence |
+
+### FHIR DiagnosticReport → OMOP (Common Fields)
+
+| OMOP Field | FHIR DiagnosticReport Source | Logic |
+|------------|------------------------------|-------|
+| `person_id` | `DiagnosticReport.subject` | Resolved from Patient reference |
+| `visit_occurrence_id` | `DiagnosticReport.encounter` | Resolved from Encounter reference |
+| `*_concept_id` | `DiagnosticReport.code` (LOINC) | Via vocabulary lookup |
+| `*_source_concept_id` | `DiagnosticReport.conclusionCode` (SNOMED) | Via vocabulary lookup |
+| `*_source_value` | `DiagnosticReport.conclusionCode.coding[0].code` | Raw SNOMED code |
+| `*_date` | `DiagnosticReport.effectiveDateTime` | Date component |
+| `*_datetime` | Same | Full timestamp |
+| `*_type_concept_id` | `DiagnosticReport.category` (LOINC) | Via custom mapping |
+| `fhir_logical_id` | `DiagnosticReport.id` | For incremental updates |
+| `fhir_identifier` | `DiagnosticReport.identifier[0]` | For duplicate detection |
+
+### Observation Target Mapping
+
+```java
+var diagnosticReportObservation = OmopObservation.builder()
+    .personId(personId)
+    .visitOccurrenceId(visitOccId)
+    .observationTypeConceptId(categoryCodingConcept.getTargetConceptId())
+    .observationConceptId(loincCodingConcept.getConceptId())
+    .observationSourceConceptId(snomedConcept.getConceptId())
+    .observationSourceValue(snomedCoding.getCode())
+    .valueAsString(snomedCoding.getCode())
+    .observationDate(diagnosticReportOnset.getStartDateTime().toLocalDate())
+    .observationDatetime(diagnosticReportOnset.getStartDateTime())
+    .fhirIdentifier(diagnosticReportSourceIdentifier)
+    .fhirLogicalId(diagnosticReportLogicId)
+    .build();
+```
+
+### Measurement Target Mapping
+
+```java
+var diagnosticReportMeasurement = Measurement.builder()
+    .personId(personId)
+    .visitOccurrenceId(visitOccId)
+    .measurementTypeConceptId(categoryCodingConcept.getTargetConceptId())
+    .measurementConceptId(loincCodingConcept.getConceptId())
+    .measurementSourceConceptId(snomedConcept.getConceptId())
+    .measurementSourceValue(snomedCoding.getCode())
+    .valueSourceValue(snomedCoding.getCode())
+    .measurementDate(diagnosticReportOnset.getStartDateTime().toLocalDate())
+    .measurementDatetime(diagnosticReportOnset.getStartDateTime())
+    .fhirIdentifier(diagnosticReportSourceIdentifier)
+    .fhirLogicalId(diagnosticReportLogicId)
+    .build();
+```
+
+### Procedure Target Mapping
+
+```java
+var diagnosticReportProcedure = ProcedureOccurrence.builder()
+    .personId(personId)
+    .visitOccurrenceId(visitOccId)
+    .procedureTypeConceptId(categoryCodingConcept.getTargetConceptId())
+    .procedureConceptId(loincCodingConcept.getConceptId())
+    .procedureSourceConceptId(snomedConcept.getConceptId())
+    .procedureSourceValue(snomedCoding.getCode())
+    .procedureDate(diagnosticReportOnset.getStartDateTime().toLocalDate())
+    .procedureDatetime(diagnosticReportOnset.getStartDateTime())
+    .fhirIdentifier(diagnosticReportSourceIdentifier)
+    .fhirLogicalId(diagnosticReportLogicId)
+    .build();
+```
+
+### Acceptable Status Values
+
+- `final`
+- `amended`
+- `corrected`
+- (configurable via `FHIR_RESOURCE_DIAGNOSTIC_REPORT_ACCEPTABLE_STATUS_LIST`)
+
+### Vocabulary Systems
+
+- **Code**: LOINC (primary vocabulary for DiagnosticReport.code)
+- **Conclusion**: SNOMED CT (for DiagnosticReport.conclusionCode)
+- **Category**: LOINC (for DiagnosticReport.category)
+
+### Interpretation Mapping
+
+SNOMED post-coordinated expressions with interpretation codes (e.g., `118247008:{363713009=373068000}`) are parsed and mapped to:
+- `qualifier_concept_id` / `qualifier_source_value` (for observations)
+- `operator_concept_id` (for measurements)
+- `modifier_concept_id` / `modifier_source_value` (for procedures)
+
+### Notes
+
+- **Domain-based routing**: LOINC code domain determines target table
+- **SNOMED conclusions**: Each conclusion code creates a separate record
+- **Bulk/incremental**: Supports both load modes
+- **Complex SNOMED**: Handles post-coordinated SNOMED expressions
+- **Multiple conclusions**: Multiple conclusion codes create multiple OMOP records

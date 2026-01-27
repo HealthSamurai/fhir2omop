@@ -480,3 +480,239 @@ SELECT ?patient ?code ?onset WHERE {
 - **Clinical status**: Not mapped (OMOP has no direct equivalent)
 - **Verification status**: Not mapped
 - **Provider/Encounter**: Not mapped in current OBDA file
+
+---
+
+## OMOP PROCEDURE_OCCURRENCE → FHIR Procedure Mapping
+
+**Source**: [`input/omop.obda`](https://github.com/fhircat/FHIROntopOMOP/blob/main/input/omop.obda) - mapping10
+
+**Direction**: OMOP → FHIR (virtual mapping via Ontop)
+
+### Ontop OBDA Mapping (mapping10)
+
+| FHIR Procedure Field | OMOP PROCEDURE_OCCURRENCE Column | RDF Property |
+|----------------------|----------------------------------|--------------|
+| `Procedure` (resource type) | `procedure_occurrence` table | `a :Procedure` |
+| `id` | `procedure_occurrence_id` | `{procedure_occurrence_id}^^xsd:string` |
+| `code` | `procedure_concept_id` | References `CodeableConcept/{procedure_concept_id}` |
+| `category` | `procedure_type_concept_id` | References `CodeableConcept/{procedure_type_concept_id}` |
+| `subject` | `person_id` | Link to `Patient/{person_id}` |
+| `encounter` | `visit_occurrence_id` | Link to `Encounter/{visit_occurrence_id}` |
+| `performedDateTime` | `procedure_datetime` | `{procedure_datetime}^^xsd:dateTime` |
+| `performer` | `provider_id` | Link to `Practitioner/{provider_id}` |
+
+### OBDA Mapping Target (mapping10)
+
+```
+target  <http://hl7.org/fhir/Procedure/{procedure_occurrence_id}>
+        rdf:type fhir:Procedure ;
+        fhir:Resource.id [ fhir:value "{procedure_occurrence_id}" ] ;
+        fhir:Procedure.code <http://hl7.org/fhir/CodeableConcept/{procedure_concept_id}> ;
+        fhir:Procedure.category <http://hl7.org/fhir/CodeableConcept/{procedure_type_concept_id}> ;
+        fhir:Procedure.subject [ fhir:link <http://hl7.org/fhir/Patient/{person_id}> ] ;
+        fhir:Procedure.encounter [ fhir:link <http://hl7.org/fhir/Encounter/{visit_occurrence_id}> ] ;
+        fhir:Procedure.performedDateTime [ fhir:value "{procedure_datetime}" ] ;
+        fhir:Procedure.performer [ fhir:link <http://hl7.org/fhir/Practitioner/{provider_id}> ] .
+
+source  SELECT * FROM procedure_occurrence
+```
+
+### Example SPARQL Query
+
+```sparql
+PREFIX fhir: <http://hl7.org/fhir/>
+
+SELECT ?patient ?code ?datetime WHERE {
+  ?procedure a fhir:Procedure .
+  ?procedure fhir:Procedure.subject [ fhir:link ?patient ] .
+  ?procedure fhir:Procedure.code ?codeRef .
+  ?codeRef fhir:CodeableConcept.coding [
+    fhir:Coding.code [ fhir:value ?code ]
+  ] .
+  ?procedure fhir:Procedure.performedDateTime [ fhir:value ?datetime ] .
+} LIMIT 100
+```
+
+### Notes
+
+- **Direction**: OMOP → FHIR only (virtual mapping)
+- **Virtual mapping**: No data transformation - SPARQL translated to SQL at runtime
+- **Status**: Not mapped (OMOP has no status field)
+- **Code lookup**: `procedure_concept_id` joins to concept table for code/system
+- **Category**: `procedure_type_concept_id` maps to Procedure.category
+- **Modifier**: `modifier_concept_id` not mapped
+- **Quantity**: Not mapped
+
+---
+
+## OMOP DRUG_EXPOSURE → FHIR MedicationStatement Mapping
+
+**Source**: [`input/omop.obda`](https://github.com/fhircat/FHIROntopOMOP/blob/main/input/omop.obda) - mapping11
+
+**Direction**: OMOP → FHIR (virtual mapping via Ontop)
+
+### Ontop OBDA Mapping (mapping11)
+
+| FHIR MedicationStatement Field | OMOP DRUG_EXPOSURE Column | RDF Property |
+|--------------------------------|--------------------------|--------------|
+| `MedicationStatement` (resource type) | `drug_exposure` table | `a :MedicationStatement` |
+| `id` | `drug_exposure_id` | `{drug_exposure_id}^^xsd:string` |
+| `status` | (hardcoded) | `"completed"^^xsd:string` |
+| `statusReason` | `stop_reason` | `{stop_reason}^^xsd:string` |
+| `medicationCodeableConcept` | `drug_concept_id` | References `CodeableConcept/{drug_concept_id}` |
+| `category` | `drug_type_concept_id` | References `CodeableConcept/{drug_type_concept_id}` |
+| `subject` | `person_id` | Link to `Patient/{person_id}` |
+| `context` | `visit_occurrence_id` | Link to `Encounter/{visit_occurrence_id}` |
+| `effectiveDateTime` | `drug_exposure_start_datetime` | `{drug_exposure_start_datetime}^^xsd:dateTime` |
+| `effectivePeriod.start` | `drug_exposure_start_datetime` | Same as effectiveDateTime |
+| `effectivePeriod.end` | `drug_exposure_end_datetime` | `{drug_exposure_end_datetime}^^xsd:dateTime` |
+
+### Example SPARQL Query
+
+```sparql
+PREFIX fhir: <http://hl7.org/fhir/>
+
+SELECT ?patient ?code ?startDate WHERE {
+  ?medStatement a fhir:MedicationStatement .
+  ?medStatement fhir:MedicationStatement.subject [ fhir:link ?patient ] .
+  ?medStatement fhir:MedicationStatement.medicationCodeableConcept ?codeRef .
+  ?codeRef fhir:CodeableConcept.coding [
+    fhir:Coding.code [ fhir:value ?code ]
+  ] .
+  ?medStatement fhir:MedicationStatement.effectiveDateTime [ fhir:value ?startDate ] .
+} LIMIT 100
+```
+
+### Notes
+
+- **Direction**: OMOP → FHIR only (virtual mapping)
+- **Virtual mapping**: No data transformation - SPARQL translated to SQL at runtime
+- **Status hardcoded**: Always "completed"
+- **StatusReason**: Maps `stop_reason` if present
+- **Code lookup**: `drug_concept_id` joins to concept table for code/system
+- **Category**: `drug_type_concept_id` maps to MedicationStatement.category
+
+---
+
+## OMOP DRUG_EXPOSURE → FHIR Immunization Mapping
+
+**Note**: FHIROntopOMOP does **NOT** currently implement a specific Immunization OBDA mapping. The `drug_exposure` table is mapped only to `MedicationStatement`.
+
+### Not Implemented
+
+If Immunization mapping were added, it would require:
+
+1. **Additional OBDA mapping** filtering `drug_exposure` by CVX vocabulary:
+```sql
+SELECT de.*
+FROM drug_exposure de
+JOIN concept c ON de.drug_concept_id = c.concept_id
+WHERE c.vocabulary_id = 'CVX'
+```
+
+2. **Mapping to Immunization resource**:
+| FHIR Immunization Field | OMOP Source |
+|-------------------------|-------------|
+| `Immunization.vaccineCode` | `drug_concept_id` (CVX concept) |
+| `Immunization.occurrenceDateTime` | `drug_exposure_start_datetime` |
+| `Immunization.patient` | `person_id` → Patient reference |
+| `Immunization.encounter` | `visit_occurrence_id` → Encounter reference |
+| `Immunization.lotNumber` | `lot_number` |
+| `Immunization.performer` | `provider_id` → Practitioner reference |
+
+### Current Workaround
+
+CVX-coded drugs can be queried via the existing MedicationStatement mapping and filtered by vocabulary in SPARQL:
+```sparql
+PREFIX fhir: <http://hl7.org/fhir/>
+
+SELECT ?patient ?code ?display WHERE {
+  ?medStatement a fhir:MedicationStatement .
+  ?medStatement fhir:MedicationStatement.subject [ fhir:link ?patient ] .
+  ?medStatement fhir:MedicationStatement.medicationCodeableConcept ?codeRef .
+  ?codeRef fhir:CodeableConcept.coding [
+    fhir:Coding.system [ fhir:value "CVX" ];
+    fhir:Coding.code [ fhir:value ?code ];
+    fhir:Coding.display [ fhir:value ?display ]
+  ] .
+}
+```
+
+---
+
+## OMOP OBSERVATION → FHIR AllergyIntolerance Mapping
+
+**Note**: FHIROntopOMOP does **NOT** currently implement AllergyIntolerance OBDA mapping. Allergy data in OMOP `observation` table is not exposed as a separate FHIR resource type.
+
+### Not Implemented
+
+If AllergyIntolerance mapping were added, it would require:
+
+1. **Additional OBDA mapping** filtering `observation` by allergy concepts:
+```sql
+SELECT o.*
+FROM observation o
+JOIN concept c ON o.observation_concept_id = c.concept_id
+WHERE c.concept_name LIKE '%Allerg%'
+```
+
+2. **Mapping to AllergyIntolerance resource**:
+| FHIR AllergyIntolerance Field | OMOP Source |
+|-------------------------------|-------------|
+| `AllergyIntolerance.code` | `observation_concept_id` |
+| `AllergyIntolerance.patient` | `person_id` → Patient reference |
+| `AllergyIntolerance.onsetDateTime` | `observation_date` |
+| `AllergyIntolerance.reaction.manifestation` | `value_as_concept_id` |
+| `AllergyIntolerance.recorder` | `provider_id` → Practitioner reference |
+
+### Current Workaround
+
+Allergy observations can be queried via the existing Observation mapping and filtered by concept name in SPARQL:
+```sparql
+PREFIX fhir: <http://hl7.org/fhir/>
+
+SELECT ?patient ?code ?display WHERE {
+  ?obs a fhir:Observation .
+  ?obs fhir:Observation.subject [ fhir:link ?patient ] .
+  ?obs fhir:Observation.code ?codeRef .
+  ?codeRef fhir:CodeableConcept.coding [
+    fhir:Coding.display [ fhir:value ?display ]
+  ] .
+  FILTER(CONTAINS(LCASE(?display), "allerg"))
+}
+```
+
+---
+
+## OMOP → FHIR DiagnosticReport Mapping
+
+**Note**: FHIROntopOMOP does **NOT** currently implement DiagnosticReport OBDA mapping.
+
+### Not Implemented
+
+No OBDA mapping template exists for DiagnosticReport. This would be complex as DiagnosticReport is a container resource that references other Observation resources.
+
+If DiagnosticReport mapping were added, it would require:
+
+1. **Identifying diagnostic study results** from measurement/observation tables by LOINC code patterns
+2. **Grouping related results** under a DiagnosticReport container
+3. **Creating referenced Observation resources** for individual results
+
+### Current Workaround
+
+Diagnostic study data can be queried directly from the existing Observation or Measurement mappings using SPARQL:
+```sparql
+PREFIX fhir: <http://hl7.org/fhir/>
+
+SELECT ?patient ?code ?display ?value WHERE {
+  ?obs a fhir:Observation .
+  ?obs fhir:Observation.subject [ fhir:link ?patient ] .
+  ?obs fhir:Observation.code ?codeRef .
+  ?codeRef fhir:CodeableConcept.coding [
+    fhir:Coding.system [ fhir:value "http://loinc.org" ];
+    fhir:Coding.code [ fhir:value ?code ];
+    fhir:Coding.display [ fhir:value ?display ]
+  ] .
+}
+```

@@ -293,3 +293,283 @@ Following the cookbook's methodology for Condition:
 - Domain-based routing follows OHDSI vocabulary
 - mCODE-specific conditions (cancer staging, etc.) were tested at HL7 Connectathon
 - Reference resolution (person_id, visit_occurrence_id) requires implementation-specific handling
+
+---
+
+## Procedure → OMOP PROCEDURE_OCCURRENCE Mapping
+
+**Source**: `FHIR to OMOP Cookbook.docx` (Word document - not programmatic)
+
+**Note**: This is a **guidance document** providing conceptual mapping methodology rather than executable code. The Procedure mapping follows the 8-step methodology outlined in the cookbook.
+
+### FHIR Procedure → OMOP PROCEDURE_OCCURRENCE (Conceptual Guidance)
+
+Based on the cookbook methodology:
+
+1. **Define the FHIR elements**: Identify Procedure attributes (code, performed date, status, etc.)
+2. **Identify the OMOP concept**: Map `Procedure.code` to OMOP standard concept via vocabulary lookup
+3. **Determine the OMOP CDM table**: Based on concept's domain_id:
+   - Domain = "Procedure" → `procedure_occurrence` table
+   - Domain = "Drug" → `drug_exposure` table (for drug administrations)
+   - Domain = "Device" → `device_exposure` table
+4. **Map related FHIR resources**: Link to Person (via `subject`) and Visit (via `encounter`)
+5. **Populate the OMOP CDM records**: At source record level
+
+### Expected Mappings (Conceptual)
+
+| OMOP PROCEDURE_OCCURRENCE Field | FHIR Procedure Source | Notes |
+|---------------------------------|----------------------|-------|
+| `procedure_concept_id` | `Procedure.code` | Via vocabulary translation |
+| `procedure_date` | `Procedure.performed[x]` | Date component |
+| `procedure_datetime` | `Procedure.performed[x]` | Full timestamp |
+| `procedure_end_date` | `Procedure.performedPeriod.end` | End date if period |
+| `procedure_end_datetime` | `Procedure.performedPeriod.end` | End timestamp |
+| `procedure_type_concept_id` | (derived) | EHR, claim, or other source type |
+| `modifier_concept_id` | `Procedure.bodySite` | Body site or other modifier |
+| `quantity` | (derived from extensions) | Number of procedures |
+| `person_id` | `Procedure.subject` | Reference to Patient→Person |
+| `visit_occurrence_id` | `Procedure.encounter` | Reference to Encounter→Visit |
+| `provider_id` | `Procedure.performer[].actor` | Reference to Practitioner→Provider |
+| `procedure_source_value` | `Procedure.code.coding[].code` | Original source code |
+| `procedure_source_concept_id` | `Procedure.code` | Source vocabulary concept |
+
+### Domain-Based Routing Guidance
+
+The cookbook methodology indicates procedures may route to multiple OMOP tables:
+
+| FHIR Procedure Type | Potential OMOP Table |
+|--------------------|---------------------|
+| Surgical procedure | `procedure_occurrence` |
+| Drug administration | `drug_exposure` |
+| Device implantation | `device_exposure` + `procedure_occurrence` |
+
+### Gaps Identified
+
+- Status mapping (completed, in-progress) - OMOP has no status field
+- Reason/indication handling
+- Complication recording
+- Device used during procedure (usedCode, usedReference)
+
+### Notes
+
+- This is a **guidance document**, not executable code
+- Domain-based routing follows OHDSI vocabulary
+- mCODE-specific procedures were tested at HL7 Connectathon
+- Reference resolution requires implementation-specific handling
+
+---
+
+## MedicationStatement → OMOP DRUG_EXPOSURE Mapping
+
+**Source**: `FHIR to OMOP Cookbook.docx` (Word document - not programmatic)
+
+**Note**: This is a **guidance document** providing conceptual mapping methodology rather than executable code. The MedicationStatement mapping follows the 8-step methodology outlined in the cookbook.
+
+### FHIR MedicationStatement → OMOP DRUG_EXPOSURE (Conceptual Guidance)
+
+Based on the cookbook methodology:
+
+1. **Define the FHIR elements**: Identify MedicationStatement attributes (medication code, effective period, dosage, etc.)
+2. **Identify the OMOP concept**: Map `MedicationStatement.medication` to OMOP drug concept via vocabulary lookup
+3. **Determine the OMOP CDM table**: Route to `drug_exposure` table
+4. **Map related FHIR resources**: Link to Person (via `subject`) and Visit (via `context`)
+5. **Populate the OMOP CDM records**: At source record level
+
+### Expected Mappings (Conceptual)
+
+| OMOP DRUG_EXPOSURE Field | FHIR MedicationStatement Source | Notes |
+|--------------------------|--------------------------------|-------|
+| `drug_concept_id` | `MedicationStatement.medication` | Via vocabulary translation |
+| `drug_exposure_start_date` | `MedicationStatement.effective[x]` | Start date |
+| `drug_exposure_start_datetime` | `MedicationStatement.effective[x]` | Start timestamp |
+| `drug_exposure_end_date` | `MedicationStatement.effectivePeriod.end` | End date |
+| `drug_exposure_end_datetime` | Same | End timestamp |
+| `drug_type_concept_id` | (derived) | EHR, claim, patient-reported |
+| `stop_reason` | `MedicationStatement.statusReason` | Reason for discontinuation |
+| `route_concept_id` | `MedicationStatement.dosage[].route` | Administration route |
+| `quantity` | `MedicationStatement.dosage[].doseAndRate[]` | Dose quantity |
+| `person_id` | `MedicationStatement.subject` | Reference to Patient→Person |
+| `visit_occurrence_id` | `MedicationStatement.context` | Reference to Encounter→Visit |
+| `provider_id` | `MedicationStatement.informationSource` | Reference to Practitioner→Provider |
+| `drug_source_value` | `MedicationStatement.medication.coding[].code` | Original source code |
+
+### Drug Type Concepts
+
+The cookbook references different provenance types:
+
+| Drug Type | OMOP Concept | FHIR Source |
+|-----------|--------------|-------------|
+| Patient Self-Reported | 44787730 | MedicationStatement |
+| Prescription Written | 38000177 | MedicationRequest |
+| Prescription Dispensed | 38000175 | MedicationDispense |
+| EHR Drug List | 38000178 | MedicationStatement |
+
+### Notes
+
+- This is a **guidance document**, not executable code
+- mCODE medication data was tested at HL7 Connectathon
+- Dosage handling requires careful mapping (route, quantity, frequency)
+- Reference resolution requires implementation-specific handling for Person/Visit
+
+---
+
+## Immunization → OMOP DRUG_EXPOSURE Mapping
+
+**Source**: `FHIR to OMOP Cookbook.docx` (Word document - not programmatic)
+
+**Note**: This is a **guidance document** providing conceptual mapping methodology rather than executable code. The Immunization mapping follows the 8-step methodology outlined in the cookbook.
+
+### FHIR Immunization → OMOP DRUG_EXPOSURE (Conceptual Guidance)
+
+Based on the cookbook methodology:
+
+1. **Define the FHIR elements**: Identify Immunization attributes (vaccineCode, occurrence, lotNumber, site, route, etc.)
+2. **Identify the OMOP concept**: Map `Immunization.vaccineCode` to OMOP drug concept via CVX vocabulary lookup
+3. **Determine the OMOP CDM table**: Route to `drug_exposure` table
+4. **Map related FHIR resources**: Link to Person (via `patient`) and Visit (via `encounter`)
+5. **Populate the OMOP CDM records**: At source record level
+
+### Expected Mappings (Conceptual)
+
+| OMOP DRUG_EXPOSURE Field | FHIR Immunization Source | Notes |
+|--------------------------|-------------------------|-------|
+| `drug_concept_id` | `Immunization.vaccineCode` | Via CVX vocabulary translation |
+| `drug_exposure_start_date` | `Immunization.occurrenceDateTime` | Administration date |
+| `drug_exposure_start_datetime` | `Immunization.occurrenceDateTime` | Full timestamp |
+| `drug_exposure_end_date` | `Immunization.occurrenceDateTime` | Same as start (single dose) |
+| `drug_exposure_end_datetime` | Same | Same as start |
+| `drug_type_concept_id` | (derived) | 38000179 (Physician administered) |
+| `route_concept_id` | `Immunization.route` | Administration route |
+| `quantity` | `Immunization.doseQuantity` | Dose amount |
+| `lot_number` | `Immunization.lotNumber` | Vaccine lot tracking |
+| `person_id` | `Immunization.patient` | Reference to Patient→Person |
+| `visit_occurrence_id` | `Immunization.encounter` | Reference to Encounter→Visit |
+| `provider_id` | `Immunization.performer[].actor` | Reference to Practitioner→Provider |
+| `drug_source_value` | `Immunization.vaccineCode.coding[].code` | Original CVX code |
+
+### Drug Type Concept for Immunizations
+
+| Source Type | OMOP Concept ID | Description |
+|-------------|-----------------|-------------|
+| Physician Administered | 38000179 | Physician administered drug (inpatient setting) |
+| Self-Reported | 44787730 | Patient Self-Reported Medication |
+
+### Vocabulary Considerations
+
+- **CVX** (Vaccines Administered): Primary vocabulary for vaccine codes
+- Mapping from CVX to OMOP standard concepts required
+- Some CVX codes may not have direct OMOP mappings
+
+### Notes
+
+- This is a **guidance document**, not executable code
+- Immunizations typically map to `drug_exposure` with CVX vocabulary
+- Single-dose vaccines have same start and end dates
+- Reference resolution requires implementation-specific handling
+
+---
+
+## AllergyIntolerance → OMOP OBSERVATION Mapping
+
+**Source**: `FHIR to OMOP Cookbook.docx` (Word document - not programmatic)
+
+**Note**: This is a **guidance document** providing conceptual mapping methodology rather than executable code. The AllergyIntolerance mapping follows the 8-step methodology outlined in the cookbook.
+
+### FHIR AllergyIntolerance → OMOP OBSERVATION (Conceptual Guidance)
+
+Based on the cookbook methodology:
+
+1. **Define the FHIR elements**: Identify AllergyIntolerance attributes (code, category, onsetDateTime, reaction, etc.)
+2. **Identify the OMOP concept**: Map `AllergyIntolerance.code` to OMOP observation concept via vocabulary lookup
+3. **Determine the OMOP CDM table**: Route to `observation` table (allergies are clinical findings)
+4. **Map related FHIR resources**: Link to Person (via `patient`) and Visit (via `encounter`)
+5. **Populate the OMOP CDM records**: At source record level
+
+### Expected Mappings (Conceptual)
+
+| OMOP OBSERVATION Field | FHIR AllergyIntolerance Source | Notes |
+|------------------------|-------------------------------|-------|
+| `observation_concept_id` | `AllergyIntolerance.code` | Via vocabulary translation |
+| `observation_date` | `AllergyIntolerance.onsetDateTime` | Onset date |
+| `observation_datetime` | `AllergyIntolerance.onsetDateTime` | Full timestamp |
+| `observation_type_concept_id` | (derived) | 38000280 (Physical examination) |
+| `value_as_concept_id` | `AllergyIntolerance.reaction[].manifestation` | Reaction type |
+| `value_as_string` | `AllergyIntolerance.reaction[].description` | Reaction description |
+| `person_id` | `AllergyIntolerance.patient` | Reference to Patient→Person |
+| `visit_occurrence_id` | `AllergyIntolerance.encounter` | Reference to Encounter→Visit |
+| `provider_id` | `AllergyIntolerance.recorder` | Reference to Practitioner→Provider |
+| `observation_source_value` | `AllergyIntolerance.code.coding[].code` | Original code |
+
+### Key Design Decision: Observation vs Drug_Exposure
+
+AllergyIntolerance maps to OMOP **`observation`** table (not `drug_exposure`) because:
+- Allergies are clinical findings/observations, not drug administrations
+- OMOP's `observation` table is designed for clinical findings
+- Consistent with OHDSI conventions for allergy recording
+
+### Category Mapping Guidance
+
+| FHIR Category | OMOP Observation Concept Guidance |
+|---------------|-----------------------------------|
+| `food` | Food allergy concepts (e.g., 4188027) |
+| `medication` | Drug allergy concepts (e.g., 439224) |
+| `environment` | Environmental allergy concepts |
+| `biologic` | Biologic allergy concepts |
+
+### Notes
+
+- This is a **guidance document**, not executable code
+- AllergyIntolerance maps to `observation` table (clinical finding)
+- Reaction manifestations map to `value_as_concept_id`
+- Reference resolution requires implementation-specific handling
+
+---
+
+## DiagnosticReport → OMOP Mapping
+
+**Source**: `FHIR to OMOP Cookbook.docx` (Word document - not programmatic)
+
+**Note**: This is a **guidance document** providing conceptual mapping methodology rather than executable code. The DiagnosticReport mapping follows the 8-step methodology outlined in the cookbook.
+
+### FHIR DiagnosticReport → OMOP (Conceptual Guidance)
+
+Based on the cookbook methodology:
+
+1. **Define the FHIR elements**: Identify DiagnosticReport attributes (code, effectiveDateTime, conclusionCode, category, etc.)
+2. **Identify the OMOP concept**: Map `DiagnosticReport.code` to OMOP concept via LOINC vocabulary lookup
+3. **Determine the OMOP CDM table**: Route based on concept domain:
+   - Observation domain → `observation`
+   - Measurement domain → `measurement`
+   - Procedure domain → `procedure_occurrence`
+4. **Map related FHIR resources**: Link to Person (via `subject`) and Visit (via `encounter`)
+5. **Populate the OMOP CDM records**: At source record level
+
+### Expected Mappings (Conceptual)
+
+| OMOP Field | FHIR DiagnosticReport Source | Notes |
+|------------|------------------------------|-------|
+| `*_concept_id` | `DiagnosticReport.code` | Via LOINC vocabulary translation |
+| `*_date` | `DiagnosticReport.effectiveDateTime` | Date component |
+| `*_datetime` | `DiagnosticReport.effectiveDateTime` | Full timestamp |
+| `*_type_concept_id` | `DiagnosticReport.category` | Study category type |
+| `*_source_concept_id` | `DiagnosticReport.conclusionCode` | SNOMED conclusion |
+| `*_source_value` | `DiagnosticReport.conclusionCode.coding[].code` | Raw SNOMED code |
+| `person_id` | `DiagnosticReport.subject` | Reference to Patient→Person |
+| `visit_occurrence_id` | `DiagnosticReport.encounter` | Reference to Encounter→Visit |
+| `provider_id` | `DiagnosticReport.performer[].actor` | Reference to Practitioner→Provider |
+
+### Domain-Based Routing Guidance
+
+| LOINC Code Domain | Target OMOP Table |
+|-------------------|-------------------|
+| Observation | observation |
+| Measurement | measurement |
+| Procedure | procedure_occurrence |
+
+### Notes
+
+- This is a **guidance document**, not executable code
+- DiagnosticReport is a complex container resource
+- Maps to multiple OMOP tables based on LOINC code domain
+- May generate multiple OMOP records per conclusion code
+- Reference resolution requires implementation-specific handling

@@ -597,3 +597,266 @@ Via `OmopConceptMapping.fhirForConditionTypeConcept()`:
 - **Severity/Stage**: Not supported in mapping
 - **Bidirectional**: Full support for both OMOP→FHIR and FHIR→OMOP
 - **Category**: Uses vocabulary-based mapping with problem-list-item as default
+
+---
+
+## Procedure ↔ OMOP PROCEDURE_OCCURRENCE Mapping
+
+**Source**: [`omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopProcedure.java`](https://github.com/omoponfhir/omoponfhir-omopv5-r4-mapping/blob/sqlRender/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopProcedure.java)
+
+### OMOP PROCEDURE_OCCURRENCE → FHIR Procedure (`constructFHIR()`)
+
+| FHIR Procedure Field | OMOP PROCEDURE_OCCURRENCE Source | Logic |
+|----------------------|----------------------------------|-------|
+| `id` | `procedure_occurrence_id` | Via ID mapping |
+| `status` | (hardcoded) | `COMPLETED` |
+| `subject` | `f_person` | Reference to Patient with display name |
+| `code` | `procedure_concept` | Via `CodeableConceptUtil.getCodeableConceptFromOmopConcept()` |
+| `encounter` | `visit_occurrence` | Reference to Encounter |
+| `performedDateTime` | `procedure_date` | Direct mapping |
+| `performer[].actor` | `provider` | Reference to Practitioner |
+| `performer[].function` | `provider.specialty_concept` | Provider specialty as role |
+
+### FHIR Procedure → OMOP PROCEDURE_OCCURRENCE (`constructOmop()`)
+
+| OMOP PROCEDURE_OCCURRENCE Field | FHIR Procedure Source | Logic |
+|---------------------------------|----------------------|-------|
+| `person_id` | `Procedure.subject` | Resolved from Patient reference |
+| `procedure_concept_id` | `Procedure.code` | Via vocabulary lookup |
+| `procedure_date` | `Procedure.performedDateTime` or `Period.start` | Date extraction |
+| `procedure_datetime` | Same | Full datetime |
+| `procedure_type_concept_id` | (default) | `44786630` (default type) |
+| `provider_id` | `Procedure.performer[].actor` | From Practitioner reference |
+| `visit_occurrence_id` | `Procedure.encounter` | From Encounter reference |
+| `procedure_source_value` | `Procedure.code` | Source code text |
+
+### Notes
+
+- **Status**: Always set to `COMPLETED` (OMOP has no status field)
+- **Type concept default**: `44786630` when not specified
+- **Performer role**: Provider specialty maps to `performer.function`
+- **Bidirectional**: Full support for both OMOP→FHIR and FHIR→OMOP
+
+---
+
+## MedicationStatement ↔ OMOP DRUG_EXPOSURE Mapping
+
+**Source**: [`omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopMedicationStatement.java`](https://github.com/omoponfhir/omoponfhir-omopv5-r4-mapping/blob/sqlRender/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopMedicationStatement.java)
+
+**Note**: MedicationRequest is also supported via `OmopMedicationRequest.java` with similar mapping logic.
+
+### OMOP DRUG_EXPOSURE → FHIR MedicationStatement (`constructFHIR()`)
+
+| FHIR MedicationStatement Field | OMOP DRUG_EXPOSURE Source | Logic |
+|--------------------------------|--------------------------|-------|
+| `id` | `drug_exposure_id` | Via ID mapping |
+| `status` | `stop_reason` | STOPPED if stop_reason exists, else ACTIVE |
+| `subject` | `f_person` | Reference to Patient with display name |
+| `context` | `visit_occurrence` | Reference to Encounter |
+| `medicationCodeableConcept` | `drug_concept` | Via `CodeableConceptUtil.getCodeableConceptFromOmopConcept()` |
+| `effectivePeriod.start` | `drug_exposure_start_date` + `start_datetime` | Combined date+time |
+| `effectivePeriod.end` | `drug_exposure_end_date` + `end_datetime` | Combined date+time |
+| `note` | `stop_reason` | As annotation text |
+
+### FHIR MedicationStatement → OMOP DRUG_EXPOSURE (`constructOmop()`)
+
+| OMOP DRUG_EXPOSURE Field | FHIR MedicationStatement Source | Logic |
+|--------------------------|--------------------------------|-------|
+| `person_id` | `MedicationStatement.subject` | Resolved from Patient reference |
+| `drug_concept_id` | `MedicationStatement.medicationCodeableConcept` | Via vocabulary lookup |
+| `drug_exposure_start_date` | `MedicationStatement.effectiveDateTime` or `Period.start` | Date extraction |
+| `drug_exposure_start_datetime` | Same | Full datetime |
+| `drug_exposure_end_date` | `MedicationStatement.effectivePeriod.end` | Date extraction |
+| `drug_exposure_end_datetime` | Same | Full datetime |
+| `drug_type_concept_id` | (default) | `44787730` (Patient Self-Reported Medication) |
+| `stop_reason` | `MedicationStatement.note` | From annotation text |
+| `visit_occurrence_id` | `MedicationStatement.context` | From Encounter reference |
+| `provider_id` | `MedicationStatement.informationSource` | From Practitioner reference |
+| `drug_source_value` | `MedicationStatement.medication` | Source code text |
+
+### Drug Type Concept Mapping
+
+The default type concept `44787730` (Patient Self-Reported Medication) is used. Other type concepts:
+
+| Type Concept ID | Description | FHIR Resource |
+|-----------------|-------------|---------------|
+| 44787730 | Patient Self-Reported Medication | MedicationStatement |
+| 38000177 | Prescription written | MedicationRequest |
+| 38000179 | Physician administered drug | MedicationAdministration |
+| 38000175 | Prescription dispensed in pharmacy | MedicationDispense |
+
+### Notes
+
+- **Status mapping**: `stop_reason` presence determines STOPPED vs ACTIVE status
+- **All drug_exposure → MedicationStatement**: Project maps all drug exposures to MedicationStatement
+- **Type concept default**: `44787730` for MedicationStatement
+- **Bidirectional**: Full support for both OMOP→FHIR and FHIR→OMOP
+- **MedicationRequest also supported**: Via separate `OmopMedicationRequest.java` class
+
+---
+
+## Immunization ↔ OMOP DRUG_EXPOSURE Mapping
+
+**Source**: [`omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopImmunization.java`](https://github.com/omoponfhir/omoponfhir-omopv5-r4-mapping/blob/sqlRender/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopImmunization.java)
+
+**Note**: Uses `FImmunizationView` - a specialized view that filters drug_exposure records by CVX vocabulary.
+
+### OMOP DRUG_EXPOSURE → FHIR Immunization (`constructFHIR()`)
+
+| FHIR Immunization Field | OMOP DRUG_EXPOSURE Source | Logic |
+|-------------------------|--------------------------|-------|
+| `id` | `drug_exposure_id` | Via ID mapping |
+| `status` | (derived) | COMPLETED |
+| `vaccineCode` | `drug_concept` | Via CVX vocabulary lookup |
+| `patient` | `f_person` | Reference to Patient |
+| `encounter` | `visit_occurrence` | Reference to Encounter |
+| `occurrenceDateTime` | `drug_exposure_start_date` | Direct mapping |
+| `lotNumber` | `lot_number` | Direct mapping |
+| `route` | `route_concept` | Via vocabulary lookup |
+| `doseQuantity` | `quantity` | Direct mapping |
+| `performer[].actor` | `provider` | Reference to Practitioner |
+| `note` | `sig` | As annotation |
+
+### FHIR Immunization → OMOP DRUG_EXPOSURE (`constructOmop()`)
+
+| OMOP DRUG_EXPOSURE Field | FHIR Immunization Source | Logic |
+|--------------------------|-------------------------|-------|
+| `person_id` | `Immunization.patient` | Resolved from Patient reference |
+| `drug_concept_id` | `Immunization.vaccineCode` | Via CVX vocabulary lookup |
+| `drug_exposure_start_date` | `Immunization.occurrenceDateTime` | Date extraction |
+| `drug_exposure_start_datetime` | Same | Full datetime |
+| `drug_exposure_end_date` | Same | Same as start (single event) |
+| `drug_exposure_end_datetime` | Same | Same as start |
+| `drug_type_concept_id` | (default) | `38000179` (Physician administered drug) or `44787730` (Self-reported) |
+| `lot_number` | `Immunization.lotNumber` | Direct mapping |
+| `route_concept_id` | `Immunization.route` | Via vocabulary lookup |
+| `quantity` | `Immunization.doseQuantity` | Direct mapping |
+| `visit_occurrence_id` | `Immunization.encounter` | From Encounter reference |
+| `provider_id` | `Immunization.performer[].actor` | From Practitioner reference |
+| `sig` | `Immunization.note` | From annotation text |
+
+### CVX Filtering
+
+Immunizations are identified by filtering drug_exposure where the drug_concept maps to CVX vocabulary:
+```java
+private String _where = "c2.vocabulary_id = 'CVX'";
+```
+
+### Type Concept Constants
+
+| Type Concept ID | Description | Use Case |
+|-----------------|-------------|----------|
+| 44787730 | Patient Self-Reported Medication | Self-reported vaccines |
+| 38000179 | Physician administered drug (procedure) | Administered vaccines |
+
+### Notes
+
+- **CVX vocabulary**: Immunizations identified by CVX vocabulary membership
+- **View-based**: Uses `FImmunizationView` to filter relevant drug_exposure records
+- **Single-day event**: Start and end dates are the same (vaccination is a point event)
+- **Bidirectional**: Full support for both OMOP→FHIR and FHIR→OMOP
+- **Route support**: Maps administration route via concept lookup
+
+---
+
+## AllergyIntolerance ↔ OMOP OBSERVATION Mapping
+
+**Source**: [`omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopAllergyIntolerance.java`](https://github.com/omoponfhir/omoponfhir-omopv5-r4-mapping/blob/sqlRender/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopAllergyIntolerance.java)
+
+**Note**: AllergyIntolerance maps to the OMOP **`observation`** table (not drug_exposure), filtered by concept names containing "Allerg".
+
+### OMOP OBSERVATION → FHIR AllergyIntolerance (`constructFHIR()`)
+
+| FHIR AllergyIntolerance Field | OMOP OBSERVATION Source | Logic |
+|-------------------------------|-------------------------|-------|
+| `id` | `observation_id` | Via ID mapping |
+| `patient` | `f_person` | Reference to Patient with display name |
+| `onsetDateTime` | `observation_date` | Direct mapping |
+| `recorder` | `provider` | Reference to Practitioner (if available) |
+| `code` | `value_as_concept` or `observation_concept` | Via vocabulary lookup |
+| `category` | `observation_concept` | Derived from concept ID (see table below) |
+| `type` | (hardcoded) | `ALLERGY` |
+
+### Category Determination Logic
+
+```java
+if (observationConcept.getId() == 439224L ||  // Drug allergy
+    observationConcept.getId() == 4166257L ||
+    observationConcept.getId() == 4297808L ||
+    observationConcept.getId() == 4299541L ||
+    observationConcept.getId() == 4165345L ||
+    observationConcept.getId() == 37017420L ||
+    observationConcept.getId() == 4164867L ||
+    observationConcept.getId() == 4171468L) {
+    categoryValue = AllergyIntoleranceCategory.MEDICATION;
+} else if (observationConcept.getConceptName().contains("Allerg")
+           && observationConcept.getConceptName().contains("food")) {
+    categoryValue = AllergyIntoleranceCategory.FOOD;
+}
+```
+
+### FHIR AllergyIntolerance → OMOP OBSERVATION (`constructOmop()`)
+
+| OMOP OBSERVATION Field | FHIR AllergyIntolerance Source | Logic |
+|------------------------|-------------------------------|-------|
+| `person_id` | `AllergyIntolerance.patient` | Resolved from Patient reference |
+| `observation_date` | `AllergyIntolerance.onsetDateTime` | Date extraction |
+| `provider_id` | `AllergyIntolerance.recorder` | From Practitioner reference |
+| `value_as_concept_id` | `AllergyIntolerance.code` | Via vocabulary lookup |
+| `value_as_string` | `AllergyIntolerance.code` | Source string value |
+| `observation_concept_id` | `AllergyIntolerance.category` | Based on category (see table below) |
+| `visit_occurrence_id` | `AllergyIntolerance.encounter` | From Encounter reference |
+| `observation_type_concept_id` | (hardcoded) | `38000280` (Physical examination) |
+
+### Observation Concept Assignment by Category
+
+| FHIR Category | OMOP Observation Concept ID | Description |
+|---------------|----------------------------|-------------|
+| `FOOD` | 4188027 | Food allergy |
+| `MEDICATION` | 439224 | Drug allergy |
+| (other/none) | 40772948 | Allergy to substance |
+| (derived from Drug domain) | 439224 | Drug allergy |
+
+### Filter Parameters
+
+AllergyIntolerance records are retrieved by filtering the observation table:
+```java
+filterParams = Arrays.asList(
+    new ParameterWrapper("String", Arrays.asList("observationConcept.conceptName"),
+        Arrays.asList("like"), Arrays.asList("%Allerg%"), "or"),
+    new ParameterWrapper("String", Arrays.asList("observationConcept.domainId"),
+        Arrays.asList("="), Arrays.asList("Observation"), "or")
+);
+```
+
+### Notes
+
+- **Target table**: OMOP `observation` (not drug_exposure)
+- **Filter**: Records where `observation_concept.concept_name LIKE '%Allerg%'`
+- **Type concept**: Fixed to 38000280 (Physical examination)
+- **Bidirectional**: Full support for both OMOP→FHIR and FHIR→OMOP
+- **Type fixed**: Always mapped as `AllergyIntoleranceType.ALLERGY`
+
+---
+
+## DiagnosticReport ↔ OMOP Mapping
+
+**Note**: OMOPonFHIR v5.4 R4 does **NOT** currently implement DiagnosticReport mapping.
+
+### Not Implemented
+
+No `OmopDiagnosticReport.java` mapper class or `DiagnosticReportResourceProvider.java` exists in the codebase. The project focuses on:
+- Patient, Practitioner, Organization
+- Encounter, Condition, Procedure
+- Observation (via f_observation_view)
+- MedicationRequest, MedicationStatement, Immunization
+- AllergyIntolerance, Device, Specimen, DocumentReference
+
+### Expected Implementation
+
+If DiagnosticReport mapping were added, it would likely:
+- Map to multiple OMOP tables based on domain (observation, measurement, procedure_occurrence)
+- Use LOINC codes for the main diagnostic code
+- Use SNOMED codes for conclusion codes
+- Follow the existing bidirectional mapping pattern
+- **Substance code**: Stored in `value_as_concept_id` or derived from `observation_concept_id`

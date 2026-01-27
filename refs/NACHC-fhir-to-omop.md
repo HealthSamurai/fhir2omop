@@ -568,3 +568,122 @@ private void buildConditionList() {
 - **No status mapping**: Clinical status not mapped
 - **No provider/encounter**: These references not mapped
 - **Batch processing**: Processes all conditions in a patient bundle at once
+
+---
+
+## Procedure → OMOP PROCEDURE_OCCURRENCE Mapping
+
+**Note**: This project does **NOT** currently implement FHIR Procedure → OMOP mapping. The codebase handles Patient, Observation, Encounter, and Condition resources but does not include a `ProcedureBuilder` or similar class.
+
+### Not Implemented
+
+No `OmopProcedureOccurrenceBuilder.java` or equivalent exists in the codebase. If Procedure mapping is required, it would need to be added following the pattern of existing builders:
+
+```
+src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/
+├── condition/OmopConditionOccurrenceBuilder.java
+├── observation/OmopObservationBuilder.java
+├── visitoccurrence/OmopVisitOccurrenceBuilder.java
+└── (no procedure builder)
+```
+
+---
+
+## MedicationStatement → OMOP DRUG_EXPOSURE Mapping
+
+**Note**: This project does **NOT** currently implement FHIR MedicationStatement → OMOP mapping. The codebase handles Patient, Observation, Encounter, and Condition resources but does not include a `DrugExposureBuilder` or similar class.
+
+### Not Implemented
+
+No `OmopDrugExposureBuilder.java` or equivalent exists in the codebase. If MedicationStatement mapping is required, it would need to be added following the pattern of existing builders:
+
+```
+src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/
+├── condition/OmopConditionOccurrenceBuilder.java
+├── observation/OmopObservationBuilder.java
+├── visitoccurrence/OmopVisitOccurrenceBuilder.java
+└── (no drug exposure builder)
+```
+
+---
+
+## Immunization → OMOP DRUG_EXPOSURE Mapping
+
+**Note**: This project does **NOT** currently implement FHIR Immunization → OMOP mapping. No `ImmunizationParser` or `OmopImmunizationBuilder` exists in the codebase.
+
+### Not Implemented
+
+If Immunization mapping were added, it would follow the pattern of existing builders:
+
+```
+src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/
+├── condition/OmopConditionOccurrenceBuilder.java
+├── observation/OmopObservationBuilder.java
+├── visitoccurrence/OmopVisitOccurrenceBuilder.java
+└── (no immunization builder)
+```
+
+Key considerations for future implementation:
+- Map to `drug_exposure` table
+- Filter by CVX vocabulary for vaccine codes
+- Use type concept 38000179 (Physician administered drug in inpatient setting)
+- Map `Immunization.vaccineCode` → `drug_concept_id`
+- Map `Immunization.occurrence` → `drug_exposure_start_date/datetime`
+- Map `Immunization.lotNumber` → `lot_number`
+
+---
+
+## AllergyIntolerance → OMOP Mapping
+
+**Note**: This project does **NOT** currently implement FHIR AllergyIntolerance → OMOP mapping. No `AllergyIntoleranceParser` or `OmopAllergyBuilder` exists in the codebase.
+
+### Not Implemented
+
+If AllergyIntolerance mapping were added, it would follow the pattern of existing builders:
+
+```
+src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/
+├── condition/OmopConditionOccurrenceBuilder.java
+├── observation/OmopObservationBuilder.java
+├── visitoccurrence/OmopVisitOccurrenceBuilder.java
+└── (no allergy builder)
+```
+
+Key considerations for future implementation:
+- Map to `observation` table (not drug_exposure - allergies are clinical findings)
+- Map `AllergyIntolerance.code` → `observation_concept_id`
+- Map `AllergyIntolerance.reaction.manifestation` → `value_as_concept_id`
+- Map `AllergyIntolerance.onset` → `observation_date/datetime`
+- Map `AllergyIntolerance.recordedDate` → alternative date source
+
+---
+
+## DiagnosticReport → OMOP Mapping
+
+**Note**: This project has a `DiagnosticReportParser.java` but **no corresponding OMOP builder** for mapping DiagnosticReport to OMOP tables.
+
+### Partially Implemented
+
+The project can parse DiagnosticReport resources but doesn't map them to OMOP:
+
+```
+src/main/java/org/nachc/tools/fhirtoomop/fhir/parser/r4/diagnosticreport/
+└── DiagnosticReportParser.java (parser only)
+```
+
+### Expected Implementation
+
+If DiagnosticReport mapping were added, it would follow the pattern of existing builders:
+
+```
+src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/
+├── observation/OmopObservationBuilder.java
+├── measurement/OmopMeasurementBuilder.java (would need domain routing)
+└── (no diagnostic report builder)
+```
+
+Key considerations:
+- Domain-based routing: observation, measurement, or procedure_occurrence
+- Map `DiagnosticReport.code` (LOINC) → `*_concept_id`
+- Map `DiagnosticReport.conclusionCode` (SNOMED) → `*_source_concept_id`
+- Map `DiagnosticReport.effectiveDateTime` → `*_date/datetime`
