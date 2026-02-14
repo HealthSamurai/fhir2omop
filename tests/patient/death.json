@@ -1,0 +1,58 @@
+[
+  {
+    "description": "deceasedDateTime → запись DEATH",
+    "spec": "spec/patient.md",
+    "fhir": [
+      {
+        "resourceType": "Patient",
+        "id": "pt-1",
+        "gender": "male",
+        "birthDate": "1950-05-20",
+        "deceasedDateTime": "2023-06-15T10:30:00Z"
+      }
+    ],
+    "omop": [
+      {
+        "table": "person",
+        "year_of_birth": 1950,
+        "gender_concept_id": 8507
+      },
+      {
+        "table": "death",
+        "death_date": "2023-06-15",
+        "death_datetime": "2023-06-15T10:30:00Z",
+        "death_type_concept_id": 32817
+      }
+    ]
+  },
+  {
+    "description": "нет deceased → запись DEATH не создаётся",
+    "spec": "spec/patient.md",
+    "fhir": [
+      {
+        "resourceType": "Patient",
+        "id": "pt-2",
+        "birthDate": "1990-01-01"
+      }
+    ],
+    "omop": [
+      {"table": "person"}
+    ]
+  },
+  {
+    "description": "deceasedBoolean=true без dateTime → DEATH не создаётся",
+    "comment": "death_date — обязательное поле. Без dateTime нет даты для записи.",
+    "spec": "spec/patient.md",
+    "fhir": [
+      {
+        "resourceType": "Patient",
+        "id": "pt-3",
+        "birthDate": "1990-01-01",
+        "deceasedBoolean": true
+      }
+    ],
+    "omop": [
+      {"table": "person"}
+    ]
+  }
+]

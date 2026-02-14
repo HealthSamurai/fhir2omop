@@ -1,0 +1,128 @@
+[
+  {
+    "description": "home-адрес выбирается для LOCATION",
+    "spec": "mapping/patient/address-location.md",
+    "fhir": [
+      {
+        "resourceType": "Patient",
+        "id": "pt-1",
+        "birthDate": "1990-01-01",
+        "address": [
+          {"use": "work", "city": "WorkCity"},
+          {"use": "home", "city": "HomeCity", "state": "OR"}
+        ]
+      }
+    ],
+    "omop": [
+      {"table": "person"},
+      {"table": "location", "city": "HomeCity", "state": "OR"}
+    ]
+  },
+  {
+    "description": "несколько home-адресов → последний (самый актуальный)",
+    "spec": "mapping/patient/address-location.md",
+    "fhir": [
+      {
+        "resourceType": "Patient",
+        "id": "pt-2",
+        "birthDate": "1990-01-01",
+        "address": [
+          {"use": "home", "city": "OldHome"},
+          {"use": "home", "city": "NewHome"}
+        ]
+      }
+    ],
+    "omop": [
+      {"table": "person"},
+      {"table": "location", "city": "NewHome"}
+    ]
+  },
+  {
+    "description": "нет home → первый не-old адрес",
+    "comment": "Адреса с use='old' пропускаются при поиске home-адреса.",
+    "spec": "mapping/patient/address-location.md",
+    "fhir": [
+      {
+        "resourceType": "Patient",
+        "id": "pt-3",
+        "birthDate": "1990-01-01",
+        "address": [
+          {"use": "old", "city": "OldCity"},
+          {"use": "work", "city": "WorkCity"}
+        ]
+      }
+    ],
+    "omop": [
+      {"table": "person"},
+      {"table": "location", "city": "WorkCity"}
+    ]
+  },
+  {
+    "description": "нет адресов → location не создаётся",
+    "spec": "mapping/patient/address-location.md",
+    "fhir": [
+      {
+        "resourceType": "Patient",
+        "id": "pt-4",
+        "birthDate": "1990-01-01"
+      }
+    ],
+    "omop": [
+      {"table": "person"}
+    ]
+  },
+  {
+    "description": "полный маппинг полей Address → LOCATION",
+    "spec": "mapping/patient/address-location.md",
+    "fhir": [
+      {
+        "resourceType": "Patient",
+        "id": "pt-5",
+        "birthDate": "1990-01-01",
+        "address": [
+          {
+            "use": "home",
+            "line": ["123 Main St", "Apt 4B"],
+            "city": "Springfield",
+            "state": "IL",
+            "postalCode": "62701",
+            "district": "Sangamon",
+            "country": "US"
+          }
+        ]
+      }
+    ],
+    "omop": [
+      {"table": "person"},
+      {
+        "table": "location",
+        "address_1": "123 Main St",
+        "address_2": "Apt 4B",
+        "city": "Springfield",
+        "state": "IL",
+        "zip": "62701",
+        "county": "Sangamon",
+        "country_source_value": "US"
+      }
+    ]
+  },
+  {
+    "description": "state обрезается до 2 символов (varchar(2))",
+    "comment": "Для US штатов (CA, NY) подходит. Для полных названий обрезается.",
+    "spec": "mapping/patient/address-location.md",
+    "fhir": [
+      {
+        "resourceType": "Patient",
+        "id": "pt-6",
+        "birthDate": "1990-01-01",
+        "address": [
+          {"use": "home", "state": "Illinois"}
+        ]
+      }
+    ],
+    "omop": [
+      {"table": "person"},
+      {"table": "location", "state": "Il"}
+    ]
+  }
+]
