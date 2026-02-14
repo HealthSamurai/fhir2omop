@@ -1,6 +1,7 @@
 import { test, expect, describe } from "bun:test";
 import { mapEncounter } from "../src/mapper/encounter";
 import type { Encounter } from "../src/types/fhir";
+import { MappingContext } from "../src/mapping-context";
 
 function makeEncounter(overrides: Partial<Encounter> = {}): Encounter {
   return {
@@ -119,22 +120,31 @@ describe("Encounter.period → dates", () => {
 
 describe("Encounter references", () => {
   test("subject → person_id", () => {
-    const result = mapEncounter(makeEncounter({ subject: { reference: "Patient/42" } }));
-    expect(result!.person_id).toBe(42);
+    const ctx = new MappingContext();
+    const result = mapEncounter(makeEncounter({ subject: { reference: "Patient/42" } }), ctx);
+    expect(result!.person_id).toBeGreaterThan(0);
   });
 
   test("participant → provider_id", () => {
+    const ctx = new MappingContext();
     const result = mapEncounter(makeEncounter({
       participant: [{ individual: { reference: "Practitioner/7" } }],
-    }));
-    expect(result!.provider_id).toBe(7);
+    }), ctx);
+    expect(result!.provider_id).toBeGreaterThan(0);
   });
 
   test("serviceProvider → care_site_id", () => {
+    const ctx = new MappingContext();
     const result = mapEncounter(makeEncounter({
       serviceProvider: { reference: "Organization/3" },
-    }));
-    expect(result!.care_site_id).toBe(3);
+    }), ctx);
+    expect(result!.care_site_id).toBeGreaterThan(0);
+  });
+
+  test("encounter gets its own ID from registry", () => {
+    const ctx = new MappingContext();
+    const result = mapEncounter(makeEncounter({ id: "enc-uuid-123" }), ctx);
+    expect(result!.visit_occurrence_id).toBeGreaterThan(0);
   });
 });
 

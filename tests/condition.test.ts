@@ -1,6 +1,7 @@
 import { test, expect, describe } from "bun:test";
 import { mapCondition } from "../src/mapper/condition";
 import type { Condition } from "../src/types/fhir";
+import { MappingContext } from "../src/mapping-context";
 
 function makeCondition(overrides: Partial<Condition> = {}): Condition {
   return {
@@ -144,18 +145,27 @@ describe("Condition.category → condition_type_concept_id", () => {
 
 describe("Condition references", () => {
   test("subject → person_id", () => {
-    const result = mapCondition(makeCondition({ subject: { reference: "Patient/42" } }));
-    expect(result!.person_id).toBe(42);
+    const ctx = new MappingContext();
+    const result = mapCondition(makeCondition({ subject: { reference: "Patient/42" } }), ctx);
+    expect(result!.person_id).toBeGreaterThan(0);
   });
 
   test("encounter → visit_occurrence_id", () => {
-    const result = mapCondition(makeCondition({ encounter: { reference: "Encounter/99" } }));
-    expect(result!.visit_occurrence_id).toBe(99);
+    const ctx = new MappingContext();
+    const result = mapCondition(makeCondition({ encounter: { reference: "Encounter/99" } }), ctx);
+    expect(result!.visit_occurrence_id).toBeGreaterThan(0);
   });
 
   test("asserter → provider_id", () => {
-    const result = mapCondition(makeCondition({ asserter: { reference: "Practitioner/5" } }));
-    expect(result!.provider_id).toBe(5);
+    const ctx = new MappingContext();
+    const result = mapCondition(makeCondition({ asserter: { reference: "Practitioner/5" } }), ctx);
+    expect(result!.provider_id).toBeGreaterThan(0);
+  });
+
+  test("condition gets its own ID from registry", () => {
+    const ctx = new MappingContext();
+    const result = mapCondition(makeCondition({ id: "cond-abc-uuid" }), ctx);
+    expect(result!.condition_occurrence_id).toBeGreaterThan(0);
   });
 });
 

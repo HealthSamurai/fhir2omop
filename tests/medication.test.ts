@@ -1,6 +1,7 @@
 import { test, expect, describe } from "bun:test";
 import { mapMedicationRequest } from "../src/mapper/medication";
 import type { MedicationRequest } from "../src/types/fhir";
+import { MappingContext } from "../src/mapping-context";
 
 function makeMedRequest(overrides: Partial<MedicationRequest> = {}): MedicationRequest {
   return {
@@ -136,18 +137,27 @@ describe("MedicationRequest type concept", () => {
 
 describe("MedicationRequest references", () => {
   test("subject → person_id", () => {
-    const result = mapMedicationRequest(makeMedRequest({ subject: { reference: "Patient/42" } }));
-    expect(result!.person_id).toBe(42);
+    const ctx = new MappingContext();
+    const result = mapMedicationRequest(makeMedRequest({ subject: { reference: "Patient/42" } }), ctx);
+    expect(result!.person_id).toBeGreaterThan(0);
   });
 
   test("encounter → visit_occurrence_id", () => {
-    const result = mapMedicationRequest(makeMedRequest({ encounter: { reference: "Encounter/10" } }));
-    expect(result!.visit_occurrence_id).toBe(10);
+    const ctx = new MappingContext();
+    const result = mapMedicationRequest(makeMedRequest({ encounter: { reference: "Encounter/10" } }), ctx);
+    expect(result!.visit_occurrence_id).toBeGreaterThan(0);
   });
 
   test("requester → provider_id", () => {
-    const result = mapMedicationRequest(makeMedRequest({ requester: { reference: "Practitioner/7" } }));
-    expect(result!.provider_id).toBe(7);
+    const ctx = new MappingContext();
+    const result = mapMedicationRequest(makeMedRequest({ requester: { reference: "Practitioner/7" } }), ctx);
+    expect(result!.provider_id).toBeGreaterThan(0);
+  });
+
+  test("medication request gets its own ID from registry", () => {
+    const ctx = new MappingContext();
+    const result = mapMedicationRequest(makeMedRequest({ id: "med-uuid-789" }), ctx);
+    expect(result!.drug_exposure_id).toBeGreaterThan(0);
   });
 });
 

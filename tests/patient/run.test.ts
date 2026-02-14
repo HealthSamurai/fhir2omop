@@ -1,6 +1,7 @@
 import { test, expect, describe } from "bun:test";
 import { mapPatient } from "../../src/mapper/patient";
 import type { Patient } from "../../src/types/fhir";
+import { MappingContext } from "../../src/mapping-context";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -24,11 +25,12 @@ function loadTestFiles(): { name: string; cases: TestCase[] }[] {
 
 /** Run the mapper on FHIR input and collect all OMOP records */
 function mapFhirToOmop(fhirResources: Patient[]): Record<string, unknown>[] {
+  const ctx = new MappingContext();
   const results: Record<string, unknown>[] = [];
 
   for (const resource of fhirResources) {
     if (resource.resourceType === "Patient") {
-      const { person, location, death } = mapPatient(resource);
+      const { person, location, death } = mapPatient(resource, ctx);
       if (person) results.push({ table: "person", ...person });
       if (location) results.push({ table: "location", ...location });
       if (death) results.push({ table: "death", ...death });

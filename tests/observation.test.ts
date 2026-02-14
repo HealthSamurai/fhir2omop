@@ -1,6 +1,7 @@
 import { test, expect, describe } from "bun:test";
 import { mapObservation, routeObservation } from "../src/mapper/observation";
 import type { Observation } from "../src/types/fhir";
+import { MappingContext } from "../src/mapping-context";
 
 function makeObservation(overrides: Partial<Observation> = {}): Observation {
   return {
@@ -189,19 +190,28 @@ describe("Observation → OBSERVATION fields", () => {
 
 describe("Observation references", () => {
   test("subject → person_id", () => {
-    const result = mapObservation(makeObservation({ subject: { reference: "Patient/42" } }));
-    expect(result.measurement!.person_id).toBe(42);
+    const ctx = new MappingContext();
+    const result = mapObservation(makeObservation({ subject: { reference: "Patient/42" } }), ctx);
+    expect(result.measurement!.person_id).toBeGreaterThan(0);
   });
 
   test("encounter → visit_occurrence_id", () => {
-    const result = mapObservation(makeObservation({ encounter: { reference: "Encounter/10" } }));
-    expect(result.measurement!.visit_occurrence_id).toBe(10);
+    const ctx = new MappingContext();
+    const result = mapObservation(makeObservation({ encounter: { reference: "Encounter/10" } }), ctx);
+    expect(result.measurement!.visit_occurrence_id).toBeGreaterThan(0);
   });
 
   test("performer → provider_id", () => {
+    const ctx = new MappingContext();
     const result = mapObservation(makeObservation({
       performer: [{ reference: "Practitioner/5" }],
-    }));
-    expect(result.measurement!.provider_id).toBe(5);
+    }), ctx);
+    expect(result.measurement!.provider_id).toBeGreaterThan(0);
+  });
+
+  test("observation gets its own ID from registry", () => {
+    const ctx = new MappingContext();
+    const result = mapObservation(makeObservation({ id: "obs-uuid-456" }), ctx);
+    expect(result.measurement!.measurement_id).toBeGreaterThan(0);
   });
 });
