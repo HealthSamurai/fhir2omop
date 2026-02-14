@@ -120,8 +120,8 @@ describe("validateResource", () => {
 });
 
 describe("profiles registry", () => {
-  test("has 5 profiles", () => {
-    expect(Object.keys(profiles)).toHaveLength(5);
+  test("has 6 profiles", () => {
+    expect(Object.keys(profiles)).toHaveLength(6);
   });
 
   test("each profile has rules", () => {

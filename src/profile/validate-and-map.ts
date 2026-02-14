@@ -1,4 +1,4 @@
-import type { Patient, Encounter, Condition, Observation, MedicationRequest } from "../types/fhir";
+import type { Patient, Encounter, Condition, Observation, MedicationRequest, MedicationStatement } from "../types/fhir";
 import type { PatientMappingResult, VisitOccurrence, ConditionOccurrence, ObservationMappingResult, DrugExposure } from "../types/omop";
 import type { ValidationResult } from "./types";
 import { validate } from "./validate";
@@ -8,6 +8,7 @@ import { mapEncounter } from "../mapper/encounter";
 import { mapCondition } from "../mapper/condition";
 import { mapObservation } from "../mapper/observation";
 import { mapMedicationRequest } from "../mapper/medication";
+import { mapMedicationStatement } from "../mapper/medication-statement";
 
 /** Result of validate-then-map: includes validation details alongside the mapping output */
 export interface ValidatedMappingResult<T> {
@@ -63,6 +64,16 @@ export function validateAndMapMedicationRequest(request: MedicationRequest): Val
     return { validation, result: null };
   }
   return { validation, result: mapMedicationRequest(request) };
+}
+
+/** Validate a FHIR MedicationStatement against the OMOP profile, then map if valid */
+export function validateAndMapMedicationStatement(statement: MedicationStatement): ValidatedMappingResult<DrugExposure> {
+  const profile = getProfile("MedicationStatement")!;
+  const validation = validate(statement, profile);
+  if (!validation.valid) {
+    return { validation, result: null };
+  }
+  return { validation, result: mapMedicationStatement(statement) };
 }
 
 /**

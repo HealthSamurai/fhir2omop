@@ -5,6 +5,7 @@ export { EncounterProfile } from "./encounter";
 export { ConditionProfile } from "./condition";
 export { ObservationProfile } from "./observation";
 export { MedicationRequestProfile } from "./medication";
+export { MedicationStatementProfile } from "./medication-statement";
 
 import type { OmopProfile } from "./types";
 import { PatientProfile } from "./patient";
@@ -12,6 +13,7 @@ import { EncounterProfile } from "./encounter";
 import { ConditionProfile } from "./condition";
 import { ObservationProfile } from "./observation";
 import { MedicationRequestProfile } from "./medication";
+import { MedicationStatementProfile } from "./medication-statement";
 
 /** Registry of all OMOP profiles by resource type */
 export const profiles: Record<string, OmopProfile> = {
@@ -20,6 +22,7 @@ export const profiles: Record<string, OmopProfile> = {
   Condition: ConditionProfile,
   Observation: ObservationProfile,
   MedicationRequest: MedicationRequestProfile,
+  MedicationStatement: MedicationStatementProfile,
 };
 
 /** Get the OMOP profile for a resource type, or null if none defined */
