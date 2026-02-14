@@ -5,7 +5,8 @@
   "private": true,
   "scripts": {
     "init": "bun scripts/init.ts",
-    "dev": "bun --hot src/web/server.ts"
+    "dev": "bun --hot src/web/server.ts",
+    "test": "bun test"
   },
   "devDependencies": {
     "@types/bun": "latest"
