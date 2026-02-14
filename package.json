@@ -3,6 +3,10 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "init": "bun scripts/init.ts",
+    "dev": "bun --hot src/web/server.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
@@ -11,6 +15,7 @@
   },
   "dependencies": {
     "csv-parse": "^6.1.0",
-    "duckdb": "^1.4.3"
+    "duckdb": "^1.4.3",
+    "marked": "^17.0.1"
   }
 }
