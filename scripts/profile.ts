@@ -117,16 +117,16 @@ function parseFshFiles(): { profiles: FshProfile[]; valueSets: FshValueSet[] } {
           continue;
         }
 
+        if (trimmed.startsWith('Description: """')) {
+          inDesc = true;
+          descBuffer = [];
+          continue;
+        }
+
         const descSingle = trimmed.match(/^Description:\s*"(.+)"/);
         if (descSingle) {
           if (currentProfile) currentProfile.description = descSingle[1];
           if (currentVS) currentVS.description = descSingle[1];
-          continue;
-        }
-
-        if (trimmed.startsWith('Description: """')) {
-          inDesc = true;
-          descBuffer = [];
           continue;
         }
       }
