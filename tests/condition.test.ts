@@ -1,7 +1,7 @@
 import { test, expect, describe } from "bun:test";
 import { mapCondition } from "../src/mapper/condition";
 import type { Condition } from "../src/types/fhir";
-import { MappingContext } from "../src/mapping-context";
+import { MappingContext, IdRegistry } from "../src/mapping-context";
 
 function makeCondition(overrides: Partial<Condition> = {}): Condition {
   return {
@@ -166,6 +166,46 @@ describe("Condition references", () => {
     const ctx = new MappingContext();
     const result = mapCondition(makeCondition({ id: "cond-abc-uuid" }), ctx);
     expect(result!.condition_occurrence_id).toBeGreaterThan(0);
+  });
+});
+
+// ============================================================
+// Hash mode integration
+// ============================================================
+
+describe("Condition mapping with hash mode", () => {
+  test("hash mode produces deterministic IDs across runs", () => {
+    const cond = makeCondition({ id: "cond-uuid-123" });
+    const ctx1 = new MappingContext(new IdRegistry("hash"));
+    const ctx2 = new MappingContext(new IdRegistry("hash"));
+    const r1 = mapCondition(cond, ctx1);
+    const r2 = mapCondition(cond, ctx2);
+    expect(r1!.condition_occurrence_id).toBe(r2!.condition_occurrence_id);
+    expect(r1!.person_id).toBe(r2!.person_id);
+  });
+
+  test("references resolve deterministically in hash mode", () => {
+    const cond = makeCondition({
+      id: "cond-1",
+      subject: { reference: "Patient/pt-uuid" },
+      encounter: { reference: "Encounter/enc-uuid" },
+      asserter: { reference: "Practitioner/dr-uuid" },
+    });
+    const ctx1 = new MappingContext(new IdRegistry("hash"));
+    const ctx2 = new MappingContext(new IdRegistry("hash"));
+    const r1 = mapCondition(cond, ctx1);
+    const r2 = mapCondition(cond, ctx2);
+    expect(r1!.person_id).toBe(r2!.person_id);
+    expect(r1!.visit_occurrence_id).toBe(r2!.visit_occurrence_id);
+    expect(r1!.provider_id).toBe(r2!.provider_id);
+  });
+
+  test("no collisions for typical condition mapping", () => {
+    const ctx = new MappingContext(new IdRegistry("hash"));
+    for (let i = 0; i < 100; i++) {
+      mapCondition(makeCondition({ id: `cond-${i}` }), ctx);
+    }
+    expect(ctx.ids.hasCollisions()).toBe(false);
   });
 });
 

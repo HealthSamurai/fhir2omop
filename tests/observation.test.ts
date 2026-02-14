@@ -1,7 +1,7 @@
 import { test, expect, describe } from "bun:test";
 import { mapObservation, routeObservation } from "../src/mapper/observation";
 import type { Observation } from "../src/types/fhir";
-import { MappingContext } from "../src/mapping-context";
+import { MappingContext, IdRegistry } from "../src/mapping-context";
 
 function makeObservation(overrides: Partial<Observation> = {}): Observation {
   return {
@@ -213,5 +213,57 @@ describe("Observation references", () => {
     const ctx = new MappingContext();
     const result = mapObservation(makeObservation({ id: "obs-uuid-456" }), ctx);
     expect(result.measurement!.measurement_id).toBeGreaterThan(0);
+  });
+});
+
+// ============================================================
+// Hash mode integration
+// ============================================================
+
+describe("Observation mapping with hash mode", () => {
+  test("hash mode produces deterministic IDs across runs", () => {
+    const obs = makeObservation({ id: "obs-uuid-123" });
+    const ctx1 = new MappingContext(new IdRegistry("hash"));
+    const ctx2 = new MappingContext(new IdRegistry("hash"));
+    const r1 = mapObservation(obs, ctx1);
+    const r2 = mapObservation(obs, ctx2);
+    expect(r1.measurement!.measurement_id).toBe(r2.measurement!.measurement_id);
+    expect(r1.measurement!.person_id).toBe(r2.measurement!.person_id);
+  });
+
+  test("references resolve deterministically in hash mode", () => {
+    const obs = makeObservation({
+      id: "obs-1",
+      subject: { reference: "Patient/pt-uuid" },
+      encounter: { reference: "Encounter/enc-uuid" },
+      performer: [{ reference: "Practitioner/dr-uuid" }],
+    });
+    const ctx1 = new MappingContext(new IdRegistry("hash"));
+    const ctx2 = new MappingContext(new IdRegistry("hash"));
+    const r1 = mapObservation(obs, ctx1);
+    const r2 = mapObservation(obs, ctx2);
+    expect(r1.measurement!.person_id).toBe(r2.measurement!.person_id);
+    expect(r1.measurement!.visit_occurrence_id).toBe(r2.measurement!.visit_occurrence_id);
+    expect(r1.measurement!.provider_id).toBe(r2.measurement!.provider_id);
+  });
+
+  test("social-history observation also works with hash mode", () => {
+    const obs = makeObservation({
+      id: "obs-social-1",
+      category: [{ coding: [{ code: "social-history" }] }],
+    });
+    const ctx1 = new MappingContext(new IdRegistry("hash"));
+    const ctx2 = new MappingContext(new IdRegistry("hash"));
+    const r1 = mapObservation(obs, ctx1);
+    const r2 = mapObservation(obs, ctx2);
+    expect(r1.observation!.observation_id).toBe(r2.observation!.observation_id);
+  });
+
+  test("no collisions for typical observation mapping", () => {
+    const ctx = new MappingContext(new IdRegistry("hash"));
+    for (let i = 0; i < 100; i++) {
+      mapObservation(makeObservation({ id: `obs-${i}` }), ctx);
+    }
+    expect(ctx.ids.hasCollisions()).toBe(false);
   });
 });

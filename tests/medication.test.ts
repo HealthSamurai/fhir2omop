@@ -1,7 +1,7 @@
 import { test, expect, describe } from "bun:test";
 import { mapMedicationRequest } from "../src/mapper/medication";
 import type { MedicationRequest } from "../src/types/fhir";
-import { MappingContext } from "../src/mapping-context";
+import { MappingContext, IdRegistry } from "../src/mapping-context";
 
 function makeMedRequest(overrides: Partial<MedicationRequest> = {}): MedicationRequest {
   return {
@@ -158,6 +158,46 @@ describe("MedicationRequest references", () => {
     const ctx = new MappingContext();
     const result = mapMedicationRequest(makeMedRequest({ id: "med-uuid-789" }), ctx);
     expect(result!.drug_exposure_id).toBeGreaterThan(0);
+  });
+});
+
+// ============================================================
+// Hash mode integration
+// ============================================================
+
+describe("MedicationRequest mapping with hash mode", () => {
+  test("hash mode produces deterministic IDs across runs", () => {
+    const med = makeMedRequest({ id: "med-uuid-123" });
+    const ctx1 = new MappingContext(new IdRegistry("hash"));
+    const ctx2 = new MappingContext(new IdRegistry("hash"));
+    const r1 = mapMedicationRequest(med, ctx1);
+    const r2 = mapMedicationRequest(med, ctx2);
+    expect(r1!.drug_exposure_id).toBe(r2!.drug_exposure_id);
+    expect(r1!.person_id).toBe(r2!.person_id);
+  });
+
+  test("references resolve deterministically in hash mode", () => {
+    const med = makeMedRequest({
+      id: "med-1",
+      subject: { reference: "Patient/pt-uuid" },
+      encounter: { reference: "Encounter/enc-uuid" },
+      requester: { reference: "Practitioner/dr-uuid" },
+    });
+    const ctx1 = new MappingContext(new IdRegistry("hash"));
+    const ctx2 = new MappingContext(new IdRegistry("hash"));
+    const r1 = mapMedicationRequest(med, ctx1);
+    const r2 = mapMedicationRequest(med, ctx2);
+    expect(r1!.person_id).toBe(r2!.person_id);
+    expect(r1!.visit_occurrence_id).toBe(r2!.visit_occurrence_id);
+    expect(r1!.provider_id).toBe(r2!.provider_id);
+  });
+
+  test("no collisions for typical medication mapping", () => {
+    const ctx = new MappingContext(new IdRegistry("hash"));
+    for (let i = 0; i < 100; i++) {
+      mapMedicationRequest(makeMedRequest({ id: `med-${i}` }), ctx);
+    }
+    expect(ctx.ids.hasCollisions()).toBe(false);
   });
 });
 
