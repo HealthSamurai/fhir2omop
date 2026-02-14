@@ -1,0 +1,313 @@
+[
+  {
+    "description": "White → race_concept_id 8527",
+    "spec": "mapping/patient/race-ethnicity.md",
+    "fhir": [
+      {
+        "resourceType": "Patient",
+        "id": "pt-1",
+        "birthDate": "1990-01-01",
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+            "extension": [
+              {
+                "url": "ombCategory",
+                "valueCoding": {
+                  "system": "urn:oid:2.16.840.1.113883.6.238",
+                  "code": "2106-3",
+                  "display": "White"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "omop": [
+      {
+        "table": "person",
+        "race_concept_id": 8527,
+        "race_source_value": "White",
+        "race_source_concept_id": 0
+      }
+    ]
+  },
+  {
+    "description": "Black or African American → race_concept_id 8516",
+    "spec": "mapping/patient/race-ethnicity.md",
+    "fhir": [
+      {
+        "resourceType": "Patient",
+        "id": "pt-2",
+        "birthDate": "1990-01-01",
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+            "extension": [
+              {
+                "url": "ombCategory",
+                "valueCoding": {
+                  "code": "2054-5",
+                  "display": "Black or African American"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "omop": [
+      {
+        "table": "person",
+        "race_concept_id": 8516,
+        "race_source_value": "Black or African American"
+      }
+    ]
+  },
+  {
+    "description": "Asian → race_concept_id 8515",
+    "spec": "mapping/patient/race-ethnicity.md",
+    "fhir": [
+      {
+        "resourceType": "Patient",
+        "id": "pt-3",
+        "birthDate": "1990-01-01",
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+            "extension": [
+              {
+                "url": "ombCategory",
+                "valueCoding": {
+                  "code": "2028-9",
+                  "display": "Asian"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "omop": [
+      {
+        "table": "person",
+        "race_concept_id": 8515,
+        "race_source_value": "Asian"
+      }
+    ]
+  },
+  {
+    "description": "American Indian or Alaska Native → race_concept_id 8657",
+    "spec": "mapping/patient/race-ethnicity.md",
+    "fhir": [
+      {
+        "resourceType": "Patient",
+        "id": "pt-4",
+        "birthDate": "1990-01-01",
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+            "extension": [
+              {
+                "url": "ombCategory",
+                "valueCoding": {
+                  "code": "1002-5",
+                  "display": "American Indian or Alaska Native"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "omop": [
+      {
+        "table": "person",
+        "race_concept_id": 8657,
+        "race_source_value": "American Indian or Alaska Native"
+      }
+    ]
+  },
+  {
+    "description": "Native Hawaiian or Other Pacific Islander → race_concept_id 8557",
+    "spec": "mapping/patient/race-ethnicity.md",
+    "fhir": [
+      {
+        "resourceType": "Patient",
+        "id": "pt-5",
+        "birthDate": "1990-01-01",
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+            "extension": [
+              {
+                "url": "ombCategory",
+                "valueCoding": {
+                  "code": "2076-8",
+                  "display": "Native Hawaiian or Other Pacific Islander"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "omop": [
+      {
+        "table": "person",
+        "race_concept_id": 8557,
+        "race_source_value": "Native Hawaiian or Other Pacific Islander"
+      }
+    ]
+  },
+  {
+    "description": "race extension отсутствует → race_concept_id 0, source_value null",
+    "spec": "mapping/patient/race-ethnicity.md",
+    "fhir": [
+      {
+        "resourceType": "Patient",
+        "id": "pt-6",
+        "birthDate": "1990-01-01"
+      }
+    ],
+    "omop": [
+      {
+        "table": "person",
+        "race_concept_id": 0,
+        "race_source_value": null,
+        "race_source_concept_id": 0
+      }
+    ]
+  },
+  {
+    "description": "Hispanic or Latino → ethnicity_concept_id 38003563",
+    "spec": "mapping/patient/race-ethnicity.md",
+    "fhir": [
+      {
+        "resourceType": "Patient",
+        "id": "pt-7",
+        "birthDate": "1990-01-01",
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+            "extension": [
+              {
+                "url": "ombCategory",
+                "valueCoding": {
+                  "code": "2135-2",
+                  "display": "Hispanic or Latino"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "omop": [
+      {
+        "table": "person",
+        "ethnicity_concept_id": 38003563,
+        "ethnicity_source_value": "Hispanic or Latino",
+        "ethnicity_source_concept_id": 0
+      }
+    ]
+  },
+  {
+    "description": "Not Hispanic or Latino → ethnicity_concept_id 38003564",
+    "spec": "mapping/patient/race-ethnicity.md",
+    "fhir": [
+      {
+        "resourceType": "Patient",
+        "id": "pt-8",
+        "birthDate": "1990-01-01",
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+            "extension": [
+              {
+                "url": "ombCategory",
+                "valueCoding": {
+                  "code": "2186-5",
+                  "display": "Not Hispanic or Latino"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "omop": [
+      {
+        "table": "person",
+        "ethnicity_concept_id": 38003564,
+        "ethnicity_source_value": "Not Hispanic or Latino"
+      }
+    ]
+  },
+  {
+    "description": "ethnicity extension отсутствует → ethnicity_concept_id 0",
+    "spec": "mapping/patient/race-ethnicity.md",
+    "fhir": [
+      {
+        "resourceType": "Patient",
+        "id": "pt-9",
+        "birthDate": "1990-01-01"
+      }
+    ],
+    "omop": [
+      {
+        "table": "person",
+        "ethnicity_concept_id": 0,
+        "ethnicity_source_value": null,
+        "ethnicity_source_concept_id": 0
+      }
+    ]
+  },
+  {
+    "description": "race + ethnicity вместе: White + Not Hispanic",
+    "spec": "mapping/patient/race-ethnicity.md",
+    "fhir": [
+      {
+        "resourceType": "Patient",
+        "id": "pt-10",
+        "birthDate": "1990-01-01",
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+            "extension": [
+              {
+                "url": "ombCategory",
+                "valueCoding": {
+                  "code": "2106-3",
+                  "display": "White"
+                }
+              }
+            ]
+          },
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+            "extension": [
+              {
+                "url": "ombCategory",
+                "valueCoding": {
+                  "code": "2186-5",
+                  "display": "Not Hispanic or Latino"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "omop": [
+      {
+        "table": "person",
+        "race_concept_id": 8527,
+        "race_source_value": "White",
+        "ethnicity_concept_id": 38003564,
+        "ethnicity_source_value": "Not Hispanic or Latino"
+      }
+    ]
+  }
+]

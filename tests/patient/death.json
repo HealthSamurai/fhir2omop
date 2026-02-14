@@ -1,7 +1,7 @@
 [
   {
     "description": "deceasedDateTime → запись DEATH",
-    "spec": "spec/patient.md",
+    "spec": "mapping/patient/deceased.md",
     "fhir": [
       {
         "resourceType": "Patient",
@@ -27,7 +27,7 @@
   },
   {
     "description": "нет deceased → запись DEATH не создаётся",
-    "spec": "spec/patient.md",
+    "spec": "mapping/patient/deceased.md",
     "fhir": [
       {
         "resourceType": "Patient",
@@ -42,7 +42,7 @@
   {
     "description": "deceasedBoolean=true без dateTime → DEATH не создаётся",
     "comment": "death_date — обязательное поле. Без dateTime нет даты для записи.",
-    "spec": "spec/patient.md",
+    "spec": "mapping/patient/deceased.md",
     "fhir": [
       {
         "resourceType": "Patient",
