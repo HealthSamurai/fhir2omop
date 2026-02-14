@@ -1,7 +1,7 @@
 import type { Patient, Address, Identifier } from "../types/fhir";
 import type { Person, Location, Death, PatientMappingResult } from "../types/omop";
 import { parseFhirDate, toBirthDatetime, toDate } from "../utils/date";
-import { resolveReferenceAsNumber } from "../utils/reference";
+import { MappingContext } from "../mapping-context";
 
 /** FHIR gender → OMOP gender_concept_id */
 const GENDER_CONCEPT: Record<string, number> = {
@@ -15,7 +15,7 @@ const GENDER_CONCEPT: Record<string, number> = {
 const DEATH_TYPE_EHR = 32817;
 
 /** Map a FHIR Patient to OMOP PERSON + LOCATION + DEATH */
-export function mapPatient(patient: Patient): PatientMappingResult {
+export function mapPatient(patient: Patient, ctx: MappingContext = new MappingContext()): PatientMappingResult {
   // year_of_birth is required — skip if no birthDate
   if (!patient.birthDate) {
     return { person: null, location: null, death: null };
@@ -23,7 +23,10 @@ export function mapPatient(patient: Patient): PatientMappingResult {
 
   const { year, month, day } = parseFhirDate(patient.birthDate);
 
+  const personId = patient.id ? ctx.ids.getId("Patient", patient.id) : undefined;
+
   const person: Person = {
+    person_id: personId,
     gender_concept_id: patient.gender ? (GENDER_CONCEPT[patient.gender] ?? 0) : 0,
     year_of_birth: year,
     month_of_birth: month,
@@ -38,12 +41,12 @@ export function mapPatient(patient: Patient): PatientMappingResult {
     race_source_concept_id: 0,
     ethnicity_source_value: getEthnicitySourceValue(patient),
     ethnicity_source_concept_id: 0,
-    provider_id: resolveReferenceAsNumber(patient.generalPractitioner?.[0]),
-    care_site_id: resolveReferenceAsNumber(patient.managingOrganization),
+    provider_id: ctx.ids.resolveRef(patient.generalPractitioner?.[0]),
+    care_site_id: ctx.ids.resolveRef(patient.managingOrganization),
   };
 
-  const location = mapLocation(patient);
-  const death = mapDeath(patient);
+  const location = mapLocation(patient, ctx);
+  const death = mapDeath(patient, personId);
 
   return { person, location, death };
 }
@@ -101,7 +104,7 @@ export function selectAddress(patient: Patient): Address | null {
   return nonOld.length > 0 ? nonOld[0] : addresses[0];
 }
 
-function mapLocation(patient: Patient): Location | null {
+function mapLocation(patient: Patient, ctx: MappingContext): Location | null {
   const addr = selectAddress(patient);
   if (!addr) return null;
 
@@ -113,7 +116,13 @@ function mapLocation(patient: Patient): Location | null {
     addr.country,
   ].filter(Boolean);
 
+  const locationSourceValue = locationParts.join(", ").substring(0, 50) || null;
+  const locationId = patient.id
+    ? ctx.ids.getId("Location", `Patient/${patient.id}`)
+    : undefined;
+
   return {
+    location_id: locationId,
     address_1: addr.line?.[0]?.substring(0, 50) ?? null,
     address_2: addr.line?.[1]?.substring(0, 50) ?? null,
     city: addr.city ?? null,
@@ -122,11 +131,11 @@ function mapLocation(patient: Patient): Location | null {
     county: addr.district?.substring(0, 20) ?? null,
     country_concept_id: 0,
     country_source_value: addr.country ?? null,
-    location_source_value: locationParts.join(", ").substring(0, 50) || null,
+    location_source_value: locationSourceValue,
   };
 }
 
-function mapDeath(patient: Patient): Death | null {
+function mapDeath(patient: Patient, personId?: number): Death | null {
   if (!patient.deceasedDateTime) {
     if (patient.deceasedBoolean === true) {
       // deceased but no datetime — we know they died but not when
@@ -137,7 +146,7 @@ function mapDeath(patient: Patient): Death | null {
   }
 
   return {
-    person_id: 0, // to be set by caller
+    person_id: personId ?? 0,
     death_date: toDate(patient.deceasedDateTime),
     death_datetime: patient.deceasedDateTime,
     death_type_concept_id: DEATH_TYPE_EHR,

@@ -2,7 +2,7 @@ import type { Condition } from "../types/fhir";
 import type { ConditionOccurrence } from "../types/omop";
 import { toDate } from "../utils/date";
 import { selectBestCoding, getSourceValue } from "../utils/codeable";
-import { resolveReferenceAsNumber } from "../utils/reference";
+import { MappingContext } from "../mapping-context";
 
 /** Accepted clinical statuses (active conditions) */
 const VALID_CLINICAL_STATUSES = new Set(["active", "recurrence", "relapse"]);
@@ -20,7 +20,7 @@ const TYPE_CONCEPT: Record<string, number> = {
 const TYPE_CONCEPT_EHR = 32817;
 
 /** Map a FHIR Condition to OMOP CONDITION_OCCURRENCE */
-export function mapCondition(condition: Condition): ConditionOccurrence | null {
+export function mapCondition(condition: Condition, ctx: MappingContext = new MappingContext()): ConditionOccurrence | null {
   // Status filter
   if (!isValidCondition(condition)) {
     return null;
@@ -44,7 +44,8 @@ export function mapCondition(condition: Condition): ConditionOccurrence | null {
   const typeConceptId = categoryCode ? (TYPE_CONCEPT[categoryCode] ?? TYPE_CONCEPT_EHR) : TYPE_CONCEPT_EHR;
 
   return {
-    person_id: resolveReferenceAsNumber(condition.subject) ?? 0,
+    condition_occurrence_id: condition.id ? ctx.ids.getId("Condition", condition.id) : undefined,
+    person_id: ctx.ids.resolveRef(condition.subject) ?? 0,
     condition_concept_id: 0, // Requires vocabulary lookup — placeholder
     condition_start_date: startDate,
     condition_start_datetime: condition.onsetDateTime ?? null,
@@ -53,8 +54,8 @@ export function mapCondition(condition: Condition): ConditionOccurrence | null {
     condition_type_concept_id: typeConceptId,
     condition_status_concept_id: 0,
     stop_reason: condition.abatementString ?? null,
-    provider_id: resolveReferenceAsNumber(condition.asserter),
-    visit_occurrence_id: resolveReferenceAsNumber(condition.encounter),
+    provider_id: ctx.ids.resolveRef(condition.asserter),
+    visit_occurrence_id: ctx.ids.resolveRef(condition.encounter),
     condition_source_value: bestCoding?.code ?? getSourceValue(condition.code),
     condition_source_concept_id: 0,
   };

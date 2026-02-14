@@ -2,7 +2,7 @@ import type { Observation } from "../types/fhir";
 import type { Measurement, OmopObservation, ObservationMappingResult } from "../types/omop";
 import { toDate } from "../utils/date";
 import { selectBestCoding, getSourceValue } from "../utils/codeable";
-import { resolveReferenceAsNumber } from "../utils/reference";
+import { MappingContext } from "../mapping-context";
 
 /** Only map observations with these statuses */
 const VALID_STATUSES = new Set(["final", "amended", "corrected"]);
@@ -33,7 +33,7 @@ export function routeObservation(observation: Observation): "measurement" | "obs
 }
 
 /** Map a FHIR Observation to OMOP MEASUREMENT or OBSERVATION */
-export function mapObservation(observation: Observation): ObservationMappingResult {
+export function mapObservation(observation: Observation, ctx: MappingContext = new MappingContext()): ObservationMappingResult {
   // Status filter
   if (!VALID_STATUSES.has(observation.status)) {
     return { measurement: null, observation: null };
@@ -55,7 +55,8 @@ export function mapObservation(observation: Observation): ObservationMappingResu
 
   if (route === "measurement") {
     const measurement: Measurement = {
-      person_id: resolveReferenceAsNumber(observation.subject) ?? 0,
+      measurement_id: observation.id ? ctx.ids.getId("Observation", observation.id) : undefined,
+      person_id: ctx.ids.resolveRef(observation.subject) ?? 0,
       measurement_concept_id: 0, // Requires vocabulary lookup
       measurement_date: effectiveDate,
       measurement_datetime: observation.effectiveDateTime ?? null,
@@ -66,8 +67,8 @@ export function mapObservation(observation: Observation): ObservationMappingResu
       unit_source_value: observation.valueQuantity?.unit ?? null,
       range_low: observation.referenceRange?.[0]?.low?.value ?? null,
       range_high: observation.referenceRange?.[0]?.high?.value ?? null,
-      provider_id: resolveReferenceAsNumber(observation.performer?.[0]),
-      visit_occurrence_id: resolveReferenceAsNumber(observation.encounter),
+      provider_id: ctx.ids.resolveRef(observation.performer?.[0]),
+      visit_occurrence_id: ctx.ids.resolveRef(observation.encounter),
       measurement_source_value: sourceValue,
       measurement_source_concept_id: 0,
     };
@@ -75,7 +76,8 @@ export function mapObservation(observation: Observation): ObservationMappingResu
   }
 
   const omopObs: OmopObservation = {
-    person_id: resolveReferenceAsNumber(observation.subject) ?? 0,
+    observation_id: observation.id ? ctx.ids.getId("Observation", observation.id) : undefined,
+    person_id: ctx.ids.resolveRef(observation.subject) ?? 0,
     observation_concept_id: 0, // Requires vocabulary lookup
     observation_date: effectiveDate,
     observation_datetime: observation.effectiveDateTime ?? null,
@@ -85,8 +87,8 @@ export function mapObservation(observation: Observation): ObservationMappingResu
     value_as_concept_id: null,
     unit_concept_id: null,
     unit_source_value: observation.valueQuantity?.unit ?? null,
-    provider_id: resolveReferenceAsNumber(observation.performer?.[0]),
-    visit_occurrence_id: resolveReferenceAsNumber(observation.encounter),
+    provider_id: ctx.ids.resolveRef(observation.performer?.[0]),
+    visit_occurrence_id: ctx.ids.resolveRef(observation.encounter),
     observation_source_value: sourceValue,
     observation_source_concept_id: 0,
   };

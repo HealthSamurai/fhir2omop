@@ -1,6 +1,7 @@
 import { test, expect, describe } from "bun:test";
 import { mapPatient, selectIdentifier, selectAddress } from "../src/mapper/patient";
 import type { Patient } from "../src/types/fhir";
+import { MappingContext, IdRegistry } from "../src/mapping-context";
 
 // --- Helpers ---
 
@@ -362,25 +363,45 @@ describe("US Core Ethnicity extension → ethnicity_concept_id", () => {
 
 describe("Patient references → provider_id, care_site_id", () => {
   test("generalPractitioner maps to provider_id", () => {
+    const ctx = new MappingContext();
     const patient = makePatient({
       generalPractitioner: [{ reference: "Practitioner/42" }],
     });
-    const result = mapPatient(patient);
-    expect(result.person!.provider_id).toBe(42);
+    const result = mapPatient(patient, ctx);
+    expect(result.person!.provider_id).toBeGreaterThan(0);
   });
 
   test("managingOrganization maps to care_site_id", () => {
+    const ctx = new MappingContext();
     const patient = makePatient({
       managingOrganization: { reference: "Organization/7" },
     });
-    const result = mapPatient(patient);
-    expect(result.person!.care_site_id).toBe(7);
+    const result = mapPatient(patient, ctx);
+    expect(result.person!.care_site_id).toBeGreaterThan(0);
   });
 
   test("no references → null", () => {
     const result = mapPatient(makePatient());
     expect(result.person!.provider_id).toBeNull();
     expect(result.person!.care_site_id).toBeNull();
+  });
+
+  test("same reference always gets same ID", () => {
+    const ctx = new MappingContext();
+    const p1 = makePatient({ id: "p1", generalPractitioner: [{ reference: "Practitioner/dr-smith" }] });
+    const p2 = makePatient({ id: "p2", generalPractitioner: [{ reference: "Practitioner/dr-smith" }] });
+    const r1 = mapPatient(p1, ctx);
+    const r2 = mapPatient(p2, ctx);
+    expect(r1.person!.provider_id).toBe(r2.person!.provider_id);
+  });
+
+  test("different references get different IDs", () => {
+    const ctx = new MappingContext();
+    const p1 = makePatient({ id: "p1", generalPractitioner: [{ reference: "Practitioner/dr-smith" }] });
+    const p2 = makePatient({ id: "p2", generalPractitioner: [{ reference: "Practitioner/dr-jones" }] });
+    const r1 = mapPatient(p1, ctx);
+    const r2 = mapPatient(p2, ctx);
+    expect(r1.person!.provider_id).not.toBe(r2.person!.provider_id);
   });
 });
 
@@ -390,6 +411,7 @@ describe("Patient references → provider_id, care_site_id", () => {
 
 describe("Full Patient mapping", () => {
   test("complete patient produces person + location + death", () => {
+    const ctx = new MappingContext();
     const patient: Patient = {
       resourceType: "Patient",
       id: "full-patient-1",
@@ -417,10 +439,11 @@ describe("Full Patient mapping", () => {
       ],
     };
 
-    const result = mapPatient(patient);
+    const result = mapPatient(patient, ctx);
 
     // Person
     expect(result.person).not.toBeNull();
+    expect(result.person!.person_id).toBeGreaterThan(0);
     expect(result.person!.gender_concept_id).toBe(8532);
     expect(result.person!.year_of_birth).toBe(1985);
     expect(result.person!.month_of_birth).toBe(7);
@@ -428,16 +451,18 @@ describe("Full Patient mapping", () => {
     expect(result.person!.person_source_value).toBe("http://hl7.org/fhir/sid/us-ssn|123-45-6789");
     expect(result.person!.race_concept_id).toBe(8527);
     expect(result.person!.ethnicity_concept_id).toBe(38003564);
-    expect(result.person!.provider_id).toBe(100);
-    expect(result.person!.care_site_id).toBe(50);
+    expect(result.person!.provider_id).toBeGreaterThan(0);
+    expect(result.person!.care_site_id).toBeGreaterThan(0);
 
     // Location
     expect(result.location).not.toBeNull();
+    expect(result.location!.location_id).toBeGreaterThan(0);
     expect(result.location!.city).toBe("Portland");
     expect(result.location!.state).toBe("OR");
 
     // Death
     expect(result.death).not.toBeNull();
+    expect(result.death!.person_id).toBe(result.person!.person_id);
     expect(result.death!.death_date).toBe("2023-01-15");
   });
 
@@ -449,6 +474,7 @@ describe("Full Patient mapping", () => {
 
     const result = mapPatient(patient);
     expect(result.person).not.toBeNull();
+    expect(result.person!.person_id).toBeUndefined();
     expect(result.person!.gender_concept_id).toBe(0);
     expect(result.person!.year_of_birth).toBe(2000);
     expect(result.person!.month_of_birth).toBeNull();
@@ -457,5 +483,57 @@ describe("Full Patient mapping", () => {
     expect(result.person!.ethnicity_concept_id).toBe(0);
     expect(result.location).toBeNull();
     expect(result.death).toBeNull();
+  });
+});
+
+// ============================================================
+// Hash mode integration
+// ============================================================
+
+describe("Patient mapping with hash mode", () => {
+  test("hash mode produces deterministic IDs across runs", () => {
+    const patient = makePatient({ id: "uuid-abc-123" });
+    const ctx1 = new MappingContext(new IdRegistry("hash"));
+    const ctx2 = new MappingContext(new IdRegistry("hash"));
+    const r1 = mapPatient(patient, ctx1);
+    const r2 = mapPatient(patient, ctx2);
+    expect(r1.person!.person_id).toBe(r2.person!.person_id);
+  });
+
+  test("hash mode IDs are large integers (not sequential)", () => {
+    const ctx = new MappingContext(new IdRegistry("hash"));
+    const result = mapPatient(makePatient({ id: "uuid-abc-123" }), ctx);
+    expect(result.person!.person_id).toBeGreaterThan(1000);
+  });
+
+  test("references resolve deterministically in hash mode", () => {
+    const ctx = new MappingContext(new IdRegistry("hash"));
+    const patient = makePatient({
+      id: "p1",
+      generalPractitioner: [{ reference: "Practitioner/dr-smith" }],
+      managingOrganization: { reference: "Organization/org-1" },
+    });
+    const result = mapPatient(patient, ctx);
+
+    // Same reference in a fresh context → same ID
+    const ctx2 = new MappingContext(new IdRegistry("hash"));
+    const result2 = mapPatient(patient, ctx2);
+    expect(result.person!.provider_id).toBe(result2.person!.provider_id);
+    expect(result.person!.care_site_id).toBe(result2.person!.care_site_id);
+  });
+
+  test("death record gets correct person_id in hash mode", () => {
+    const ctx = new MappingContext(new IdRegistry("hash"));
+    const patient = makePatient({ id: "deceased-patient", deceasedDateTime: "2023-01-01" });
+    const result = mapPatient(patient, ctx);
+    expect(result.death!.person_id).toBe(result.person!.person_id);
+  });
+
+  test("no collisions for typical patient mapping", () => {
+    const ctx = new MappingContext(new IdRegistry("hash"));
+    for (let i = 0; i < 100; i++) {
+      mapPatient(makePatient({ id: `patient-${i}` }), ctx);
+    }
+    expect(ctx.ids.hasCollisions()).toBe(false);
   });
 });

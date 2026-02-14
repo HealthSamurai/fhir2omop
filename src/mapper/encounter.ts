@@ -1,7 +1,7 @@
 import type { Encounter } from "../types/fhir";
 import type { VisitOccurrence } from "../types/omop";
 import { toDate } from "../utils/date";
-import { resolveReferenceAsNumber } from "../utils/reference";
+import { MappingContext } from "../mapping-context";
 
 /** FHIR Encounter.class code → OMOP visit_concept_id */
 const VISIT_CONCEPT: Record<string, number> = {
@@ -23,7 +23,7 @@ const VALID_STATUSES = new Set(["finished", "in-progress"]);
 const VISIT_TYPE_EHR = 32817;
 
 /** Map a FHIR Encounter to OMOP VISIT_OCCURRENCE */
-export function mapEncounter(encounter: Encounter): VisitOccurrence | null {
+export function mapEncounter(encounter: Encounter, ctx: MappingContext = new MappingContext()): VisitOccurrence | null {
   // Status filter
   if (!VALID_STATUSES.has(encounter.status)) {
     return null;
@@ -39,15 +39,16 @@ export function mapEncounter(encounter: Encounter): VisitOccurrence | null {
   const endDate = encounter.period.end ? toDate(encounter.period.end) : startDate;
 
   return {
-    person_id: resolveReferenceAsNumber(encounter.subject) ?? 0,
+    visit_occurrence_id: encounter.id ? ctx.ids.getId("Encounter", encounter.id) : undefined,
+    person_id: ctx.ids.resolveRef(encounter.subject) ?? 0,
     visit_concept_id: visitConceptId,
     visit_start_date: startDate,
     visit_start_datetime: encounter.period.start,
     visit_end_date: endDate,
     visit_end_datetime: encounter.period.end ?? null,
     visit_type_concept_id: VISIT_TYPE_EHR,
-    provider_id: resolveReferenceAsNumber(encounter.participant?.[0]?.individual),
-    care_site_id: resolveReferenceAsNumber(encounter.serviceProvider),
+    provider_id: ctx.ids.resolveRef(encounter.participant?.[0]?.individual),
+    care_site_id: ctx.ids.resolveRef(encounter.serviceProvider),
     visit_source_value: encounter.class?.code ?? null,
     visit_source_concept_id: 0,
     admitted_from_concept_id: 0,

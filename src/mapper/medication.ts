@@ -2,7 +2,7 @@ import type { MedicationRequest } from "../types/fhir";
 import type { DrugExposure } from "../types/omop";
 import { toDate } from "../utils/date";
 import { selectBestCoding, getSourceValue } from "../utils/codeable";
-import { resolveReferenceAsNumber } from "../utils/reference";
+import { MappingContext } from "../mapping-context";
 
 /** Only map requests with these statuses */
 const VALID_STATUSES = new Set(["active", "completed"]);
@@ -11,7 +11,7 @@ const VALID_STATUSES = new Set(["active", "completed"]);
 const TYPE_CONCEPT_PRESCRIPTION = 38000177;
 
 /** Map a FHIR MedicationRequest to OMOP DRUG_EXPOSURE */
-export function mapMedicationRequest(request: MedicationRequest): DrugExposure | null {
+export function mapMedicationRequest(request: MedicationRequest, ctx: MappingContext = new MappingContext()): DrugExposure | null {
   // Status filter
   if (!VALID_STATUSES.has(request.status)) {
     return null;
@@ -38,7 +38,8 @@ export function mapMedicationRequest(request: MedicationRequest): DrugExposure |
   const routeCoding = request.dosageInstruction?.[0]?.route?.coding?.[0];
 
   return {
-    person_id: resolveReferenceAsNumber(request.subject) ?? 0,
+    drug_exposure_id: request.id ? ctx.ids.getId("MedicationRequest", request.id) : undefined,
+    person_id: ctx.ids.resolveRef(request.subject) ?? 0,
     drug_concept_id: 0, // Requires vocabulary lookup
     drug_exposure_start_date: startDate,
     drug_exposure_start_datetime: request.authoredOn ?? null,
@@ -51,8 +52,8 @@ export function mapMedicationRequest(request: MedicationRequest): DrugExposure |
     days_supply: null,
     route_concept_id: null, // Would need vocab lookup
     route_source_value: routeCoding?.display ?? routeCoding?.code ?? null,
-    provider_id: resolveReferenceAsNumber(request.requester),
-    visit_occurrence_id: resolveReferenceAsNumber(request.encounter),
+    provider_id: ctx.ids.resolveRef(request.requester),
+    visit_occurrence_id: ctx.ids.resolveRef(request.encounter),
     drug_source_value: sourceValue,
     drug_source_concept_id: 0,
   };
