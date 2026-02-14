@@ -26,6 +26,7 @@ export interface Period {
 
 export interface Quantity {
   value?: number;
+  comparator?: "<" | "<=" | ">=" | ">";
   unit?: string;
   system?: string;
   code?: string;
@@ -114,6 +115,15 @@ export interface Condition {
   asserter?: Reference;
 }
 
+export interface ObservationComponent {
+  code: CodeableConcept;
+  valueQuantity?: Quantity;
+  valueCodeableConcept?: CodeableConcept;
+  valueString?: string;
+  interpretation?: CodeableConcept[];
+  referenceRange?: Range[];
+}
+
 export interface Observation {
   resourceType: "Observation";
   id?: string;
@@ -127,7 +137,9 @@ export interface Observation {
   valueQuantity?: Quantity;
   valueCodeableConcept?: CodeableConcept;
   valueString?: string;
+  interpretation?: CodeableConcept[];
   referenceRange?: Range[];
+  component?: ObservationComponent[];
 }
 
 export interface DosageDoseAndRate {

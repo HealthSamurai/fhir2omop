@@ -18,7 +18,20 @@ Description: """
   - code is mandatory with at least one coding from an OMOP-resolvable vocabulary
   - effectiveDateTime is mandatory (OMOP date fields are required)
   - category is recommended for proper table routing
-  - value[x] is recommended for meaningful data
+
+  Component observations (e.g., blood pressure with systolic + diastolic):
+  - Each component is expanded into its own OMOP measurement/observation record
+  - Component codes override the parent code for measurement_source_value
+  - Component values override the parent value
+
+  Operator mapping (valueQuantity.comparator):
+  - < -> operator_concept_id 4171756
+  - <= -> operator_concept_id 4171754
+  - >= -> operator_concept_id 4171755
+  - > -> operator_concept_id 4172703
+
+  Interpretation mapping:
+  - interpretation codes map to qualifier_source_value (observation table)
 """
 
 // --- Status: only finalized observations ---
@@ -54,3 +67,16 @@ Description: """
 
 // --- Reference range: maps to range_low / range_high ---
 * referenceRange MS
+
+// --- Interpretation: maps to qualifier_source_value / qualifier_concept_id ---
+* interpretation MS
+
+// --- Component: expanded into separate OMOP records ---
+* component MS
+* component.code MS
+* component.code.coding 1..* MS
+* component.code.coding.system 1..1 MS
+* component.code.coding.code 1..1 MS
+* component.value[x] MS
+* component.referenceRange MS
+* component.interpretation MS
