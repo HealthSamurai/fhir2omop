@@ -139,6 +139,24 @@ export interface Dosage {
   doseAndRate?: DosageDoseAndRate[];
 }
 
+export interface MedicationStatement {
+  resourceType: "MedicationStatement";
+  id?: string;
+  status: "active" | "completed" | "entered-in-error" | "intended" | "stopped" | "on-hold" | "unknown" | "not-taken";
+  category?: CodeableConcept;
+  medicationCodeableConcept?: CodeableConcept;
+  medicationReference?: Reference;
+  subject: Reference;
+  context?: Reference;
+  effectiveDateTime?: string;
+  effectivePeriod?: Period;
+  dateAsserted?: string;
+  informationSource?: Reference;
+  reasonCode?: CodeableConcept[];
+  reasonReference?: Reference[];
+  dosage?: Dosage[];
+}
+
 export interface MedicationRequest {
   resourceType: "MedicationRequest";
   id?: string;
