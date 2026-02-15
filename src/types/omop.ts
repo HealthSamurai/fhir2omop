@@ -86,6 +86,7 @@ export interface Measurement {
   measurement_date: string;
   measurement_datetime?: string | null;
   measurement_type_concept_id: number;
+  operator_concept_id?: number | null;
   value_as_number?: number | null;
   value_as_concept_id?: number | null;
   unit_concept_id?: number | null;
@@ -94,8 +95,11 @@ export interface Measurement {
   range_high?: number | null;
   provider_id?: number | null;
   visit_occurrence_id?: number | null;
+  visit_detail_id?: number | null;
   measurement_source_value?: string | null;
   measurement_source_concept_id?: number;
+  unit_source_concept_id?: number;
+  value_source_value?: string | null;
 }
 
 export interface OmopObservation {
@@ -108,12 +112,16 @@ export interface OmopObservation {
   value_as_number?: number | null;
   value_as_string?: string | null;
   value_as_concept_id?: number | null;
+  qualifier_concept_id?: number | null;
   unit_concept_id?: number | null;
   unit_source_value?: string | null;
   provider_id?: number | null;
   visit_occurrence_id?: number | null;
+  visit_detail_id?: number | null;
   observation_source_value?: string | null;
   observation_source_concept_id?: number;
+  qualifier_source_value?: string | null;
+  value_source_value?: string | null;
 }
 
 export interface DrugExposure {
@@ -144,8 +152,8 @@ export interface PatientMappingResult {
   death: Death | null;
 }
 
-/** Observation mapping result — routes to measurement or observation */
+/** Observation mapping result — routes to measurement or observation (arrays for component observations) */
 export interface ObservationMappingResult {
-  measurement: Measurement | null;
-  observation: OmopObservation | null;
+  measurement: Measurement | Measurement[] | null;
+  observation: OmopObservation | OmopObservation[] | null;
 }

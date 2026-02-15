@@ -150,17 +150,23 @@ Description: """
 * http://hl7.org/fhir/CodeSystem/observation-status#amended    "Amended"
 * http://hl7.org/fhir/CodeSystem/observation-status#corrected  "Corrected"
 
-// Observation categories for OMOP table routing
-ValueSet: OmopObservationCategory
-Id: omop-observation-category
-Title: "OMOP Observation Category"
+// Observation categories for OMOP measurement table routing
+ValueSet: OmopMeasurementCategory
+Id: omop-measurement-category
+Title: "OMOP Measurement Category"
 Description: """
-  Observation categories that determine OMOP table routing:
-  - laboratory, vital-signs -> measurement table
-  - social-history, survey, activity -> observation table
+  Observation categories that route to the OMOP measurement table.
 """
 * http://terminology.hl7.org/CodeSystem/observation-category#laboratory     "Laboratory"
 * http://terminology.hl7.org/CodeSystem/observation-category#vital-signs    "Vital Signs"
+
+// Observation categories for OMOP observation table routing
+ValueSet: OmopObservationTableCategory
+Id: omop-observation-table-category
+Title: "OMOP Observation Table Category"
+Description: """
+  Observation categories that route to the OMOP observation table.
+"""
 * http://terminology.hl7.org/CodeSystem/observation-category#social-history "Social History"
 * http://terminology.hl7.org/CodeSystem/observation-category#survey         "Survey"
 * http://terminology.hl7.org/CodeSystem/observation-category#activity       "Activity"
