@@ -1,0 +1,59 @@
+[
+  {
+    "description": "asserter → provider_id (preferred over recorder)",
+    "fhir": [
+      {
+        "resourceType": "Condition",
+        "id": "cond-asserter",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "73211009" }] },
+        "subject": { "reference": "Patient/pt-1" },
+        "onsetDateTime": "2023-01-10",
+        "asserter": { "reference": "Practitioner/dr-assert" },
+        "recorder": { "reference": "Practitioner/dr-record" }
+      }
+    ],
+    "omop": [
+      {
+        "table": "condition_occurrence",
+        "comment": "provider_id should resolve asserter, not recorder"
+      }
+    ]
+  },
+  {
+    "description": "recorder → provider_id (fallback when no asserter)",
+    "fhir": [
+      {
+        "resourceType": "Condition",
+        "id": "cond-recorder",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "73211009" }] },
+        "subject": { "reference": "Patient/pt-1" },
+        "onsetDateTime": "2023-01-10",
+        "recorder": { "reference": "Practitioner/dr-record" }
+      }
+    ],
+    "omop": [
+      {
+        "table": "condition_occurrence",
+        "comment": "provider_id should resolve recorder when asserter absent"
+      }
+    ]
+  },
+  {
+    "description": "No asserter, no recorder → null provider_id",
+    "fhir": [
+      {
+        "resourceType": "Condition",
+        "id": "cond-no-provider",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "73211009" }] },
+        "subject": { "reference": "Patient/pt-1" },
+        "onsetDateTime": "2023-01-10"
+      }
+    ],
+    "omop": [
+      {
+        "table": "condition_occurrence",
+        "provider_id": null
+      }
+    ]
+  }
+]
