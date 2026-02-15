@@ -160,6 +160,36 @@ Description: """
 * http://terminology.hl7.org/CodeSystem/observation-category#laboratory     "Laboratory"
 * http://terminology.hl7.org/CodeSystem/observation-category#vital-signs    "Vital Signs"
 
+// ============================================================
+// Procedure terminology ValueSets
+// ============================================================
+
+// Procedure codes resolvable via OMOP vocabulary tables
+ValueSet: OmopProcedureCodes
+Id: omop-procedure-codes
+Title: "OMOP-Resolvable Procedure Codes"
+Description: """
+  Procedure terminology systems that have standard concept mappings
+  in the OMOP vocabulary tables. Codes from these systems can
+  be resolved to procedure_concept_id via the CONCEPT table.
+"""
+* codes from system http://snomed.info/sct                         // SNOMED CT — preferred
+* codes from system http://www.ama-assn.org/go/cpt                 // CPT-4
+* codes from system http://www.cms.gov/Medicare/Coding/ICD10       // ICD-10-PCS
+* codes from system http://www.nlm.nih.gov/research/umls/hcpcs     // HCPCS
+
+// Procedure status: only completed
+ValueSet: OmopProcedureStatus
+Id: omop-procedure-status
+Title: "OMOP-Mappable Procedure Status"
+Description: """
+  Only statuses that represent a completed procedure.
+  OMOP procedure_occurrence assumes the procedure was performed.
+  Resources with other statuses (preparation, in-progress, not-done,
+  on-hold, stopped, entered-in-error, unknown) are not converted.
+"""
+* http://hl7.org/fhir/CodeSystem/event-status#completed  "Completed"
+
 // Observation categories for OMOP observation table routing
 ValueSet: OmopObservationTableCategory
 Id: omop-observation-table-category
