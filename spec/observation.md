@@ -118,14 +118,33 @@ Resources are skipped (return null) when:
 - `code.coding` is empty (no coded concept)
 - `effectiveDateTime` is missing (OMOP date fields are required)
 
+## Unmapped FHIR Elements
+
+These Observation elements have no direct OMOP measurement/observation field:
+
+| FHIR Element | Reason Not Mapped | Potential Approach |
+|--------------|-------------------|--------------------|
+| `bodySite` | No column in measurement/observation | Could map to anatomic_site_concept_id (measurement) |
+| `method` | No column | Could map to measurement_event_id or note |
+| `specimen` | Not implemented | Could map to OMOP SPECIMEN table |
+| `device` | No direct equivalent | Could map to DEVICE_EXPOSURE |
+| `effectivePeriod` | Only effectiveDateTime supported | Use period.start as date |
+| `effectiveTiming` | Complex structure | Not applicable |
+| `effectiveInstant` | Not implemented | Map as effectiveDateTime |
+| `issued` | No direct equivalent | Result issue time |
+| `dataAbsentReason` | No direct equivalent | Could map to value_source_value |
+| `interpretation` | qualifier_source_value populated | qualifier_concept_id is placeholder (null) |
+| `note` | No column | Could map to note_nlp table |
+| `hasMember` | Observation grouping | No direct equivalent |
+| `derivedFrom` | Computed results | No direct equivalent |
+| `identifier` | No standard field | Could store in source_value |
+| `focus` | No direct equivalent | Specific to genetic tests |
+| `value[x]` as Boolean/Range/Ratio/etc | Not implemented | See mapping/observation/value.md |
+
 ## Gaps and Future Work
 
 - **Concept ID resolution**: All `*_concept_id` fields are placeholders (0/null) until vocabulary DB integration
 - **Unit concept mapping**: UCUM codes need lookup in OMOP vocabulary
-- **effectivePeriod**: Only `effectiveDateTime` is supported; `effectivePeriod` could map start→date
-- **Specimen reference**: `Observation.specimen` could link to OMOP specimen table
-- **Method**: `Observation.method` has no direct OMOP field
-- **bodySite**: `Observation.bodySite` could map to measurement anatomic site
 
 ## Reference Implementations
 
