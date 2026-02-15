@@ -2,6 +2,27 @@
 
 Analysis of the mapping patterns across `./mapping`, `./tests`, `./profiles`, `./spec`, and `./src/mapper`.
 
+## Definition of Done
+
+A resource mapping is **complete** when it has all 4 artifacts:
+
+1. **`mapping/{resource}/*.md`** — Per-element mapping specs + `nonmapped.md`
+2. **`tests/{resource}/*.json` + `run.test.ts`** — JSON data-driven tests (sequential + hash modes)
+3. **`spec/{resource}.md`** — Consolidated spec with unmapped elements table
+4. **`profiles/Omop{Resource}.fsh`** — FHIR Shorthand profile
+
+### Completeness Matrix
+
+| Resource | mapping/ | nonmapped.md | tests/ JSON | run.test.ts | spec/ | profile .fsh |
+|---|---|---|---|---|---|---|
+| Patient | 7 files | yes | 8 files | yes | yes | OmopPatient |
+| Condition | 5 files | yes | 5 files | yes | yes | OmopCondition |
+| Encounter | 4 files | yes | 5 files | yes | yes | OmopEncounter |
+| Observation | 5 files | yes | 6 files | yes | yes | OmopObservation + OmopMeasurement |
+| MedicationRequest | 5 files | yes | 4 files | yes | yes | OmopMedicationRequest |
+| MedicationStatement | 5 files | yes | 4 files | yes | yes | OmopMedicationStatement |
+| AllergyIntolerance | 4 files | yes | 5 files | yes | yes | OmopAllergyIntolerance |
+
 ## Current Architecture
 
 ```
@@ -135,7 +156,25 @@ Clinical codes (SNOMED, LOINC, RxNorm, ICD-10) need Athena vocabulary database f
 
 ### Two Testing Approaches
 
-**1. Inline test fixtures** (condition, encounter, observation, medication, allergy-intolerance)
+**1. JSON data-driven tests** (`tests/{resource}/run.test.ts` + `*.json` — all 7 resources)
+
+```json
+[{
+  "description": "test name",
+  "spec": "mapping/resource/element.md",
+  "fhir": [{ "resourceType": "...", ... }],
+  "omop": [{ "table": "omop_table", "field": "value" }]
+}]
+```
+
+The JSON data-driven approach is the primary testing method:
+- Hash mode compatibility testing (auto-relaxes ID assertions)
+- Partial field matching (only check specified fields)
+- Table-grouped assertions
+- `omop: null` for skip cases (invalid status, missing required fields)
+- Reusable test data
+
+**2. Inline test fixtures** (all resources — `tests/{resource}.test.ts`)
 
 ```typescript
 function makeResource(overrides = {}): ResourceType {
@@ -147,36 +186,20 @@ test("description", () => {
 });
 ```
 
-**2. JSON data-driven tests** (patient only — `tests/patient/run.test.ts`)
-
-```json
-[{
-  "description": "test name",
-  "fhir": [{ "resourceType": "Patient", ... }],
-  "omop": [{ "table": "person", "field": "value" }]
-}]
-```
-
-The JSON data-driven approach (`run.test.ts`) is more declarative and enables:
-- Hash mode compatibility testing (auto-relaxes ID assertions)
-- Partial field matching (only check specified fields)
-- Table-grouped assertions
-- Reusable test data
-
 ### Test Coverage
 
-| Mapper | Test Categories | Fixture Style |
-|--------|----------------|---------------|
-| Patient | gender, birthdate, identifier, address, death, race/ethnicity, references, full integration, hash mode | JSON data-driven + inline |
-| Condition | status filter, onset/abatement, type/status concepts, references | inline |
-| Encounter | status filter, visit class, dates | inline |
-| Observation | status filter, category routing, component expansion, values | inline |
-| MedicationRequest | status filter, fields, type concept, references, hash mode, code priority | inline |
-| MedicationStatement | status filter, dates, dosage, references, code priority | inline |
-| AllergyIntolerance | status filter, reactions, references | inline |
-| MappingContext | IdRegistry sequential/hash, collision detection, reference resolution | inline |
+| Mapper | JSON Fixtures | Inline Tests | Categories |
+|--------|--------------|--------------|------------|
+| Patient | 8 files | yes | gender, birthdate, identifier, address, death, race/ethnicity, references, full |
+| Condition | 5 files | yes | status, onset, abatement, references, full |
+| Encounter | 5 files | yes | status, class, period, references, full |
+| Observation | 6 files | yes | status, routing, component, measurement, references, full |
+| MedicationRequest | 4 files | yes | status, fields, references, full |
+| MedicationStatement | 4 files | yes | status, fields, references, full |
+| AllergyIntolerance | 5 files | yes | status, fields, reaction, references, full |
+| MappingContext | — | yes | IdRegistry sequential/hash, collision detection, reference resolution |
 
-**Total: 370 tests, 972 assertions, 9 test files.**
+**Total: 601 tests, 2000 expect() calls, 15 test files.**
 
 ## Profiles (FHIR Shorthand)
 
@@ -196,32 +219,19 @@ The JSON data-driven approach (`run.test.ts`) is more declarative and enables:
 
 Profiles mirror the mapper validation rules — a resource conforming to the profile is guaranteed to produce a non-null mapping result.
 
-## Identified Inconsistencies
+## Resolved Inconsistencies
 
-### 1. MedicationStatement uses `resolveReferenceAsNumber` instead of MappingContext
+### MedicationStatement (fixed)
 
-`medication-statement.ts` is the only mapper that uses the old `resolveReferenceAsNumber()` utility instead of `ctx.ids.resolveRef()`. This means:
+Previously `medication-statement.ts` used legacy `resolveReferenceAsNumber()` instead of `MappingContext`. This has been fixed — all 7 mappers now follow the uniform contract with `ctx.ids.resolveRef()` and `ctx.ids.getId()`.
 
-- No IdRegistry tracking for referenced resources
-- References only work if FHIR IDs happen to be numeric integers
-- Hash mode doesn't work for MedicationStatement references
-- Tests use `expect(result.person_id).toBe(123)` (numeric FHIR ID) vs the pattern in other tests
+## Open Design Notes
 
-All other mappers (patient, condition, encounter, observation, medication-request, allergy-intolerance) correctly use `MappingContext`.
-
-### 2. MedicationStatement doesn't accept MappingContext parameter
-
-The function signature is `mapMedicationStatement(statement)` — it doesn't accept or use a `MappingContext`. This breaks the uniform mapper contract.
-
-### 3. MedicationStatement missing `drug_exposure_id`
-
-The MedicationStatement mapper doesn't assign `drug_exposure_id` from the IdRegistry, while MedicationRequest does.
-
-### 4. No unified result type for single-table mappers
+### No unified result type for single-table mappers
 
 Patient has `PatientMappingResult`, Observation has `ObservationMappingResult`, but single-table mappers return the OMOP type directly. This is fine now but could benefit from a uniform `MappingResult<T>` wrapper if we add metadata (warnings, unmapped codes, etc.).
 
-### 5. Observation component result types are loose
+### Observation component result types are loose
 
 `ObservationMappingResult` uses `Measurement | Measurement[] | null` — the union with arrays makes consumer code complex. A consistent array-based approach would be cleaner.
 
