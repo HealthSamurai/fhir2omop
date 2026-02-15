@@ -1,22 +1,22 @@
-# Observation — немаппированные элементы
+# Observation — Unmapped Elements
 
-Элементы FHIR Observation, не имеющие прямого маппинга в OMOP MEASUREMENT / OBSERVATION.
+FHIR Observation elements with no direct mapping to OMOP MEASUREMENT / OBSERVATION.
 
-| FHIR элемент | Причина | Потенциальный подход |
+| FHIR Element | Reason | Potential Approach |
 |---|---|---|
-| `bodySite` | Нет колонки в measurement/observation | Маппить в anatomic_site_concept_id (measurement) |
-| `method` | Нет колонки | Маппить в measurement_event_id или note |
-| `specimen` | Не реализовано | Маппить в OMOP SPECIMEN таблицу |
-| `device` | Нет прямого аналога | Маппить в DEVICE_EXPOSURE |
-| `effectivePeriod` | Только effectiveDateTime поддерживается | Использовать period.start как date |
-| `effectiveTiming` | Сложная структура | Не применимо |
-| `effectiveInstant` | Не реализовано | Маппить как effectiveDateTime |
-| `issued` | Нет прямого аналога | Время выдачи результата |
-| `dataAbsentReason` | Нет прямого аналога | Маппить в value_source_value |
-| `interpretation` | qualifier_source_value заполняется | qualifier_concept_id — placeholder (null) |
-| `note` | Нет колонки | Маппить в note_nlp |
-| `hasMember` | Группировка observations | Нет прямого аналога |
-| `derivedFrom` | Вычисленные результаты | Нет прямого аналога |
-| `identifier` | Нет стандартного поля | Можно хранить в source_value |
-| `focus` | Нет прямого аналога | Специфично для генетических тестов |
-| `value[x]` как Boolean/Range/Ratio/etc | Не реализованы | См. mapping/observation/value.md |
+| `bodySite` | No column in measurement/observation | Map to anatomic_site_concept_id (measurement) |
+| `method` | No column | Map to measurement_event_id or note |
+| `specimen` | Not implemented | Map to OMOP SPECIMEN table |
+| `device` | No direct equivalent | Map to DEVICE_EXPOSURE |
+| `effectivePeriod` | Only effectiveDateTime is supported | Use period.start as date |
+| `effectiveTiming` | Complex structure | Not applicable |
+| `effectiveInstant` | Not implemented | Map as effectiveDateTime |
+| `issued` | No direct equivalent | Time the result was issued |
+| `dataAbsentReason` | No direct equivalent | Map to value_source_value |
+| `interpretation` | qualifier_source_value is populated | qualifier_concept_id — placeholder (null) |
+| `note` | No column | Map to note_nlp |
+| `hasMember` | Observation grouping | No direct equivalent |
+| `derivedFrom` | Computed results | No direct equivalent |
+| `identifier` | No standard field | Could store in source_value |
+| `focus` | No direct equivalent | Specific to genetic tests |
+| `value[x]` as Boolean/Range/Ratio/etc | Not implemented | See mapping/observation/value.md |

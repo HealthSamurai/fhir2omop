@@ -1,16 +1,16 @@
-# Condition — немаппированные элементы
+# Condition — Unmapped Elements
 
-Элементы FHIR Condition, не имеющие прямого маппинга в OMOP CONDITION_OCCURRENCE.
+FHIR Condition elements with no direct mapping to OMOP CONDITION_OCCURRENCE.
 
-| FHIR элемент | Причина | Потенциальный подход |
+| FHIR Element | Reason | Potential Approach |
 |---|---|---|
-| `severity` | Нет колонки в condition_occurrence | Создать отдельную запись observation |
-| `bodySite` | Нет колонки в condition_occurrence | Маппить в observation или note |
-| `stage` | Нет колонки в condition_occurrence | Создать отдельную запись observation/measurement |
-| `evidence` | Нет колонки в condition_occurrence | Связать с observation записями |
-| `note` | Нет колонки в condition_occurrence | Маппить в note_nlp таблицу |
-| `identifier` | Нет стандартного поля | Можно хранить в condition_source_value |
-| `verificationStatus` | Используется только для фильтрации | Нет OMOP эквивалента помимо фильтрации |
-| `onset[x]` как Age/Range/String | Неточные временные данные | Требует контекста пациента для вычисления |
-| `abatement[x]` как Age/Range | Неточные временные данные | Требует контекста пациента |
-| `recorder` vs `asserter` | OMOP имеет один provider_id | asserter приоритетный; recorder — fallback |
+| `severity` | No column in condition_occurrence | Create separate observation record |
+| `bodySite` | No column in condition_occurrence | Map to observation or note |
+| `stage` | No column in condition_occurrence | Create separate observation/measurement record |
+| `evidence` | No column in condition_occurrence | Link to observation records |
+| `note` | No column in condition_occurrence | Map to note_nlp table |
+| `identifier` | No standard field | Could store in condition_source_value |
+| `verificationStatus` | Used only for filtering | No OMOP equivalent beyond filtering |
+| `onset[x]` as Age/Range/String | Imprecise temporal data | Requires patient context for calculation |
+| `abatement[x]` as Age/Range | Imprecise temporal data | Requires patient context |
+| `recorder` vs `asserter` | OMOP has a single provider_id | asserter is priority; recorder is fallback |

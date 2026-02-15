@@ -1,19 +1,19 @@
-# Patient — немаппированные элементы
+# Patient — Unmapped Elements
 
-Элементы FHIR Patient, не имеющие прямого маппинга в OMOP PERSON / LOCATION / DEATH.
+FHIR Patient elements with no direct mapping to OMOP PERSON / LOCATION / DEATH.
 
-| FHIR элемент | Причина | Потенциальный подход |
+| FHIR Element | Reason | Potential Approach |
 |---|---|---|
-| `name` | Нет колонки в PERSON (OMOP деидентифицирован) | PII — не хранится в OMOP CDM |
-| `telecom` | Нет колонки | PII — телефон/email |
-| `maritalStatus` | Нет колонки в PERSON | Маппить в observation |
-| `multipleBirth[x]` | Нет колонки | Маппить в observation |
-| `photo` | Нет колонки | PII — не применимо |
-| `contact` | Нет колонки | Контактные лица |
-| `communication` | Нет колонки | Язык общения |
-| `link` | Нет прямого аналога | Связи между записями пациентов |
-| `active` | Не используется для фильтрации | Статус записи (не клинический) |
-| `generalPractitioner[1..n]` | OMOP имеет один provider_id | Используем только первого |
-| `extension` (кроме race/ethnicity) | Нет стандартных полей | Специфичные расширения |
-| `identifier[1..n]` (кроме лучшего) | person_source_value — одно значение | Выбираем лучший по приоритету SSN > MRN > first |
-| `address[1..n]` (кроме home) | Одна LOCATION на пациента | Выбираем home address |
+| `name` | No column in PERSON (OMOP is de-identified) | PII — not stored in OMOP CDM |
+| `telecom` | No column | PII — phone/email |
+| `maritalStatus` | No column in PERSON | Map to observation |
+| `multipleBirth[x]` | No column | Map to observation |
+| `photo` | No column | PII — not applicable |
+| `contact` | No column | Contact persons |
+| `communication` | No column | Communication language |
+| `link` | No direct equivalent | Links between patient records |
+| `active` | Not used for filtering | Record status (not clinical) |
+| `generalPractitioner[1..n]` | OMOP has a single provider_id | Use only the first |
+| `extension` (other than race/ethnicity) | No standard fields | Implementation-specific extensions |
+| `identifier[1..n]` (other than best) | person_source_value is a single value | Select best by priority SSN > MRN > first |
+| `address[1..n]` (other than home) | One LOCATION per patient | Select home address |

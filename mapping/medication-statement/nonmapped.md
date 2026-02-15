@@ -1,19 +1,21 @@
-# MedicationStatement — немаппированные элементы
+# MedicationStatement — Unmapped Elements
 
-| FHIR элемент | Причина | Потенциальный подход |
+FHIR MedicationStatement elements with no direct mapping to OMOP DRUG_EXPOSURE.
+
+| FHIR Element | Reason | Potential Approach |
 |---|---|---|
-| `medicationReference` | Не реализовано | Разрешить ссылку → извлечь code |
-| `reasonCode` | Нет колонки в drug_exposure | Маппить как condition_occurrence |
-| `reasonReference` | Нет колонки | Связать через visit_occurrence_id |
-| `note` | Нет колонки | Маппить в note_nlp |
-| `dosage[1..n]` | Берём только первую | Сложные схемы упрощены |
-| `dosage.timing` | Нет прямого аналога | Расписание приёма |
-| `dosage.site` | Нет колонки | Место введения |
-| `dosage.method` | Нет колонки | Метод введения |
-| `dosage.maxDosePerPeriod` | Нет колонки | Макс. доза |
-| `statusReason` | stop_reason — не маппится | Можно маппить в stop_reason |
-| `category` | Нет прямого аналога | Категория (inpatient/outpatient/community) |
-| `dateAsserted` | Нет колонки | Дата утверждения |
-| `derivedFrom` | Нет прямого аналога | Источник данных |
-| `partOf` | Нет прямого аналога | Часть другого события |
-| `identifier` | Нет стандартного поля | Можно хранить в drug_source_value |
+| `medicationReference` | Not implemented | Resolve reference → extract code |
+| `reasonCode` | No column in drug_exposure | Map as condition_occurrence |
+| `reasonReference` | No column | Link via visit_occurrence_id |
+| `note` | No column | Map to note_nlp |
+| `dosage[1..n]` | Only the first is used | Complex regimens are simplified |
+| `dosage.timing` | No direct equivalent | Administration schedule |
+| `dosage.site` | No column | Administration site |
+| `dosage.method` | No column | Administration method |
+| `dosage.maxDosePerPeriod` | No column | Maximum dose |
+| `statusReason` | stop_reason — not mapped | Could map to stop_reason |
+| `category` | No direct equivalent | Category (inpatient/outpatient/community) |
+| `dateAsserted` | No column | Date asserted |
+| `derivedFrom` | No direct equivalent | Data source |
+| `partOf` | No direct equivalent | Part of another event |
+| `identifier` | No standard field | Could store in drug_source_value |
