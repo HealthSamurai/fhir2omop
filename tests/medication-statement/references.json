@@ -1,0 +1,37 @@
+[
+  {
+    "description": "informationSource → provider_id, context → visit_occurrence_id",
+    "spec": "mapping/medication-statement/references.md",
+    "fhir": [
+      {
+        "resourceType": "MedicationStatement",
+        "id": "ms-refs",
+        "status": "active",
+        "medicationCodeableConcept": { "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "313782" }] },
+        "subject": { "reference": "Patient/pt-1" },
+        "informationSource": { "reference": "Practitioner/dr-1" },
+        "context": { "reference": "Encounter/enc-1" },
+        "effectiveDateTime": "2024-01-15T10:00:00Z"
+      }
+    ],
+    "omop": [
+      { "table": "drug_exposure", "drug_type_concept_id": 44787730 }
+    ]
+  },
+  {
+    "description": "no informationSource, no context → null provider/visit",
+    "fhir": [
+      {
+        "resourceType": "MedicationStatement",
+        "id": "ms-norefs",
+        "status": "active",
+        "medicationCodeableConcept": { "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "313782" }] },
+        "subject": { "reference": "Patient/pt-1" },
+        "effectiveDateTime": "2024-01-15T10:00:00Z"
+      }
+    ],
+    "omop": [
+      { "table": "drug_exposure", "provider_id": null, "visit_occurrence_id": null }
+    ]
+  }
+]

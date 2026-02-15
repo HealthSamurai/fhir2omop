@@ -1,0 +1,77 @@
+[
+  {
+    "description": "active → mapped",
+    "spec": "mapping/medication-statement/status.md",
+    "fhir": [
+      {
+        "resourceType": "MedicationStatement",
+        "id": "ms-1",
+        "status": "active",
+        "medicationCodeableConcept": { "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "313782", "display": "Acetaminophen 325 MG" }] },
+        "subject": { "reference": "Patient/1" },
+        "effectiveDateTime": "2024-01-15T10:00:00Z"
+      }
+    ],
+    "omop": [
+      { "table": "drug_exposure", "drug_source_value": "313782" }
+    ]
+  },
+  {
+    "description": "completed → mapped",
+    "fhir": [
+      {
+        "resourceType": "MedicationStatement",
+        "id": "ms-2",
+        "status": "completed",
+        "medicationCodeableConcept": { "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "313782" }] },
+        "subject": { "reference": "Patient/1" },
+        "effectiveDateTime": "2024-01-15T10:00:00Z"
+      }
+    ],
+    "omop": [
+      { "table": "drug_exposure", "drug_source_value": "313782" }
+    ]
+  },
+  {
+    "description": "entered-in-error → skipped",
+    "fhir": [
+      {
+        "resourceType": "MedicationStatement",
+        "id": "ms-3",
+        "status": "entered-in-error",
+        "medicationCodeableConcept": { "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "313782" }] },
+        "subject": { "reference": "Patient/1" },
+        "effectiveDateTime": "2024-01-15T10:00:00Z"
+      }
+    ],
+    "omop": null
+  },
+  {
+    "description": "intended → skipped",
+    "fhir": [
+      {
+        "resourceType": "MedicationStatement",
+        "id": "ms-4",
+        "status": "intended",
+        "medicationCodeableConcept": { "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "313782" }] },
+        "subject": { "reference": "Patient/1" },
+        "effectiveDateTime": "2024-01-15T10:00:00Z"
+      }
+    ],
+    "omop": null
+  },
+  {
+    "description": "not-taken → skipped",
+    "fhir": [
+      {
+        "resourceType": "MedicationStatement",
+        "id": "ms-5",
+        "status": "not-taken",
+        "medicationCodeableConcept": { "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "313782" }] },
+        "subject": { "reference": "Patient/1" },
+        "effectiveDateTime": "2024-01-15T10:00:00Z"
+      }
+    ],
+    "omop": null
+  }
+]

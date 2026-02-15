@@ -1,0 +1,101 @@
+[
+  {
+    "description": "single reaction manifestation → value_as_string",
+    "spec": "mapping/allergy-intolerance/reaction.md",
+    "fhir": [
+      {
+        "resourceType": "AllergyIntolerance",
+        "id": "allergy-rx1",
+        "clinicalStatus": { "coding": [{ "code": "active" }] },
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "387207008" }] },
+        "patient": { "reference": "Patient/1" },
+        "onsetDateTime": "2023-03-15",
+        "reaction": [{
+          "manifestation": [
+            { "coding": [{ "code": "247472004", "display": "Hives" }] }
+          ]
+        }]
+      }
+    ],
+    "omop": [
+      { "table": "observation", "value_as_string": "Hives" }
+    ]
+  },
+  {
+    "description": "multiple manifestations joined with semicolon",
+    "fhir": [
+      {
+        "resourceType": "AllergyIntolerance",
+        "id": "allergy-rx2",
+        "clinicalStatus": { "coding": [{ "code": "active" }] },
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "387207008" }] },
+        "patient": { "reference": "Patient/1" },
+        "onsetDateTime": "2023-03-15",
+        "reaction": [{
+          "manifestation": [
+            { "coding": [{ "code": "247472004", "display": "Hives" }] },
+            { "coding": [{ "code": "267036007", "display": "Shortness of breath" }] }
+          ]
+        }]
+      }
+    ],
+    "omop": [
+      { "table": "observation", "value_as_string": "Hives; Shortness of breath" }
+    ]
+  },
+  {
+    "description": "multiple reactions → all manifestations joined",
+    "fhir": [
+      {
+        "resourceType": "AllergyIntolerance",
+        "id": "allergy-rx3",
+        "clinicalStatus": { "coding": [{ "code": "active" }] },
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "387207008" }] },
+        "patient": { "reference": "Patient/1" },
+        "onsetDateTime": "2023-03-15",
+        "reaction": [
+          { "manifestation": [{ "coding": [{ "display": "Hives" }] }] },
+          { "manifestation": [{ "coding": [{ "display": "Nausea" }] }] }
+        ]
+      }
+    ],
+    "omop": [
+      { "table": "observation", "value_as_string": "Hives; Nausea" }
+    ]
+  },
+  {
+    "description": "manifestation text fallback",
+    "fhir": [
+      {
+        "resourceType": "AllergyIntolerance",
+        "id": "allergy-rx4",
+        "clinicalStatus": { "coding": [{ "code": "active" }] },
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "387207008" }] },
+        "patient": { "reference": "Patient/1" },
+        "onsetDateTime": "2023-03-15",
+        "reaction": [{
+          "manifestation": [{ "text": "Rash" }]
+        }]
+      }
+    ],
+    "omop": [
+      { "table": "observation", "value_as_string": "Rash" }
+    ]
+  },
+  {
+    "description": "no reaction → null value_as_string",
+    "fhir": [
+      {
+        "resourceType": "AllergyIntolerance",
+        "id": "allergy-rx5",
+        "clinicalStatus": { "coding": [{ "code": "active" }] },
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "387207008" }] },
+        "patient": { "reference": "Patient/1" },
+        "onsetDateTime": "2023-03-15"
+      }
+    ],
+    "omop": [
+      { "table": "observation", "value_as_string": null }
+    ]
+  }
+]

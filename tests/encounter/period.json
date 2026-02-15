@@ -1,0 +1,73 @@
+[
+  {
+    "description": "start and end dates extracted",
+    "spec": "mapping/encounter/period.md",
+    "fhir": [
+      {
+        "resourceType": "Encounter",
+        "id": "enc-period-1",
+        "status": "finished",
+        "class": { "code": "AMB" },
+        "subject": { "reference": "Patient/1" },
+        "period": { "start": "2023-06-15T09:00:00Z", "end": "2023-06-15T17:00:00Z" }
+      }
+    ],
+    "omop": [
+      {
+        "table": "visit_occurrence",
+        "visit_start_date": "2023-06-15",
+        "visit_start_datetime": "2023-06-15T09:00:00Z",
+        "visit_end_date": "2023-06-15",
+        "visit_end_datetime": "2023-06-15T17:00:00Z"
+      }
+    ]
+  },
+  {
+    "description": "missing end date → uses start date for end_date",
+    "fhir": [
+      {
+        "resourceType": "Encounter",
+        "id": "enc-period-2",
+        "status": "finished",
+        "class": { "code": "AMB" },
+        "subject": { "reference": "Patient/1" },
+        "period": { "start": "2023-06-15T09:00:00Z" }
+      }
+    ],
+    "omop": [
+      {
+        "table": "visit_occurrence",
+        "visit_start_date": "2023-06-15",
+        "visit_end_date": "2023-06-15",
+        "visit_end_datetime": null
+      }
+    ]
+  },
+  {
+    "description": "missing period → skipped",
+    "fhir": [
+      {
+        "resourceType": "Encounter",
+        "id": "enc-no-period",
+        "status": "finished",
+        "class": { "code": "AMB" },
+        "subject": { "reference": "Patient/1" }
+      }
+    ],
+    "omop": null
+  },
+  {
+    "description": "period without start → skipped",
+    "fhir": [
+      {
+        "resourceType": "Encounter",
+        "id": "enc-no-start",
+        "status": "finished",
+        "class": { "code": "AMB" },
+        "subject": { "reference": "Patient/1" },
+        "period": { "end": "2023-06-15T17:00:00Z" }
+      }
+    ],
+    "omop": null
+  }
+]

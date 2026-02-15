@@ -1,0 +1,41 @@
+[
+  {
+    "description": "subject, encounter, performer → person_id, visit_occurrence_id, provider_id",
+    "spec": "mapping/observation/references.md",
+    "fhir": [
+      {
+        "resourceType": "Observation",
+        "id": "obs-refs",
+        "status": "final",
+        "category": [{ "coding": [{ "code": "laboratory" }] }],
+        "code": { "coding": [{ "system": "http://loinc.org", "code": "2339-0" }] },
+        "subject": { "reference": "Patient/pt-1" },
+        "encounter": { "reference": "Encounter/enc-1" },
+        "performer": [{ "reference": "Practitioner/dr-1" }],
+        "effectiveDateTime": "2023-06-15T10:00:00Z",
+        "valueQuantity": { "value": 95.0, "unit": "mg/dL" }
+      }
+    ],
+    "omop": [
+      { "table": "measurement", "measurement_type_concept_id": 32817 }
+    ]
+  },
+  {
+    "description": "no performer, no encounter → null provider/visit",
+    "fhir": [
+      {
+        "resourceType": "Observation",
+        "id": "obs-norefs",
+        "status": "final",
+        "category": [{ "coding": [{ "code": "laboratory" }] }],
+        "code": { "coding": [{ "system": "http://loinc.org", "code": "2339-0" }] },
+        "subject": { "reference": "Patient/pt-1" },
+        "effectiveDateTime": "2023-06-15T10:00:00Z",
+        "valueQuantity": { "value": 95.0, "unit": "mg/dL" }
+      }
+    ],
+    "omop": [
+      { "table": "measurement", "provider_id": null, "visit_occurrence_id": null }
+    ]
+  }
+]

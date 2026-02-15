@@ -1,0 +1,79 @@
+[
+  {
+    "description": "finished → mapped",
+    "spec": "mapping/encounter/status.md",
+    "fhir": [
+      {
+        "resourceType": "Encounter",
+        "id": "enc-1",
+        "status": "finished",
+        "class": { "code": "AMB" },
+        "subject": { "reference": "Patient/1" },
+        "period": { "start": "2023-06-15T09:00:00Z" }
+      }
+    ],
+    "omop": [
+      { "table": "visit_occurrence", "visit_source_value": "AMB" }
+    ]
+  },
+  {
+    "description": "in-progress → mapped",
+    "spec": "mapping/encounter/status.md",
+    "fhir": [
+      {
+        "resourceType": "Encounter",
+        "id": "enc-2",
+        "status": "in-progress",
+        "class": { "code": "AMB" },
+        "subject": { "reference": "Patient/1" },
+        "period": { "start": "2023-06-15T09:00:00Z" }
+      }
+    ],
+    "omop": [
+      { "table": "visit_occurrence", "visit_source_value": "AMB" }
+    ]
+  },
+  {
+    "description": "planned → skipped",
+    "spec": "mapping/encounter/status.md",
+    "fhir": [
+      {
+        "resourceType": "Encounter",
+        "id": "enc-3",
+        "status": "planned",
+        "class": { "code": "AMB" },
+        "subject": { "reference": "Patient/1" },
+        "period": { "start": "2023-06-15T09:00:00Z" }
+      }
+    ],
+    "omop": null
+  },
+  {
+    "description": "cancelled → skipped",
+    "fhir": [
+      {
+        "resourceType": "Encounter",
+        "id": "enc-4",
+        "status": "cancelled",
+        "class": { "code": "AMB" },
+        "subject": { "reference": "Patient/1" },
+        "period": { "start": "2023-06-15T09:00:00Z" }
+      }
+    ],
+    "omop": null
+  },
+  {
+    "description": "entered-in-error → skipped",
+    "fhir": [
+      {
+        "resourceType": "Encounter",
+        "id": "enc-5",
+        "status": "entered-in-error",
+        "class": { "code": "AMB" },
+        "subject": { "reference": "Patient/1" },
+        "period": { "start": "2023-06-15T09:00:00Z" }
+      }
+    ],
+    "omop": null
+  }
+]

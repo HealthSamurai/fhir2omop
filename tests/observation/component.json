@@ -1,0 +1,100 @@
+[
+  {
+    "description": "blood pressure → 2 measurement records (systolic + diastolic)",
+    "spec": "mapping/observation/component.md",
+    "fhir": [
+      {
+        "resourceType": "Observation",
+        "id": "bp-1",
+        "status": "final",
+        "category": [{ "coding": [{ "code": "vital-signs" }] }],
+        "code": { "coding": [{ "system": "http://loinc.org", "code": "85354-9", "display": "Blood pressure panel" }] },
+        "subject": { "reference": "Patient/1" },
+        "effectiveDateTime": "2023-06-15T10:00:00Z",
+        "component": [
+          {
+            "code": { "coding": [{ "system": "http://loinc.org", "code": "8480-6", "display": "Systolic blood pressure" }] },
+            "valueQuantity": { "value": 120, "unit": "mmHg" }
+          },
+          {
+            "code": { "coding": [{ "system": "http://loinc.org", "code": "8462-4", "display": "Diastolic blood pressure" }] },
+            "valueQuantity": { "value": 80, "unit": "mmHg" }
+          }
+        ]
+      }
+    ],
+    "omop": [
+      {
+        "table": "measurement",
+        "measurement_source_value": "8480-6",
+        "value_as_number": 120,
+        "unit_source_value": "mmHg",
+        "measurement_date": "2023-06-15"
+      },
+      {
+        "table": "measurement",
+        "measurement_source_value": "8462-4",
+        "value_as_number": 80,
+        "unit_source_value": "mmHg",
+        "measurement_date": "2023-06-15"
+      }
+    ]
+  },
+  {
+    "description": "component with referenceRange → range_low/high",
+    "fhir": [
+      {
+        "resourceType": "Observation",
+        "id": "bp-2",
+        "status": "final",
+        "category": [{ "coding": [{ "code": "vital-signs" }] }],
+        "code": { "coding": [{ "system": "http://loinc.org", "code": "85354-9" }] },
+        "subject": { "reference": "Patient/1" },
+        "effectiveDateTime": "2023-06-15T10:00:00Z",
+        "component": [
+          {
+            "code": { "coding": [{ "system": "http://loinc.org", "code": "8480-6" }] },
+            "valueQuantity": { "value": 120, "unit": "mmHg" },
+            "referenceRange": [{ "low": { "value": 90 }, "high": { "value": 140 } }]
+          }
+        ]
+      }
+    ],
+    "omop": [
+      {
+        "table": "measurement",
+        "measurement_source_value": "8480-6",
+        "range_low": 90,
+        "range_high": 140
+      }
+    ]
+  },
+  {
+    "description": "survey components → observation table",
+    "fhir": [
+      {
+        "resourceType": "Observation",
+        "id": "survey-comp",
+        "status": "final",
+        "category": [{ "coding": [{ "code": "survey" }] }],
+        "code": { "coding": [{ "system": "http://loinc.org", "code": "44249-1", "display": "PHQ-9" }] },
+        "subject": { "reference": "Patient/1" },
+        "effectiveDateTime": "2023-06-15T10:00:00Z",
+        "component": [
+          {
+            "code": { "coding": [{ "system": "http://loinc.org", "code": "44250-9" }] },
+            "valueString": "Nearly every day"
+          },
+          {
+            "code": { "coding": [{ "system": "http://loinc.org", "code": "44255-8" }] },
+            "valueString": "Several days"
+          }
+        ]
+      }
+    ],
+    "omop": [
+      { "table": "observation", "observation_source_value": "44250-9" },
+      { "table": "observation", "observation_source_value": "44255-8" }
+    ]
+  }
+]

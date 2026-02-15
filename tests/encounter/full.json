@@ -1,0 +1,54 @@
+[
+  {
+    "description": "full Encounter → visit_occurrence with all mapped fields",
+    "fhir": [
+      {
+        "resourceType": "Encounter",
+        "id": "enc-full",
+        "status": "finished",
+        "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "IMP" },
+        "subject": { "reference": "Patient/pt-1" },
+        "participant": [{ "individual": { "reference": "Practitioner/dr-1" } }],
+        "serviceProvider": { "reference": "Organization/org-1" },
+        "period": { "start": "2023-06-15T09:00:00Z", "end": "2023-06-20T14:00:00Z" }
+      }
+    ],
+    "omop": [
+      {
+        "table": "visit_occurrence",
+        "visit_concept_id": 9201,
+        "visit_start_date": "2023-06-15",
+        "visit_start_datetime": "2023-06-15T09:00:00Z",
+        "visit_end_date": "2023-06-20",
+        "visit_end_datetime": "2023-06-20T14:00:00Z",
+        "visit_type_concept_id": 32817,
+        "visit_source_value": "IMP",
+        "visit_source_concept_id": 0
+      }
+    ]
+  },
+  {
+    "description": "minimal Encounter → only required fields",
+    "fhir": [
+      {
+        "resourceType": "Encounter",
+        "id": "enc-minimal",
+        "status": "finished",
+        "class": { "code": "AMB" },
+        "subject": { "reference": "Patient/pt-2" },
+        "period": { "start": "2024-01-10" }
+      }
+    ],
+    "omop": [
+      {
+        "table": "visit_occurrence",
+        "visit_concept_id": 9202,
+        "visit_start_date": "2024-01-10",
+        "visit_end_date": "2024-01-10",
+        "visit_end_datetime": null,
+        "visit_type_concept_id": 32817,
+        "visit_source_value": "AMB"
+      }
+    ]
+  }
+]

@@ -1,0 +1,82 @@
+[
+  {
+    "description": "active → mapped",
+    "spec": "mapping/medication-request/status.md",
+    "fhir": [
+      {
+        "resourceType": "MedicationRequest",
+        "id": "med-1",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": { "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "1049502", "display": "Lisinopril 10 MG" }] },
+        "subject": { "reference": "Patient/1" },
+        "authoredOn": "2023-06-15T09:00:00Z"
+      }
+    ],
+    "omop": [
+      { "table": "drug_exposure", "drug_source_value": "1049502" }
+    ]
+  },
+  {
+    "description": "completed → mapped",
+    "fhir": [
+      {
+        "resourceType": "MedicationRequest",
+        "id": "med-2",
+        "status": "completed",
+        "intent": "order",
+        "medicationCodeableConcept": { "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "1049502" }] },
+        "subject": { "reference": "Patient/1" },
+        "authoredOn": "2023-06-15T09:00:00Z"
+      }
+    ],
+    "omop": [
+      { "table": "drug_exposure", "drug_source_value": "1049502" }
+    ]
+  },
+  {
+    "description": "cancelled → skipped",
+    "fhir": [
+      {
+        "resourceType": "MedicationRequest",
+        "id": "med-3",
+        "status": "cancelled",
+        "intent": "order",
+        "medicationCodeableConcept": { "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "1049502" }] },
+        "subject": { "reference": "Patient/1" },
+        "authoredOn": "2023-06-15T09:00:00Z"
+      }
+    ],
+    "omop": null
+  },
+  {
+    "description": "entered-in-error → skipped",
+    "fhir": [
+      {
+        "resourceType": "MedicationRequest",
+        "id": "med-4",
+        "status": "entered-in-error",
+        "intent": "order",
+        "medicationCodeableConcept": { "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "1049502" }] },
+        "subject": { "reference": "Patient/1" },
+        "authoredOn": "2023-06-15T09:00:00Z"
+      }
+    ],
+    "omop": null
+  },
+  {
+    "description": "draft → skipped",
+    "fhir": [
+      {
+        "resourceType": "MedicationRequest",
+        "id": "med-5",
+        "status": "draft",
+        "intent": "order",
+        "medicationCodeableConcept": { "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "1049502" }] },
+        "subject": { "reference": "Patient/1" },
+        "authoredOn": "2023-06-15T09:00:00Z"
+      }
+    ],
+    "omop": null
+  }
+]

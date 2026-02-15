@@ -1,0 +1,139 @@
+[
+  {
+    "description": "authoredOn → drug_exposure_start_date/datetime",
+    "spec": "mapping/medication-request/dates.md",
+    "fhir": [
+      {
+        "resourceType": "MedicationRequest",
+        "id": "med-dates",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": { "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "1049502" }] },
+        "subject": { "reference": "Patient/1" },
+        "authoredOn": "2023-06-15T09:00:00Z"
+      }
+    ],
+    "omop": [
+      {
+        "table": "drug_exposure",
+        "drug_exposure_start_date": "2023-06-15",
+        "drug_exposure_start_datetime": "2023-06-15T09:00:00Z",
+        "drug_exposure_end_date": null,
+        "drug_exposure_end_datetime": null
+      }
+    ]
+  },
+  {
+    "description": "dispenseRequest.validityPeriod.end → drug_exposure_end_date",
+    "fhir": [
+      {
+        "resourceType": "MedicationRequest",
+        "id": "med-end",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": { "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "1049502" }] },
+        "subject": { "reference": "Patient/1" },
+        "authoredOn": "2023-06-15T09:00:00Z",
+        "dispenseRequest": { "validityPeriod": { "end": "2023-12-15T09:00:00Z" } }
+      }
+    ],
+    "omop": [
+      {
+        "table": "drug_exposure",
+        "drug_exposure_end_date": "2023-12-15",
+        "drug_exposure_end_datetime": "2023-12-15T09:00:00Z"
+      }
+    ]
+  },
+  {
+    "description": "dosage quantity and route mapped",
+    "spec": "mapping/medication-request/dosage.md",
+    "fhir": [
+      {
+        "resourceType": "MedicationRequest",
+        "id": "med-dosage",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": { "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "1049502" }] },
+        "subject": { "reference": "Patient/1" },
+        "authoredOn": "2023-06-15T09:00:00Z",
+        "dosageInstruction": [
+          {
+            "route": { "coding": [{ "code": "26643006", "display": "Oral" }] },
+            "doseAndRate": [{ "doseQuantity": { "value": 10, "unit": "mg" } }]
+          }
+        ]
+      }
+    ],
+    "omop": [
+      {
+        "table": "drug_exposure",
+        "quantity": 10,
+        "route_source_value": "Oral"
+      }
+    ]
+  },
+  {
+    "description": "refills from dispenseRequest",
+    "fhir": [
+      {
+        "resourceType": "MedicationRequest",
+        "id": "med-refills",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": { "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "1049502" }] },
+        "subject": { "reference": "Patient/1" },
+        "authoredOn": "2023-06-15T09:00:00Z",
+        "dispenseRequest": { "numberOfRepeatsAllowed": 3 }
+      }
+    ],
+    "omop": [
+      { "table": "drug_exposure", "refills": 3 }
+    ]
+  },
+  {
+    "description": "no authoredOn → skipped",
+    "fhir": [
+      {
+        "resourceType": "MedicationRequest",
+        "id": "med-nodate",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": { "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "1049502" }] },
+        "subject": { "reference": "Patient/1" }
+      }
+    ],
+    "omop": null
+  },
+  {
+    "description": "no medication code → skipped",
+    "fhir": [
+      {
+        "resourceType": "MedicationRequest",
+        "id": "med-nocode",
+        "status": "active",
+        "intent": "order",
+        "subject": { "reference": "Patient/1" },
+        "authoredOn": "2023-06-15T09:00:00Z"
+      }
+    ],
+    "omop": null
+  },
+  {
+    "description": "drug_type_concept_id is 38000177 (Prescription written)",
+    "fhir": [
+      {
+        "resourceType": "MedicationRequest",
+        "id": "med-type",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": { "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "1049502" }] },
+        "subject": { "reference": "Patient/1" },
+        "authoredOn": "2023-06-15T09:00:00Z"
+      }
+    ],
+    "omop": [
+      { "table": "drug_exposure", "drug_type_concept_id": 38000177 }
+    ]
+  }
+]

@@ -1,0 +1,66 @@
+[
+  {
+    "description": "full lab Observation → measurement with all mapped fields",
+    "fhir": [
+      {
+        "resourceType": "Observation",
+        "id": "obs-full-lab",
+        "status": "final",
+        "category": [{ "coding": [{ "system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "laboratory" }] }],
+        "code": { "coding": [{ "system": "http://loinc.org", "code": "2339-0", "display": "Glucose [Mass/volume] in Blood" }] },
+        "subject": { "reference": "Patient/pt-1" },
+        "encounter": { "reference": "Encounter/enc-1" },
+        "performer": [{ "reference": "Practitioner/dr-1" }],
+        "effectiveDateTime": "2023-06-15T10:00:00Z",
+        "valueQuantity": { "value": 95.0, "unit": "mg/dL", "system": "http://unitsofmeasure.org", "code": "mg/dL" },
+        "referenceRange": [{ "low": { "value": 70 }, "high": { "value": 100 } }]
+      }
+    ],
+    "omop": [
+      {
+        "table": "measurement",
+        "measurement_concept_id": 0,
+        "measurement_date": "2023-06-15",
+        "measurement_datetime": "2023-06-15T10:00:00Z",
+        "measurement_type_concept_id": 32817,
+        "value_as_number": 95.0,
+        "unit_source_value": "mg/dL",
+        "range_low": 70,
+        "range_high": 100,
+        "measurement_source_value": "2339-0",
+        "measurement_source_concept_id": 0,
+        "value_source_value": "95 mg/dL"
+      }
+    ]
+  },
+  {
+    "description": "full social-history Observation → observation with all mapped fields",
+    "fhir": [
+      {
+        "resourceType": "Observation",
+        "id": "obs-full-social",
+        "status": "final",
+        "category": [{ "coding": [{ "code": "social-history" }] }],
+        "code": { "coding": [{ "system": "http://loinc.org", "code": "72166-2", "display": "Tobacco smoking status" }] },
+        "subject": { "reference": "Patient/pt-1" },
+        "effectiveDateTime": "2023-06-15T10:00:00Z",
+        "valueString": "Former smoker, quit 2020",
+        "interpretation": [{ "coding": [{ "code": "N", "display": "Normal" }] }]
+      }
+    ],
+    "omop": [
+      {
+        "table": "observation",
+        "observation_concept_id": 0,
+        "observation_date": "2023-06-15",
+        "observation_datetime": "2023-06-15T10:00:00Z",
+        "observation_type_concept_id": 32817,
+        "value_as_string": "Former smoker, quit 2020",
+        "observation_source_value": "72166-2",
+        "observation_source_concept_id": 0,
+        "qualifier_source_value": "N",
+        "value_source_value": "Former smoker, quit 2020"
+      }
+    ]
+  }
+]

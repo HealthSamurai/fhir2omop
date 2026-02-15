@@ -1,0 +1,44 @@
+[
+  {
+    "description": "subject, participant, serviceProvider → person_id, provider_id, care_site_id",
+    "spec": "mapping/encounter/references.md",
+    "fhir": [
+      {
+        "resourceType": "Encounter",
+        "id": "enc-refs",
+        "status": "finished",
+        "class": { "code": "AMB" },
+        "subject": { "reference": "Patient/pt-1" },
+        "participant": [{ "individual": { "reference": "Practitioner/dr-1" } }],
+        "serviceProvider": { "reference": "Organization/org-1" },
+        "period": { "start": "2023-06-15T09:00:00Z" }
+      }
+    ],
+    "omop": [
+      {
+        "table": "visit_occurrence",
+        "visit_type_concept_id": 32817
+      }
+    ]
+  },
+  {
+    "description": "no participant, no serviceProvider → null provider/care_site",
+    "fhir": [
+      {
+        "resourceType": "Encounter",
+        "id": "enc-no-refs",
+        "status": "finished",
+        "class": { "code": "AMB" },
+        "subject": { "reference": "Patient/pt-1" },
+        "period": { "start": "2023-06-15T09:00:00Z" }
+      }
+    ],
+    "omop": [
+      {
+        "table": "visit_occurrence",
+        "provider_id": null,
+        "care_site_id": null
+      }
+    ]
+  }
+]
