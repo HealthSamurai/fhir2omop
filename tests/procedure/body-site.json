@@ -1,0 +1,72 @@
+[
+  {
+    "description": "bodySite → modifier_source_value",
+    "spec": "mapping/procedure/body-site.md",
+    "fhir": [
+      {
+        "resourceType": "Procedure",
+        "id": "proc-bs-1",
+        "status": "completed",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "80146002" }] },
+        "subject": { "reference": "Patient/1" },
+        "performedDateTime": "2023-03-15",
+        "bodySite": [
+          { "coding": [{ "system": "http://snomed.info/sct", "code": "66754008", "display": "Appendix structure" }] }
+        ]
+      }
+    ],
+    "omop": [
+      {
+        "table": "procedure_occurrence",
+        "modifier_source_value": "66754008",
+        "modifier_concept_id": 0
+      }
+    ]
+  },
+  {
+    "description": "bodySite отсутствует → modifier_source_value null",
+    "spec": "mapping/procedure/body-site.md",
+    "fhir": [
+      {
+        "resourceType": "Procedure",
+        "id": "proc-bs-2",
+        "status": "completed",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "80146002" }] },
+        "subject": { "reference": "Patient/1" },
+        "performedDateTime": "2023-03-15"
+      }
+    ],
+    "omop": [
+      {
+        "table": "procedure_occurrence",
+        "modifier_source_value": null,
+        "modifier_concept_id": 0
+      }
+    ]
+  },
+  {
+    "description": "несколько bodySite → берётся первый",
+    "comment": "OMOP modifier_concept_id — одно значение. Берём первый bodySite элемент.",
+    "spec": "mapping/procedure/body-site.md",
+    "fhir": [
+      {
+        "resourceType": "Procedure",
+        "id": "proc-bs-3",
+        "status": "completed",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "80146002" }] },
+        "subject": { "reference": "Patient/1" },
+        "performedDateTime": "2023-03-15",
+        "bodySite": [
+          { "coding": [{ "system": "http://snomed.info/sct", "code": "66754008", "display": "Appendix" }] },
+          { "coding": [{ "system": "http://snomed.info/sct", "code": "181255000", "display": "Abdomen" }] }
+        ]
+      }
+    ],
+    "omop": [
+      {
+        "table": "procedure_occurrence",
+        "modifier_source_value": "66754008"
+      }
+    ]
+  }
+]

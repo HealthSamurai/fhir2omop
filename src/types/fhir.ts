@@ -178,6 +178,19 @@ export interface MedicationStatement {
   dosage?: Dosage[];
 }
 
+export interface Procedure {
+  resourceType: "Procedure";
+  id?: string;
+  status: "preparation" | "in-progress" | "not-done" | "on-hold" | "stopped" | "completed" | "entered-in-error" | "unknown";
+  code?: CodeableConcept;
+  subject: Reference;
+  encounter?: Reference;
+  performedDateTime?: string;
+  performedPeriod?: Period;
+  performer?: { actor?: Reference }[];
+  bodySite?: CodeableConcept[];
+}
+
 export interface AllergyIntoleranceReaction {
   substance?: CodeableConcept;
   manifestation: CodeableConcept[];

@@ -1,0 +1,112 @@
+[
+  {
+    "description": "performedDateTime → procedure_date + procedure_datetime",
+    "spec": "mapping/procedure/dates.md",
+    "fhir": [
+      {
+        "resourceType": "Procedure",
+        "id": "proc-dt-1",
+        "status": "completed",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "80146002" }] },
+        "subject": { "reference": "Patient/1" },
+        "performedDateTime": "2023-03-15T10:30:00Z"
+      }
+    ],
+    "omop": [
+      {
+        "table": "procedure_occurrence",
+        "procedure_date": "2023-03-15",
+        "procedure_datetime": "2023-03-15T10:30:00Z",
+        "procedure_end_date": null,
+        "procedure_end_datetime": null
+      }
+    ]
+  },
+  {
+    "description": "performedPeriod → start/end dates",
+    "spec": "mapping/procedure/dates.md",
+    "fhir": [
+      {
+        "resourceType": "Procedure",
+        "id": "proc-dt-2",
+        "status": "completed",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "80146002" }] },
+        "subject": { "reference": "Patient/1" },
+        "performedPeriod": {
+          "start": "2023-03-15T08:00:00Z",
+          "end": "2023-03-15T12:00:00Z"
+        }
+      }
+    ],
+    "omop": [
+      {
+        "table": "procedure_occurrence",
+        "procedure_date": "2023-03-15",
+        "procedure_datetime": "2023-03-15T08:00:00Z",
+        "procedure_end_date": "2023-03-15",
+        "procedure_end_datetime": "2023-03-15T12:00:00Z"
+      }
+    ]
+  },
+  {
+    "description": "performedPeriod без end → null end dates",
+    "spec": "mapping/procedure/dates.md",
+    "fhir": [
+      {
+        "resourceType": "Procedure",
+        "id": "proc-dt-3",
+        "status": "completed",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "80146002" }] },
+        "subject": { "reference": "Patient/1" },
+        "performedPeriod": {
+          "start": "2023-03-15T08:00:00Z"
+        }
+      }
+    ],
+    "omop": [
+      {
+        "table": "procedure_occurrence",
+        "procedure_date": "2023-03-15",
+        "procedure_datetime": "2023-03-15T08:00:00Z",
+        "procedure_end_date": null,
+        "procedure_end_datetime": null
+      }
+    ]
+  },
+  {
+    "description": "ни performedDateTime ни performedPeriod → пропускается",
+    "comment": "procedure_date обязательное поле в OMOP. Без даты запись не создаётся.",
+    "spec": "mapping/procedure/dates.md",
+    "fhir": [
+      {
+        "resourceType": "Procedure",
+        "id": "proc-dt-4",
+        "status": "completed",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "80146002" }] },
+        "subject": { "reference": "Patient/1" }
+      }
+    ],
+    "omop": []
+  },
+  {
+    "description": "date-only performedDateTime (без времени)",
+    "spec": "mapping/procedure/dates.md",
+    "fhir": [
+      {
+        "resourceType": "Procedure",
+        "id": "proc-dt-5",
+        "status": "completed",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "80146002" }] },
+        "subject": { "reference": "Patient/1" },
+        "performedDateTime": "2023-03-15"
+      }
+    ],
+    "omop": [
+      {
+        "table": "procedure_occurrence",
+        "procedure_date": "2023-03-15",
+        "procedure_datetime": "2023-03-15"
+      }
+    ]
+  }
+]

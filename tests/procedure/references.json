@@ -1,0 +1,85 @@
+[
+  {
+    "description": "subject → person_id",
+    "spec": "mapping/procedure/references.md",
+    "fhir": [
+      {
+        "resourceType": "Procedure",
+        "id": "proc-ref-1",
+        "status": "completed",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "80146002" }] },
+        "subject": { "reference": "Patient/42" },
+        "performedDateTime": "2023-03-15"
+      }
+    ],
+    "omop": [
+      {
+        "table": "procedure_occurrence",
+        "person_id": 1
+      }
+    ]
+  },
+  {
+    "description": "encounter → visit_occurrence_id",
+    "spec": "mapping/procedure/references.md",
+    "fhir": [
+      {
+        "resourceType": "Procedure",
+        "id": "proc-ref-2",
+        "status": "completed",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "80146002" }] },
+        "subject": { "reference": "Patient/1" },
+        "encounter": { "reference": "Encounter/99" },
+        "performedDateTime": "2023-03-15"
+      }
+    ],
+    "omop": [
+      {
+        "table": "procedure_occurrence",
+        "visit_occurrence_id": 1
+      }
+    ]
+  },
+  {
+    "description": "performer[0].actor → provider_id",
+    "spec": "mapping/procedure/references.md",
+    "fhir": [
+      {
+        "resourceType": "Procedure",
+        "id": "proc-ref-3",
+        "status": "completed",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "80146002" }] },
+        "subject": { "reference": "Patient/1" },
+        "performer": [{ "actor": { "reference": "Practitioner/dr-5" } }],
+        "performedDateTime": "2023-03-15"
+      }
+    ],
+    "omop": [
+      {
+        "table": "procedure_occurrence",
+        "provider_id": 1
+      }
+    ]
+  },
+  {
+    "description": "без encounter и performer → null references",
+    "spec": "mapping/procedure/references.md",
+    "fhir": [
+      {
+        "resourceType": "Procedure",
+        "id": "proc-ref-4",
+        "status": "completed",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "80146002" }] },
+        "subject": { "reference": "Patient/1" },
+        "performedDateTime": "2023-03-15"
+      }
+    ],
+    "omop": [
+      {
+        "table": "procedure_occurrence",
+        "visit_occurrence_id": null,
+        "provider_id": null
+      }
+    ]
+  }
+]

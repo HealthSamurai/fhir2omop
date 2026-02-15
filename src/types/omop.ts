@@ -147,6 +147,25 @@ export interface DrugExposure {
   drug_source_concept_id?: number;
 }
 
+export interface ProcedureOccurrence {
+  procedure_occurrence_id?: number;
+  person_id: number;
+  procedure_concept_id: number;
+  procedure_date: string;
+  procedure_datetime?: string | null;
+  procedure_end_date?: string | null;
+  procedure_end_datetime?: string | null;
+  procedure_type_concept_id: number;
+  modifier_concept_id?: number | null;
+  quantity?: number | null;
+  provider_id?: number | null;
+  visit_occurrence_id?: number | null;
+  visit_detail_id?: number | null;
+  procedure_source_value?: string | null;
+  procedure_source_concept_id?: number;
+  modifier_source_value?: string | null;
+}
+
 /** Result of mapping a Patient resource — may produce multiple OMOP records */
 export interface PatientMappingResult {
   person: Person | null;
