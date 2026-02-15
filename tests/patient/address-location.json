@@ -1,6 +1,6 @@
 [
   {
-    "description": "home-адрес выбирается для LOCATION",
+    "description": "home address is selected for LOCATION",
     "spec": "mapping/patient/address-location.md",
     "fhir": [
       {
@@ -19,7 +19,7 @@
     ]
   },
   {
-    "description": "несколько home-адресов → последний (самый актуальный)",
+    "description": "multiple home addresses → last one (most recent)",
     "spec": "mapping/patient/address-location.md",
     "fhir": [
       {
@@ -38,8 +38,8 @@
     ]
   },
   {
-    "description": "нет home → первый не-old адрес",
-    "comment": "Адреса с use='old' пропускаются при поиске home-адреса.",
+    "description": "no home → first non-old address",
+    "comment": "Addresses with use='old' are skipped when searching for home address.",
     "spec": "mapping/patient/address-location.md",
     "fhir": [
       {
@@ -58,7 +58,7 @@
     ]
   },
   {
-    "description": "нет адресов → location не создаётся",
+    "description": "no addresses → location not created",
     "spec": "mapping/patient/address-location.md",
     "fhir": [
       {
@@ -72,7 +72,7 @@
     ]
   },
   {
-    "description": "полный маппинг полей Address → LOCATION",
+    "description": "full Address → LOCATION field mapping",
     "spec": "mapping/patient/address-location.md",
     "fhir": [
       {
@@ -107,8 +107,8 @@
     ]
   },
   {
-    "description": "state обрезается до 2 символов (varchar(2))",
-    "comment": "Для US штатов (CA, NY) подходит. Для полных названий обрезается.",
+    "description": "state truncated to 2 characters (varchar(2))",
+    "comment": "Works for US state codes (CA, NY). Full state names are truncated.",
     "spec": "mapping/patient/address-location.md",
     "fhir": [
       {

@@ -1,6 +1,6 @@
 [
   {
-    "description": "полная дата 1990-03-15 → year=1990, month=3, day=15",
+    "description": "full date 1990-03-15 → year=1990, month=3, day=15",
     "spec": "mapping/patient/birthdate.md",
     "fhir": [
       {
@@ -21,8 +21,8 @@
     ]
   },
   {
-    "description": "частичная дата YYYY-MM → month есть, day = null",
-    "comment": "birth_datetime паддится: отсутствующий день → 01",
+    "description": "partial date YYYY-MM → month present, day = null",
+    "comment": "birth_datetime is padded: missing day → 01",
     "spec": "mapping/patient/birthdate.md",
     "fhir": [
       {
@@ -43,8 +43,8 @@
     ]
   },
   {
-    "description": "только год YYYY → month и day = null",
-    "comment": "birth_datetime паддится: отсутствующий месяц → 01, день → 01",
+    "description": "year only YYYY → month and day = null",
+    "comment": "birth_datetime is padded: missing month → 01, day → 01",
     "spec": "mapping/patient/birthdate.md",
     "fhir": [
       {
@@ -65,8 +65,8 @@
     ]
   },
   {
-    "description": "birthDate отсутствует → запись PERSON не создаётся",
-    "comment": "year_of_birth — обязательное поле (NOT NULL) в OMOP PERSON. Без birthDate нельзя заполнить — пропускаем пациента.",
+    "description": "birthDate missing → PERSON record not created",
+    "comment": "year_of_birth is a required field (NOT NULL) in OMOP PERSON. Without birthDate it cannot be populated — skip patient.",
     "spec": "mapping/patient/birthdate.md",
     "fhir": [
       {

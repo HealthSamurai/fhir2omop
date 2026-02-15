@@ -41,7 +41,7 @@
   },
   {
     "description": "other → gender_concept_id 8521 (not 0)",
-    "comment": "Большинство реализаций ошибочно маппят other в 0. Мы следуем omoponfhir: 8521 = OTHER в OMOP Gender vocabulary.",
+    "comment": "Most implementations incorrectly map other to 0. We follow omoponfhir: 8521 = OTHER in OMOP Gender vocabulary.",
     "spec": "mapping/patient/gender.md",
     "fhir": [
       {
@@ -62,7 +62,7 @@
   },
   {
     "description": "unknown → gender_concept_id 8551 (not 0)",
-    "comment": "8551 = UNKNOWN в OMOP Gender vocabulary. Concept 0 означает 'No matching concept' — это другая семантика.",
+    "comment": "8551 = UNKNOWN in OMOP Gender vocabulary. Concept 0 means 'No matching concept' — different semantics.",
     "spec": "mapping/patient/gender.md",
     "fhir": [
       {
@@ -82,7 +82,7 @@
     ]
   },
   {
-    "description": "gender отсутствует → gender_concept_id 0",
+    "description": "gender missing → gender_concept_id 0",
     "comment": "Concept 0 = 'No matching concept'. gender_source_value = null.",
     "spec": "mapping/patient/gender.md",
     "fhir": [

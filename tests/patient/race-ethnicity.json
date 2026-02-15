@@ -162,7 +162,7 @@
     ]
   },
   {
-    "description": "race extension отсутствует → race_concept_id 0, source_value null",
+    "description": "race extension missing → race_concept_id 0, source_value null",
     "spec": "mapping/patient/race-ethnicity.md",
     "fhir": [
       {
@@ -246,7 +246,7 @@
     ]
   },
   {
-    "description": "ethnicity extension отсутствует → ethnicity_concept_id 0",
+    "description": "ethnicity extension missing → ethnicity_concept_id 0",
     "spec": "mapping/patient/race-ethnicity.md",
     "fhir": [
       {
@@ -265,7 +265,7 @@
     ]
   },
   {
-    "description": "race + ethnicity вместе: White + Not Hispanic",
+    "description": "race + ethnicity together: White + Not Hispanic",
     "spec": "mapping/patient/race-ethnicity.md",
     "fhir": [
       {

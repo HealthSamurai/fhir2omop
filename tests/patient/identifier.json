@@ -1,6 +1,6 @@
 [
   {
-    "description": "SSN имеет наивысший приоритет",
+    "description": "SSN has highest priority",
     "spec": "mapping/patient/identifier.md",
     "fhir": [
       {
@@ -28,7 +28,7 @@
     ]
   },
   {
-    "description": "MRN — второй приоритет (когда нет SSN)",
+    "description": "MRN is second priority (when no SSN)",
     "spec": "mapping/patient/identifier.md",
     "fhir": [
       {
@@ -56,7 +56,7 @@
     ]
   },
   {
-    "description": "первый identifier — если нет SSN и MRN",
+    "description": "first identifier — when no SSN and no MRN",
     "spec": "mapping/patient/identifier.md",
     "fhir": [
       {
@@ -83,7 +83,7 @@
     ]
   },
   {
-    "description": "Patient.id — fallback когда нет identifier",
+    "description": "Patient.id — fallback when no identifier",
     "spec": "mapping/patient/identifier.md",
     "fhir": [
       {
@@ -100,8 +100,8 @@
     ]
   },
   {
-    "description": "формат system|value",
-    "comment": "Сохраняем систему для уникальности при интеграции данных из нескольких источников.",
+    "description": "system|value format",
+    "comment": "System is preserved for uniqueness when integrating data from multiple sources.",
     "spec": "mapping/patient/identifier.md",
     "fhir": [
       {
@@ -124,7 +124,7 @@
     ]
   },
   {
-    "description": "identifier без system → только value",
+    "description": "identifier without system → value only",
     "spec": "mapping/patient/identifier.md",
     "fhir": [
       {
