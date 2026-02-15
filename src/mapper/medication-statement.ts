@@ -2,7 +2,7 @@ import type { MedicationStatement } from "../types/fhir";
 import type { DrugExposure } from "../types/omop";
 import { toDate } from "../utils/date";
 import { selectBestCoding, getSourceValue } from "../utils/codeable";
-import { resolveReferenceAsNumber } from "../utils/reference";
+import { MappingContext } from "../mapping-context";
 
 /** Only map statements with these statuses */
 const VALID_STATUSES = new Set(["active", "completed"]);
@@ -11,7 +11,7 @@ const VALID_STATUSES = new Set(["active", "completed"]);
 const TYPE_CONCEPT_PATIENT_REPORTED = 44787730;
 
 /** Map a FHIR MedicationStatement to OMOP DRUG_EXPOSURE */
-export function mapMedicationStatement(statement: MedicationStatement): DrugExposure | null {
+export function mapMedicationStatement(statement: MedicationStatement, ctx: MappingContext = new MappingContext()): DrugExposure | null {
   // Status filter
   if (!VALID_STATUSES.has(statement.status)) {
     return null;
@@ -44,7 +44,8 @@ export function mapMedicationStatement(statement: MedicationStatement): DrugExpo
   const routeCoding = statement.dosage?.[0]?.route?.coding?.[0];
 
   return {
-    person_id: resolveReferenceAsNumber(statement.subject) ?? 0,
+    drug_exposure_id: statement.id ? ctx.ids.getId("MedicationStatement", statement.id) : undefined,
+    person_id: ctx.ids.resolveRef(statement.subject) ?? 0,
     drug_concept_id: 0, // Requires vocabulary lookup
     drug_exposure_start_date: startDate,
     drug_exposure_start_datetime: statement.effectiveDateTime ?? statement.effectivePeriod?.start ?? null,
@@ -57,8 +58,8 @@ export function mapMedicationStatement(statement: MedicationStatement): DrugExpo
     days_supply: null,
     route_concept_id: null, // Would need vocab lookup
     route_source_value: routeCoding?.display ?? routeCoding?.code ?? null,
-    provider_id: resolveReferenceAsNumber(statement.informationSource),
-    visit_occurrence_id: resolveReferenceAsNumber(statement.context),
+    provider_id: ctx.ids.resolveRef(statement.informationSource),
+    visit_occurrence_id: ctx.ids.resolveRef(statement.context),
     drug_source_value: sourceValue,
     drug_source_concept_id: 0,
   };
