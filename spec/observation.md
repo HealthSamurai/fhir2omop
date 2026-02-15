@@ -2,9 +2,14 @@
 
 ## Overview
 
-| FHIR Resource | OMOP Table | Direction |
-|---------------|------------|-----------|
-| Observation | MEASUREMENT, OBSERVATION | FHIR → OMOP |
+| FHIR Resource | FHIR Profile | OMOP Table | Direction |
+|---------------|-------------|------------|-----------|
+| Observation | OmopMeasurement | MEASUREMENT | FHIR → OMOP |
+| Observation | OmopObservation | OBSERVATION | FHIR → OMOP |
+
+Two separate FHIR profiles constrain Observation for each OMOP target table:
+- **OmopMeasurement** (`profiles/OmopMeasurement.fsh`) — for labs and vitals → OMOP `measurement`
+- **OmopObservation** (`profiles/OmopObservation.fsh`) — for social history, surveys, activity → OMOP `observation`
 
 ## Domain-Based Routing
 
