@@ -178,6 +178,29 @@ export interface MedicationStatement {
   dosage?: Dosage[];
 }
 
+export interface AllergyIntoleranceReaction {
+  substance?: CodeableConcept;
+  manifestation: CodeableConcept[];
+  severity?: "mild" | "moderate" | "severe";
+}
+
+export interface AllergyIntolerance {
+  resourceType: "AllergyIntolerance";
+  id?: string;
+  clinicalStatus?: CodeableConcept;
+  verificationStatus?: CodeableConcept;
+  type?: "allergy" | "intolerance";
+  category?: ("food" | "medication" | "environment" | "biologic")[];
+  criticality?: "low" | "high" | "unable-to-assess";
+  code?: CodeableConcept;
+  patient: Reference;
+  encounter?: Reference;
+  onsetDateTime?: string;
+  recorder?: Reference;
+  asserter?: Reference;
+  reaction?: AllergyIntoleranceReaction[];
+}
+
 export interface MedicationRequest {
   resourceType: "MedicationRequest";
   id?: string;

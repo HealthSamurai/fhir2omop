@@ -170,3 +170,41 @@ Description: """
 * http://terminology.hl7.org/CodeSystem/observation-category#social-history "Social History"
 * http://terminology.hl7.org/CodeSystem/observation-category#survey         "Survey"
 * http://terminology.hl7.org/CodeSystem/observation-category#activity       "Activity"
+
+// ============================================================
+// AllergyIntolerance ValueSets
+// ============================================================
+
+// AllergyIntolerance codes resolvable via OMOP vocabulary tables
+ValueSet: OmopAllergyIntoleranceCodes
+Id: omop-allergy-intolerance-codes
+Title: "OMOP-Resolvable AllergyIntolerance Codes"
+Description: """
+  Substance/allergen terminology systems that have standard concept
+  mappings in the OMOP vocabulary tables.
+"""
+* codes from system http://snomed.info/sct                         // SNOMED CT — preferred for allergens
+* codes from system http://www.nlm.nih.gov/research/umls/rxnorm   // RxNorm — for medication allergies
+* codes from system http://hl7.org/fhir/sid/ndc                   // NDC
+
+// AllergyIntolerance clinical status — only active
+ValueSet: OmopAllergyIntoleranceClinicalStatus
+Id: omop-allergy-intolerance-clinical-status
+Title: "OMOP-Mappable AllergyIntolerance Clinical Status"
+Description: """
+  Only active allergies are converted to OMOP observation records.
+  Inactive, resolved, and other statuses are not mapped.
+"""
+* http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical#active "Active"
+
+// AllergyIntolerance verification status (excludes entered-in-error and refuted)
+ValueSet: OmopAllergyIntoleranceVerificationStatus
+Id: omop-allergy-intolerance-verification-status
+Title: "OMOP-Mappable AllergyIntolerance Verification Status"
+Description: """
+  Verification statuses acceptable for OMOP mapping.
+  Resources with entered-in-error or refuted are never converted.
+"""
+* http://terminology.hl7.org/CodeSystem/allergyintolerance-verification#confirmed   "Confirmed"
+* http://terminology.hl7.org/CodeSystem/allergyintolerance-verification#unconfirmed "Unconfirmed"
+* http://terminology.hl7.org/CodeSystem/allergyintolerance-verification#presumed    "Presumed"
