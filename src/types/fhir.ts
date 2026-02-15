@@ -106,13 +106,22 @@ export interface Condition {
   clinicalStatus?: CodeableConcept;
   verificationStatus?: CodeableConcept;
   category?: CodeableConcept[];
+  severity?: CodeableConcept;
   code?: CodeableConcept;
+  bodySite?: CodeableConcept[];
   subject: Reference;
   encounter?: Reference;
   onsetDateTime?: string;
+  onsetPeriod?: Period;
   abatementDateTime?: string;
+  abatementPeriod?: Period;
   abatementString?: string;
+  recordedDate?: string;
+  recorder?: Reference;
   asserter?: Reference;
+  stage?: { summary?: CodeableConcept; type?: CodeableConcept }[];
+  evidence?: { code?: CodeableConcept[]; detail?: Reference[] }[];
+  note?: { text?: string }[];
 }
 
 export interface ObservationComponent {

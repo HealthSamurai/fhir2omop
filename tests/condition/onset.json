@@ -1,0 +1,91 @@
+[
+  {
+    "description": "onsetDateTime → condition_start_date (primary path)",
+    "fhir": [
+      {
+        "resourceType": "Condition",
+        "id": "cond-onset-dt",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "73211009" }] },
+        "subject": { "reference": "Patient/1" },
+        "onsetDateTime": "2023-06-15T10:30:00Z"
+      }
+    ],
+    "omop": [
+      {
+        "table": "condition_occurrence",
+        "condition_start_date": "2023-06-15",
+        "condition_start_datetime": "2023-06-15T10:30:00Z"
+      }
+    ]
+  },
+  {
+    "description": "onsetPeriod.start → condition_start_date (fallback)",
+    "fhir": [
+      {
+        "resourceType": "Condition",
+        "id": "cond-onset-period",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "73211009" }] },
+        "subject": { "reference": "Patient/1" },
+        "onsetPeriod": { "start": "2023-03-01T08:00:00Z", "end": "2023-03-10T08:00:00Z" }
+      }
+    ],
+    "omop": [
+      {
+        "table": "condition_occurrence",
+        "condition_start_date": "2023-03-01",
+        "condition_start_datetime": "2023-03-01T08:00:00Z"
+      }
+    ]
+  },
+  {
+    "description": "recordedDate as fallback when no onset[x]",
+    "fhir": [
+      {
+        "resourceType": "Condition",
+        "id": "cond-recorded",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "73211009" }] },
+        "subject": { "reference": "Patient/1" },
+        "recordedDate": "2023-09-20"
+      }
+    ],
+    "omop": [
+      {
+        "table": "condition_occurrence",
+        "condition_start_date": "2023-09-20",
+        "condition_start_datetime": "2023-09-20"
+      }
+    ]
+  },
+  {
+    "description": "No onset and no recordedDate → skipped",
+    "fhir": [
+      {
+        "resourceType": "Condition",
+        "id": "cond-no-date",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "73211009" }] },
+        "subject": { "reference": "Patient/1" }
+      }
+    ],
+    "omop": null
+  },
+  {
+    "description": "onsetDateTime takes priority over recordedDate",
+    "fhir": [
+      {
+        "resourceType": "Condition",
+        "id": "cond-onset-priority",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "73211009" }] },
+        "subject": { "reference": "Patient/1" },
+        "onsetDateTime": "2023-01-15",
+        "recordedDate": "2023-02-01"
+      }
+    ],
+    "omop": [
+      {
+        "table": "condition_occurrence",
+        "condition_start_date": "2023-01-15",
+        "condition_start_datetime": "2023-01-15"
+      }
+    ]
+  }
+]

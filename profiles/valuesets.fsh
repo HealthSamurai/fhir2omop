@@ -130,7 +130,7 @@ Id: omop-condition-verification-status
 Title: "OMOP-Mappable Condition Verification Status"
 Description: """
   Verification statuses acceptable for OMOP mapping.
-  Resources with entered-in-error are never converted.
+  Resources with entered-in-error or refuted are never converted.
 """
 * http://terminology.hl7.org/CodeSystem/condition-ver-status#confirmed     "Confirmed"
 * http://terminology.hl7.org/CodeSystem/condition-ver-status#unconfirmed   "Unconfirmed"
