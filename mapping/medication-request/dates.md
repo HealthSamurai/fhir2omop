@@ -1,29 +1,29 @@
 # MedicationRequest dates → OMOP DRUG_EXPOSURE date fields
 
-## Источник
+## Source
 
 FHIR `MedicationRequest`:
-- `authoredOn` (dateTime) — дата назначения
-- `dispenseRequest.validityPeriod.end` (dateTime) — конец периода действия
+- `authoredOn` (dateTime) — prescription date
+- `dispenseRequest.validityPeriod.end` (dateTime) — end of validity period
 
-## Цель
+## Target
 
 OMOP DRUG_EXPOSURE:
-- `drug_exposure_start_date` (date, **required**) — начало
-- `drug_exposure_start_datetime` (datetime) — начало
-- `drug_exposure_end_date` (date) — конец
-- `drug_exposure_end_datetime` (datetime) — конец
+- `drug_exposure_start_date` (date, **required**) — start
+- `drug_exposure_start_datetime` (datetime) — start
+- `drug_exposure_end_date` (date) — end
+- `drug_exposure_end_datetime` (datetime) — end
 
-## Маппинг
+## Mapping
 
-| FHIR | OMOP | Примечания |
+| FHIR | OMOP | Notes |
 |---|---|---|
-| `authoredOn` | `drug_exposure_start_date` | Извлечение YYYY-MM-DD |
-| `authoredOn` | `drug_exposure_start_datetime` | Полное значение |
-| `dispenseRequest.validityPeriod.end` | `drug_exposure_end_date` | Извлечение YYYY-MM-DD |
-| `dispenseRequest.validityPeriod.end` | `drug_exposure_end_datetime` | Полное значение |
-| отсутствует end | null | Открытый рецепт |
+| `authoredOn` | `drug_exposure_start_date` | Extract YYYY-MM-DD |
+| `authoredOn` | `drug_exposure_start_datetime` | Full value |
+| `dispenseRequest.validityPeriod.end` | `drug_exposure_end_date` | Extract YYYY-MM-DD |
+| `dispenseRequest.validityPeriod.end` | `drug_exposure_end_datetime` | Full value |
+| absent end | null | Open-ended prescription |
 
-## Валидация
+## Validation
 
-Если `authoredOn` отсутствует — запись **не создаётся**. drug_exposure_start_date обязательное поле.
+If `authoredOn` is absent — record **is not created**. drug_exposure_start_date is a required field.

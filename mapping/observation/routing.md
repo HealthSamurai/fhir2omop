@@ -1,33 +1,33 @@
 # Observation.category → OMOP domain routing (measurement vs observation)
 
-## Источник
+## Source
 
-FHIR `Observation.category` — CodeableConcept из `observation-category`: laboratory, vital-signs, social-history, survey, activity, imaging, procedure, exam, therapy.
+FHIR `Observation.category` — CodeableConcept from `observation-category`: laboratory, vital-signs, social-history, survey, activity, imaging, procedure, exam, therapy.
 
-## Цель
+## Target
 
-Определяет целевую таблицу OMOP: `MEASUREMENT` или `OBSERVATION`.
+Determines the target OMOP table: `MEASUREMENT` or `OBSERVATION`.
 
-## Маппинг
+## Mapping
 
-| FHIR category | OMOP таблица | Обоснование |
+| FHIR category | OMOP table | Rationale |
 |---|---|---|
-| `laboratory` | measurement | Лабораторные результаты |
-| `vital-signs` | measurement | Витальные показатели |
-| `social-history` | observation | Социальные данные |
-| `survey` | observation | Опросники (PHQ-9, AUDIT) |
-| `activity` | observation | Физическая активность |
-| отсутствует | measurement | Default — лаборатория наиболее частый случай |
+| `laboratory` | measurement | Laboratory results |
+| `vital-signs` | measurement | Vital signs |
+| `social-history` | observation | Social data |
+| `survey` | observation | Questionnaires (PHQ-9, AUDIT) |
+| `activity` | observation | Physical activity |
+| absent | measurement | Default — laboratory is the most common case |
 
-## Текущее ограничение
+## Current limitation
 
-Роутинг по category — упрощённый подход. Полноценный OMOP ETL определяет домен по `concept.domain_id` из Athena vocabulary. Например:
-- SNOMED concept может принадлежать домену Measurement, Condition или Procedure
-- LOINC код может быть Measurement или Observation
+Category-based routing is a simplified approach. A full OMOP ETL determines domain by `concept.domain_id` from Athena vocabulary. For example:
+- A SNOMED concept may belong to the Measurement, Condition, or Procedure domain
+- A LOINC code may be Measurement or Observation
 
-## Будущая работа
+## Future work
 
-При интеграции Athena vocabulary — переключиться на domain-based routing:
+When integrating Athena vocabulary — switch to domain-based routing:
 ```
 domain = athena.lookupDomain(concept_id)
 if domain == 'Measurement' → measurement table

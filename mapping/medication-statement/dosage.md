@@ -1,27 +1,27 @@
 # MedicationStatement.dosage → OMOP DRUG_EXPOSURE dosage fields
 
-## Источник
+## Source
 
 FHIR `MedicationStatement.dosage[]`:
-- `dosage[0].doseAndRate[0].doseQuantity.value` — количество
-- `dosage[0].route` — маршрут введения
+- `dosage[0].doseAndRate[0].doseQuantity.value` — dose amount
+- `dosage[0].route` — route of administration
 
-## Цель
+## Target
 
 OMOP DRUG_EXPOSURE:
-- `quantity` (float) — количество
-- `route_concept_id` (integer) — concept маршрута
-- `route_source_value` (varchar(50)) — оригинальный маршрут
+- `quantity` (float) — amount
+- `route_concept_id` (integer) — route concept
+- `route_source_value` (varchar(50)) — original route
 
-## Маппинг
+## Mapping
 
-| FHIR | OMOP | Примечания |
+| FHIR | OMOP | Notes |
 |---|---|---|
-| `dosage[0].doseAndRate[0].doseQuantity.value` | `quantity` | Числовое значение дозы |
-| `dosage[0].route.coding[0].display` | `route_source_value` | Display предпочтительнее code |
+| `dosage[0].doseAndRate[0].doseQuantity.value` | `quantity` | Numeric dose value |
+| `dosage[0].route.coding[0].display` | `route_source_value` | Display preferred over code |
 | `dosage[0].route` | `route_concept_id` | **null** (placeholder) |
 
-## Отличия от MedicationRequest
+## Differences from MedicationRequest
 
-- Нет `refills` (MedicationStatement — самоотчёт пациента)
-- `drug_type_concept_id` = **44787730** (Patient Self-Reported) вместо 38000177 (Prescription)
+- No `refills` (MedicationStatement is patient self-report)
+- `drug_type_concept_id` = **44787730** (Patient Self-Reported) instead of 38000177 (Prescription)

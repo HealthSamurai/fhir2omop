@@ -1,16 +1,16 @@
 # Encounter.class → OMOP VISIT_OCCURRENCE visit concept
 
-## Источник
+## Source
 
-FHIR `Encounter.class` — Coding из value set `v3-ActEncounterCode`: IMP, AMB, EMER, HH, SS, OBSENC, FLD, VR.
+FHIR `Encounter.class` — Coding from value set `v3-ActEncounterCode`: IMP, AMB, EMER, HH, SS, OBSENC, FLD, VR.
 
-## Цель
+## Target
 
 OMOP VISIT_OCCURRENCE:
 - `visit_concept_id` (integer, required) — FK → CONCEPT
-- `visit_source_value` (varchar(50)) — оригинальный код класса
+- `visit_source_value` (varchar(50)) — original class code
 
-## Маппинг
+## Mapping
 
 | FHIR class.code | visit_concept_id | OMOP Concept Name |
 |---|---|---|
@@ -23,18 +23,18 @@ OMOP VISIT_OCCURRENCE:
 | `OBSENC` | **9201** | Inpatient Visit (Observation Encounter) |
 | `FLD` | **9202** | Outpatient Visit (Field) |
 | `VR` | **9202** | Outpatient Visit (Virtual) |
-| неизвестный код | **0** | No matching concept |
+| unknown code | **0** | No matching concept |
 
-- `visit_source_value` — оригинальный код класса encounter. Если class отсутствует — NULL.
+- `visit_source_value` — original encounter class code. If class is absent — NULL.
 
-## Решение по SS/OBSENC/FLD/VR
+## Decision on SS/OBSENC/FLD/VR
 
-Маппим в ближайший OMOP concept:
-- SS (Short Stay), FLD (Field), VR (Virtual) → 9202 (Outpatient) — краткие/дистанционные визиты
-- OBSENC (Observation Encounter) → 9201 (Inpatient) — наблюдение в стационаре
-- ACUTE → 9201 (Inpatient) — острое состояние
+Mapped to the nearest OMOP concept:
+- SS (Short Stay), FLD (Field), VR (Virtual) → 9202 (Outpatient) — brief/remote visits
+- OBSENC (Observation Encounter) → 9201 (Inpatient) — observation in hospital
+- ACUTE → 9201 (Inpatient) — acute condition
 
-## Консенсус реализаций
+## Implementation consensus
 
-- **Все**: IMP→9201, AMB→9202, EMER→9203
-- **omoponfhir**: наиболее полный маппинг с HH→581476
+- **All**: IMP→9201, AMB→9202, EMER→9203
+- **omoponfhir**: most complete mapping with HH→581476

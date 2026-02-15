@@ -1,44 +1,44 @@
 # Patient.id / Patient.identifier → OMOP PERSON person_source_value
 
-## Источник
+## Source
 
-- `Patient.id` — логический идентификатор ресурса
-- `Patient.identifier` — массив бизнес-идентификаторов (SSN, MRN и др.), каждый с `system` и `value`
+- `Patient.id` — logical resource identifier
+- `Patient.identifier` — array of business identifiers (SSN, MRN, etc.), each with `system` and `value`
 
-## Цель
+## Target
 
 OMOP PERSON:
-- `person_source_value` (varchar(50)) — исходный идентификатор пациента
+- `person_source_value` (varchar(50)) — original patient identifier
 
-## Решение: стратегия выбора идентификатора
+## Decision: identifier selection strategy
 
-Формат записи: `"{system}|{value}"` — сохраняем систему для уникальности при интеграции данных из нескольких источников.
+Record format: `"{system}|{value}"` — we preserve the system for uniqueness when integrating data from multiple sources.
 
-**Приоритет выбора:**
+**Selection priority:**
 
-1. `identifier` с `system = "http://hl7.org/fhir/sid/us-ssn"` (SSN)
-2. `identifier` с `type.coding.code = "MR"` (MRN — Medical Record Number)
-3. `identifier[0]` (первый в массиве)
-4. `Patient.id` (fallback, без system — просто id)
+1. `identifier` with `system = "http://hl7.org/fhir/sid/us-ssn"` (SSN)
+2. `identifier` with `type.coding.code = "MR"` (MRN — Medical Record Number)
+3. `identifier[0]` (first in the array)
+4. `Patient.id` (fallback, without system — just the id)
 
-## Примеры
+## Examples
 
 | FHIR | person_source_value |
 |---|---|
 | identifier: system=`http://hospital.org/mrn`, value=`12345` | `http://hospital.org/mrn\|12345` |
 | identifier: system=`http://hl7.org/fhir/sid/us-ssn`, value=`999-99-9999` | `http://hl7.org/fhir/sid/us-ssn\|999-99-9999` |
-| только Patient.id = `abc-123` | `abc-123` |
+| only Patient.id = `abc-123` | `abc-123` |
 
-## Дополнительные поля
+## Additional fields
 
-- `person_source_concept_id` — 0 (нет стандартного concept для типа идентификатора)
+- `person_source_concept_id` — 0 (no standard concept for identifier type)
 
-## Ограничения
+## Limitations
 
-- `person_source_value` — varchar(50). Длинные system URI + value могут превысить лимит. В этом случае обрезаем system до минимально различимой части.
+- `person_source_value` — varchar(50). Long system URIs + value may exceed the limit. In this case, the system is truncated to a minimally distinguishable part.
 
-## Консенсус реализаций
+## Implementation consensus
 
-- **9/9**: сохраняют идентификатор в person_source_value
-- **omoponfhir**: формат `system^value` — мы используем аналогичный подход с `system|value`
-- **Остальные**: просто Patient.id без system
+- **9/9**: store identifier in person_source_value
+- **omoponfhir**: format `system^value` — we use a similar approach with `system|value`
+- **Others**: just Patient.id without system

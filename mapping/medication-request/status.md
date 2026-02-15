@@ -1,25 +1,25 @@
 # MedicationRequest.status → OMOP filtering
 
-## Источник
+## Source
 
 FHIR `MedicationRequest.status` — code: active, on-hold, cancelled, completed, entered-in-error, stopped, draft, unknown.
 
-## Цель
+## Target
 
-Используется для **фильтрации** — определяет создавать ли запись DRUG_EXPOSURE.
+Used for **filtering** — determines whether a DRUG_EXPOSURE record is created.
 
-## Фильтрация
+## Filtering
 
-| Значение | Действие | Причина |
+| Value | Action | Reason |
 |---|---|---|
-| `active` | Map | Активный рецепт |
-| `completed` | Map | Завершённый рецепт |
-| `on-hold` | Skip | Приостановлен |
-| `cancelled` | Skip | Отменён |
-| `entered-in-error` | Skip | Ошибочная запись |
-| `stopped` | Skip | Остановлен |
-| `draft` | Skip | Черновик — не назначен |
-| `unknown` | Skip | Неизвестный статус |
+| `active` | Map | Active prescription |
+| `completed` | Map | Completed prescription |
+| `on-hold` | Skip | On hold |
+| `cancelled` | Skip | Cancelled |
+| `entered-in-error` | Skip | Erroneous record |
+| `stopped` | Skip | Stopped |
+| `draft` | Skip | Draft — not prescribed |
+| `unknown` | Skip | Unknown status |
 
 ## Type Concept
 

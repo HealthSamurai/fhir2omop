@@ -1,25 +1,25 @@
 # MedicationStatement.status → OMOP filtering
 
-## Источник
+## Source
 
 FHIR `MedicationStatement.status` — code: active, completed, entered-in-error, intended, stopped, not-taken, on-hold, unknown.
 
-## Цель
+## Target
 
-Используется для **фильтрации**.
+Used for **filtering**.
 
-## Фильтрация
+## Filtering
 
-| Значение | Действие | Причина |
+| Value | Action | Reason |
 |---|---|---|
-| `active` | Map | Текущий приём |
-| `completed` | Map | Завершённый приём |
-| `entered-in-error` | Skip | Ошибочная запись |
-| `intended` | Skip | Планируемый — ещё не начат |
-| `stopped` | Skip | Остановлен |
-| `not-taken` | Skip | Не принимался |
-| `on-hold` | Skip | Приостановлен |
-| `unknown` | Skip | Неизвестный статус |
+| `active` | Map | Currently taking |
+| `completed` | Map | Completed course |
+| `entered-in-error` | Skip | Erroneous record |
+| `intended` | Skip | Planned — not yet started |
+| `stopped` | Skip | Stopped |
+| `not-taken` | Skip | Not taken |
+| `on-hold` | Skip | On hold |
+| `unknown` | Skip | Unknown status |
 
 ## Type Concept
 

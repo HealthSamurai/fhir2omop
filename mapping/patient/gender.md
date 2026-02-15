@@ -1,17 +1,17 @@
 # Patient.gender → OMOP PERSON gender fields
 
-## Источник
+## Source
 
-FHIR `Patient.gender` — код из value set `AdministrativeGender`: `male`, `female`, `other`, `unknown`.
+FHIR `Patient.gender` — code from value set `AdministrativeGender`: `male`, `female`, `other`, `unknown`.
 
-## Цель
+## Target
 
 OMOP PERSON:
 - `gender_concept_id` (integer, required) — FK → CONCEPT
-- `gender_source_value` (varchar(50)) — оригинальное значение
+- `gender_source_value` (varchar(50)) — original value
 - `gender_source_concept_id` (integer) — source concept
 
-## Маппинг
+## Mapping
 
 | FHIR gender | gender_concept_id | OMOP Concept Name |
 |---|---|---|
@@ -19,19 +19,19 @@ OMOP PERSON:
 | `female` | **8532** | FEMALE |
 | `other` | **8521** | OTHER |
 | `unknown` | **8551** | UNKNOWN |
-| отсутствует | **0** | No matching concept |
+| absent | **0** | No matching concept |
 
-- `gender_source_value` — оригинальная строка из FHIR (`"male"`, `"female"`, `"other"`, `"unknown"`). Если отсутствует — NULL.
-- `gender_source_concept_id` — 0 (FHIR AdministrativeGender не имеет прямого concept в OMOP vocabulary).
+- `gender_source_value` — original string from FHIR (`"male"`, `"female"`, `"other"`, `"unknown"`). If absent — NULL.
+- `gender_source_concept_id` — 0 (FHIR AdministrativeGender has no direct concept in OMOP vocabulary).
 
-## Решение по other/unknown
+## Decision on other/unknown
 
-Маппим `other` → 8521 и `unknown` → 8551 (а не в 0). Concept 0 означает "No matching concept" — это для случаев когда значение не удалось сопоставить. `other` и `unknown` — валидные значения с конкретными concept ID в OMOP Gender vocabulary.
+We map `other` → 8521 and `unknown` → 8551 (not to 0). Concept 0 means "No matching concept" — it is for cases where the value could not be matched. `other` and `unknown` are valid values with specific concept IDs in the OMOP Gender vocabulary.
 
-Большинство реализаций (FhirToCdm, omopfhirmap, NACHC) ошибочно маппят в 0, теряя различие. Мы следуем подходу omoponfhir, который корректно использует 8521/8551.
+Most implementations (FhirToCdm, omopfhirmap, NACHC) incorrectly map to 0, losing the distinction. We follow the omoponfhir approach, which correctly uses 8521/8551.
 
-## Консенсус реализаций
+## Implementation consensus
 
 - **9/9**: male → 8507, female → 8532
-- **1/9** (omoponfhir): other → 8521, unknown → 8551 — наш выбор
-- **Остальные**: other/unknown → 0
+- **1/9** (omoponfhir): other → 8521, unknown → 8551 — our choice
+- **Others**: other/unknown → 0

@@ -1,36 +1,36 @@
 # MedicationStatement.effective[x] → OMOP DRUG_EXPOSURE date fields
 
-## Источник
+## Source
 
-FHIR `MedicationStatement.effective[x]` — полиморфное поле:
-- `effectiveDateTime` — точная дата/время
-- `effectivePeriod` — период (start/end)
+FHIR `MedicationStatement.effective[x]` — polymorphic field:
+- `effectiveDateTime` — exact date/time
+- `effectivePeriod` — period (start/end)
 
-## Цель
+## Target
 
 OMOP DRUG_EXPOSURE:
-- `drug_exposure_start_date` (date, **required**) — начало
-- `drug_exposure_start_datetime` (datetime) — начало
-- `drug_exposure_end_date` (date) — конец
-- `drug_exposure_end_datetime` (datetime) — конец
+- `drug_exposure_start_date` (date, **required**) — start
+- `drug_exposure_start_datetime` (datetime) — start
+- `drug_exposure_end_date` (date) — end
+- `drug_exposure_end_datetime` (datetime) — end
 
-## Маппинг
+## Mapping
 
-| FHIR | OMOP | Примечания |
+| FHIR | OMOP | Notes |
 |---|---|---|
-| `effectiveDateTime` | `drug_exposure_start_date` | Извлечение YYYY-MM-DD |
-| `effectiveDateTime` | `drug_exposure_start_datetime` | Полное значение |
-| `effectivePeriod.start` | `drug_exposure_start_date` | Fallback если нет dateTime |
-| `effectivePeriod.start` | `drug_exposure_start_datetime` | Полное значение |
-| `effectivePeriod.end` | `drug_exposure_end_date` | Извлечение YYYY-MM-DD |
-| `effectivePeriod.end` | `drug_exposure_end_datetime` | Полное значение |
+| `effectiveDateTime` | `drug_exposure_start_date` | Extract YYYY-MM-DD |
+| `effectiveDateTime` | `drug_exposure_start_datetime` | Full value |
+| `effectivePeriod.start` | `drug_exposure_start_date` | Fallback if no dateTime |
+| `effectivePeriod.start` | `drug_exposure_start_datetime` | Full value |
+| `effectivePeriod.end` | `drug_exposure_end_date` | Extract YYYY-MM-DD |
+| `effectivePeriod.end` | `drug_exposure_end_datetime` | Full value |
 
 ## Fallback chain
 
 1. `effectiveDateTime` → start_date
-2. `effectivePeriod.start` → start_date (если нет dateTime)
-3. Ничего → запись **не создаётся**
+2. `effectivePeriod.start` → start_date (if no dateTime)
+3. Nothing → record **is not created**
 
-## Валидация
+## Validation
 
-Если нет ни effectiveDateTime, ни effectivePeriod.start — запись не создаётся.
+If neither effectiveDateTime nor effectivePeriod.start is present — record is not created.

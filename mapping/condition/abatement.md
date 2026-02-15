@@ -1,37 +1,37 @@
 # Condition.abatement[x] → OMOP CONDITION_OCCURRENCE end date
 
-## Источник
+## Source
 
-FHIR `Condition.abatement[x]` — полиморфное поле:
-- `abatementDateTime` — дата/время окончания
-- `abatementPeriod` — период окончания
-- `abatementAge` — возраст окончания
-- `abatementRange` — диапазон возраста
-- `abatementString` — текстовое описание
+FHIR `Condition.abatement[x]` — polymorphic field:
+- `abatementDateTime` — date/time of resolution
+- `abatementPeriod` — resolution period
+- `abatementAge` — age at resolution
+- `abatementRange` — age range
+- `abatementString` — textual description
 
-## Цель
+## Target
 
 OMOP CONDITION_OCCURRENCE:
-- `condition_end_date` (date) — дата окончания
-- `condition_end_datetime` (datetime) — дата/время окончания
-- `stop_reason` (varchar(20)) — причина окончания
+- `condition_end_date` (date) — end date
+- `condition_end_datetime` (datetime) — end date/time
+- `stop_reason` (varchar(20)) — reason for ending
 
-## Маппинг
+## Mapping
 
-| Источник | condition_end_date | condition_end_datetime | stop_reason |
+| Source | condition_end_date | condition_end_datetime | stop_reason |
 |---|---|---|---|
-| `abatementDateTime` | Извлечение YYYY-MM-DD | Полное значение | null |
-| `abatementPeriod.end` | Извлечение YYYY-MM-DD | Полное значение | null |
-| `abatementString` | null | null | Текст строки |
-| Ничего нет | null | null | null |
+| `abatementDateTime` | Extract YYYY-MM-DD | Full value | null |
+| `abatementPeriod.end` | Extract YYYY-MM-DD | Full value | null |
+| `abatementString` | null | null | Text string |
+| Nothing available | null | null | null |
 
-## Немаппированные типы abatement[x]
+## Unmapped abatement[x] types
 
-| Тип | Причина | Потенциальный подход |
+| Type | Reason | Potential approach |
 |---|---|---|
-| `abatementAge` | Требует birthDate пациента | Вычислить при наличии контекста Patient |
-| `abatementRange` | Диапазон возраста; неточная дата | Использовать среднюю точку |
+| `abatementAge` | Requires patient's birthDate | Compute when Patient context is available |
+| `abatementRange` | Age range; imprecise date | Use midpoint |
 
-## Решение по abatementString
+## Decision on abatementString
 
-`abatementString` маппится в `stop_reason` (а не в end_date). Это сохраняет текстовое описание причины окончания заболевания без попытки извлечь дату из свободного текста.
+`abatementString` is mapped to `stop_reason` (not to end_date). This preserves the textual description of the reason for disease resolution without attempting to extract a date from free text.

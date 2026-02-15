@@ -1,6 +1,6 @@
 # Condition references → OMOP CONDITION_OCCURRENCE FK fields
 
-## Источник
+## Source
 
 FHIR `Condition`:
 - `subject` — Reference(Patient)
@@ -8,7 +8,7 @@ FHIR `Condition`:
 - `asserter` — Reference(Practitioner|Patient)
 - `recorder` — Reference(Practitioner|Patient)
 
-## Цель
+## Target
 
 OMOP CONDITION_OCCURRENCE:
 - `person_id` (integer, **required**) — FK → PERSON
@@ -16,27 +16,27 @@ OMOP CONDITION_OCCURRENCE:
 - `provider_id` (integer) — FK → PROVIDER
 - `visit_detail_id` (integer) — FK → VISIT_DETAIL
 
-## Маппинг
+## Mapping
 
-| FHIR Reference | OMOP Field | Примечания |
+| FHIR Reference | OMOP Field | Notes |
 |---|---|---|
-| `subject` | `person_id` | Через `ctx.ids.resolveRef()` |
-| `encounter` | `visit_occurrence_id` | Через `ctx.ids.resolveRef()` |
-| `asserter` | `provider_id` | Приоритетный источник провайдера |
-| `recorder` | `provider_id` | Fallback если asserter отсутствует |
-| — | `visit_detail_id` | null (не маппируется) |
+| `subject` | `person_id` | Via `ctx.ids.resolveRef()` |
+| `encounter` | `visit_occurrence_id` | Via `ctx.ids.resolveRef()` |
+| `asserter` | `provider_id` | Priority source for provider |
+| `recorder` | `provider_id` | Fallback if asserter is absent |
+| — | `visit_detail_id` | null (not mapped) |
 
-## Решение по asserter vs recorder
+## Decision on asserter vs recorder
 
-OMOP имеет единственное поле `provider_id`. FHIR различает:
-- `asserter` — кто утвердил/диагностировал заболевание
-- `recorder` — кто записал в систему
+OMOP has a single `provider_id` field. FHIR distinguishes:
+- `asserter` — who asserted/diagnosed the condition
+- `recorder` — who recorded it in the system
 
-Используем **asserter** как приоритетный, **recorder** как fallback. Логика:
+We use **asserter** as priority, **recorder** as fallback. Logic:
 ```
 provider_id = ctx.ids.resolveRef(condition.asserter ?? condition.recorder)
 ```
 
 ## visit_detail_id
 
-Не маппируется. Потребовал бы более гранулярные данные об encounter (под-визиты, отделения).
+Not mapped. Would require more granular encounter data (sub-visits, departments).

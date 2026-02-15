@@ -1,45 +1,45 @@
 # AllergyIntolerance.reaction → OMOP OBSERVATION value_as_string
 
-## Источник
+## Source
 
-FHIR `AllergyIntolerance.reaction[]` — массив реакций:
-- `reaction[].manifestation[]` — CodeableConcept с проявлениями (Hives, Nausea, etc.)
+FHIR `AllergyIntolerance.reaction[]` — array of reactions:
+- `reaction[].manifestation[]` — CodeableConcept with manifestations (Hives, Nausea, etc.)
 
-## Цель
+## Target
 
 OMOP OBSERVATION:
-- `value_as_string` (varchar(60)) — текстовое описание реакций
+- `value_as_string` (varchar(60)) — textual description of reactions
 
-## Маппинг
+## Mapping
 
-Все проявления из всех реакций собираются в одну строку, разделённую `"; "`.
+All manifestations from all reactions are collected into a single string, separated by `"; "`.
 
-Для каждого manifestation:
-1. `manifestation.coding[0].display` — предпочтительно
+For each manifestation:
+1. `manifestation.coding[0].display` — preferred
 2. `manifestation.text` — fallback
 
-## Примеры
+## Examples
 
 | FHIR reactions | value_as_string |
 |---|---|
-| 1 реакция, 1 проявление: Hives | `"Hives"` |
-| 1 реакция, 2 проявления: Hives, SOB | `"Hives; Shortness of breath"` |
-| 2 реакции: Hives + Nausea | `"Hives; Nausea"` |
-| Нет реакций | null |
+| 1 reaction, 1 manifestation: Hives | `"Hives"` |
+| 1 reaction, 2 manifestations: Hives, SOB | `"Hives; Shortness of breath"` |
+| 2 reactions: Hives + Nausea | `"Hives; Nausea"` |
+| No reactions | null |
 
-## Дополнительные маппинги
+## Additional mappings
 
-| FHIR | OMOP | Примечания |
+| FHIR | OMOP | Notes |
 |---|---|---|
-| `type` (allergy/intolerance) | `qualifier_source_value` | Тип аллергической реакции |
-| `criticality` (low/high/unable-to-assess) | `value_source_value` | Критичность |
+| `type` (allergy/intolerance) | `qualifier_source_value` | Type of allergic reaction |
+| `criticality` (low/high/unable-to-assess) | `value_source_value` | Criticality |
 
-## Немаппированные поля реакций
+## Unmapped reaction fields
 
-| FHIR | Причина |
+| FHIR | Reason |
 |---|---|
-| `reaction.substance` | Нет отдельного поля; код аллергена в основном `code` |
-| `reaction.severity` | Нет прямого аналога |
-| `reaction.exposureRoute` | Нет прямого аналога |
-| `reaction.onset` | Нет прямого аналога (дата реакции) |
-| `reaction.note` | Нет колонки |
+| `reaction.substance` | No separate field; allergen code is in the main `code` |
+| `reaction.severity` | No direct equivalent |
+| `reaction.exposureRoute` | No direct equivalent |
+| `reaction.onset` | No direct equivalent (reaction date) |
+| `reaction.note` | No column |

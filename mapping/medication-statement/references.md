@@ -1,28 +1,28 @@
 # MedicationStatement references → OMOP DRUG_EXPOSURE FK fields
 
-## Источник
+## Source
 
 FHIR `MedicationStatement`:
 - `subject` — Reference(Patient)
 - `context` — Reference(Encounter)
 - `informationSource` — Reference(Practitioner|Patient|RelatedPerson)
 
-## Цель
+## Target
 
 OMOP DRUG_EXPOSURE:
 - `person_id` (integer, **required**) — FK → PERSON
 - `visit_occurrence_id` (integer) — FK → VISIT_OCCURRENCE
 - `provider_id` (integer) — FK → PROVIDER
 
-## Маппинг
+## Mapping
 
-| FHIR Reference | OMOP Field | Примечания |
+| FHIR Reference | OMOP Field | Notes |
 |---|---|---|
-| `subject` | `person_id` | Через `ctx.ids.resolveRef()` |
-| `context` | `visit_occurrence_id` | Encounter в контексте которого записан |
-| `informationSource` | `provider_id` | Источник информации |
+| `subject` | `person_id` | Via `ctx.ids.resolveRef()` |
+| `context` | `visit_occurrence_id` | Encounter in which it was recorded |
+| `informationSource` | `provider_id` | Information source |
 
-## Отличия от MedicationRequest
+## Differences from MedicationRequest
 
-- `context` вместо `encounter` (FHIR R4 naming)
-- `informationSource` вместо `requester` — источник может быть пациент или родственник
+- `context` instead of `encounter` (FHIR R4 naming)
+- `informationSource` instead of `requester` — source may be patient or relative

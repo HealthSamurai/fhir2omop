@@ -1,35 +1,35 @@
 # AllergyIntolerance.clinicalStatus / verificationStatus → OMOP filtering
 
-## Источник
+## Source
 
 FHIR `AllergyIntolerance.clinicalStatus` — CodeableConcept: active, inactive, resolved.
 FHIR `AllergyIntolerance.verificationStatus` — CodeableConcept: unconfirmed, confirmed, refuted, entered-in-error.
 
-## Цель
+## Target
 
-Используется для **фильтрации**.
+Used for **filtering**.
 
-## Фильтрация
+## Filtering
 
 ### Clinical Status
 
-| Значение | Действие | Причина |
+| Value | Action | Reason |
 |---|---|---|
-| `active` | Map | Текущая аллергия |
-| `inactive` | Skip | Неактивная |
-| `resolved` | Skip | Разрешилась |
-| отсутствует | Map | clinicalStatus опционален |
+| `active` | Map | Current allergy |
+| `inactive` | Skip | Inactive |
+| `resolved` | Skip | Resolved |
+| absent | Map | clinicalStatus is optional |
 
 ### Verification Status
 
-| Значение | Действие | Причина |
+| Value | Action | Reason |
 |---|---|---|
-| `confirmed` | Map | Подтверждённая |
-| `unconfirmed` | Map | Неподтверждённая — всё равно маппим |
-| `refuted` | Skip | Опровергнутая |
-| `entered-in-error` | Skip | Ошибочная запись |
-| отсутствует | Map | verificationStatus опционален |
+| `confirmed` | Map | Confirmed |
+| `unconfirmed` | Map | Unconfirmed — still mapped |
+| `refuted` | Skip | Refuted |
+| `entered-in-error` | Skip | Erroneous record |
+| absent | Map | verificationStatus is optional |
 
-## Решение
+## Decision
 
-Строже чем Condition: только `active` для clinicalStatus. Аллергии `inactive` или `resolved` не создают записи — они представляют историческое состояние.
+Stricter than Condition: only `active` for clinicalStatus. `inactive` or `resolved` allergies do not create records — they represent historical state.

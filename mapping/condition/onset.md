@@ -1,45 +1,45 @@
 # Condition.onset[x] → OMOP CONDITION_OCCURRENCE start date
 
-## Источник
+## Source
 
-FHIR `Condition.onset[x]` — полиморфное поле:
-- `onsetDateTime` — дата/время начала
-- `onsetPeriod` — период начала
-- `onsetAge` — возраст начала
-- `onsetRange` — диапазон возраста
-- `onsetString` — текстовое описание
+FHIR `Condition.onset[x]` — polymorphic field:
+- `onsetDateTime` — date/time of onset
+- `onsetPeriod` — onset period
+- `onsetAge` — age at onset
+- `onsetRange` — age range
+- `onsetString` — textual description
 
-Fallback: `Condition.recordedDate` — дата записи в систему.
+Fallback: `Condition.recordedDate` — date recorded in the system.
 
-## Цель
+## Target
 
 OMOP CONDITION_OCCURRENCE:
-- `condition_start_date` (date, **required**) — дата начала
-- `condition_start_datetime` (datetime) — дата/время начала
+- `condition_start_date` (date, **required**) — start date
+- `condition_start_datetime` (datetime) — start date/time
 
-## Маппинг (fallback chain)
+## Mapping (fallback chain)
 
-| Приоритет | Источник | condition_start_date | condition_start_datetime |
+| Priority | Source | condition_start_date | condition_start_datetime |
 |---|---|---|---|
-| 1 | `onsetDateTime` | Извлечение YYYY-MM-DD | Полное значение |
-| 2 | `onsetPeriod.start` | Извлечение YYYY-MM-DD | Полное значение |
-| 3 | `recordedDate` | Извлечение YYYY-MM-DD | Полное значение |
-| — | Ничего нет | **Запись не создаётся** | — |
+| 1 | `onsetDateTime` | Extract YYYY-MM-DD | Full value |
+| 2 | `onsetPeriod.start` | Extract YYYY-MM-DD | Full value |
+| 3 | `recordedDate` | Extract YYYY-MM-DD | Full value |
+| — | Nothing available | **Record not created** | — |
 
-## Немаппированные типы onset[x]
+## Unmapped onset[x] types
 
-| Тип | Причина | Потенциальный подход |
+| Type | Reason | Potential approach |
 |---|---|---|
-| `onsetAge` | Требует birthDate пациента | Вычислить при наличии контекста Patient |
-| `onsetRange` | Диапазон возраста; неточная дата | Использовать среднюю точку диапазона |
-| `onsetString` | Свободный текст; нет надёжной даты | NLP extraction |
+| `onsetAge` | Requires patient's birthDate | Compute when Patient context is available |
+| `onsetRange` | Age range; imprecise date | Use midpoint of range |
+| `onsetString` | Free text; no reliable date | NLP extraction |
 
-## Решение по recordedDate
+## Decision on recordedDate
 
-`recordedDate` — последний fallback. Это дата записи, не дата начала заболевания, но лучше иметь приблизительную дату чем потерять запись целиком.
+`recordedDate` is the last fallback. This is the recording date, not the disease onset date, but it is better to have an approximate date than to lose the record entirely.
 
-## Консенсус реализаций
+## Implementation consensus
 
-- **ETL-German-FHIR-Core**: наиболее полный — поддерживает весь fallback chain
+- **ETL-German-FHIR-Core**: most complete — supports the full fallback chain
 - **omoponfhir**: onsetDateTime + recordedDate
-- **Большинство**: только onsetDateTime
+- **Most others**: only onsetDateTime

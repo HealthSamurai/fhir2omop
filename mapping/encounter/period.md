@@ -1,36 +1,36 @@
 # Encounter.period → OMOP VISIT_OCCURRENCE date fields
 
-## Источник
+## Source
 
-FHIR `Encounter.period` — тип `Period`:
-- `start` (dateTime) — начало визита
-- `end` (dateTime) — конец визита
+FHIR `Encounter.period` — type `Period`:
+- `start` (dateTime) — visit start
+- `end` (dateTime) — visit end
 
-## Цель
+## Target
 
 OMOP VISIT_OCCURRENCE:
-- `visit_start_date` (date, **required**) — дата начала
-- `visit_start_datetime` (datetime) — дата/время начала
-- `visit_end_date` (date, **required**) — дата окончания
-- `visit_end_datetime` (datetime) — дата/время окончания
+- `visit_start_date` (date, **required**) — start date
+- `visit_start_datetime` (datetime) — start date/time
+- `visit_end_date` (date, **required**) — end date
+- `visit_end_datetime` (datetime) — end date/time
 
-## Маппинг
+## Mapping
 
-| FHIR | OMOP | Примечания |
+| FHIR | OMOP | Notes |
 |---|---|---|
-| `period.start` | `visit_start_date` | Извлечение YYYY-MM-DD |
-| `period.start` | `visit_start_datetime` | Полное значение |
-| `period.end` | `visit_end_date` | Извлечение YYYY-MM-DD |
-| `period.end` | `visit_end_datetime` | Полное значение |
+| `period.start` | `visit_start_date` | Extract YYYY-MM-DD |
+| `period.start` | `visit_start_datetime` | Full value |
+| `period.end` | `visit_end_date` | Extract YYYY-MM-DD |
+| `period.end` | `visit_end_datetime` | Full value |
 
-## Обработка отсутствующих данных
+## Handling missing data
 
-| Ситуация | Действие |
+| Situation | Action |
 |---|---|
-| period отсутствует | Запись **не создаётся** |
-| period.start отсутствует | Запись **не создаётся** |
-| period.end отсутствует | `visit_end_date` = `visit_start_date`, `visit_end_datetime` = null |
+| period absent | Record **not created** |
+| period.start absent | Record **not created** |
+| period.end absent | `visit_end_date` = `visit_start_date`, `visit_end_datetime` = null |
 
-## Решение по отсутствующему end
+## Decision on missing end
 
-`visit_end_date` — обязательное поле в OMOP. Если `period.end` отсутствует, используем `visit_start_date` как end_date (однодневный визит). `visit_end_datetime` остаётся null — не подставляем фиктивное время.
+`visit_end_date` is a required field in OMOP. If `period.end` is absent, we use `visit_start_date` as end_date (single-day visit). `visit_end_datetime` remains null — we do not substitute a fictitious time.

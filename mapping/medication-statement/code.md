@@ -1,28 +1,28 @@
 # MedicationStatement.medicationCodeableConcept → OMOP DRUG_EXPOSURE code fields
 
-## Источник
+## Source
 
-FHIR `MedicationStatement.medicationCodeableConcept` — CodeableConcept с кодами из RxNorm, NDC, ATC.
+FHIR `MedicationStatement.medicationCodeableConcept` — CodeableConcept with codes from RxNorm, NDC, ATC.
 
-## Цель
+## Target
 
 OMOP DRUG_EXPOSURE:
 - `drug_concept_id` (integer, required) — FK → CONCEPT
-- `drug_source_value` (varchar(50)) — оригинальный код
+- `drug_source_value` (varchar(50)) — original code
 - `drug_source_concept_id` (integer) — source concept
 
-## Маппинг
+## Mapping
 
-| FHIR | OMOP | Примечания |
+| FHIR | OMOP | Notes |
 |---|---|---|
-| `medicationCodeableConcept.coding[best].code` | `drug_source_value` | Лучший код по приоритету словарей |
-| `medicationCodeableConcept` | `drug_concept_id` | **0** (placeholder — требует Athena) |
+| `medicationCodeableConcept.coding[best].code` | `drug_source_value` | Best code by vocabulary priority |
+| `medicationCodeableConcept` | `drug_concept_id` | **0** (placeholder — requires Athena) |
 | `medicationCodeableConcept` | `drug_source_concept_id` | **0** (placeholder) |
 
-## Приоритет словарей
+## Vocabulary priority
 
-Аналогичен MedicationRequest: RxNorm > SNOMED > NDC.
+Same as MedicationRequest: RxNorm > SNOMED > NDC.
 
-## Валидация
+## Validation
 
-Если `medicationCodeableConcept.coding` пуст — запись **не создаётся**.
+If `medicationCodeableConcept.coding` is empty — record **is not created**.

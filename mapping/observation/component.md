@@ -1,48 +1,48 @@
 # Observation.component → OMOP expanded records
 
-## Источник
+## Source
 
-FHIR `Observation.component` — массив компонентов (например, систолическое/диастолическое давление в одном Observation).
+FHIR `Observation.component` — array of components (e.g., systolic/diastolic blood pressure in one Observation).
 
-Каждый компонент содержит:
+Each component contains:
 - `code` — CodeableConcept
-- `value[x]` — значение
-- `referenceRange` — референсный диапазон
-- `interpretation` — интерпретация
+- `value[x]` — value
+- `referenceRange` — reference range
+- `interpretation` — interpretation
 
-## Цель
+## Target
 
-Каждый компонент создаёт **отдельную запись** в OMOP (measurement или observation).
+Each component creates a **separate record** in OMOP (measurement or observation).
 
-## Маппинг
+## Mapping
 
-| Аспект | Поведение |
+| Aspect | Behavior |
 |---|---|
-| Роутинг | Все компоненты наследуют category-based routing от родителя |
-| code | Используется `component.code` (перезаписывает parent code) |
-| value[x] | Используется `component.value[x]` |
-| referenceRange | Используется `component.referenceRange` |
-| ID | Суффикс `-comp-{index}` для уникальности в IdRegistry |
-| person_id | Наследуется от родителя |
-| visit_occurrence_id | Наследуется от родителя |
-| provider_id | Наследуется от родителя |
+| Routing | All components inherit category-based routing from the parent |
+| code | Uses `component.code` (overrides parent code) |
+| value[x] | Uses `component.value[x]` |
+| referenceRange | Uses `component.referenceRange` |
+| ID | Suffix `-comp-{index}` for uniqueness in IdRegistry |
+| person_id | Inherited from parent |
+| visit_occurrence_id | Inherited from parent |
+| provider_id | Inherited from parent |
 
-## Примеры
+## Examples
 
-### Кровяное давление (LOINC 85354-9)
+### Blood pressure (LOINC 85354-9)
 
-Входной Observation с 2 компонентами → 2 записи measurement:
-1. Систолическое (8480-6): value=120, unit=mmHg
-2. Диастолическое (8462-4): value=80, unit=mmHg
+Input Observation with 2 components → 2 measurement records:
+1. Systolic (8480-6): value=120, unit=mmHg
+2. Diastolic (8462-4): value=80, unit=mmHg
 
-### Опросник (survey)
+### Questionnaire (survey)
 
-Входной Observation с N компонентами → N записей observation.
+Input Observation with N components → N observation records.
 
-## Обработка невалидных компонентов
+## Handling invalid components
 
-Компоненты с пустым `code.coding` пропускаются. Остальные создают записи.
+Components with empty `code.coding` are skipped. The rest create records.
 
-## Один компонент
+## Single component
 
-Если только 1 компонент — возвращается одиночная запись (не массив).
+If only 1 component — a single record is returned (not an array).

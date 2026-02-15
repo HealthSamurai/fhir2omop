@@ -1,23 +1,23 @@
 # MedicationRequest references → OMOP DRUG_EXPOSURE FK fields
 
-## Источник
+## Source
 
 FHIR `MedicationRequest`:
 - `subject` — Reference(Patient)
 - `encounter` — Reference(Encounter)
 - `requester` — Reference(Practitioner|Organization)
 
-## Цель
+## Target
 
 OMOP DRUG_EXPOSURE:
 - `person_id` (integer, **required**) — FK → PERSON
 - `visit_occurrence_id` (integer) — FK → VISIT_OCCURRENCE
 - `provider_id` (integer) — FK → PROVIDER
 
-## Маппинг
+## Mapping
 
-| FHIR Reference | OMOP Field | Примечания |
+| FHIR Reference | OMOP Field | Notes |
 |---|---|---|
-| `subject` | `person_id` | Через `ctx.ids.resolveRef()` |
-| `encounter` | `visit_occurrence_id` | Через `ctx.ids.resolveRef()` |
-| `requester` | `provider_id` | Назначающий врач |
+| `subject` | `person_id` | Via `ctx.ids.resolveRef()` |
+| `encounter` | `visit_occurrence_id` | Via `ctx.ids.resolveRef()` |
+| `requester` | `provider_id` | Prescribing physician |

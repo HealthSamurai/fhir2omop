@@ -1,46 +1,46 @@
 # Condition.clinicalStatus / verificationStatus → OMOP filtering and status fields
 
-## Источник
+## Source
 
-FHIR `Condition.clinicalStatus` — CodeableConcept из `condition-clinical`:
+FHIR `Condition.clinicalStatus` — CodeableConcept from `condition-clinical`:
 - active, recurrence, relapse, inactive, remission, resolved
 
-FHIR `Condition.verificationStatus` — CodeableConcept из `condition-ver-status`:
+FHIR `Condition.verificationStatus` — CodeableConcept from `condition-ver-status`:
 - confirmed, unconfirmed, provisional, differential, entered-in-error, refuted
 
-## Цель
+## Target
 
 OMOP CONDITION_OCCURRENCE:
-- `condition_status_concept_id` (integer) — состояние
-- `condition_status_source_value` (varchar(50)) — оригинальный код
+- `condition_status_concept_id` (integer) — status
+- `condition_status_source_value` (varchar(50)) — original code
 
-Также используется для **фильтрации** — определяет создавать ли запись.
+Also used for **filtering** — determines whether a record is created.
 
-## Фильтрация
+## Filtering
 
 ### Clinical Status
 
-| Значение | Действие | Причина |
+| Value | Action | Reason |
 |---|---|---|
-| `active` | Map | Текущее заболевание |
-| `recurrence` | Map | Повтор — активное состояние |
-| `relapse` | Map | Рецидив — активное состояние |
-| `inactive` | Skip | Неактивное — историческое |
-| `remission` | Skip | В ремиссии |
-| `resolved` | Skip | Разрешилось |
-| отсутствует | Map | clinicalStatus опционален в FHIR |
+| `active` | Map | Current disease |
+| `recurrence` | Map | Recurrence — active state |
+| `relapse` | Map | Relapse — active state |
+| `inactive` | Skip | Inactive — historical |
+| `remission` | Skip | In remission |
+| `resolved` | Skip | Resolved |
+| absent | Map | clinicalStatus is optional in FHIR |
 
 ### Verification Status
 
-| Значение | Действие | Причина |
+| Value | Action | Reason |
 |---|---|---|
-| `confirmed` | Map | Подтверждённый диагноз |
-| `unconfirmed` | Map | Неподтверждённый — всё равно маппим |
-| `provisional` | Map | Предварительный |
-| `differential` | Map | Дифференциальный |
-| `entered-in-error` | Skip | Ошибочная запись |
-| `refuted` | Skip | Опровергнутый |
-| отсутствует | Map | verificationStatus опционален |
+| `confirmed` | Map | Confirmed diagnosis |
+| `unconfirmed` | Map | Unconfirmed — still mapped |
+| `provisional` | Map | Provisional |
+| `differential` | Map | Differential |
+| `entered-in-error` | Skip | Erroneous record |
+| `refuted` | Skip | Refuted |
+| absent | Map | verificationStatus is optional |
 
 ## Status Concept Mapping
 
@@ -49,9 +49,9 @@ OMOP CONDITION_OCCURRENCE:
 | `active` | **32902** | Active condition |
 | `recurrence` | **32902** | Active condition |
 | `relapse` | **32902** | Active condition |
-| отсутствует | **0** | Unknown |
+| absent | **0** | Unknown |
 
-- `condition_status_source_value` — оригинальный код clinicalStatus (`"active"`, `"recurrence"` и т.д.). Если отсутствует — NULL.
+- `condition_status_source_value` — original clinicalStatus code (`"active"`, `"recurrence"`, etc.). If absent — NULL.
 
 ## Type Concept Mapping (category)
 
@@ -59,4 +59,4 @@ OMOP CONDITION_OCCURRENCE:
 |---|---|---|
 | `problem-list-item` | **32840** | Problem list from EHR |
 | `encounter-diagnosis` | **32817** | EHR encounter record |
-| отсутствует/другое | **32817** | EHR (default) |
+| absent/other | **32817** | EHR (default) |

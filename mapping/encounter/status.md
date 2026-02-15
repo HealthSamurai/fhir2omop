@@ -1,27 +1,27 @@
 # Encounter.status → OMOP filtering
 
-## Источник
+## Source
 
-FHIR `Encounter.status` — code из value set `EncounterStatus`: planned, arrived, triaged, in-progress, onleave, finished, cancelled, entered-in-error, unknown.
+FHIR `Encounter.status` — code from value set `EncounterStatus`: planned, arrived, triaged, in-progress, onleave, finished, cancelled, entered-in-error, unknown.
 
-## Цель
+## Target
 
-Используется для **фильтрации** — определяет создавать ли запись VISIT_OCCURRENCE.
+Used for **filtering** — determines whether a VISIT_OCCURRENCE record is created.
 
-## Фильтрация
+## Filtering
 
-| Значение | Действие | Причина |
+| Value | Action | Reason |
 |---|---|---|
-| `finished` | Map | Завершённый визит |
-| `in-progress` | Map | Текущий визит — валидные данные |
-| `planned` | Skip | Планируемый — ещё не произошёл |
-| `arrived` | Skip | Прибыл — визит не начался |
-| `triaged` | Skip | Триаж — визит не начался |
-| `onleave` | Skip | Отсутствует — нет стабильных данных |
-| `cancelled` | Skip | Отменён |
-| `entered-in-error` | Skip | Ошибочная запись |
-| `unknown` | Skip | Неизвестный статус |
+| `finished` | Map | Completed visit |
+| `in-progress` | Map | Current visit — valid data |
+| `planned` | Skip | Planned — has not occurred yet |
+| `arrived` | Skip | Arrived — visit has not started |
+| `triaged` | Skip | Triage — visit has not started |
+| `onleave` | Skip | On leave — no stable data |
+| `cancelled` | Skip | Cancelled |
+| `entered-in-error` | Skip | Erroneous record |
+| `unknown` | Skip | Unknown status |
 
-## Решение
+## Decision
 
-Маппим только `finished` и `in-progress`. Planned/cancelled/entered-in-error не представляют реальные визиты. in-progress включаем для поддержки текущих госпитализаций.
+We map only `finished` and `in-progress`. Planned/cancelled/entered-in-error do not represent real visits. in-progress is included to support current hospitalizations.

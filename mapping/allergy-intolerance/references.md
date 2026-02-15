@@ -1,29 +1,29 @@
 # AllergyIntolerance references → OMOP OBSERVATION FK fields
 
-## Источник
+## Source
 
 FHIR `AllergyIntolerance`:
 - `patient` — Reference(Patient)
 - `encounter` — Reference(Encounter)
 - `recorder` — Reference(Practitioner|Patient)
 
-## Цель
+## Target
 
 OMOP OBSERVATION:
 - `person_id` (integer, **required**) — FK → PERSON
 - `visit_occurrence_id` (integer) — FK → VISIT_OCCURRENCE
 - `provider_id` (integer) — FK → PROVIDER
 
-## Маппинг
+## Mapping
 
-| FHIR Reference | OMOP Field | Примечания |
+| FHIR Reference | OMOP Field | Notes |
 |---|---|---|
-| `patient` | `person_id` | Через `ctx.ids.resolveRef()` |
-| `encounter` | `visit_occurrence_id` | Через `ctx.ids.resolveRef()` |
-| `recorder` | `provider_id` | Кто записал аллергию |
+| `patient` | `person_id` | Via `ctx.ids.resolveRef()` |
+| `encounter` | `visit_occurrence_id` | Via `ctx.ids.resolveRef()` |
+| `recorder` | `provider_id` | Who recorded the allergy |
 
-## Немаппированные ссылки
+## Unmapped references
 
-| FHIR Reference | Причина |
+| FHIR Reference | Reason |
 |---|---|
-| `asserter` | OMOP имеет один provider_id; используем recorder |
+| `asserter` | OMOP has a single provider_id; we use recorder |

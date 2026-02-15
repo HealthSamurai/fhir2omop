@@ -1,36 +1,36 @@
 # Encounter references → OMOP VISIT_OCCURRENCE FK fields
 
-## Источник
+## Source
 
 FHIR `Encounter`:
 - `subject` — Reference(Patient)
 - `participant[].individual` — Reference(Practitioner)
 - `serviceProvider` — Reference(Organization)
 
-## Цель
+## Target
 
 OMOP VISIT_OCCURRENCE:
 - `person_id` (integer, **required**) — FK → PERSON
 - `provider_id` (integer) — FK → PROVIDER
 - `care_site_id` (integer) — FK → CARE_SITE
 
-## Маппинг
+## Mapping
 
-| FHIR Reference | OMOP Field | Примечания |
+| FHIR Reference | OMOP Field | Notes |
 |---|---|---|
-| `subject` | `person_id` | Через `ctx.ids.resolveRef()` |
-| `participant[0].individual` | `provider_id` | Первый участник визита |
-| `serviceProvider` | `care_site_id` | Организация-провайдер |
+| `subject` | `person_id` | Via `ctx.ids.resolveRef()` |
+| `participant[0].individual` | `provider_id` | First visit participant |
+| `serviceProvider` | `care_site_id` | Service provider organization |
 
-## Решение по participant
+## Decision on participant
 
-FHIR Encounter может иметь множество participants. OMOP VISIT_OCCURRENCE имеет один `provider_id`. Берём первого participant (`participant[0].individual`).
+FHIR Encounter can have multiple participants. OMOP VISIT_OCCURRENCE has a single `provider_id`. We take the first participant (`participant[0].individual`).
 
-## Немаппированные ссылки
+## Unmapped references
 
-| FHIR Reference | Причина |
+| FHIR Reference | Reason |
 |---|---|
-| `participant[1..n]` | OMOP имеет один provider_id |
-| `location` | Не маппируется в visit_occurrence (отдельная таблица CARE_SITE) |
-| `partOf` | Не маппируется (вложенные encounters) |
-| `reasonReference` | Не маппируется (причина визита) |
+| `participant[1..n]` | OMOP has a single provider_id |
+| `location` | Not mapped to visit_occurrence (separate CARE_SITE table) |
+| `partOf` | Not mapped (nested encounters) |
+| `reasonReference` | Not mapped (reason for visit) |

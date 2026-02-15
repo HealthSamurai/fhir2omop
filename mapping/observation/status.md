@@ -1,26 +1,26 @@
 # Observation.status → OMOP filtering
 
-## Источник
+## Source
 
-FHIR `Observation.status` — code из value set `ObservationStatus`: registered, preliminary, final, amended, corrected, cancelled, entered-in-error, unknown.
+FHIR `Observation.status` — code from value set `ObservationStatus`: registered, preliminary, final, amended, corrected, cancelled, entered-in-error, unknown.
 
-## Цель
+## Target
 
-Используется для **фильтрации** — определяет создавать ли запись.
+Used for **filtering** — determines whether a record is created.
 
-## Фильтрация
+## Filtering
 
-| Значение | Действие | Причина |
+| Value | Action | Reason |
 |---|---|---|
-| `final` | Map | Финальный результат |
-| `amended` | Map | Исправленный — валидный результат |
-| `corrected` | Map | Скорректированный — валидный результат |
-| `preliminary` | Skip | Предварительный — может измениться |
-| `registered` | Skip | Зарегистрирован — нет результата |
-| `cancelled` | Skip | Отменён |
-| `entered-in-error` | Skip | Ошибочная запись |
-| `unknown` | Skip | Неизвестный статус |
+| `final` | Map | Final result |
+| `amended` | Map | Amended — valid result |
+| `corrected` | Map | Corrected — valid result |
+| `preliminary` | Skip | Preliminary — may change |
+| `registered` | Skip | Registered — no result yet |
+| `cancelled` | Skip | Cancelled |
+| `entered-in-error` | Skip | Erroneous record |
+| `unknown` | Skip | Unknown status |
 
-## Решение
+## Decision
 
-Маппим только `final`, `amended`, `corrected`. Preliminary пропускаем — для аналитики нужны стабильные результаты. Amended и corrected включаем — это обновлённые, но валидные значения.
+We map only `final`, `amended`, `corrected`. Preliminary is skipped — analytics requires stable results. Amended and corrected are included — they are updated but valid values.
