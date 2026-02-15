@@ -1,0 +1,104 @@
+[
+  {
+    "description": "SNOMED код → procedure_source_value",
+    "spec": "mapping/procedure/code.md",
+    "fhir": [
+      {
+        "resourceType": "Procedure",
+        "id": "proc-code-1",
+        "status": "completed",
+        "code": {
+          "coding": [{ "system": "http://snomed.info/sct", "code": "80146002", "display": "Appendectomy" }]
+        },
+        "subject": { "reference": "Patient/1" },
+        "performedDateTime": "2023-03-15"
+      }
+    ],
+    "omop": [
+      {
+        "table": "procedure_occurrence",
+        "procedure_source_value": "80146002",
+        "procedure_concept_id": 0,
+        "procedure_source_concept_id": 0
+      }
+    ]
+  },
+  {
+    "description": "SNOMED приоритетнее CPT4",
+    "comment": "При наличии нескольких кодировок выбирается SNOMED как более приоритетная.",
+    "spec": "mapping/procedure/code.md",
+    "fhir": [
+      {
+        "resourceType": "Procedure",
+        "id": "proc-code-2",
+        "status": "completed",
+        "code": {
+          "coding": [
+            { "system": "http://www.ama-assn.org/go/cpt", "code": "44950", "display": "Appendectomy" },
+            { "system": "http://snomed.info/sct", "code": "80146002", "display": "Appendectomy" }
+          ]
+        },
+        "subject": { "reference": "Patient/1" },
+        "performedDateTime": "2023-03-15"
+      }
+    ],
+    "omop": [
+      {
+        "table": "procedure_occurrence",
+        "procedure_source_value": "80146002"
+      }
+    ]
+  },
+  {
+    "description": "только CPT4 код → используется CPT4",
+    "spec": "mapping/procedure/code.md",
+    "fhir": [
+      {
+        "resourceType": "Procedure",
+        "id": "proc-code-3",
+        "status": "completed",
+        "code": {
+          "coding": [{ "system": "http://www.ama-assn.org/go/cpt", "code": "44950", "display": "Appendectomy" }]
+        },
+        "subject": { "reference": "Patient/1" },
+        "performedDateTime": "2023-03-15"
+      }
+    ],
+    "omop": [
+      {
+        "table": "procedure_occurrence",
+        "procedure_source_value": "44950"
+      }
+    ]
+  },
+  {
+    "description": "code отсутствует → пропускается",
+    "comment": "procedure_concept_id обязательное поле, без кода невозможно создать запись.",
+    "spec": "mapping/procedure/code.md",
+    "fhir": [
+      {
+        "resourceType": "Procedure",
+        "id": "proc-code-4",
+        "status": "completed",
+        "subject": { "reference": "Patient/1" },
+        "performedDateTime": "2023-03-15"
+      }
+    ],
+    "omop": []
+  },
+  {
+    "description": "пустой code.coding → пропускается",
+    "spec": "mapping/procedure/code.md",
+    "fhir": [
+      {
+        "resourceType": "Procedure",
+        "id": "proc-code-5",
+        "status": "completed",
+        "code": { "coding": [] },
+        "subject": { "reference": "Patient/1" },
+        "performedDateTime": "2023-03-15"
+      }
+    ],
+    "omop": []
+  }
+]

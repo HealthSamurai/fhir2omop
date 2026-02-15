@@ -1,0 +1,99 @@
+[
+  {
+    "description": "completed → procedure_occurrence создаётся",
+    "spec": "mapping/procedure/status.md",
+    "fhir": [
+      {
+        "resourceType": "Procedure",
+        "id": "proc-1",
+        "status": "completed",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "80146002", "display": "Appendectomy" }] },
+        "subject": { "reference": "Patient/1" },
+        "performedDateTime": "2023-03-15T10:00:00Z"
+      }
+    ],
+    "omop": [
+      {
+        "table": "procedure_occurrence",
+        "procedure_type_concept_id": 32817
+      }
+    ]
+  },
+  {
+    "description": "in-progress → пропускается",
+    "comment": "OMOP procedure_occurrence предполагает выполненную процедуру. Незавершённые процедуры не конвертируются.",
+    "spec": "mapping/procedure/status.md",
+    "fhir": [
+      {
+        "resourceType": "Procedure",
+        "id": "proc-2",
+        "status": "in-progress",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "80146002" }] },
+        "subject": { "reference": "Patient/1" },
+        "performedDateTime": "2023-03-15T10:00:00Z"
+      }
+    ],
+    "omop": []
+  },
+  {
+    "description": "not-done → пропускается",
+    "comment": "Процедура не была выполнена — не создаём запись в OMOP.",
+    "spec": "mapping/procedure/status.md",
+    "fhir": [
+      {
+        "resourceType": "Procedure",
+        "id": "proc-3",
+        "status": "not-done",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "80146002" }] },
+        "subject": { "reference": "Patient/1" },
+        "performedDateTime": "2023-03-15T10:00:00Z"
+      }
+    ],
+    "omop": []
+  },
+  {
+    "description": "entered-in-error → пропускается",
+    "spec": "mapping/procedure/status.md",
+    "fhir": [
+      {
+        "resourceType": "Procedure",
+        "id": "proc-4",
+        "status": "entered-in-error",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "80146002" }] },
+        "subject": { "reference": "Patient/1" },
+        "performedDateTime": "2023-03-15T10:00:00Z"
+      }
+    ],
+    "omop": []
+  },
+  {
+    "description": "preparation → пропускается",
+    "spec": "mapping/procedure/status.md",
+    "fhir": [
+      {
+        "resourceType": "Procedure",
+        "id": "proc-5",
+        "status": "preparation",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "80146002" }] },
+        "subject": { "reference": "Patient/1" },
+        "performedDateTime": "2023-03-15T10:00:00Z"
+      }
+    ],
+    "omop": []
+  },
+  {
+    "description": "stopped → пропускается",
+    "spec": "mapping/procedure/status.md",
+    "fhir": [
+      {
+        "resourceType": "Procedure",
+        "id": "proc-6",
+        "status": "stopped",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "80146002" }] },
+        "subject": { "reference": "Patient/1" },
+        "performedDateTime": "2023-03-15T10:00:00Z"
+      }
+    ],
+    "omop": []
+  }
+]

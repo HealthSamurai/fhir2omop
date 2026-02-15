@@ -1,0 +1,71 @@
+[
+  {
+    "description": "полный Procedure → procedure_occurrence со всеми полями",
+    "comment": "Один Procedure создаёт одну запись в procedure_occurrence.",
+    "fhir": [
+      {
+        "resourceType": "Procedure",
+        "id": "proc-full",
+        "status": "completed",
+        "code": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "80146002", "display": "Appendectomy" }
+          ]
+        },
+        "subject": { "reference": "Patient/pt-1" },
+        "encounter": { "reference": "Encounter/enc-1" },
+        "performedPeriod": {
+          "start": "2023-03-15T08:00:00Z",
+          "end": "2023-03-15T10:30:00Z"
+        },
+        "performer": [
+          { "actor": { "reference": "Practitioner/dr-1" } }
+        ],
+        "bodySite": [
+          { "coding": [{ "system": "http://snomed.info/sct", "code": "66754008", "display": "Appendix structure" }] }
+        ]
+      }
+    ],
+    "omop": [
+      {
+        "table": "procedure_occurrence",
+        "procedure_source_value": "80146002",
+        "procedure_concept_id": 0,
+        "procedure_date": "2023-03-15",
+        "procedure_datetime": "2023-03-15T08:00:00Z",
+        "procedure_end_date": "2023-03-15",
+        "procedure_end_datetime": "2023-03-15T10:30:00Z",
+        "procedure_type_concept_id": 32817,
+        "modifier_source_value": "66754008",
+        "modifier_concept_id": 0,
+        "procedure_source_concept_id": 0
+      }
+    ]
+  },
+  {
+    "description": "минимальный Procedure → только обязательные поля",
+    "fhir": [
+      {
+        "resourceType": "Procedure",
+        "id": "proc-minimal",
+        "status": "completed",
+        "code": {
+          "coding": [{ "system": "http://snomed.info/sct", "code": "80146002" }]
+        },
+        "subject": { "reference": "Patient/pt-2" },
+        "performedDateTime": "2023-06-01"
+      }
+    ],
+    "omop": [
+      {
+        "table": "procedure_occurrence",
+        "procedure_source_value": "80146002",
+        "procedure_date": "2023-06-01",
+        "procedure_type_concept_id": 32817,
+        "visit_occurrence_id": null,
+        "provider_id": null,
+        "modifier_source_value": null
+      }
+    ]
+  }
+]
