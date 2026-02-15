@@ -1,0 +1,83 @@
+[
+  {
+    "description": "IMP (inpatient) → visit_concept_id 9201",
+    "spec": "mapping/encounter/class.md",
+    "fhir": [
+      {
+        "resourceType": "Encounter",
+        "id": "enc-imp",
+        "status": "finished",
+        "class": { "code": "IMP" },
+        "subject": { "reference": "Patient/1" },
+        "period": { "start": "2023-06-15T09:00:00Z" }
+      }
+    ],
+    "omop": [
+      { "table": "visit_occurrence", "visit_concept_id": 9201, "visit_source_value": "IMP" }
+    ]
+  },
+  {
+    "description": "AMB (ambulatory) → visit_concept_id 9202",
+    "fhir": [
+      {
+        "resourceType": "Encounter",
+        "id": "enc-amb",
+        "status": "finished",
+        "class": { "code": "AMB" },
+        "subject": { "reference": "Patient/1" },
+        "period": { "start": "2023-06-15T09:00:00Z" }
+      }
+    ],
+    "omop": [
+      { "table": "visit_occurrence", "visit_concept_id": 9202, "visit_source_value": "AMB" }
+    ]
+  },
+  {
+    "description": "EMER (emergency) → visit_concept_id 9203",
+    "fhir": [
+      {
+        "resourceType": "Encounter",
+        "id": "enc-emer",
+        "status": "finished",
+        "class": { "code": "EMER" },
+        "subject": { "reference": "Patient/1" },
+        "period": { "start": "2023-06-15T09:00:00Z" }
+      }
+    ],
+    "omop": [
+      { "table": "visit_occurrence", "visit_concept_id": 9203, "visit_source_value": "EMER" }
+    ]
+  },
+  {
+    "description": "HH (home health) → visit_concept_id 581476",
+    "fhir": [
+      {
+        "resourceType": "Encounter",
+        "id": "enc-hh",
+        "status": "finished",
+        "class": { "code": "HH" },
+        "subject": { "reference": "Patient/1" },
+        "period": { "start": "2023-06-15T09:00:00Z" }
+      }
+    ],
+    "omop": [
+      { "table": "visit_occurrence", "visit_concept_id": 581476, "visit_source_value": "HH" }
+    ]
+  },
+  {
+    "description": "unknown class → visit_concept_id 0",
+    "fhir": [
+      {
+        "resourceType": "Encounter",
+        "id": "enc-custom",
+        "status": "finished",
+        "class": { "code": "CUSTOM" },
+        "subject": { "reference": "Patient/1" },
+        "period": { "start": "2023-06-15T09:00:00Z" }
+      }
+    ],
+    "omop": [
+      { "table": "visit_occurrence", "visit_concept_id": 0, "visit_source_value": "CUSTOM" }
+    ]
+  }
+]

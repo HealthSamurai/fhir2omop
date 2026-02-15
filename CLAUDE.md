@@ -174,6 +174,166 @@ Note: Bun may crash on cleanup (exit code 133) due to a Bun/DuckDB bug. Output i
 
 ---
 
+## Mapping Framework
+
+### Definition of Done
+
+A resource mapping is **complete** when it has all 4 artifacts:
+
+#### 1. `mapping/{resource}/*.md` — Per-element mapping specs
+
+One markdown file per mapped FHIR element (or logical group). Each file documents:
+- **Source**: FHIR element path, type, cardinality, ValueSet
+- **Target**: OMOP field(s), data type, constraints
+- **Mapping rules**: concept map table, fallback chain, truncation, defaults
+- **Design decision**: why this approach was chosen, with reference implementation consensus
+
+Plus `mapping/{resource}/nonmapped.md` listing every unmapped FHIR element with reason and potential future approach.
+
+#### 2. `tests/{resource}/*.json` + `run.test.ts` — JSON data-driven tests
+
+Declarative test data: FHIR input → expected OMOP output. Each JSON file contains an array of test cases:
+```json
+[{
+  "description": "what is being tested",
+  "spec": "link to mapping/ doc it verifies",
+  "fhir": [{ "resourceType": "...", ... }],
+  "omop": [{ "table": "omop_table", "field": "expected_value" }]
+}]
+```
+- `omop: null` means resource should be skipped (status filter, missing required fields)
+- Partial field matching — only specified fields are checked
+- `run.test.ts` auto-loads all JSON files and runs mapper in both sequential and hash ID modes
+
+#### 3. `spec/{resource}.md` — Consolidated mapping specification
+
+Single reference document covering:
+- Status filtering rules (FHIR status → map/skip table)
+- Field mapping table (all FHIR elements → OMOP fields)
+- Polymorphic handling (onset[x], effective[x], value[x])
+- Concept mapping tables (static maps with concept IDs)
+- Vocabulary priority for code selection
+- Validation rules (when to skip/return null)
+- **Unmapped elements table** (element, reason, potential approach)
+- Reference implementation comparison
+- Gaps and future work
+
+#### 4. `profiles/Omop{Resource}.fsh` — FHIR Shorthand profile
+
+FSH profile constraining the base resource so any conformant instance produces a non-null mapping:
+- Required fields marked `1..1` (e.g. birthDate, code, effectiveDateTime)
+- Status values constrained to valid set
+- Must-support on all mapped elements
+- Unmapped elements documented in description
+
+### Completeness Matrix
+
+| Resource | mapping/ | nonmapped.md | tests/ JSON | run.test.ts | spec/ | profile .fsh |
+|---|---|---|---|---|---|---|
+| Patient | 7 files | yes | 8 files | yes | yes | OmopPatient |
+| Condition | 5 files | yes | 5 files | yes | yes | OmopCondition |
+| Encounter | 4 files | yes | 5 files | yes | yes | OmopEncounter |
+| Observation | 5 files | yes | 6 files | yes | yes | OmopObservation + OmopMeasurement |
+| MedicationRequest | 5 files | yes | 4 files | yes | yes | OmopMedicationRequest |
+| MedicationStatement | 5 files | yes | 4 files | yes | yes | OmopMedicationStatement |
+| AllergyIntolerance | 4 files | yes | 5 files | yes | yes | OmopAllergyIntolerance |
+
+### Mapper Architecture
+
+All mappers follow a uniform 5-stage pipeline:
+
+```
+FHIR Resource → Status Filter → Required Field Validation → ID Assignment → Field Mapping → OMOP Record
+```
+
+1. **Status filter** — reject invalid statuses (entered-in-error, cancelled, etc.)
+2. **Required field validation** — skip if missing mandatory data (code, date, etc.)
+3. **ID assignment** — `ctx.ids.getId(resourceType, fhirId)` for deterministic integer IDs
+4. **Field mapping** — concept maps, date resolution, reference resolution, code selection
+5. **Record construction** — typed OMOP object with `*_source_value` audit trail
+
+Mapper contract:
+```typescript
+function mapXxx(resource: FhirType, ctx: MappingContext = new MappingContext()): OmopType | null
+```
+
+Multi-record mappers: Patient → person + location + death; Observation → measurement[] + observation[].
+
+### Repository Structure
+
+```
+mapping/                   # Per-element mapping specs (one .md per element)
+├── patient/               # gender.md, birthdate.md, ..., nonmapped.md
+├── condition/             # code.md, status.md, onset.md, ..., nonmapped.md
+├── encounter/             # class.md, status.md, period.md, ..., nonmapped.md
+├── observation/           # value.md, routing.md, component.md, ..., nonmapped.md
+├── medication-request/    # code.md, status.md, dates.md, dosage.md, ..., nonmapped.md
+├── medication-statement/  # code.md, status.md, dates.md, dosage.md, ..., nonmapped.md
+├── allergy-intolerance/   # code.md, status.md, reaction.md, ..., nonmapped.md
+└── ids.md                 # ID assignment strategy
+
+tests/                     # JSON data-driven + inline unit tests
+├── patient/               # run.test.ts + 8 JSON fixtures
+├── condition/             # run.test.ts + 5 JSON fixtures
+├── encounter/             # run.test.ts + 5 JSON fixtures
+├── observation/           # run.test.ts + 6 JSON fixtures
+├── medication-request/    # run.test.ts + 4 JSON fixtures
+├── medication-statement/  # run.test.ts + 4 JSON fixtures
+├── allergy-intolerance/   # run.test.ts + 5 JSON fixtures
+├── patient.test.ts        # Inline unit tests
+├── condition.test.ts
+├── encounter.test.ts
+├── observation.test.ts
+├── medication.test.ts
+├── allergy-intolerance.test.ts
+└── mapping-context.test.ts
+
+spec/                      # Consolidated mapping specifications
+├── framework.md           # Architecture overview
+├── overview.md            # Project overview
+├── testing.md             # Testing strategy
+├── profiles.md            # FHIR profile documentation
+├── patient.md             # Per-resource mapping specs
+├── condition.md
+├── encounter.md
+├── observation.md
+├── medication.md          # MedicationRequest + MedicationStatement
+└── allergy-intolerance.md
+
+profiles/                  # FHIR Shorthand profiles
+├── OmopPatient.fsh
+├── OmopCondition.fsh
+├── OmopEncounter.fsh
+├── OmopObservation.fsh
+├── OmopMeasurement.fsh
+├── OmopMedicationRequest.fsh
+├── OmopMedicationStatement.fsh
+├── OmopAllergyIntolerance.fsh
+├── valuesets.fsh
+└── README.md
+
+src/                       # TypeScript implementation
+├── index.ts               # Public API
+├── mapping-context.ts     # MappingContext + IdRegistry
+├── mapper/                # One mapper per FHIR resource
+│   ├── patient.ts
+│   ├── condition.ts
+│   ├── encounter.ts
+│   ├── observation.ts
+│   ├── medication.ts
+│   ├── medication-statement.ts
+│   └── allergy-intolerance.ts
+├── types/
+│   ├── fhir.ts            # FHIR R4 type definitions
+│   └── omop.ts            # OMOP CDM type definitions
+└── utils/
+    ├── date.ts            # parseFhirDate, toBirthDatetime, toDate
+    ├── codeable.ts        # selectBestCoding, getSourceValue, systemToVocab
+    └── reference.ts       # resolveReference, resolveReferenceAsNumber
+```
+
+---
+
 ## Bun Runtime
 
 Default to using Bun instead of Node.js.

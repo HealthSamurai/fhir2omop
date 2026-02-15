@@ -97,9 +97,92 @@ group DrugExposure(source src: MedicationStatement, target tgt : DrugExposureTab
 
 ---
 
-## Gaps and Considerations
+## Status Filtering
 
+### MedicationRequest
+
+| Status | Action |
+|--------|--------|
+| active | Map |
+| completed | Map |
+| on-hold | Skip |
+| cancelled | Skip |
+| entered-in-error | Skip |
+| stopped | Skip |
+| draft | Skip |
+| unknown | Skip |
+
+### MedicationStatement
+
+| Status | Action |
+|--------|--------|
+| active | Map |
+| completed | Map |
+| entered-in-error | Skip |
+| intended | Skip |
+| stopped | Skip |
+| not-taken | Skip |
+| on-hold | Skip |
+| unknown | Skip |
+
+## Validation Rules
+
+Resources are skipped (return null) when:
+- Status is not active or completed
+- `medicationCodeableConcept.coding` is empty
+- Start date is missing (authoredOn for Request, effective[x] for Statement)
+
+## Vocabulary Priority
+
+Code selection follows this priority order (via `selectBestCoding`):
+
+1. RxNorm (`http://www.nlm.nih.gov/research/umls/rxnorm`)
+2. SNOMED CT (`http://snomed.info/sct`)
+3. NDC (`http://hl7.org/fhir/sid/ndc`)
+
+## Unmapped FHIR Elements — MedicationRequest
+
+| FHIR Element | Reason Not Mapped | Potential Approach |
+|--------------|-------------------|--------------------|
+| `intent` | No OMOP equivalent | Used for classification only |
+| `priority` | No column | Map to note |
+| `medicationReference` | Not implemented | Resolve reference → extract code from Medication |
+| `reasonCode` | No column in drug_exposure | Map as condition_occurrence |
+| `reasonReference` | No column | Link via visit_occurrence_id |
+| `note` | No column | Map to note_nlp table |
+| `dosageInstruction[1..n]` | Only first used | Complex dosing simplified |
+| `dosageInstruction.timing` | No direct equivalent | Dosing schedule |
+| `dosageInstruction.site` | No column | Administration site |
+| `dosageInstruction.method` | No column | Administration method |
+| `dispenseRequest.expectedSupplyDuration` | days_supply is null | Could calculate |
+| `substitution` | No column | Dispensing-specific |
+| `courseOfTherapyType` | No column | Therapy course type |
+| `insurance` | No column | Insurance data outside OMOP CDM |
+| `recorder` vs `requester` | OMOP has single provider_id | Using requester |
+| `sig` | No column | Free-text dosage instruction for patient |
+
+## Unmapped FHIR Elements — MedicationStatement
+
+| FHIR Element | Reason Not Mapped | Potential Approach |
+|--------------|-------------------|--------------------|
+| `medicationReference` | Not implemented | Resolve reference → extract code |
+| `reasonCode` | No column in drug_exposure | Map as condition_occurrence |
+| `reasonReference` | No column | Link via visit_occurrence_id |
+| `note` | No column | Map to note_nlp |
+| `dosage[1..n]` | Only first used | Complex dosing simplified |
+| `dosage.timing` | No direct equivalent | Dosing schedule |
+| `dosage.site` | No column | Administration site |
+| `dosage.method` | No column | Administration method |
+| `statusReason` | stop_reason not mapped | Could map to stop_reason |
+| `category` | No direct equivalent | inpatient/outpatient/community classification |
+| `dateAsserted` | No column | Date of assertion |
+| `derivedFrom` | No direct equivalent | Source of data |
+| `partOf` | No direct equivalent | Part of another event |
+
+## Gaps and Future Work
+
+- **Concept ID resolution**: `drug_concept_id` and `drug_source_concept_id` are placeholders (0) pending Athena vocabulary integration
+- **Route concept mapping**: `route_concept_id` is null — requires vocabulary lookup
 - **Dosage complexity**: FHIR dosage instructions are complex; simplified in OMOP
-- **Days supply**: Calculation from dosage and quantity
-- **Refills**: `MedicationRequest.dispenseRequest.numberOfRepeatsAllowed`
-- **Sig**: Free-text dosage instructions in `sig` field
+- **Days supply**: Calculation from dosage and quantity not implemented
+- **medicationReference**: Only medicationCodeableConcept is supported; Reference requires resolving linked Medication resource

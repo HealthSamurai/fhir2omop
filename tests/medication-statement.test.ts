@@ -1,9 +1,11 @@
 import { test, expect, describe } from "bun:test";
 import { mapMedicationStatement } from "../src/mapper/medication-statement";
 import type { MedicationStatement } from "../src/types/fhir";
+import { MappingContext, IdRegistry } from "../src/mapping-context";
 
 const validStatement: MedicationStatement = {
   resourceType: "MedicationStatement",
+  id: "ms-1",
   status: "active",
   medicationCodeableConcept: {
     coding: [
@@ -16,9 +18,10 @@ const validStatement: MedicationStatement = {
 
 describe("mapMedicationStatement", () => {
   test("maps a valid MedicationStatement to drug_exposure", () => {
-    const result = mapMedicationStatement(validStatement);
+    const ctx = new MappingContext();
+    const result = mapMedicationStatement(validStatement, ctx);
     expect(result).not.toBeNull();
-    expect(result!.person_id).toBe(123);
+    expect(result!.person_id).toBeGreaterThan(0);
     expect(result!.drug_exposure_start_date).toBe("2024-01-15");
     expect(result!.drug_source_value).toBe("313782");
     expect(result!.drug_type_concept_id).toBe(44787730); // Patient Self-Reported
@@ -94,23 +97,25 @@ describe("mapMedicationStatement", () => {
   });
 
   test("maps informationSource to provider_id", () => {
+    const ctx = new MappingContext();
     const stmt: MedicationStatement = {
       ...validStatement,
       informationSource: { reference: "Practitioner/456" },
     };
-    const result = mapMedicationStatement(stmt);
+    const result = mapMedicationStatement(stmt, ctx);
     expect(result).not.toBeNull();
-    expect(result!.provider_id).toBe(456);
+    expect(result!.provider_id).toBeGreaterThan(0);
   });
 
   test("maps context to visit_occurrence_id", () => {
+    const ctx = new MappingContext();
     const stmt: MedicationStatement = {
       ...validStatement,
       context: { reference: "Encounter/789" },
     };
-    const result = mapMedicationStatement(stmt);
+    const result = mapMedicationStatement(stmt, ctx);
     expect(result).not.toBeNull();
-    expect(result!.visit_occurrence_id).toBe(789);
+    expect(result!.visit_occurrence_id).toBeGreaterThan(0);
   });
 
   test("selects best coding by vocabulary priority", () => {
@@ -126,5 +131,65 @@ describe("mapMedicationStatement", () => {
     const result = mapMedicationStatement(stmt);
     expect(result).not.toBeNull();
     expect(result!.drug_source_value).toBe("313782"); // RxNorm preferred over NDC
+  });
+});
+
+// ============================================================
+// ID assignment
+// ============================================================
+
+describe("MedicationStatement ID assignment", () => {
+  test("drug_exposure_id assigned from IdRegistry", () => {
+    const ctx = new MappingContext();
+    const result = mapMedicationStatement(validStatement, ctx);
+    expect(result!.drug_exposure_id).toBeGreaterThan(0);
+  });
+
+  test("no id → no drug_exposure_id", () => {
+    const ctx = new MappingContext();
+    const stmt: MedicationStatement = { ...validStatement, id: undefined };
+    const result = mapMedicationStatement(stmt, ctx);
+    expect(result!.drug_exposure_id).toBeUndefined();
+  });
+});
+
+// ============================================================
+// Hash mode integration
+// ============================================================
+
+describe("MedicationStatement mapping with hash mode", () => {
+  test("hash mode produces deterministic IDs across runs", () => {
+    const stmt = { ...validStatement, id: "ms-uuid-123" };
+    const ctx1 = new MappingContext(new IdRegistry("hash"));
+    const ctx2 = new MappingContext(new IdRegistry("hash"));
+    const r1 = mapMedicationStatement(stmt, ctx1);
+    const r2 = mapMedicationStatement(stmt, ctx2);
+    expect(r1!.drug_exposure_id).toBe(r2!.drug_exposure_id);
+    expect(r1!.person_id).toBe(r2!.person_id);
+  });
+
+  test("references resolve deterministically in hash mode", () => {
+    const stmt: MedicationStatement = {
+      ...validStatement,
+      id: "ms-1",
+      subject: { reference: "Patient/pt-uuid" },
+      informationSource: { reference: "Practitioner/dr-uuid" },
+      context: { reference: "Encounter/enc-uuid" },
+    };
+    const ctx1 = new MappingContext(new IdRegistry("hash"));
+    const ctx2 = new MappingContext(new IdRegistry("hash"));
+    const r1 = mapMedicationStatement(stmt, ctx1);
+    const r2 = mapMedicationStatement(stmt, ctx2);
+    expect(r1!.person_id).toBe(r2!.person_id);
+    expect(r1!.visit_occurrence_id).toBe(r2!.visit_occurrence_id);
+    expect(r1!.provider_id).toBe(r2!.provider_id);
+  });
+
+  test("no collisions for typical medication statement mapping", () => {
+    const ctx = new MappingContext(new IdRegistry("hash"));
+    for (let i = 0; i < 100; i++) {
+      mapMedicationStatement({ ...validStatement, id: `ms-${i}` }, ctx);
+    }
+    expect(ctx.ids.hasCollisions()).toBe(false);
   });
 });

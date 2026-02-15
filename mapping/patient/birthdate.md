@@ -1,37 +1,37 @@
 # Patient.birthDate → OMOP PERSON birth fields
 
-## Источник
+## Source
 
-FHIR `Patient.birthDate` — тип `date`. Может быть полной датой (`1990-03-15`), частичной (`1990-03`, `1990`) или отсутствовать.
+FHIR `Patient.birthDate` — type `date`. Can be a full date (`1990-03-15`), partial (`1990-03`, `1990`), or absent.
 
-## Цель
+## Target
 
 OMOP PERSON:
-- `year_of_birth` (integer, **required**) — год рождения
-- `month_of_birth` (integer) — месяц рождения
-- `day_of_birth` (integer) — день рождения
-- `birth_datetime` (datetime) — полная дата/время рождения
+- `year_of_birth` (integer, **required**) — year of birth
+- `month_of_birth` (integer) — month of birth
+- `day_of_birth` (integer) — day of birth
+- `birth_datetime` (datetime) — full birth date/time
 
-## Маппинг
+## Mapping
 
 | FHIR birthDate | year_of_birth | month_of_birth | day_of_birth | birth_datetime |
 |---|---|---|---|---|
 | `"1990-03-15"` | 1990 | 3 | 15 | 1990-03-15T00:00:00 |
 | `"1990-03"` | 1990 | 3 | NULL | 1990-03-01T00:00:00 |
 | `"1990"` | 1990 | NULL | NULL | 1990-01-01T00:00:00 |
-| отсутствует | **запись не создаётся** | — | — | — |
+| absent | **record not created** | — | — | — |
 
-## Решение по отсутствующему birthDate
+## Decision on missing birthDate
 
-`year_of_birth` — обязательное поле (NOT NULL) в OMOP PERSON. Если `Patient.birthDate` отсутствует, запись PERSON **не создаётся**. Событие логируется как warning для отслеживания потерь данных.
+`year_of_birth` is a required field (NOT NULL) in OMOP PERSON. If `Patient.birthDate` is absent, the PERSON record **is not created**. The event is logged as a warning to track data loss.
 
-Альтернатива (дефолтное значение вроде 1900) отвергнута — это загрязняет данные и может исказить аналитику.
+The alternative (a default value like 1900) was rejected — it pollutes data and can distort analytics.
 
 ## birth_datetime
 
-Для частичных дат используется padding: отсутствующий месяц → 01, отсутствующий день → 01, время → 00:00:00.
+For partial dates, padding is used: missing month → 01, missing day → 01, time → 00:00:00.
 
-## Консенсус реализаций
+## Implementation consensus
 
-- **9/9**: разбирают birthDate на year/month/day
-- Все используют одинаковую логику парсинга компонентов даты
+- **9/9**: parse birthDate into year/month/day
+- All use the same date component parsing logic

@@ -1,0 +1,75 @@
+[
+  {
+    "description": "full MedicationRequest → drug_exposure with all mapped fields",
+    "fhir": [
+      {
+        "resourceType": "MedicationRequest",
+        "id": "med-full",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            { "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "1049502", "display": "Lisinopril 10 MG" },
+            { "system": "http://hl7.org/fhir/sid/ndc", "code": "00071015523", "display": "Lisinopril 10mg tab" }
+          ]
+        },
+        "subject": { "reference": "Patient/pt-1" },
+        "encounter": { "reference": "Encounter/enc-1" },
+        "requester": { "reference": "Practitioner/dr-1" },
+        "authoredOn": "2023-06-15T09:00:00Z",
+        "dosageInstruction": [
+          {
+            "route": { "coding": [{ "code": "26643006", "display": "Oral" }] },
+            "doseAndRate": [{ "doseQuantity": { "value": 10, "unit": "mg" } }]
+          }
+        ],
+        "dispenseRequest": {
+          "numberOfRepeatsAllowed": 3,
+          "validityPeriod": { "end": "2023-12-15T09:00:00Z" }
+        }
+      }
+    ],
+    "omop": [
+      {
+        "table": "drug_exposure",
+        "drug_concept_id": 0,
+        "drug_exposure_start_date": "2023-06-15",
+        "drug_exposure_start_datetime": "2023-06-15T09:00:00Z",
+        "drug_exposure_end_date": "2023-12-15",
+        "drug_exposure_end_datetime": "2023-12-15T09:00:00Z",
+        "drug_type_concept_id": 38000177,
+        "quantity": 10,
+        "refills": 3,
+        "route_source_value": "Oral",
+        "drug_source_value": "1049502",
+        "drug_source_concept_id": 0
+      }
+    ]
+  },
+  {
+    "description": "minimal MedicationRequest → only required fields",
+    "fhir": [
+      {
+        "resourceType": "MedicationRequest",
+        "id": "med-minimal",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": { "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "1049502" }] },
+        "subject": { "reference": "Patient/pt-2" },
+        "authoredOn": "2024-01-10"
+      }
+    ],
+    "omop": [
+      {
+        "table": "drug_exposure",
+        "drug_concept_id": 0,
+        "drug_exposure_start_date": "2024-01-10",
+        "drug_exposure_end_date": null,
+        "drug_type_concept_id": 38000177,
+        "quantity": null,
+        "refills": null,
+        "drug_source_value": "1049502"
+      }
+    ]
+  }
+]

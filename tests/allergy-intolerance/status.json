@@ -1,0 +1,91 @@
+[
+  {
+    "description": "active + confirmed → mapped",
+    "spec": "mapping/allergy-intolerance/status.md",
+    "fhir": [
+      {
+        "resourceType": "AllergyIntolerance",
+        "id": "allergy-1",
+        "clinicalStatus": { "coding": [{ "code": "active" }] },
+        "verificationStatus": { "coding": [{ "code": "confirmed" }] },
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "387207008", "display": "Ibuprofen" }] },
+        "patient": { "reference": "Patient/1" },
+        "onsetDateTime": "2023-03-15"
+      }
+    ],
+    "omop": [
+      { "table": "observation", "observation_source_value": "387207008" }
+    ]
+  },
+  {
+    "description": "inactive → skipped",
+    "fhir": [
+      {
+        "resourceType": "AllergyIntolerance",
+        "id": "allergy-2",
+        "clinicalStatus": { "coding": [{ "code": "inactive" }] },
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "387207008" }] },
+        "patient": { "reference": "Patient/1" },
+        "onsetDateTime": "2023-03-15"
+      }
+    ],
+    "omop": null
+  },
+  {
+    "description": "resolved → skipped",
+    "fhir": [
+      {
+        "resourceType": "AllergyIntolerance",
+        "id": "allergy-3",
+        "clinicalStatus": { "coding": [{ "code": "resolved" }] },
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "387207008" }] },
+        "patient": { "reference": "Patient/1" },
+        "onsetDateTime": "2023-03-15"
+      }
+    ],
+    "omop": null
+  },
+  {
+    "description": "entered-in-error → skipped",
+    "fhir": [
+      {
+        "resourceType": "AllergyIntolerance",
+        "id": "allergy-4",
+        "verificationStatus": { "coding": [{ "code": "entered-in-error" }] },
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "387207008" }] },
+        "patient": { "reference": "Patient/1" },
+        "onsetDateTime": "2023-03-15"
+      }
+    ],
+    "omop": null
+  },
+  {
+    "description": "refuted → skipped",
+    "fhir": [
+      {
+        "resourceType": "AllergyIntolerance",
+        "id": "allergy-5",
+        "verificationStatus": { "coding": [{ "code": "refuted" }] },
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "387207008" }] },
+        "patient": { "reference": "Patient/1" },
+        "onsetDateTime": "2023-03-15"
+      }
+    ],
+    "omop": null
+  },
+  {
+    "description": "no clinicalStatus → mapped (not required)",
+    "fhir": [
+      {
+        "resourceType": "AllergyIntolerance",
+        "id": "allergy-6",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "387207008" }] },
+        "patient": { "reference": "Patient/1" },
+        "onsetDateTime": "2023-03-15"
+      }
+    ],
+    "omop": [
+      { "table": "observation", "observation_source_value": "387207008" }
+    ]
+  }
+]

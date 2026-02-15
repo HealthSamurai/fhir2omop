@@ -1,0 +1,129 @@
+[
+  {
+    "description": "valueQuantity → value_as_number + unit",
+    "spec": "mapping/observation/value.md",
+    "fhir": [
+      {
+        "resourceType": "Observation",
+        "id": "obs-qty",
+        "status": "final",
+        "category": [{ "coding": [{ "code": "laboratory" }] }],
+        "code": { "coding": [{ "system": "http://loinc.org", "code": "2339-0", "display": "Glucose" }] },
+        "subject": { "reference": "Patient/1" },
+        "effectiveDateTime": "2023-06-15T10:00:00Z",
+        "valueQuantity": { "value": 120.5, "unit": "mg/dL" }
+      }
+    ],
+    "omop": [
+      {
+        "table": "measurement",
+        "value_as_number": 120.5,
+        "unit_source_value": "mg/dL",
+        "value_source_value": "120.5 mg/dL",
+        "measurement_date": "2023-06-15",
+        "measurement_datetime": "2023-06-15T10:00:00Z",
+        "measurement_type_concept_id": 32817
+      }
+    ]
+  },
+  {
+    "description": "referenceRange → range_low/high",
+    "fhir": [
+      {
+        "resourceType": "Observation",
+        "id": "obs-range",
+        "status": "final",
+        "category": [{ "coding": [{ "code": "laboratory" }] }],
+        "code": { "coding": [{ "system": "http://loinc.org", "code": "2339-0" }] },
+        "subject": { "reference": "Patient/1" },
+        "effectiveDateTime": "2023-06-15T10:00:00Z",
+        "valueQuantity": { "value": 95, "unit": "mg/dL" },
+        "referenceRange": [{ "low": { "value": 70 }, "high": { "value": 100 } }]
+      }
+    ],
+    "omop": [
+      {
+        "table": "measurement",
+        "range_low": 70,
+        "range_high": 100
+      }
+    ]
+  },
+  {
+    "description": "no effectiveDateTime → skipped",
+    "fhir": [
+      {
+        "resourceType": "Observation",
+        "id": "obs-nodate",
+        "status": "final",
+        "category": [{ "coding": [{ "code": "laboratory" }] }],
+        "code": { "coding": [{ "system": "http://loinc.org", "code": "2339-0" }] },
+        "subject": { "reference": "Patient/1" },
+        "valueQuantity": { "value": 95, "unit": "mg/dL" }
+      }
+    ],
+    "omop": null
+  },
+  {
+    "description": "no code → skipped",
+    "fhir": [
+      {
+        "resourceType": "Observation",
+        "id": "obs-nocode",
+        "status": "final",
+        "category": [{ "coding": [{ "code": "laboratory" }] }],
+        "code": { "coding": [] },
+        "subject": { "reference": "Patient/1" },
+        "effectiveDateTime": "2023-06-15T10:00:00Z",
+        "valueQuantity": { "value": 95, "unit": "mg/dL" }
+      }
+    ],
+    "omop": null
+  },
+  {
+    "description": "< comparator → operator_concept_id 4171756",
+    "spec": "mapping/observation/value.md",
+    "fhir": [
+      {
+        "resourceType": "Observation",
+        "id": "obs-lt",
+        "status": "final",
+        "category": [{ "coding": [{ "code": "laboratory" }] }],
+        "code": { "coding": [{ "system": "http://loinc.org", "code": "2339-0" }] },
+        "subject": { "reference": "Patient/1" },
+        "effectiveDateTime": "2023-06-15T10:00:00Z",
+        "valueQuantity": { "value": 10, "comparator": "<", "unit": "mg/dL" }
+      }
+    ],
+    "omop": [
+      {
+        "table": "measurement",
+        "operator_concept_id": 4171756,
+        "value_as_number": 10,
+        "value_source_value": "<10 mg/dL"
+      }
+    ]
+  },
+  {
+    "description": ">= comparator → operator_concept_id 4171755",
+    "fhir": [
+      {
+        "resourceType": "Observation",
+        "id": "obs-gte",
+        "status": "final",
+        "category": [{ "coding": [{ "code": "laboratory" }] }],
+        "code": { "coding": [{ "system": "http://loinc.org", "code": "2339-0" }] },
+        "subject": { "reference": "Patient/1" },
+        "effectiveDateTime": "2023-06-15T10:00:00Z",
+        "valueQuantity": { "value": 100, "comparator": ">=", "unit": "mg/dL" }
+      }
+    ],
+    "omop": [
+      {
+        "table": "measurement",
+        "operator_concept_id": 4171755,
+        "value_source_value": ">=100 mg/dL"
+      }
+    ]
+  }
+]

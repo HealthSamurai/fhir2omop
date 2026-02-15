@@ -1,0 +1,65 @@
+[
+  {
+    "description": "full MedicationStatement → drug_exposure with all mapped fields",
+    "fhir": [
+      {
+        "resourceType": "MedicationStatement",
+        "id": "ms-full",
+        "status": "active",
+        "medicationCodeableConcept": {
+          "coding": [
+            { "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "313782", "display": "Acetaminophen 325 MG" },
+            { "system": "http://hl7.org/fhir/sid/ndc", "code": "00071015523" }
+          ]
+        },
+        "subject": { "reference": "Patient/pt-1" },
+        "informationSource": { "reference": "Practitioner/dr-1" },
+        "context": { "reference": "Encounter/enc-1" },
+        "effectivePeriod": { "start": "2024-01-15T10:00:00Z", "end": "2024-07-15T10:00:00Z" },
+        "dosage": [{
+          "route": { "coding": [{ "code": "26643006", "display": "Oral" }] },
+          "doseAndRate": [{ "doseQuantity": { "value": 325, "unit": "mg" } }]
+        }]
+      }
+    ],
+    "omop": [
+      {
+        "table": "drug_exposure",
+        "drug_concept_id": 0,
+        "drug_exposure_start_date": "2024-01-15",
+        "drug_exposure_start_datetime": "2024-01-15T10:00:00Z",
+        "drug_exposure_end_date": "2024-07-15",
+        "drug_exposure_end_datetime": "2024-07-15T10:00:00Z",
+        "drug_type_concept_id": 44787730,
+        "quantity": 325,
+        "route_source_value": "Oral",
+        "drug_source_value": "313782",
+        "drug_source_concept_id": 0
+      }
+    ]
+  },
+  {
+    "description": "minimal MedicationStatement → only required fields",
+    "fhir": [
+      {
+        "resourceType": "MedicationStatement",
+        "id": "ms-minimal",
+        "status": "active",
+        "medicationCodeableConcept": { "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "313782" }] },
+        "subject": { "reference": "Patient/pt-2" },
+        "effectiveDateTime": "2024-01-10"
+      }
+    ],
+    "omop": [
+      {
+        "table": "drug_exposure",
+        "drug_concept_id": 0,
+        "drug_exposure_start_date": "2024-01-10",
+        "drug_exposure_end_date": null,
+        "drug_type_concept_id": 44787730,
+        "quantity": null,
+        "drug_source_value": "313782"
+      }
+    ]
+  }
+]

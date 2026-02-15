@@ -1,0 +1,37 @@
+[
+  {
+    "description": "patient, encounter, recorder → person_id, visit_occurrence_id, provider_id",
+    "spec": "mapping/allergy-intolerance/references.md",
+    "fhir": [
+      {
+        "resourceType": "AllergyIntolerance",
+        "id": "allergy-refs",
+        "clinicalStatus": { "coding": [{ "code": "active" }] },
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "387207008" }] },
+        "patient": { "reference": "Patient/pt-1" },
+        "encounter": { "reference": "Encounter/enc-1" },
+        "recorder": { "reference": "Practitioner/dr-1" },
+        "onsetDateTime": "2023-03-15"
+      }
+    ],
+    "omop": [
+      { "table": "observation", "observation_type_concept_id": 32817 }
+    ]
+  },
+  {
+    "description": "no encounter, no recorder → null visit/provider",
+    "fhir": [
+      {
+        "resourceType": "AllergyIntolerance",
+        "id": "allergy-norefs",
+        "clinicalStatus": { "coding": [{ "code": "active" }] },
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "387207008" }] },
+        "patient": { "reference": "Patient/pt-1" },
+        "onsetDateTime": "2023-03-15"
+      }
+    ],
+    "omop": [
+      { "table": "observation", "provider_id": null, "visit_occurrence_id": null }
+    ]
+  }
+]

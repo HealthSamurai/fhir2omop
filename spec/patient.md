@@ -823,9 +823,28 @@ END
 
 ---
 
+## Unmapped FHIR Elements
+
+These Patient elements have no direct OMOP person/location/death field:
+
+| FHIR Element | Reason Not Mapped | Potential Approach |
+|--------------|-------------------|--------------------|
+| `name` | No column in PERSON (OMOP is de-identified) | PII — not stored in OMOP CDM |
+| `telecom` | No column in PERSON | PII — phone/email |
+| `maritalStatus` | No column in PERSON | Could map to observation |
+| `multipleBirth[x]` | No column in PERSON | Could map to observation |
+| `photo` | No column in PERSON | PII — not applicable |
+| `contact` | No column in PERSON | Contact persons |
+| `communication` | No column in PERSON | Language preference |
+| `link` | No direct equivalent | Patient record linkage |
+| `active` | Not used for filtering | Record status (not clinical) |
+| `generalPractitioner[1..n]` | OMOP has single provider_id | Only first is used |
+| `extension` (other than race/ethnicity) | No standard fields | Implementation-specific extensions |
+| `identifier[1..n]` (beyond best) | person_source_value is single value | Best selected by priority: SSN > MRN > first |
+| `address[1..n]` (beyond home) | One LOCATION per patient | Home address selected |
+
 ## Gaps and Considerations
 
-- **Name handling**: OMOP has no standard name fields; some use extension tables
 - **Race/Ethnicity**: US-specific; not applicable to German/European data
 - **Multiple identifiers**: FHIR supports many; OMOP has single `person_source_value`
 - **Address history**: FHIR supports multiple; OMOP links to one LOCATION

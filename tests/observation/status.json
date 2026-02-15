@@ -1,0 +1,102 @@
+[
+  {
+    "description": "final → mapped to measurement",
+    "spec": "mapping/observation/status.md",
+    "fhir": [
+      {
+        "resourceType": "Observation",
+        "id": "obs-1",
+        "status": "final",
+        "category": [{ "coding": [{ "code": "laboratory" }] }],
+        "code": { "coding": [{ "system": "http://loinc.org", "code": "2339-0", "display": "Glucose" }] },
+        "subject": { "reference": "Patient/1" },
+        "effectiveDateTime": "2023-06-15T10:00:00Z",
+        "valueQuantity": { "value": 95.0, "unit": "mg/dL" }
+      }
+    ],
+    "omop": [
+      { "table": "measurement", "measurement_source_value": "2339-0" }
+    ]
+  },
+  {
+    "description": "amended → mapped",
+    "fhir": [
+      {
+        "resourceType": "Observation",
+        "id": "obs-2",
+        "status": "amended",
+        "category": [{ "coding": [{ "code": "laboratory" }] }],
+        "code": { "coding": [{ "system": "http://loinc.org", "code": "2339-0" }] },
+        "subject": { "reference": "Patient/1" },
+        "effectiveDateTime": "2023-06-15T10:00:00Z",
+        "valueQuantity": { "value": 95.0, "unit": "mg/dL" }
+      }
+    ],
+    "omop": [
+      { "table": "measurement", "measurement_source_value": "2339-0" }
+    ]
+  },
+  {
+    "description": "corrected → mapped",
+    "fhir": [
+      {
+        "resourceType": "Observation",
+        "id": "obs-3",
+        "status": "corrected",
+        "category": [{ "coding": [{ "code": "laboratory" }] }],
+        "code": { "coding": [{ "system": "http://loinc.org", "code": "2339-0" }] },
+        "subject": { "reference": "Patient/1" },
+        "effectiveDateTime": "2023-06-15T10:00:00Z",
+        "valueQuantity": { "value": 95.0, "unit": "mg/dL" }
+      }
+    ],
+    "omop": [
+      { "table": "measurement", "measurement_source_value": "2339-0" }
+    ]
+  },
+  {
+    "description": "preliminary → skipped",
+    "fhir": [
+      {
+        "resourceType": "Observation",
+        "id": "obs-4",
+        "status": "preliminary",
+        "category": [{ "coding": [{ "code": "laboratory" }] }],
+        "code": { "coding": [{ "system": "http://loinc.org", "code": "2339-0" }] },
+        "subject": { "reference": "Patient/1" },
+        "effectiveDateTime": "2023-06-15T10:00:00Z"
+      }
+    ],
+    "omop": null
+  },
+  {
+    "description": "entered-in-error → skipped",
+    "fhir": [
+      {
+        "resourceType": "Observation",
+        "id": "obs-5",
+        "status": "entered-in-error",
+        "category": [{ "coding": [{ "code": "laboratory" }] }],
+        "code": { "coding": [{ "system": "http://loinc.org", "code": "2339-0" }] },
+        "subject": { "reference": "Patient/1" },
+        "effectiveDateTime": "2023-06-15T10:00:00Z"
+      }
+    ],
+    "omop": null
+  },
+  {
+    "description": "cancelled → skipped",
+    "fhir": [
+      {
+        "resourceType": "Observation",
+        "id": "obs-6",
+        "status": "cancelled",
+        "category": [{ "coding": [{ "code": "laboratory" }] }],
+        "code": { "coding": [{ "system": "http://loinc.org", "code": "2339-0" }] },
+        "subject": { "reference": "Patient/1" },
+        "effectiveDateTime": "2023-06-15T10:00:00Z"
+      }
+    ],
+    "omop": null
+  }
+]

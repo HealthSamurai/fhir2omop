@@ -1,0 +1,92 @@
+[
+  {
+    "description": "laboratory category → measurement table",
+    "spec": "mapping/observation/routing.md",
+    "fhir": [
+      {
+        "resourceType": "Observation",
+        "id": "obs-lab",
+        "status": "final",
+        "category": [{ "coding": [{ "code": "laboratory" }] }],
+        "code": { "coding": [{ "system": "http://loinc.org", "code": "2339-0", "display": "Glucose" }] },
+        "subject": { "reference": "Patient/1" },
+        "effectiveDateTime": "2023-06-15T10:00:00Z",
+        "valueQuantity": { "value": 95.0, "unit": "mg/dL" }
+      }
+    ],
+    "omop": [
+      { "table": "measurement", "measurement_source_value": "2339-0" }
+    ]
+  },
+  {
+    "description": "vital-signs category → measurement table",
+    "fhir": [
+      {
+        "resourceType": "Observation",
+        "id": "obs-vitals",
+        "status": "final",
+        "category": [{ "coding": [{ "code": "vital-signs" }] }],
+        "code": { "coding": [{ "system": "http://loinc.org", "code": "8310-5", "display": "Body temperature" }] },
+        "subject": { "reference": "Patient/1" },
+        "effectiveDateTime": "2023-06-15T10:00:00Z",
+        "valueQuantity": { "value": 37.0, "unit": "Cel" }
+      }
+    ],
+    "omop": [
+      { "table": "measurement", "measurement_source_value": "8310-5" }
+    ]
+  },
+  {
+    "description": "social-history category → observation table",
+    "fhir": [
+      {
+        "resourceType": "Observation",
+        "id": "obs-social",
+        "status": "final",
+        "category": [{ "coding": [{ "code": "social-history" }] }],
+        "code": { "coding": [{ "system": "http://loinc.org", "code": "72166-2", "display": "Tobacco smoking status" }] },
+        "subject": { "reference": "Patient/1" },
+        "effectiveDateTime": "2023-06-15T10:00:00Z",
+        "valueString": "Former smoker"
+      }
+    ],
+    "omop": [
+      { "table": "observation", "observation_source_value": "72166-2", "value_as_string": "Former smoker" }
+    ]
+  },
+  {
+    "description": "survey category → observation table",
+    "fhir": [
+      {
+        "resourceType": "Observation",
+        "id": "obs-survey",
+        "status": "final",
+        "category": [{ "coding": [{ "code": "survey" }] }],
+        "code": { "coding": [{ "system": "http://loinc.org", "code": "44249-1", "display": "PHQ-9" }] },
+        "subject": { "reference": "Patient/1" },
+        "effectiveDateTime": "2023-06-15T10:00:00Z",
+        "valueQuantity": { "value": 12, "unit": "score" }
+      }
+    ],
+    "omop": [
+      { "table": "observation", "observation_source_value": "44249-1", "value_as_number": 12 }
+    ]
+  },
+  {
+    "description": "no category → defaults to measurement",
+    "fhir": [
+      {
+        "resourceType": "Observation",
+        "id": "obs-nocat",
+        "status": "final",
+        "code": { "coding": [{ "system": "http://loinc.org", "code": "2339-0" }] },
+        "subject": { "reference": "Patient/1" },
+        "effectiveDateTime": "2023-06-15T10:00:00Z",
+        "valueQuantity": { "value": 95.0, "unit": "mg/dL" }
+      }
+    ],
+    "omop": [
+      { "table": "measurement", "measurement_source_value": "2339-0" }
+    ]
+  }
+]

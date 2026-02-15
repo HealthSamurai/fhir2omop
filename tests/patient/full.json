@@ -1,7 +1,7 @@
 [
   {
-    "description": "полный Patient → person + location + death (1 FHIR → 3 OMOP)",
-    "comment": "Один Patient создаёт записи в трёх таблицах OMOP.",
+    "description": "full Patient → person + location + death (1 FHIR → 3 OMOP)",
+    "comment": "One Patient creates records in three OMOP tables.",
     "fhir": [
       {
         "resourceType": "Patient",
@@ -60,7 +60,7 @@
     ]
   },
   {
-    "description": "минимальный Patient → только person (без location, без death)",
+    "description": "minimal Patient → person only (no location, no death)",
     "fhir": [
       {
         "resourceType": "Patient",

@@ -1,29 +1,29 @@
 # Patient US Core Race/Ethnicity → OMOP PERSON race/ethnicity fields
 
-## Источник
+## Source
 
-US Core расширения на `Patient`:
+US Core extensions on `Patient`:
 - **Race**: `http://hl7.org/fhir/us/core/StructureDefinition/us-core-race`
 - **Ethnicity**: `http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity`
 
-Каждое расширение содержит вложенные extension:
-- `ombCategory` — категория OMB (Office of Management and Budget)
-- `detailed` — детализированный код (например, конкретная азиатская этническая группа)
-- `text` — текстовое описание
+Each extension contains nested extensions:
+- `ombCategory` — OMB (Office of Management and Budget) category
+- `detailed` — detailed code (e.g., specific Asian ethnic group)
+- `text` — textual description
 
-Мы маппим `ombCategory` как основной источник.
+We map `ombCategory` as the primary source.
 
-## Цель
+## Target
 
 OMOP PERSON:
 - `race_concept_id` (integer, **required**) — FK → CONCEPT
-- `race_source_value` (varchar(50)) — оригинальное значение
+- `race_source_value` (varchar(50)) — original value
 - `race_source_concept_id` (integer) — source concept
 - `ethnicity_concept_id` (integer, **required**) — FK → CONCEPT
-- `ethnicity_source_value` (varchar(50)) — оригинальное значение
+- `ethnicity_source_value` (varchar(50)) — original value
 - `ethnicity_source_concept_id` (integer) — source concept
 
-## Маппинг Race
+## Race mapping
 
 | OMB Race Code | Display | race_concept_id | OMOP Concept Name |
 |---|---|---|---|
@@ -32,39 +32,39 @@ OMOP PERSON:
 | `2054-5` | Black or African American | **8516** | Black or African American |
 | `2076-8` | Native Hawaiian or Other Pacific Islander | **8557** | Native Hawaiian or Other Pacific Islander |
 | `2106-3` | White | **8527** | White |
-| отсутствует | — | **0** | No matching concept |
+| absent | — | **0** | No matching concept |
 
-- `race_source_value` — display из ombCategory coding. Если нет display — code.
-- `race_source_concept_id` — 0 (OMB коды не имеют прямого OMOP source concept).
+- `race_source_value` — display from ombCategory coding. If no display — code.
+- `race_source_concept_id` — 0 (OMB codes have no direct OMOP source concept).
 
-## Маппинг Ethnicity
+## Ethnicity mapping
 
 | OMB Ethnicity Code | Display | ethnicity_concept_id | OMOP Concept Name |
 |---|---|---|---|
 | `2135-2` | Hispanic or Latino | **38003563** | Hispanic or Latino |
 | `2186-5` | Not Hispanic or Latino | **38003564** | Not Hispanic or Latino |
-| отсутствует | — | **0** | No matching concept |
+| absent | — | **0** | No matching concept |
 
-- `ethnicity_source_value` — display из ombCategory coding. Если нет display — code.
+- `ethnicity_source_value` — display from ombCategory coding. If no display — code.
 - `ethnicity_source_concept_id` — 0.
 
-## Решение по отсутствующим расширениям
+## Decision on missing extensions
 
-Если US Core Race/Ethnicity extension отсутствует:
+If US Core Race/Ethnicity extension is absent:
 - `race_concept_id` = 0, `race_source_value` = NULL
 - `ethnicity_concept_id` = 0, `ethnicity_source_value` = NULL
 
-Concept 0 = "No matching concept". Не используем 8552 (Unknown) — это для случаев когда значение явно указано как "unknown". Отсутствие расширения означает "не записано", а не "неизвестно".
+Concept 0 = "No matching concept". We do not use 8552 (Unknown) — that is for cases where the value is explicitly stated as "unknown". Absence of the extension means "not recorded", not "unknown".
 
-## Ограничения
+## Limitations
 
-- US-специфично: US Core расширения не используются в Европе
-- Немецкие данные используют `ethnicGroup` extension (SNOMED) — несовместимо с US Core
-- `race_concept_id` и `ethnicity_concept_id` — required fields в OMOP. Даже при отсутствии данных нужно записать 0.
+- US-specific: US Core extensions are not used in Europe
+- German data uses `ethnicGroup` extension (SNOMED) — incompatible with US Core
+- `race_concept_id` and `ethnicity_concept_id` are required fields in OMOP. Even without data, 0 must be recorded.
 
-## Консенсус реализаций
+## Implementation consensus
 
-| Project | Race Source | Метод | Отсутствует |
+| Project | Race Source | Method | When absent |
 |---|---|---|---|
 | omoponfhir-v54-r4 | US Core ombCategory | Hardcoded map | null |
 | FhirToCdm | US Core ombCategory display | Hardcoded map | 0 |
@@ -72,4 +72,4 @@ Concept 0 = "No matching concept". Не используем 8552 (Unknown) — 
 | mends-on-fhir | OMOP concept | ConceptMap JSON | UNK |
 | ETL-German-FHIR-Core | German ethnicGroup | SNOMED lookup | 8552 (Unknown) |
 
-Мы следуем подходу omoponfhir с прямым маппингом OMB code → concept_id и значением 0 для отсутствующих данных.
+We follow the omoponfhir approach with direct OMB code → concept_id mapping and value 0 for missing data.

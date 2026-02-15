@@ -1,0 +1,111 @@
+[
+  {
+    "description": "effectiveDateTime → drug_exposure_start_date",
+    "spec": "mapping/medication-statement/dates.md",
+    "fhir": [
+      {
+        "resourceType": "MedicationStatement",
+        "id": "ms-dt",
+        "status": "active",
+        "medicationCodeableConcept": { "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "313782" }] },
+        "subject": { "reference": "Patient/1" },
+        "effectiveDateTime": "2024-01-15T10:00:00Z"
+      }
+    ],
+    "omop": [
+      {
+        "table": "drug_exposure",
+        "drug_exposure_start_date": "2024-01-15",
+        "drug_exposure_start_datetime": "2024-01-15T10:00:00Z",
+        "drug_exposure_end_date": null
+      }
+    ]
+  },
+  {
+    "description": "effectivePeriod start/end → drug_exposure dates",
+    "fhir": [
+      {
+        "resourceType": "MedicationStatement",
+        "id": "ms-period",
+        "status": "active",
+        "medicationCodeableConcept": { "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "313782" }] },
+        "subject": { "reference": "Patient/1" },
+        "effectivePeriod": { "start": "2024-01-15", "end": "2024-07-15" }
+      }
+    ],
+    "omop": [
+      {
+        "table": "drug_exposure",
+        "drug_exposure_start_date": "2024-01-15",
+        "drug_exposure_end_date": "2024-07-15"
+      }
+    ]
+  },
+  {
+    "description": "dosage route and quantity mapped",
+    "spec": "mapping/medication-statement/dosage.md",
+    "fhir": [
+      {
+        "resourceType": "MedicationStatement",
+        "id": "ms-dosage",
+        "status": "active",
+        "medicationCodeableConcept": { "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "313782" }] },
+        "subject": { "reference": "Patient/1" },
+        "effectiveDateTime": "2024-01-15T10:00:00Z",
+        "dosage": [{
+          "route": { "coding": [{ "code": "26643006", "display": "Oral" }] },
+          "doseAndRate": [{ "doseQuantity": { "value": 325, "unit": "mg" } }]
+        }]
+      }
+    ],
+    "omop": [
+      {
+        "table": "drug_exposure",
+        "quantity": 325,
+        "route_source_value": "Oral"
+      }
+    ]
+  },
+  {
+    "description": "drug_type_concept_id is 44787730 (Patient Self-Reported)",
+    "fhir": [
+      {
+        "resourceType": "MedicationStatement",
+        "id": "ms-type",
+        "status": "active",
+        "medicationCodeableConcept": { "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "313782" }] },
+        "subject": { "reference": "Patient/1" },
+        "effectiveDateTime": "2024-01-15T10:00:00Z"
+      }
+    ],
+    "omop": [
+      { "table": "drug_exposure", "drug_type_concept_id": 44787730 }
+    ]
+  },
+  {
+    "description": "no effective date → skipped",
+    "fhir": [
+      {
+        "resourceType": "MedicationStatement",
+        "id": "ms-nodate",
+        "status": "active",
+        "medicationCodeableConcept": { "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "313782" }] },
+        "subject": { "reference": "Patient/1" }
+      }
+    ],
+    "omop": null
+  },
+  {
+    "description": "no medication code → skipped",
+    "fhir": [
+      {
+        "resourceType": "MedicationStatement",
+        "id": "ms-nocode",
+        "status": "active",
+        "subject": { "reference": "Patient/1" },
+        "effectiveDateTime": "2024-01-15T10:00:00Z"
+      }
+    ],
+    "omop": null
+  }
+]

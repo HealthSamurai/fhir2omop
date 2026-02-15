@@ -1,0 +1,103 @@
+[
+  {
+    "description": "code → observation_source_value",
+    "spec": "mapping/allergy-intolerance/code.md",
+    "fhir": [
+      {
+        "resourceType": "AllergyIntolerance",
+        "id": "allergy-code",
+        "clinicalStatus": { "coding": [{ "code": "active" }] },
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "387207008", "display": "Ibuprofen" }] },
+        "patient": { "reference": "Patient/1" },
+        "onsetDateTime": "2023-03-15T10:00:00Z"
+      }
+    ],
+    "omop": [
+      {
+        "table": "observation",
+        "observation_source_value": "387207008",
+        "observation_date": "2023-03-15",
+        "observation_datetime": "2023-03-15T10:00:00Z",
+        "observation_type_concept_id": 32817,
+        "observation_concept_id": 0
+      }
+    ]
+  },
+  {
+    "description": "type allergy → qualifier_source_value",
+    "fhir": [
+      {
+        "resourceType": "AllergyIntolerance",
+        "id": "allergy-type",
+        "clinicalStatus": { "coding": [{ "code": "active" }] },
+        "type": "allergy",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "387207008" }] },
+        "patient": { "reference": "Patient/1" },
+        "onsetDateTime": "2023-03-15"
+      }
+    ],
+    "omop": [
+      { "table": "observation", "qualifier_source_value": "allergy" }
+    ]
+  },
+  {
+    "description": "type intolerance → qualifier_source_value",
+    "fhir": [
+      {
+        "resourceType": "AllergyIntolerance",
+        "id": "allergy-intol",
+        "clinicalStatus": { "coding": [{ "code": "active" }] },
+        "type": "intolerance",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "387207008" }] },
+        "patient": { "reference": "Patient/1" },
+        "onsetDateTime": "2023-03-15"
+      }
+    ],
+    "omop": [
+      { "table": "observation", "qualifier_source_value": "intolerance" }
+    ]
+  },
+  {
+    "description": "criticality → value_source_value",
+    "fhir": [
+      {
+        "resourceType": "AllergyIntolerance",
+        "id": "allergy-crit",
+        "clinicalStatus": { "coding": [{ "code": "active" }] },
+        "criticality": "high",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "387207008" }] },
+        "patient": { "reference": "Patient/1" },
+        "onsetDateTime": "2023-03-15"
+      }
+    ],
+    "omop": [
+      { "table": "observation", "value_source_value": "high" }
+    ]
+  },
+  {
+    "description": "no onsetDateTime → skipped",
+    "fhir": [
+      {
+        "resourceType": "AllergyIntolerance",
+        "id": "allergy-nodate",
+        "clinicalStatus": { "coding": [{ "code": "active" }] },
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "387207008" }] },
+        "patient": { "reference": "Patient/1" }
+      }
+    ],
+    "omop": null
+  },
+  {
+    "description": "no code → skipped",
+    "fhir": [
+      {
+        "resourceType": "AllergyIntolerance",
+        "id": "allergy-nocode",
+        "clinicalStatus": { "coding": [{ "code": "active" }] },
+        "patient": { "reference": "Patient/1" },
+        "onsetDateTime": "2023-03-15"
+      }
+    ],
+    "omop": null
+  }
+]

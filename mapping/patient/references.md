@@ -1,67 +1,67 @@
 # Patient.generalPractitioner / managingOrganization → OMOP PERSON provider_id / care_site_id
 
-## Источник
+## Source
 
-- `Patient.generalPractitioner` — массив Reference(Practitioner | Organization | PractitionerRole). Первичный лечащий врач.
-- `Patient.managingOrganization` — Reference(Organization). Организация, управляющая записью пациента.
+- `Patient.generalPractitioner` — array of Reference(Practitioner | Organization | PractitionerRole). Primary care provider.
+- `Patient.managingOrganization` — Reference(Organization). Organization managing the patient record.
 
-## Цель
+## Target
 
 OMOP PERSON:
 - `provider_id` (integer) — FK → PROVIDER
 - `care_site_id` (integer) — FK → CARE_SITE
 
-## Маппинг
+## Mapping
 
-| FHIR | OMOP | Примечания |
+| FHIR | OMOP | Notes |
 |---|---|---|
-| `generalPractitioner[0]` | `provider_id` | Первый из массива, разрешение Reference → integer ID |
-| `managingOrganization` | `care_site_id` | Разрешение Reference → integer ID |
+| `generalPractitioner[0]` | `provider_id` | First from the array, Reference resolution → integer ID |
+| `managingOrganization` | `care_site_id` | Reference resolution → integer ID |
 
-## Правила разрешения Reference
+## Reference resolution rules
 
-FHIR Reference имеет формат `"ResourceType/id"` (например `"Practitioner/123"`).
+FHIR Reference has the format `"ResourceType/id"` (e.g. `"Practitioner/123"`).
 
-1. Извлекаем ID из строки reference: `"Practitioner/123"` → `123`
-2. Если ID — число, используем напрямую как FK
-3. Если ID — не число (UUID), требуется таблица маппинга FHIR ID → OMOP integer ID
-4. Если reference отсутствует — NULL
+1. Extract ID from the reference string: `"Practitioner/123"` → `123`
+2. If ID is a number, use directly as FK
+3. If ID is not a number (UUID), a mapping table FHIR ID → OMOP integer ID is required
+4. If reference is absent — NULL
 
-## Решение по множественным generalPractitioner
+## Decision on multiple generalPractitioner
 
-FHIR допускает массив `generalPractitioner`. OMOP PERSON имеет одно поле `provider_id`.
+FHIR allows an array of `generalPractitioner`. OMOP PERSON has a single `provider_id` field.
 
-**Правило**: берём `generalPractitioner[0]` — первый элемент массива. Остальные теряются.
+**Rule**: take `generalPractitioner[0]` — the first element in the array. The rest are lost.
 
-## Решение по типу Reference
+## Decision on Reference type
 
-`generalPractitioner` может ссылаться на Practitioner, Organization или PractitionerRole. Для `provider_id` нас интересует только Practitioner. Если reference указывает на Organization — игнорируем для provider_id (это ближе к care_site).
+`generalPractitioner` can reference Practitioner, Organization, or PractitionerRole. For `provider_id` we are only interested in Practitioner. If the reference points to Organization — it should be ignored for provider_id (closer to care_site).
 
-На данном этапе: маппим любой generalPractitioner[0] в provider_id, без фильтрации по типу.
+At this stage: we map any generalPractitioner[0] to provider_id, without filtering by type.
 
-## Отсутствующие значения
+## Missing values
 
-| Ситуация | provider_id | care_site_id |
+| Situation | provider_id | care_site_id |
 |---|---|---|
-| generalPractitioner есть | ID из reference | — |
-| generalPractitioner отсутствует | NULL | — |
-| managingOrganization есть | — | ID из reference |
-| managingOrganization отсутствует | — | NULL |
+| generalPractitioner present | ID from reference | — |
+| generalPractitioner absent | NULL | — |
+| managingOrganization present | — | ID from reference |
+| managingOrganization absent | — | NULL |
 
-Не используем дефолтные значения (вроде 1 или 0) — NULL корректно отражает отсутствие данных.
+We do not use default values (like 1 or 0) — NULL correctly reflects the absence of data.
 
-## Консенсус реализаций
+## Implementation consensus
 
 | Project | generalPractitioner → provider_id | managingOrganization → care_site_id |
 |---|---|---|
-| omoponfhir-v54-r4 | ✓ | ✓ |
-| omopfhirmap | ✓ | ✓ |
-| mends-on-fhir | ✓ | — |
-| GT-FHIR | ✓ | — |
+| omoponfhir-v54-r4 | yes | yes |
+| omopfhirmap | yes | yes |
+| mends-on-fhir | yes | — |
+| GT-FHIR | yes | — |
 | ETL-German-FHIR-Core | — | — |
 | FhirToCdm | — | — |
 | NACHC | — (defaults to 1) | — (defaults to 1) |
 
-- **4/9** маппят generalPractitioner
-- **2/9** маппят managingOrganization
-- NACHC использует дефолт 1 — мы считаем это некорректным
+- **4/9** map generalPractitioner
+- **2/9** map managingOrganization
+- NACHC uses default 1 — we consider this incorrect

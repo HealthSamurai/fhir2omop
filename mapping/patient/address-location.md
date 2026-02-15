@@ -1,53 +1,53 @@
 # Patient.address → OMOP LOCATION
 
-## Источник
+## Source
 
-FHIR `Patient.address` — массив `Address`, может содержать несколько адресов с разным `use` (home, work, temp, old).
+FHIR `Patient.address` — array of `Address`, may contain multiple addresses with different `use` (home, work, temp, old).
 
-## Цель
+## Target
 
-OMOP `LOCATION` — таблица физических адресов. Связь с PERSON через `person.location_id` (FK → LOCATION).
+OMOP `LOCATION` — table of physical addresses. Linked to PERSON through `person.location_id` (FK → LOCATION).
 
-Семантика OMOP: **последний известный адрес проживания** пациента.
+OMOP semantics: **last known residential address** of the patient.
 
-## Решение: выбор адреса
+## Decision: address selection
 
-У пациента в FHIR может быть несколько адресов. OMOP поддерживает только один (`location_id`).
+A patient in FHIR may have multiple addresses. OMOP supports only one (`location_id`).
 
-**Правило выбора:**
+**Selection rule:**
 
-1. Адрес с `use = "home"` (если несколько — последний в массиве, как наиболее актуальный)
-2. Если нет `home` — первый адрес в массиве (`address[0]`)
-3. Если адресов нет — `location_id = NULL`
+1. Address with `use = "home"` (if multiple — last in the array, as most current)
+2. If no `home` — first address in the array (`address[0]`)
+3. If no addresses — `location_id = NULL`
 
-Адреса с `use = "old"` пропускаются при поиске home-адреса.
+Addresses with `use = "old"` are skipped when searching for a home address.
 
-## Маппинг полей
+## Field mapping
 
-| FHIR Address | OMOP LOCATION | Примечания |
+| FHIR Address | OMOP LOCATION | Notes |
 |---|---|---|
-| `line[0]` | `address_1` | Первая строка адреса |
-| `line[1]` | `address_2` | Вторая строка (если есть) |
+| `line[0]` | `address_1` | First address line |
+| `line[1]` | `address_2` | Second line (if present) |
 | `city` | `city` | |
-| `state` | `state` | OMOP: varchar(2), для US — код штата |
+| `state` | `state` | OMOP: varchar(2), for US — state code |
 | `postalCode` | `zip` | OMOP: varchar(9) |
 | `district` | `county` | |
-| `country` | `country_source_value` | Текстовое название страны |
-| `country` | `country_concept_id` | Маппинг в Geography domain (если возможно), иначе 0 |
-| — | `location_source_value` | Полный адрес одной строкой для трейсинга |
+| `country` | `country_source_value` | Textual country name |
+| `country` | `country_concept_id` | Mapping to Geography domain (if possible), otherwise 0 |
+| — | `location_source_value` | Full address as single string for tracing |
 
-## Ограничения OMOP
+## OMOP limitations
 
-- `state` — varchar(2). Для US штатов (CA, NY) подходит. Для других стран значение может обрезаться.
-- `county` — varchar(20). Длинные названия районов обрезаются.
-- `address_1`, `address_2` — varchar(50). Длинные строки обрезаются.
+- `state` — varchar(2). Fits US state codes (CA, NY). For other countries, the value may be truncated.
+- `county` — varchar(20). Long district names are truncated.
+- `address_1`, `address_2` — varchar(50). Long lines are truncated.
 
-## Дедупликация
+## Deduplication
 
-Каждому пациенту создаётся своя запись LOCATION (1:1 с PERSON). Дедупликация одинаковых адресов не выполняется — это упрощает ETL и соответствует подходу большинства реализаций.
+Each patient gets their own LOCATION record (1:1 with PERSON). Deduplication of identical addresses is not performed — this simplifies ETL and matches the approach of most implementations.
 
-## Консенсус реализаций
+## Implementation consensus
 
-- 6+ из 9 проектов маппят address → LOCATION
-- Все используют подход "одна LOCATION на пациента"
-- Выбор home-адреса — наиболее распространённая стратегия
+- 6+ out of 9 projects map address → LOCATION
+- All use the "one LOCATION per patient" approach
+- Selecting the home address is the most common strategy

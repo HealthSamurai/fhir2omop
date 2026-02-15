@@ -89,9 +89,61 @@ group VisitOccurrence(source src: Encounter, target tgt : VisitOccurrenceTable) 
 
 ---
 
-## Gaps and Considerations
+## Status Filtering
 
-- **Nested encounters**: FHIR `partOf` vs OMOP `preceding_visit_occurrence_id`
+| Status | Action |
+|--------|--------|
+| finished | Map |
+| in-progress | Map |
+| planned | Skip |
+| arrived | Skip |
+| triaged | Skip |
+| onleave | Skip |
+| cancelled | Skip |
+| entered-in-error | Skip |
+| unknown | Skip |
+
+## Additional Class Mappings
+
+| FHIR class.code | OMOP Concept ID | Description |
+|-----------------|-----------------|-------------|
+| `ACUTE` | 9201 | Inpatient Visit |
+| `SS` | 9202 | Outpatient Visit (Short Stay) |
+| `OBSENC` | 9201 | Inpatient Visit (Observation) |
+| `FLD` | 9202 | Outpatient Visit (Field) |
+| `VR` | 9202 | Outpatient Visit (Virtual) |
+
+## Validation Rules
+
+Resources are skipped (return null) when:
+- Status is not finished or in-progress
+- `period` is missing
+- `period.start` is missing
+
+## Unmapped FHIR Elements
+
+| FHIR Element | Reason Not Mapped | Potential Approach |
+|--------------|-------------------|--------------------|
+| `type` | class already determines visit_concept_id | Store in visit_source_value or note |
+| `serviceType` | No column | Separate record |
+| `priority` | No column | Map to observation |
+| `reasonCode` | No column in visit_occurrence | Map as condition_occurrence |
+| `reasonReference` | No column | Link via visit_occurrence_id |
+| `diagnosis` | Not in visit_occurrence | Map through Condition resources |
+| `hospitalization.admitSource` | admitted_from_concept_id placeholder (0) | Requires vocabulary lookup |
+| `hospitalization.dischargeDisposition` | discharged_to_concept_id placeholder (0) | Requires vocabulary lookup |
+| `hospitalization.dietPreference` | No column | Not applicable |
+| `location` | No direct mapping | Map to CARE_SITE |
+| `partOf` | Nested encounters | Map to VISIT_DETAIL |
+| `participant[1..n]` | OMOP has single provider_id | Only first participant used |
+| `length` | No column | Calculated from period |
+| `identifier` | No standard field | Store in visit_source_value |
+| `account` | No column | Financial data — outside OMOP CDM |
+
+## Gaps and Future Work
+
+- **Concept ID resolution**: `admitted_from_concept_id` and `discharged_to_concept_id` are placeholders (0) pending vocabulary integration
+- **Nested encounters**: FHIR `partOf` vs OMOP `preceding_visit_occurrence_id` / VISIT_DETAIL
 - **Visit detail**: Not all projects populate VISIT_DETAIL
 - **Class mapping**: Vocabulary alignment between FHIR and OMOP visit types
 - **Length of stay**: Calculated from period, not stored directly
