@@ -75,8 +75,10 @@ export interface ConditionOccurrence {
   stop_reason?: string | null;
   provider_id?: number | null;
   visit_occurrence_id?: number | null;
+  visit_detail_id?: number | null;
   condition_source_value?: string | null;
   condition_source_concept_id?: number;
+  condition_status_source_value?: string | null;
 }
 
 export interface Measurement {

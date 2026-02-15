@@ -1,0 +1,73 @@
+[
+  {
+    "description": "active + confirmed → mapped with condition_status_concept_id=32902",
+    "fhir": [
+      {
+        "resourceType": "Condition",
+        "id": "cond-active",
+        "clinicalStatus": { "coding": [{ "system": "http://terminology.hl7.org/CodeSystem/condition-clinical", "code": "active" }] },
+        "verificationStatus": { "coding": [{ "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status", "code": "confirmed" }] },
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "73211009" }] },
+        "subject": { "reference": "Patient/1" },
+        "onsetDateTime": "2023-01-10"
+      }
+    ],
+    "omop": [{ "table": "condition_occurrence", "condition_status_concept_id": 32902, "condition_status_source_value": "active" }]
+  },
+  {
+    "description": "inactive → skipped",
+    "fhir": [
+      {
+        "resourceType": "Condition",
+        "id": "cond-inactive",
+        "clinicalStatus": { "coding": [{ "code": "inactive" }] },
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "73211009" }] },
+        "subject": { "reference": "Patient/1" },
+        "onsetDateTime": "2023-01-10"
+      }
+    ],
+    "omop": null
+  },
+  {
+    "description": "resolved → skipped",
+    "fhir": [
+      {
+        "resourceType": "Condition",
+        "id": "cond-resolved",
+        "clinicalStatus": { "coding": [{ "code": "resolved" }] },
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "73211009" }] },
+        "subject": { "reference": "Patient/1" },
+        "onsetDateTime": "2023-01-10"
+      }
+    ],
+    "omop": null
+  },
+  {
+    "description": "entered-in-error → skipped",
+    "fhir": [
+      {
+        "resourceType": "Condition",
+        "id": "cond-error",
+        "verificationStatus": { "coding": [{ "code": "entered-in-error" }] },
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "73211009" }] },
+        "subject": { "reference": "Patient/1" },
+        "onsetDateTime": "2023-01-10"
+      }
+    ],
+    "omop": null
+  },
+  {
+    "description": "refuted → skipped",
+    "fhir": [
+      {
+        "resourceType": "Condition",
+        "id": "cond-refuted",
+        "verificationStatus": { "coding": [{ "code": "refuted" }] },
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "73211009" }] },
+        "subject": { "reference": "Patient/1" },
+        "onsetDateTime": "2023-01-10"
+      }
+    ],
+    "omop": null
+  }
+]

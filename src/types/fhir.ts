@@ -106,13 +106,22 @@ export interface Condition {
   clinicalStatus?: CodeableConcept;
   verificationStatus?: CodeableConcept;
   category?: CodeableConcept[];
+  severity?: CodeableConcept;
   code?: CodeableConcept;
+  bodySite?: CodeableConcept[];
   subject: Reference;
   encounter?: Reference;
   onsetDateTime?: string;
+  onsetPeriod?: Period;
   abatementDateTime?: string;
+  abatementPeriod?: Period;
   abatementString?: string;
+  recordedDate?: string;
+  recorder?: Reference;
   asserter?: Reference;
+  stage?: { summary?: CodeableConcept; type?: CodeableConcept }[];
+  evidence?: { code?: CodeableConcept[]; detail?: Reference[] }[];
+  note?: { text?: string }[];
 }
 
 export interface ObservationComponent {
@@ -180,6 +189,29 @@ export interface Procedure {
   performedPeriod?: Period;
   performer?: { actor?: Reference }[];
   bodySite?: CodeableConcept[];
+}
+
+export interface AllergyIntoleranceReaction {
+  substance?: CodeableConcept;
+  manifestation: CodeableConcept[];
+  severity?: "mild" | "moderate" | "severe";
+}
+
+export interface AllergyIntolerance {
+  resourceType: "AllergyIntolerance";
+  id?: string;
+  clinicalStatus?: CodeableConcept;
+  verificationStatus?: CodeableConcept;
+  type?: "allergy" | "intolerance";
+  category?: ("food" | "medication" | "environment" | "biologic")[];
+  criticality?: "low" | "high" | "unable-to-assess";
+  code?: CodeableConcept;
+  patient: Reference;
+  encounter?: Reference;
+  onsetDateTime?: string;
+  recorder?: Reference;
+  asserter?: Reference;
+  reaction?: AllergyIntoleranceReaction[];
 }
 
 export interface MedicationRequest {

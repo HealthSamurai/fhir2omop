@@ -1,0 +1,82 @@
+[
+  {
+    "description": "abatementDateTime → condition_end_date",
+    "fhir": [
+      {
+        "resourceType": "Condition",
+        "id": "cond-abate-dt",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "73211009" }] },
+        "subject": { "reference": "Patient/1" },
+        "onsetDateTime": "2023-01-10",
+        "abatementDateTime": "2023-06-15T14:00:00Z"
+      }
+    ],
+    "omop": [
+      {
+        "table": "condition_occurrence",
+        "condition_end_date": "2023-06-15",
+        "condition_end_datetime": "2023-06-15T14:00:00Z"
+      }
+    ]
+  },
+  {
+    "description": "abatementPeriod.end → condition_end_date",
+    "fhir": [
+      {
+        "resourceType": "Condition",
+        "id": "cond-abate-period",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "73211009" }] },
+        "subject": { "reference": "Patient/1" },
+        "onsetDateTime": "2023-01-10",
+        "abatementPeriod": { "start": "2023-05-01", "end": "2023-06-30" }
+      }
+    ],
+    "omop": [
+      {
+        "table": "condition_occurrence",
+        "condition_end_date": "2023-06-30",
+        "condition_end_datetime": "2023-06-30"
+      }
+    ]
+  },
+  {
+    "description": "abatementString → stop_reason (no end date)",
+    "fhir": [
+      {
+        "resourceType": "Condition",
+        "id": "cond-abate-string",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "73211009" }] },
+        "subject": { "reference": "Patient/1" },
+        "onsetDateTime": "2023-01-10",
+        "abatementString": "Resolved after treatment"
+      }
+    ],
+    "omop": [
+      {
+        "table": "condition_occurrence",
+        "condition_end_date": null,
+        "stop_reason": "Resolved after treatment"
+      }
+    ]
+  },
+  {
+    "description": "No abatement → null end dates, null stop_reason",
+    "fhir": [
+      {
+        "resourceType": "Condition",
+        "id": "cond-no-abate",
+        "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "73211009" }] },
+        "subject": { "reference": "Patient/1" },
+        "onsetDateTime": "2023-01-10"
+      }
+    ],
+    "omop": [
+      {
+        "table": "condition_occurrence",
+        "condition_end_date": null,
+        "condition_end_datetime": null,
+        "stop_reason": null
+      }
+    ]
+  }
+]
