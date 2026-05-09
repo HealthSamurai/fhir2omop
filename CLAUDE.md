@@ -39,17 +39,35 @@ refs/
 ```
 
 ### FHIR R4 Core (not in git)
+
+Source: `https://fs.get-ig.org/rs/hl7.fhir.r4.core-4.0.1.ndjson.gz` (4,574 resources)
+
+Two outputs are written by `bun src/load-fhir-core.ts`:
+
 ```
-fhir-core/                 # Downloaded via: bun src/load-fhir-core.ts
-├── StructureDefinition.ndjson    # 655 resource/type definitions
+fhir-core/                 # Full canonical resources (one file per resourceType)
+├── StructureDefinition.ndjson    # 655   resource/type definitions
 ├── ValueSet.ndjson               # 1,316 value sets
 ├── CodeSystem.ndjson             # 1,062 code systems
 ├── SearchParameter.ndjson        # 1,400 search parameters
-├── ConceptMap.ndjson             # 80 concept maps
-└── index.json                    # Summary
+├── ConceptMap.ndjson             # 80    concept maps
+├── OperationDefinition.ndjson    # 47    operation definitions
+├── CapabilityStatement.ndjson    # 6     capability statements
+├── CompartmentDefinition.ndjson  # 6     compartment definitions
+├── StructureMap.ndjson           # 2     structure maps
+├── StructureDefinition-by-type.json   # SDs grouped by .type
+└── index.json                    # Summary (source URL, downloadedAt, counts)
+
+data/                      # Slim index — { url, resourceType, version, id } only
+├── <ResourceType>.ndjson         # Same 9 types as above, one line per resource
+└── index.json                    # Same summary as fhir-core/index.json
 ```
 
-Reload FHIR core: `bun src/load-fhir-core.ts`
+Use `data/` for fast canonical-URL lookups and inventories without parsing the
+full resources; use `fhir-core/` when you need element definitions, concepts,
+or any other body content.
+
+Reload FHIR core: `bun src/load-fhir-core.ts` (rewrites both directories)
 
 ## Scripts
 

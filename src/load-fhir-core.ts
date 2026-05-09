@@ -3,6 +3,7 @@ import { mkdir } from "node:fs/promises";
 
 const FHIR_CORE_URL = "https://fs.get-ig.org/rs/hl7.fhir.r4.core-4.0.1.ndjson.gz";
 const OUTPUT_DIR = "./fhir-core";
+const SLIM_DIR = "./data";
 
 async function loadFhirCore() {
   console.log("Downloading FHIR R4 Core metadata...");
@@ -22,8 +23,9 @@ async function loadFhirCore() {
   const lines = text.trim().split("\n");
   console.log(`Found ${lines.length} resources`);
 
-  // Create output directory
+  // Create output directories
   await mkdir(OUTPUT_DIR, { recursive: true });
+  await mkdir(SLIM_DIR, { recursive: true });
 
   // Group resources by type
   const byType: Record<string, any[]> = {};
@@ -56,13 +58,27 @@ async function loadFhirCore() {
     console.log(`  ${type}: ${byType[type].length}`);
   }
 
-  // Save each resource type to a separate file
+  // Save each resource type to a separate file (full + slim)
   console.log("\nSaving files...");
   for (const type of types) {
     const filePath = `${OUTPUT_DIR}/${type}.ndjson`;
     const content = byType[type].map((r) => JSON.stringify(r)).join("\n");
     await Bun.write(filePath, content);
     console.log(`  ${filePath}`);
+
+    const slimPath = `${SLIM_DIR}/${type}.ndjson`;
+    const slimContent = byType[type]
+      .map((r) =>
+        JSON.stringify({
+          url: r.url,
+          resourceType: r.resourceType,
+          version: r.version,
+          id: r.id,
+        })
+      )
+      .join("\n");
+    await Bun.write(slimPath, slimContent);
+    console.log(`  ${slimPath}`);
   }
 
   // Save index file with all resource types and counts
@@ -75,6 +91,8 @@ async function loadFhirCore() {
   };
   await Bun.write(`${OUTPUT_DIR}/index.json`, JSON.stringify(index, null, 2));
   console.log(`  ${OUTPUT_DIR}/index.json`);
+  await Bun.write(`${SLIM_DIR}/index.json`, JSON.stringify(index, null, 2));
+  console.log(`  ${SLIM_DIR}/index.json`);
 
   // Save a combined lookup file for StructureDefinitions by type
   if (byTypeAndId["StructureDefinition"]) {
