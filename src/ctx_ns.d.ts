@@ -3,107 +3,14 @@ declare global {
     type Context = import("./$type_Context").Context;
 
     interface FnsRegistry {
-        _test_hashline_edit: {
-        nearby: typeof import("../.hyper/_test_hashline_edit/nearby").default;
-        };
-        agent: {
-        buildDelegatedTaskPrompt: typeof import("./agent/buildDelegatedTaskPrompt").default;
-        buildLlmRequest: typeof import("./agent/buildLlmRequest").default;
-        clear: typeof import("./agent/clear").default;
-        compact: typeof import("./agent/compact").default;
-        delegateTask: typeof import("./agent/delegateTask").default;
-        executeBash: typeof import("./agent/executeBash").default;
-        executeMarker: typeof import("./agent/executeMarker").default;
-        finishTask: typeof import("./agent/finishTask").default;
-        formatMarkerError: typeof import("./agent/formatMarkerError").default;
-        formatMarkerResult: typeof import("./agent/formatMarkerResult").default;
-        fullSystemPrompt: typeof import("./agent/fullSystemPrompt").default;
-        getBasePromptParts: typeof import("./agent/getBasePromptParts").default;
-        highlightResult: typeof import("./agent/highlightResult").default;
-        listPromptPresets: typeof import("./agent/listPromptPresets").default;
-        llmCall: typeof import("./agent/llmCall").default;
-        nextId: typeof import("./agent/nextId").default;
-        parseMarkers: typeof import("./agent/parseMarkers").default;
-        parseReadMarker: typeof import("./agent/parseReadMarker").default;
-        readAndSummarize: typeof import("./agent/readAndSummarize").default;
-        renderEventHtml: typeof import("./agent/renderEventHtml").default;
-        renderStatusBar: typeof import("./agent/renderStatusBar").default;
-        run: typeof import("./agent/run").default;
-        sanitizeHtmlBody: typeof import("./agent/sanitizeHtmlBody").default;
-        serializeMarkerCall: typeof import("./agent/serializeMarkerCall").default;
-        start: typeof import("./agent/start").default;
-        stop: typeof import("./agent/stop").default;
-        waitForEvent: typeof import("./agent/waitForEvent").default;
-        wakeWaiters: typeof import("./agent/wakeWaiters").default;
-        wakeWorker: typeof import("./agent/wakeWorker").default;
-        workerLoop: typeof import("./agent/workerLoop").default;
-        };
-        db: {
-        connect: typeof import("./db/connect").default;
-        exec: typeof import("./db/exec").default;
-        insert: typeof import("./db/insert").default;
-        migrate: typeof import("./db/migrate").default;
-        select: typeof import("./db/select").default;
-        };
-        dev: {
-        readLog: typeof import("./dev/readLog").default;
-        test: typeof import("./dev/test").default;
-        testSummary: typeof import("./dev/testSummary").default;
-        typecheck: typeof import("./dev/typecheck").default;
-        };
-        events: {
-        emit: typeof import("./events/emit").default;
-        emitAgentsChanged: typeof import("./events/emitAgentsChanged").default;
-        subscribe: typeof import("./events/subscribe").default;
-        };
-        files: {
-        close: typeof import("./files/close").default;
-        editHashline: typeof import("./files/editHashline").default;
-        exists: typeof import("./files/exists").default;
-        formatHashline: typeof import("./files/formatHashline").default;
-        grep: typeof import("./files/grep").default;
-        grepHashline: typeof import("./files/grepHashline").default;
-        lineHash: typeof import("./files/lineHash").default;
-        list: typeof import("./files/list").default;
-        listOpen: typeof import("./files/listOpen").default;
-        mkdir: typeof import("./files/mkdir").default;
-        open: typeof import("./files/open").default;
-        parseAnchor: typeof import("./files/parseAnchor").default;
-        parseHashlineEdit: typeof import("./files/parseHashlineEdit").default;
-        read: typeof import("./files/read").default;
-        readHashline: typeof import("./files/readHashline").default;
-        remove: typeof import("./files/remove").default;
-        rename: typeof import("./files/rename").default;
-        resolveSafe: typeof import("./files/resolveSafe").default;
-        stat: typeof import("./files/stat").default;
-        write: typeof import("./files/write").default;
-        };
-        git: {
-        commit: typeof import("./git/commit").default;
-        push: typeof import("./git/push").default;
-        run: typeof import("./git/run").default;
-        stage: typeof import("./git/stage").default;
-        stageCommitPush: typeof import("./git/stageCommitPush").default;
-        status: typeof import("./git/status").default;
-        };
         http: {
         loadRoutes: typeof import("./http/loadRoutes").default;
         match: typeof import("./http/match").default;
         start: typeof import("./http/$start").default;
         };
-        llm: {
-        listModels: typeof import("./llm/listModels").default;
-        refreshClaudeCode: typeof import("./llm/refreshClaudeCode").default;
-        refreshCodex: typeof import("./llm/refreshCodex").default;
-        refreshKimiCode: typeof import("./llm/refreshKimiCode").default;
-        resolveEndpoint: typeof import("./llm/resolveEndpoint").default;
-        stream: typeof import("./llm/stream").default;
-        streamAnthropic: typeof import("./llm/streamAnthropic").default;
-        streamCodex: typeof import("./llm/streamCodex").default;
-        streamMock: typeof import("./llm/streamMock").default;
-        streamOpenAI: typeof import("./llm/streamOpenAI").default;
-        toAnthropicMessages: typeof import("./llm/toAnthropicMessages").default;
-        toCodexInput: typeof import("./llm/toCodexInput").default;
+        mapspec: {
+        list: typeof import("./mapspec/list").default;
+        render: typeof import("./mapspec/render").default;
         };
         markdown: {
         highlight: typeof import("./markdown/highlight").default;
@@ -120,112 +27,12 @@ declare global {
         load: typeof import("./repl/load").default;
         start: typeof import("./repl/$start").default;
         };
-        session: {
-        appendAssistantEvent: typeof import("./session/appendAssistantEvent").default;
-        appendAssistantMessage: typeof import("./session/appendAssistantMessage").default;
-        appendErrorEvent: typeof import("./session/appendErrorEvent").default;
-        appendEvent: typeof import("./session/appendEvent").default;
-        appendMessage: typeof import("./session/appendMessage").default;
-        appendThinkingEvent: typeof import("./session/appendThinkingEvent").default;
-        appendToolCallEvent: typeof import("./session/appendToolCallEvent").default;
-        appendUserMessage: typeof import("./session/appendUserMessage").default;
-        archive: typeof import("./session/archive").default;
-        delete: typeof import("./session/delete").default;
-        deleteMessageAt: typeof import("./session/deleteMessageAt").default;
-        estimateMessageTokens: typeof import("../.hyper/session/estimateMessageTokens").default;
-        fork: typeof import("./session/fork").default;
-        getEvents: typeof import("./session/getEvents").default;
-        getFullMessages: typeof import("./session/getFullMessages").default;
-        getMaxEventIdx: typeof import("./session/getMaxEventIdx").default;
-        getMessages: typeof import("./session/getMessages").default;
-        list: typeof import("./session/list").default;
-        load: typeof import("./session/load").default;
-        loadAll: typeof import("./session/loadAll").default;
-        replaceEvents: typeof import("./session/replaceEvents").default;
-        replaceMessages: typeof import("./session/replaceMessages").default;
-        save: typeof import("./session/save").default;
-        search: typeof import("./session/search").default;
-        syncAgentState: typeof import("./session/syncAgentState").default;
-        truncateMessagesFrom: typeof import("./session/truncateMessagesFrom").default;
-        updateScratchpad: typeof import("./session/updateScratchpad").default;
-        };
-        settings: {
-        agentDebounceMs: typeof import("./settings/agentDebounceMs").default;
-        declared: typeof import("./settings/declared").default;
-        get: typeof import("./settings/get").default;
-        getNumber: typeof import("./settings/getNumber").default;
-        getString: typeof import("./settings/getString").default;
-        list: typeof import("./settings/list").default;
-        logoutCodex: typeof import("./settings/logoutCodex").default;
-        logoutKimi: typeof import("./settings/logoutKimi").default;
-        modelDefault: typeof import("./settings/modelDefault").default;
-        providerApiKey: typeof import("./settings/providerApiKey").default;
-        providerBaseUrl: typeof import("./settings/providerBaseUrl").default;
-        remove: typeof import("./settings/remove").default;
-        renderDeclaredForm: typeof import("./settings/renderDeclaredForm").default;
-        saveEnv: typeof import("./settings/saveEnv").default;
-        set: typeof import("./settings/set").default;
-        startCodexLogin: typeof import("./settings/startCodexLogin").default;
-        startKimiLogin: typeof import("./settings/startKimiLogin").default;
-        status: typeof import("./settings/status").default;
-        };
-        skill: {
-        hello: typeof import("./skill/hello").default;
-        inspect: typeof import("./skill/inspect").default;
-        wordCount: typeof import("./skill/wordCount").default;
-        };
-        tools: {
-        dice: typeof import("./tools/dice").default;
-        password: typeof import("./tools/password").default;
-        };
-        ui: {
-        action: typeof import("./ui/action").default;
-        controlScript: typeof import("./ui/controlScript").default;
-        createAgent: typeof import("./ui/createAgent").default;
-        eval: typeof import("./ui/eval").default;
-        notify: typeof import("./ui/notify").default;
-        openAgent: typeof import("./ui/openAgent").default;
-        openFile: typeof import("./ui/openFile").default;
-        pending: typeof import("./ui/pending").default;
-        script: typeof import("./ui/script").default;
-        sendToAgent: typeof import("./ui/sendToAgent").default;
-        };
     }
 
     interface RootFns {
     genTypes: typeof import("./genTypes").default;
     layout: typeof import("./$layout").default;
     loadFns: typeof import("./loadFns").default;
-    }
-
-    namespace types {
-        namespace agent {
-            type Agent = import("./agent/$type_Agent").Agent;
-            type MarkerCall = import("./agent/$type_MarkerCall").MarkerCall;
-            type MarkerParseError = import("./agent/$type_MarkerParseError").MarkerParseError;
-        }
-        namespace dev {
-            type TestRun = import("./dev/$type_TestRun").TestRun;
-        }
-        namespace events {
-            type Event = import("./events/$type_Event").Event;
-        }
-        namespace files {
-            type EditHashlineOp = import("./files/$type_EditHashlineOp").EditHashlineOp;
-            type GrepMatch = import("./files/$type_GrepMatch").GrepMatch;
-            type ReadAnchorLine = import("./files/$type_ReadAnchorLine").ReadAnchorLine;
-            type ReadHashlineResult = import("./files/$type_ReadHashlineResult").ReadHashlineResult;
-        }
-        namespace git {
-            type Result = import("./git/$type_Result").Result;
-        }
-        namespace tools {
-            type DiceOpts = import("./tools/$type_DiceOpts").DiceOpts;
-            type PasswordOpts = import("./tools/$type_PasswordOpts").PasswordOpts;
-        }
-        namespace ui {
-            type AgentLaunch = import("./ui/$type_AgentLaunch").AgentLaunch;
-        }
     }
 }
 export {};

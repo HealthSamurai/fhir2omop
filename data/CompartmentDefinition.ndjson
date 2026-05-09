@@ -1,0 +1,6 @@
+{"url":"http://hl7.org/fhir/CompartmentDefinition/device","resourceType":"CompartmentDefinition","version":"4.0.1","id":"device"}
+{"url":"http://hl7.org/fhir/CompartmentDefinition/encounter","resourceType":"CompartmentDefinition","version":"4.0.1","id":"encounter"}
+{"url":"http://hl7.org/fhir/CompartmentDefinition/example","resourceType":"CompartmentDefinition","id":"example"}
+{"url":"http://hl7.org/fhir/CompartmentDefinition/patient","resourceType":"CompartmentDefinition","version":"4.0.1","id":"patient"}
+{"url":"http://hl7.org/fhir/CompartmentDefinition/practitioner","resourceType":"CompartmentDefinition","version":"4.0.1","id":"practitioner"}
+{"url":"http://hl7.org/fhir/CompartmentDefinition/relatedPerson","resourceType":"CompartmentDefinition","version":"4.0.1","id":"relatedPerson"}

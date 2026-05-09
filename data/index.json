@@ -1,0 +1,15 @@
+{
+  "source": "https://fs.get-ig.org/rs/hl7.fhir.r4.core-4.0.1.ndjson.gz",
+  "downloadedAt": "2026-05-09T10:41:06.575Z",
+  "resourceTypes": {
+    "CapabilityStatement": 6,
+    "CodeSystem": 1062,
+    "CompartmentDefinition": 6,
+    "ConceptMap": 80,
+    "OperationDefinition": 47,
+    "SearchParameter": 1400,
+    "StructureDefinition": 655,
+    "StructureMap": 2,
+    "ValueSet": 1316
+  }
+}

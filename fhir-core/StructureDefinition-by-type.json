@@ -1,0 +1,5664 @@
+{
+  "Extension": [
+    {
+      "id": "11179-objectClass",
+      "url": "http://hl7.org/fhir/StructureDefinition/11179-objectClass",
+      "name": "objectClass",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "11179-objectClassProperty",
+      "url": "http://hl7.org/fhir/StructureDefinition/11179-objectClassProperty",
+      "name": "objectClassProperty",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "11179-permitted-value-conceptmap",
+      "url": "http://hl7.org/fhir/StructureDefinition/11179-permitted-value-conceptmap",
+      "name": "permitted-value-conceptmap",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "11179-permitted-value-valueset",
+      "url": "http://hl7.org/fhir/StructureDefinition/11179-permitted-value-valueset",
+      "name": "permitted-value-valueset",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "allergyintolerance-assertedDate",
+      "url": "http://hl7.org/fhir/StructureDefinition/allergyintolerance-assertedDate",
+      "name": "assertedDate",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "allergyintolerance-certainty",
+      "url": "http://hl7.org/fhir/StructureDefinition/allergyintolerance-certainty",
+      "name": "certainty",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "allergyintolerance-duration",
+      "url": "http://hl7.org/fhir/StructureDefinition/allergyintolerance-duration",
+      "name": "duration",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "allergyintolerance-reasonRefuted",
+      "url": "http://hl7.org/fhir/StructureDefinition/allergyintolerance-reasonRefuted",
+      "name": "reasonRefuted",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "allergyintolerance-resolutionAge",
+      "url": "http://hl7.org/fhir/StructureDefinition/allergyintolerance-resolutionAge",
+      "name": "resolutionAge",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "allergyintolerance-substanceExposureRisk",
+      "url": "http://hl7.org/fhir/StructureDefinition/allergyintolerance-substanceExposureRisk",
+      "name": "substanceExposureRisk",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "auditevent-Accession",
+      "url": "http://hl7.org/fhir/StructureDefinition/auditevent-Accession",
+      "name": "Accession",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "auditevent-Anonymized",
+      "url": "http://hl7.org/fhir/StructureDefinition/auditevent-Anonymized",
+      "name": "Anonymized",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "auditevent-Encrypted",
+      "url": "http://hl7.org/fhir/StructureDefinition/auditevent-Encrypted",
+      "name": "Encrypted",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "auditevent-Instance",
+      "url": "http://hl7.org/fhir/StructureDefinition/auditevent-Instance",
+      "name": "Instance",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "auditevent-MPPS",
+      "url": "http://hl7.org/fhir/StructureDefinition/auditevent-MPPS",
+      "name": "MPPS",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "auditevent-NumberOfInstances",
+      "url": "http://hl7.org/fhir/StructureDefinition/auditevent-NumberOfInstances",
+      "name": "NumberOfInstances",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "auditevent-ParticipantObjectContainsStudy",
+      "url": "http://hl7.org/fhir/StructureDefinition/auditevent-ParticipantObjectContainsStudy",
+      "name": "ParticipantObjectContainsStudy",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "auditevent-SOPClass",
+      "url": "http://hl7.org/fhir/StructureDefinition/auditevent-SOPClass",
+      "name": "SOPClass",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "bodySite",
+      "url": "http://hl7.org/fhir/StructureDefinition/bodySite",
+      "name": "BodyStructure Reference",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "capabilities",
+      "url": "http://fhir-registry.smarthealthit.org/StructureDefinition/capabilities",
+      "name": "capabilities",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "capabilitystatement-expectation",
+      "url": "http://hl7.org/fhir/StructureDefinition/capabilitystatement-expectation",
+      "name": "expectation",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "capabilitystatement-prohibited",
+      "url": "http://hl7.org/fhir/StructureDefinition/capabilitystatement-prohibited",
+      "name": "prohibited",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "capabilitystatement-search-parameter-combination",
+      "url": "http://hl7.org/fhir/StructureDefinition/capabilitystatement-search-parameter-combination",
+      "name": "search-parameter-combination",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "capabilitystatement-supported-system",
+      "url": "http://hl7.org/fhir/StructureDefinition/capabilitystatement-supported-system",
+      "name": "supported-system",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "capabilitystatement-websocket",
+      "url": "http://hl7.org/fhir/StructureDefinition/capabilitystatement-websocket",
+      "name": "websocket",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "careplan-activity-title",
+      "url": "http://hl7.org/fhir/StructureDefinition/careplan-activity-title",
+      "name": "activity-title",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "codesystem-alternate",
+      "url": "http://hl7.org/fhir/StructureDefinition/codesystem-alternate",
+      "name": "alternate",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "codesystem-author",
+      "url": "http://hl7.org/fhir/StructureDefinition/codesystem-author",
+      "name": "author",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "codesystem-concept-comments",
+      "url": "http://hl7.org/fhir/StructureDefinition/codesystem-concept-comments",
+      "name": "concept-comments",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "codesystem-conceptOrder",
+      "url": "http://hl7.org/fhir/StructureDefinition/codesystem-conceptOrder",
+      "name": "conceptOrder",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "codesystem-effectiveDate",
+      "url": "http://hl7.org/fhir/StructureDefinition/codesystem-effectiveDate",
+      "name": "effectiveDate",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "codesystem-expirationDate",
+      "url": "http://hl7.org/fhir/StructureDefinition/codesystem-expirationDate",
+      "name": "expirationDate",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "codesystem-history",
+      "url": "http://hl7.org/fhir/StructureDefinition/codesystem-history",
+      "name": "history",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "codesystem-keyWord",
+      "url": "http://hl7.org/fhir/StructureDefinition/codesystem-keyWord",
+      "name": "keyWord",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "codesystem-label",
+      "url": "http://hl7.org/fhir/StructureDefinition/codesystem-label",
+      "name": "label",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "codesystem-map",
+      "url": "http://hl7.org/fhir/StructureDefinition/codesystem-map",
+      "name": "map",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "codesystem-otherName",
+      "url": "http://hl7.org/fhir/StructureDefinition/codesystem-otherName",
+      "name": "otherName",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "codesystem-replacedby",
+      "url": "http://hl7.org/fhir/StructureDefinition/codesystem-replacedby",
+      "name": "replacedby",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "codesystem-sourceReference",
+      "url": "http://hl7.org/fhir/StructureDefinition/codesystem-sourceReference",
+      "name": "sourceReference",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "codesystem-trusted-expansion",
+      "url": "http://hl7.org/fhir/StructureDefinition/codesystem-trusted-expansion",
+      "name": "trusted-expansion",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "codesystem-usage",
+      "url": "http://hl7.org/fhir/StructureDefinition/codesystem-usage",
+      "name": "usage",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "codesystem-warning",
+      "url": "http://hl7.org/fhir/StructureDefinition/codesystem-warning",
+      "name": "warning",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "codesystem-workflowStatus",
+      "url": "http://hl7.org/fhir/StructureDefinition/codesystem-workflowStatus",
+      "name": "workflowStatus",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "coding-sctdescid",
+      "url": "http://hl7.org/fhir/StructureDefinition/coding-sctdescid",
+      "name": "sctdescid",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "communication-media",
+      "url": "http://hl7.org/fhir/StructureDefinition/communication-media",
+      "name": "media",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "communicationrequest-initiatingLocation",
+      "url": "http://hl7.org/fhir/StructureDefinition/communicationrequest-initiatingLocation",
+      "name": "initiatingLocation",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "composition-clinicaldocument-otherConfidentiality",
+      "url": "http://hl7.org/fhir/StructureDefinition/composition-clinicaldocument-otherConfidentiality",
+      "name": "otherConfidentiality",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "composition-clinicaldocument-versionNumber",
+      "url": "http://hl7.org/fhir/StructureDefinition/composition-clinicaldocument-versionNumber",
+      "name": "versionNumber",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "composition-section-subject",
+      "url": "http://hl7.org/fhir/StructureDefinition/composition-section-subject",
+      "name": "section-subject",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "concept-bidirectional",
+      "url": "http://hl7.org/fhir/StructureDefinition/concept-bidirectional",
+      "name": "bidirectional",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "condition-assertedDate",
+      "url": "http://hl7.org/fhir/StructureDefinition/condition-assertedDate",
+      "name": "assertedDate",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "condition-dueTo",
+      "url": "http://hl7.org/fhir/StructureDefinition/condition-dueTo",
+      "name": "dueTo",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "condition-occurredFollowing",
+      "url": "http://hl7.org/fhir/StructureDefinition/condition-occurredFollowing",
+      "name": "occurredFollowing",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "condition-outcome",
+      "url": "http://hl7.org/fhir/StructureDefinition/condition-outcome",
+      "name": "outcome",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "condition-related",
+      "url": "http://hl7.org/fhir/StructureDefinition/condition-related",
+      "name": "related",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "condition-ruledOut",
+      "url": "http://hl7.org/fhir/StructureDefinition/condition-ruledOut",
+      "name": "ruledOut",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "consent-location",
+      "url": "http://hl7.org/fhir/StructureDefinition/consent-location",
+      "name": "location",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "consent-NotificationEndpoint",
+      "url": "http://hl7.org/fhir/StructureDefinition/consent-NotificationEndpoint",
+      "name": "NotificationEndpoint",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "consent-Transcriber",
+      "url": "http://hl7.org/fhir/StructureDefinition/consent-Transcriber",
+      "name": "Transcriber",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "consent-Witness",
+      "url": "http://hl7.org/fhir/StructureDefinition/consent-Witness",
+      "name": "Witness",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "contactpoint-area",
+      "url": "http://hl7.org/fhir/StructureDefinition/contactpoint-area",
+      "name": "area",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "contactpoint-country",
+      "url": "http://hl7.org/fhir/StructureDefinition/contactpoint-country",
+      "name": "country",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "contactpoint-extension",
+      "url": "http://hl7.org/fhir/StructureDefinition/contactpoint-extension",
+      "name": "extension",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "contactpoint-local",
+      "url": "http://hl7.org/fhir/StructureDefinition/contactpoint-local",
+      "name": "local",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "cqf-calculatedValue",
+      "url": "http://hl7.org/fhir/StructureDefinition/cqf-calculatedValue",
+      "name": "calculatedValue",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "cqf-cdsHooksEndpoint",
+      "url": "http://hl7.org/fhir/StructureDefinition/cqf-cdsHooksEndpoint",
+      "name": "cdsHooksEndpoint",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "cqf-citation",
+      "url": "http://hl7.org/fhir/StructureDefinition/cqf-citation",
+      "name": "citation",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "cqf-encounterClass",
+      "url": "http://hl7.org/fhir/StructureDefinition/cqf-encounterClass",
+      "name": "encounterClass",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "cqf-encounterType",
+      "url": "http://hl7.org/fhir/StructureDefinition/cqf-encounterType",
+      "name": "encounterType",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "cqf-expression",
+      "url": "http://hl7.org/fhir/StructureDefinition/cqf-expression",
+      "name": "expression",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "cqf-initialValue",
+      "url": "http://hl7.org/fhir/StructureDefinition/cqf-initialValue",
+      "name": "initialValue",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "cqf-initiatingOrganization",
+      "url": "http://hl7.org/fhir/StructureDefinition/cqf-initiatingOrganization",
+      "name": "initiatingOrganization",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "cqf-initiatingPerson",
+      "url": "http://hl7.org/fhir/StructureDefinition/cqf-initiatingPerson",
+      "name": "initiatingPerson",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "cqf-library",
+      "url": "http://hl7.org/fhir/StructureDefinition/cqf-library",
+      "name": "library",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "cqf-measureInfo",
+      "url": "http://hl7.org/fhir/StructureDefinition/cqf-measureInfo",
+      "name": "measureInfo",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "cqf-qualityOfEvidence",
+      "url": "http://hl7.org/fhir/StructureDefinition/cqf-qualityOfEvidence",
+      "name": "qualityOfEvidence",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "cqf-receivingOrganization",
+      "url": "http://hl7.org/fhir/StructureDefinition/cqf-receivingOrganization",
+      "name": "receivingOrganization",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "cqf-receivingPerson",
+      "url": "http://hl7.org/fhir/StructureDefinition/cqf-receivingPerson",
+      "name": "receivingPerson",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "cqf-recipientLanguage",
+      "url": "http://hl7.org/fhir/StructureDefinition/cqf-recipientLanguage",
+      "name": "recipientLanguage",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "cqf-recipientType",
+      "url": "http://hl7.org/fhir/StructureDefinition/cqf-recipientType",
+      "name": "recipientType",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "cqf-relativeDateTime",
+      "url": "http://hl7.org/fhir/StructureDefinition/cqf-relativeDateTime",
+      "name": "relativeDateTime",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "cqf-strengthOfRecommendation",
+      "url": "http://hl7.org/fhir/StructureDefinition/cqf-strengthOfRecommendation",
+      "name": "strengthOfRecommendation",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "cqf-systemUserLanguage",
+      "url": "http://hl7.org/fhir/StructureDefinition/cqf-systemUserLanguage",
+      "name": "systemUserLanguage",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "cqf-systemUserTaskContext",
+      "url": "http://hl7.org/fhir/StructureDefinition/cqf-systemUserTaskContext",
+      "name": "systemUserTaskContext",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "cqf-systemUserType",
+      "url": "http://hl7.org/fhir/StructureDefinition/cqf-systemUserType",
+      "name": "systemUserType",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "cqm-ValidityPeriod",
+      "url": "http://hl7.org/fhir/StructureDefinition/cqm-ValidityPeriod",
+      "name": "ValidityPeriod",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "data-absent-reason",
+      "url": "http://hl7.org/fhir/StructureDefinition/data-absent-reason",
+      "name": "Data Absent Reason",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "designNote",
+      "url": "http://hl7.org/fhir/StructureDefinition/designNote",
+      "name": "Design Note",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "device-implantStatus",
+      "url": "http://hl7.org/fhir/StructureDefinition/device-implantStatus",
+      "name": "implantStatus",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "devicerequest-patientInstruction",
+      "url": "http://hl7.org/fhir/StructureDefinition/devicerequest-patientInstruction",
+      "name": "patientInstruction",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "diagnosticReport-addendumOf",
+      "url": "http://hl7.org/fhir/StructureDefinition/diagnosticReport-addendumOf",
+      "name": "addendumOf",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "diagnosticReport-extends",
+      "url": "http://hl7.org/fhir/StructureDefinition/diagnosticReport-extends",
+      "name": "extends",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "DiagnosticReport-geneticsAnalysis",
+      "url": "http://hl7.org/fhir/StructureDefinition/DiagnosticReport-geneticsAnalysis",
+      "name": "Analysis",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "DiagnosticReport-geneticsAssessedCondition",
+      "url": "http://hl7.org/fhir/StructureDefinition/DiagnosticReport-geneticsAssessedCondition",
+      "name": "AssessedCondition",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "DiagnosticReport-geneticsFamilyMemberHistory",
+      "url": "http://hl7.org/fhir/StructureDefinition/DiagnosticReport-geneticsFamilyMemberHistory",
+      "name": "FamilyMemberHistory",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "DiagnosticReport-geneticsReferences",
+      "url": "http://hl7.org/fhir/StructureDefinition/DiagnosticReport-geneticsReferences",
+      "name": "References",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "diagnosticReport-locationPerformed",
+      "url": "http://hl7.org/fhir/StructureDefinition/diagnosticReport-locationPerformed",
+      "name": "locationPerformed",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "diagnosticReport-replaces",
+      "url": "http://hl7.org/fhir/StructureDefinition/diagnosticReport-replaces",
+      "name": "replaces",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "diagnosticReport-risk",
+      "url": "http://hl7.org/fhir/StructureDefinition/diagnosticReport-risk",
+      "name": "risk",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "diagnosticReport-summaryOf",
+      "url": "http://hl7.org/fhir/StructureDefinition/diagnosticReport-summaryOf",
+      "name": "summaryOf",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "display",
+      "url": "http://hl7.org/fhir/StructureDefinition/display",
+      "name": "Display Name",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "elementdefinition-allowedUnits",
+      "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-allowedUnits",
+      "name": "allowedUnits",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "elementdefinition-bestpractice-explanation",
+      "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bestpractice-explanation",
+      "name": "bestpractice-explanation",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "elementdefinition-bestpractice",
+      "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bestpractice",
+      "name": "bestpractice",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "elementdefinition-bindingName",
+      "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+      "name": "bindingName",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "elementdefinition-equivalence",
+      "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-equivalence",
+      "name": "equivalence",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "elementdefinition-identifier",
+      "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-identifier",
+      "name": "identifier",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "elementdefinition-inheritedExtensibleValueSet",
+      "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-inheritedExtensibleValueSet",
+      "name": "inheritedExtensibleValueSet",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "elementdefinition-isCommonBinding",
+      "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-isCommonBinding",
+      "name": "isCommonBinding",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "elementdefinition-maxValueSet",
+      "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-maxValueSet",
+      "name": "maxValueSet",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "elementdefinition-minValueSet",
+      "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-minValueSet",
+      "name": "minValueSet",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "elementdefinition-namespace",
+      "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-namespace",
+      "name": "namespace",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "elementdefinition-profile-element",
+      "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-profile-element",
+      "name": "profile-element",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "elementdefinition-question",
+      "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-question",
+      "name": "question",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "elementdefinition-selector",
+      "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-selector",
+      "name": "selector",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "elementdefinition-translatable",
+      "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-translatable",
+      "name": "translatable",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "encounter-associatedEncounter",
+      "url": "http://hl7.org/fhir/StructureDefinition/encounter-associatedEncounter",
+      "name": "associatedEncounter",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "encounter-modeOfArrival",
+      "url": "http://hl7.org/fhir/StructureDefinition/encounter-modeOfArrival",
+      "name": "modeOfArrival",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "encounter-reasonCancelled",
+      "url": "http://hl7.org/fhir/StructureDefinition/encounter-reasonCancelled",
+      "name": "reasonCancelled",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "entryFormat",
+      "url": "http://hl7.org/fhir/StructureDefinition/entryFormat",
+      "name": "entryFormat",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "event-basedOn",
+      "url": "http://hl7.org/fhir/StructureDefinition/event-basedOn",
+      "name": "basedOn",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "event-eventHistory",
+      "url": "http://hl7.org/fhir/StructureDefinition/event-eventHistory",
+      "name": "eventHistory",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "event-location",
+      "url": "http://hl7.org/fhir/StructureDefinition/event-location",
+      "name": "location",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "event-partOf",
+      "url": "http://hl7.org/fhir/StructureDefinition/event-partOf",
+      "name": "partOf",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "event-performerFunction",
+      "url": "http://hl7.org/fhir/StructureDefinition/event-performerFunction",
+      "name": "performerFunction",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "event-statusReason",
+      "url": "http://hl7.org/fhir/StructureDefinition/event-statusReason",
+      "name": "statusReason",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "Extension",
+      "url": "http://hl7.org/fhir/StructureDefinition/Extension",
+      "name": "Extension",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    },
+    {
+      "id": "family-member-history-genetics-observation",
+      "url": "http://hl7.org/fhir/StructureDefinition/family-member-history-genetics-observation",
+      "name": "observation",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "family-member-history-genetics-parent",
+      "url": "http://hl7.org/fhir/StructureDefinition/family-member-history-genetics-parent",
+      "name": "parent",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "family-member-history-genetics-sibling",
+      "url": "http://hl7.org/fhir/StructureDefinition/family-member-history-genetics-sibling",
+      "name": "sibling",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "familymemberhistory-abatement",
+      "url": "http://hl7.org/fhir/StructureDefinition/familymemberhistory-abatement",
+      "name": "abatement",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "familymemberhistory-patient-record",
+      "url": "http://hl7.org/fhir/StructureDefinition/familymemberhistory-patient-record",
+      "name": "patient-record",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "familymemberhistory-severity",
+      "url": "http://hl7.org/fhir/StructureDefinition/familymemberhistory-severity",
+      "name": "severity",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "familymemberhistory-type",
+      "url": "http://hl7.org/fhir/StructureDefinition/familymemberhistory-type",
+      "name": "type",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "flag-detail",
+      "url": "http://hl7.org/fhir/StructureDefinition/flag-detail",
+      "name": "detail",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "flag-priority",
+      "url": "http://hl7.org/fhir/StructureDefinition/flag-priority",
+      "name": "priority",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "geolocation",
+      "url": "http://hl7.org/fhir/StructureDefinition/geolocation",
+      "name": "Geolocation",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "goal-acceptance",
+      "url": "http://hl7.org/fhir/StructureDefinition/goal-acceptance",
+      "name": "acceptance",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "goal-reasonRejected",
+      "url": "http://hl7.org/fhir/StructureDefinition/goal-reasonRejected",
+      "name": "reasonRejected",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "goal-relationship",
+      "url": "http://hl7.org/fhir/StructureDefinition/goal-relationship",
+      "name": "relationship",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "hla-genotyping-results-allele-database",
+      "url": "http://hl7.org/fhir/StructureDefinition/hla-genotyping-results-allele-database",
+      "name": "allele-database",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "hla-genotyping-results-glstring",
+      "url": "http://hl7.org/fhir/StructureDefinition/hla-genotyping-results-glstring",
+      "name": "glstring",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "hla-genotyping-results-haploid",
+      "url": "http://hl7.org/fhir/StructureDefinition/hla-genotyping-results-haploid",
+      "name": "haploid",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "hla-genotyping-results-method",
+      "url": "http://hl7.org/fhir/StructureDefinition/hla-genotyping-results-method",
+      "name": "method",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "http-response-header",
+      "url": "http://hl7.org/fhir/StructureDefinition/http-response-header",
+      "name": "http-response-header",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "humanname-assembly-order",
+      "url": "http://hl7.org/fhir/StructureDefinition/humanname-assembly-order",
+      "name": "assembly-order",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "humanname-fathers-family",
+      "url": "http://hl7.org/fhir/StructureDefinition/humanname-fathers-family",
+      "name": "fathers-family",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "humanname-mothers-family",
+      "url": "http://hl7.org/fhir/StructureDefinition/humanname-mothers-family",
+      "name": "mothers-family",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "humanname-own-name",
+      "url": "http://hl7.org/fhir/StructureDefinition/humanname-own-name",
+      "name": "own-name",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "humanname-own-prefix",
+      "url": "http://hl7.org/fhir/StructureDefinition/humanname-own-prefix",
+      "name": "own-prefix",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "humanname-partner-name",
+      "url": "http://hl7.org/fhir/StructureDefinition/humanname-partner-name",
+      "name": "partner-name",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "humanname-partner-prefix",
+      "url": "http://hl7.org/fhir/StructureDefinition/humanname-partner-prefix",
+      "name": "partner-prefix",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "identifier-validDate",
+      "url": "http://hl7.org/fhir/StructureDefinition/identifier-validDate",
+      "name": "validDate",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-AD-use",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-AD-use",
+      "name": "AD-use",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-ADXP-additionalLocator",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-ADXP-additionalLocator",
+      "name": "ADXP-additionalLocator",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-ADXP-buildingNumberSuffix",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-ADXP-buildingNumberSuffix",
+      "name": "ADXP-buildingNumberSuffix",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-ADXP-careOf",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-ADXP-careOf",
+      "name": "ADXP-careOf",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-ADXP-censusTract",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-ADXP-censusTract",
+      "name": "ADXP-censusTract",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-ADXP-delimiter",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-ADXP-delimiter",
+      "name": "ADXP-delimiter",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-ADXP-deliveryAddressLine",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-ADXP-deliveryAddressLine",
+      "name": "ADXP-deliveryAddressLine",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-ADXP-deliveryInstallationArea",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-ADXP-deliveryInstallationArea",
+      "name": "ADXP-deliveryInstallationArea",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-ADXP-deliveryInstallationQualifier",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-ADXP-deliveryInstallationQualifier",
+      "name": "ADXP-deliveryInstallationQualifier",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-ADXP-deliveryInstallationType",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-ADXP-deliveryInstallationType",
+      "name": "ADXP-deliveryInstallationType",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-ADXP-deliveryMode",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-ADXP-deliveryMode",
+      "name": "ADXP-deliveryMode",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-ADXP-deliveryModeIdentifier",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-ADXP-deliveryModeIdentifier",
+      "name": "ADXP-deliveryModeIdentifier",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-ADXP-direction",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-ADXP-direction",
+      "name": "ADXP-direction",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-ADXP-houseNumber",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-ADXP-houseNumber",
+      "name": "ADXP-houseNumber",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-ADXP-houseNumberNumeric",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-ADXP-houseNumberNumeric",
+      "name": "ADXP-houseNumberNumeric",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-ADXP-postBox",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-ADXP-postBox",
+      "name": "ADXP-postBox",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-ADXP-precinct",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-ADXP-precinct",
+      "name": "ADXP-precinct",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-ADXP-streetAddressLine",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-ADXP-streetAddressLine",
+      "name": "ADXP-streetAddressLine",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-ADXP-streetName",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-ADXP-streetName",
+      "name": "ADXP-streetName",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-ADXP-streetNameBase",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-ADXP-streetNameBase",
+      "name": "ADXP-streetNameBase",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-ADXP-streetNameType",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-ADXP-streetNameType",
+      "name": "ADXP-streetNameType",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-ADXP-unitID",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-ADXP-unitID",
+      "name": "ADXP-unitID",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-ADXP-unitType",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-ADXP-unitType",
+      "name": "ADXP-unitType",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-EN-qualifier",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-EN-qualifier",
+      "name": "EN-qualifier",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-EN-representation",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-EN-representation",
+      "name": "EN-representation",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-EN-use",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-EN-use",
+      "name": "EN-use",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-nullFlavor",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-nullFlavor",
+      "name": "nullFlavor",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-PQ-translation",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-PQ-translation",
+      "name": "PQ-translation",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-preferred",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-preferred",
+      "name": "preferred",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-SC-coding",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-SC-coding",
+      "name": "SC-coding",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-TEL-address",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-TEL-address",
+      "name": "TEL-address",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-uncertainty",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-uncertainty",
+      "name": "uncertainty",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "iso21090-uncertaintyType",
+      "url": "http://hl7.org/fhir/StructureDefinition/iso21090-uncertaintyType",
+      "name": "uncertaintyType",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "language",
+      "url": "http://hl7.org/fhir/StructureDefinition/language",
+      "name": "Human Language",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "list-changeBase",
+      "url": "http://hl7.org/fhir/StructureDefinition/list-changeBase",
+      "name": "changeBase",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "location-boundary-geojson",
+      "url": "http://hl7.org/fhir/StructureDefinition/location-boundary-geojson",
+      "name": "boundary-geojson",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "location-distance",
+      "url": "http://hl7.org/fhir/StructureDefinition/location-distance",
+      "name": "location-distance",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "match-grade",
+      "url": "http://hl7.org/fhir/StructureDefinition/match-grade",
+      "name": "match-grade",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "maxDecimalPlaces",
+      "url": "http://hl7.org/fhir/StructureDefinition/maxDecimalPlaces",
+      "name": "maxDecimalPlaces",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "maxSize",
+      "url": "http://hl7.org/fhir/StructureDefinition/maxSize",
+      "name": "maxSize",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "maxValue",
+      "url": "http://hl7.org/fhir/StructureDefinition/maxValue",
+      "name": "maxValue",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "messageheader-response-request",
+      "url": "http://hl7.org/fhir/StructureDefinition/messageheader-response-request",
+      "name": "messageheader-response-request",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "mimeType",
+      "url": "http://hl7.org/fhir/StructureDefinition/mimeType",
+      "name": "mimeType",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "minLength",
+      "url": "http://hl7.org/fhir/StructureDefinition/minLength",
+      "name": "minLength",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "minValue",
+      "url": "http://hl7.org/fhir/StructureDefinition/minValue",
+      "name": "minValue",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "narrativeLink",
+      "url": "http://hl7.org/fhir/StructureDefinition/narrativeLink",
+      "name": "Narrative Link",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "nutritionorder-adaptiveFeedingDevice",
+      "url": "http://hl7.org/fhir/StructureDefinition/nutritionorder-adaptiveFeedingDevice",
+      "name": "adaptiveFeedingDevice",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "oauth-uris",
+      "url": "http://fhir-registry.smarthealthit.org/StructureDefinition/oauth-uris",
+      "name": "oauth-uris",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "observation-bodyPosition",
+      "url": "http://hl7.org/fhir/StructureDefinition/observation-bodyPosition",
+      "name": "bodyPosition",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "observation-delta",
+      "url": "http://hl7.org/fhir/StructureDefinition/observation-delta",
+      "name": "delta",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "observation-deviceCode",
+      "url": "http://hl7.org/fhir/StructureDefinition/observation-deviceCode",
+      "name": "deviceCode",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "observation-focusCode",
+      "url": "http://hl7.org/fhir/StructureDefinition/observation-focusCode",
+      "name": "focusCode",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "observation-gatewayDevice",
+      "url": "http://hl7.org/fhir/StructureDefinition/observation-gatewayDevice",
+      "name": "gatewayDevice",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "observation-geneticsAllele",
+      "url": "http://hl7.org/fhir/StructureDefinition/observation-geneticsAllele",
+      "name": "Allele",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "observation-geneticsAminoAcidChange",
+      "url": "http://hl7.org/fhir/StructureDefinition/observation-geneticsAminoAcidChange",
+      "name": "AminoAcidChange",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "observation-geneticsAncestry",
+      "url": "http://hl7.org/fhir/StructureDefinition/observation-geneticsAncestry",
+      "name": "Ancestry",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "observation-geneticsCopyNumberEvent",
+      "url": "http://hl7.org/fhir/StructureDefinition/observation-geneticsCopyNumberEvent",
+      "name": "CopyNumberEvent",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "observation-geneticsDNARegionName",
+      "url": "http://hl7.org/fhir/StructureDefinition/observation-geneticsDNARegionName",
+      "name": "DNARegionName",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "observation-geneticsGene",
+      "url": "http://hl7.org/fhir/StructureDefinition/observation-geneticsGene",
+      "name": "Gene",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "observation-geneticsGenomicSourceClass",
+      "url": "http://hl7.org/fhir/StructureDefinition/observation-geneticsGenomicSourceClass",
+      "name": "GenomicSourceClass",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "observation-geneticsInterpretation",
+      "url": "http://hl7.org/fhir/StructureDefinition/observation-geneticsInterpretation",
+      "name": "Interpretation",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "observation-geneticsPhaseSet",
+      "url": "http://hl7.org/fhir/StructureDefinition/observation-geneticsPhaseSet",
+      "name": "PhaseSet",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "observation-geneticsVariant",
+      "url": "http://hl7.org/fhir/StructureDefinition/observation-geneticsVariant",
+      "name": "Variant",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "observation-precondition",
+      "url": "http://hl7.org/fhir/StructureDefinition/observation-precondition",
+      "name": "precondition",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "observation-reagent",
+      "url": "http://hl7.org/fhir/StructureDefinition/observation-reagent",
+      "name": "reagent",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "observation-replaces",
+      "url": "http://hl7.org/fhir/StructureDefinition/observation-replaces",
+      "name": "replaces",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "observation-secondaryFinding",
+      "url": "http://hl7.org/fhir/StructureDefinition/observation-secondaryFinding",
+      "name": "secondaryFinding",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "observation-sequelTo",
+      "url": "http://hl7.org/fhir/StructureDefinition/observation-sequelTo",
+      "name": "sequelTo",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "observation-specimenCode",
+      "url": "http://hl7.org/fhir/StructureDefinition/observation-specimenCode",
+      "name": "specimenCode",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "observation-timeOffset",
+      "url": "http://hl7.org/fhir/StructureDefinition/observation-timeOffset",
+      "name": "timeOffset",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "openEHR-administration",
+      "url": "http://hl7.org/fhir/StructureDefinition/openEHR-administration",
+      "name": "administration",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "openEHR-careplan",
+      "url": "http://hl7.org/fhir/StructureDefinition/openEHR-careplan",
+      "name": "careplan",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "openEHR-exposureDate",
+      "url": "http://hl7.org/fhir/StructureDefinition/openEHR-exposureDate",
+      "name": "exposureDate",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "openEHR-exposureDescription",
+      "url": "http://hl7.org/fhir/StructureDefinition/openEHR-exposureDescription",
+      "name": "exposureDescription",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "openEHR-exposureDuration",
+      "url": "http://hl7.org/fhir/StructureDefinition/openEHR-exposureDuration",
+      "name": "exposureDuration",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "openEHR-location",
+      "url": "http://hl7.org/fhir/StructureDefinition/openEHR-location",
+      "name": "location",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "openEHR-management",
+      "url": "http://hl7.org/fhir/StructureDefinition/openEHR-management",
+      "name": "management",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "openEHR-test",
+      "url": "http://hl7.org/fhir/StructureDefinition/openEHR-test",
+      "name": "test",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "operationdefinition-allowed-type",
+      "url": "http://hl7.org/fhir/StructureDefinition/operationdefinition-allowed-type",
+      "name": "allowed-type",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "operationdefinition-profile",
+      "url": "http://hl7.org/fhir/StructureDefinition/operationdefinition-profile",
+      "name": "profile",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "operationoutcome-authority",
+      "url": "http://hl7.org/fhir/StructureDefinition/operationoutcome-authority",
+      "name": "authority",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "operationoutcome-detectedIssue",
+      "url": "http://hl7.org/fhir/StructureDefinition/operationoutcome-detectedIssue",
+      "name": "detectedIssue",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "operationoutcome-issue-source",
+      "url": "http://hl7.org/fhir/StructureDefinition/operationoutcome-issue-source",
+      "name": "issue-source",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "ordinalValue",
+      "url": "http://hl7.org/fhir/StructureDefinition/ordinalValue",
+      "name": "Ordinal Value",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "organization-period",
+      "url": "http://hl7.org/fhir/StructureDefinition/organization-period",
+      "name": "period",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "organization-preferredContact",
+      "url": "http://hl7.org/fhir/StructureDefinition/organization-preferredContact",
+      "name": "preferredContact",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "organizationaffiliation-primaryInd",
+      "url": "http://hl7.org/fhir/StructureDefinition/organizationaffiliation-primaryInd",
+      "name": "primaryInd",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "originalText",
+      "url": "http://hl7.org/fhir/StructureDefinition/originalText",
+      "name": "Original Text",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "parameters-fullUrl",
+      "url": "http://hl7.org/fhir/StructureDefinition/parameters-fullUrl",
+      "name": "fullUrl",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "patient-adoptionInfo",
+      "url": "http://hl7.org/fhir/StructureDefinition/patient-adoptionInfo",
+      "name": "adoptionInfo",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "patient-animal",
+      "url": "http://hl7.org/fhir/StructureDefinition/patient-animal",
+      "name": "animal",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "patient-birthPlace",
+      "url": "http://hl7.org/fhir/StructureDefinition/patient-birthPlace",
+      "name": "birthPlace",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "patient-birthTime",
+      "url": "http://hl7.org/fhir/StructureDefinition/patient-birthTime",
+      "name": "birthTime",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "patient-cadavericDonor",
+      "url": "http://hl7.org/fhir/StructureDefinition/patient-cadavericDonor",
+      "name": "cadavericDonor",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "patient-citizenship",
+      "url": "http://hl7.org/fhir/StructureDefinition/patient-citizenship",
+      "name": "citizenship",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "patient-congregation",
+      "url": "http://hl7.org/fhir/StructureDefinition/patient-congregation",
+      "name": "congregation",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "patient-disability",
+      "url": "http://hl7.org/fhir/StructureDefinition/patient-disability",
+      "name": "disability",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "patient-genderIdentity",
+      "url": "http://hl7.org/fhir/StructureDefinition/patient-genderIdentity",
+      "name": "genderIdentity",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "patient-importance",
+      "url": "http://hl7.org/fhir/StructureDefinition/patient-importance",
+      "name": "importance",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "patient-interpreterRequired",
+      "url": "http://hl7.org/fhir/StructureDefinition/patient-interpreterRequired",
+      "name": "interpreterRequired",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "patient-mothersMaidenName",
+      "url": "http://hl7.org/fhir/StructureDefinition/patient-mothersMaidenName",
+      "name": "mothersMaidenName",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "patient-nationality",
+      "url": "http://hl7.org/fhir/StructureDefinition/patient-nationality",
+      "name": "nationality",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "patient-preferenceType",
+      "url": "http://hl7.org/fhir/StructureDefinition/patient-preferenceType",
+      "name": "preferenceType",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "patient-proficiency",
+      "url": "http://hl7.org/fhir/StructureDefinition/patient-proficiency",
+      "name": "proficiency",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "patient-relatedPerson",
+      "url": "http://hl7.org/fhir/StructureDefinition/patient-relatedPerson",
+      "name": "relatedPerson",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "patient-religion",
+      "url": "http://hl7.org/fhir/StructureDefinition/patient-religion",
+      "name": "religion",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "practitioner-animalSpecies",
+      "url": "http://hl7.org/fhir/StructureDefinition/practitioner-animalSpecies",
+      "name": "animalSpecies",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "practitionerrole-primaryInd",
+      "url": "http://hl7.org/fhir/StructureDefinition/practitionerrole-primaryInd",
+      "name": "primaryInd",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "procedure-approachBodyStructure",
+      "url": "http://hl7.org/fhir/StructureDefinition/procedure-approachBodyStructure",
+      "name": "approachBodyStructure",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "procedure-causedBy",
+      "url": "http://hl7.org/fhir/StructureDefinition/procedure-causedBy",
+      "name": "causedBy",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "procedure-directedBy",
+      "url": "http://hl7.org/fhir/StructureDefinition/procedure-directedBy",
+      "name": "directedBy",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "procedure-incisionDateTime",
+      "url": "http://hl7.org/fhir/StructureDefinition/procedure-incisionDateTime",
+      "name": "incisionDateTime",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "procedure-method",
+      "url": "http://hl7.org/fhir/StructureDefinition/procedure-method",
+      "name": "method",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "procedure-progressStatus",
+      "url": "http://hl7.org/fhir/StructureDefinition/procedure-progressStatus",
+      "name": "progressStatus",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "procedure-schedule",
+      "url": "http://hl7.org/fhir/StructureDefinition/procedure-schedule",
+      "name": "schedule",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "procedure-targetBodyStructure",
+      "url": "http://hl7.org/fhir/StructureDefinition/procedure-targetBodyStructure",
+      "name": "targetBodyStructure",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "quantity-precision",
+      "url": "http://hl7.org/fhir/StructureDefinition/quantity-precision",
+      "name": "precision",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "questionnaire-baseType",
+      "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-baseType",
+      "name": "baseType",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "questionnaire-choiceOrientation",
+      "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-choiceOrientation",
+      "name": "choiceOrientation",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "questionnaire-constraint",
+      "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-constraint",
+      "name": "constraint",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "questionnaire-displayCategory",
+      "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-displayCategory",
+      "name": "displayCategory",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "questionnaire-fhirType",
+      "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-fhirType",
+      "name": "fhirType",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "questionnaire-hidden",
+      "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-hidden",
+      "name": "hidden",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "questionnaire-itemControl",
+      "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-itemControl",
+      "name": "itemControl",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "questionnaire-maxOccurs",
+      "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-maxOccurs",
+      "name": "maxOccurs",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "questionnaire-minOccurs",
+      "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-minOccurs",
+      "name": "minOccurs",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "questionnaire-optionExclusive",
+      "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-optionExclusive",
+      "name": "optionExclusive",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "questionnaire-optionPrefix",
+      "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-optionPrefix",
+      "name": "optionPrefix",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "questionnaire-referenceFilter",
+      "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-referenceFilter",
+      "name": "referenceFilter",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "questionnaire-referenceProfile",
+      "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-referenceProfile",
+      "name": "referenceProfile",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "questionnaire-referenceResource",
+      "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-referenceResource",
+      "name": "referenceResource",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "questionnaire-signatureRequired",
+      "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-signatureRequired",
+      "name": "signatureRequired",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "questionnaire-sliderStepValue",
+      "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-sliderStepValue",
+      "name": "sliderStepValue",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "questionnaire-supportLink",
+      "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-supportLink",
+      "name": "supportLink",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "questionnaire-unit",
+      "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-unit",
+      "name": "unit",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "questionnaire-unitOption",
+      "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-unitOption",
+      "name": "unitOption",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "questionnaire-unitValueSet",
+      "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-unitValueSet",
+      "name": "unitValueSet",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "questionnaire-usageMode",
+      "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-usageMode",
+      "name": "usageMode",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "questionnaireresponse-author",
+      "url": "http://hl7.org/fhir/StructureDefinition/questionnaireresponse-author",
+      "name": "author",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "questionnaireresponse-completionMode",
+      "url": "http://hl7.org/fhir/StructureDefinition/questionnaireresponse-completionMode",
+      "name": "completionMode",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "questionnaireresponse-reason",
+      "url": "http://hl7.org/fhir/StructureDefinition/questionnaireresponse-reason",
+      "name": "reason",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "questionnaireresponse-reviewer",
+      "url": "http://hl7.org/fhir/StructureDefinition/questionnaireresponse-reviewer",
+      "name": "reviewer",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "questionnaireresponse-signature",
+      "url": "http://hl7.org/fhir/StructureDefinition/questionnaireresponse-signature",
+      "name": "signature",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "regex",
+      "url": "http://hl7.org/fhir/StructureDefinition/regex",
+      "name": "regex",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "relative-date",
+      "url": "http://hl7.org/fhir/StructureDefinition/relative-date",
+      "name": "Relative Date Criteria",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "rendered-value",
+      "url": "http://hl7.org/fhir/StructureDefinition/rendered-value",
+      "name": "Rendered Value",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "rendering-markdown",
+      "url": "http://hl7.org/fhir/StructureDefinition/rendering-markdown",
+      "name": "markdown",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "rendering-style",
+      "url": "http://hl7.org/fhir/StructureDefinition/rendering-style",
+      "name": "style",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "rendering-styleSensitive",
+      "url": "http://hl7.org/fhir/StructureDefinition/rendering-styleSensitive",
+      "name": "styleSensitive",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "rendering-xhtml",
+      "url": "http://hl7.org/fhir/StructureDefinition/rendering-xhtml",
+      "name": "xhtml",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "replaces",
+      "url": "http://hl7.org/fhir/StructureDefinition/replaces",
+      "name": "replaces",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "request-doNotPerform",
+      "url": "http://hl7.org/fhir/StructureDefinition/request-doNotPerform",
+      "name": "doNotPerform",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "request-insurance",
+      "url": "http://hl7.org/fhir/StructureDefinition/request-insurance",
+      "name": "insurance",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "request-performerOrder",
+      "url": "http://hl7.org/fhir/StructureDefinition/request-performerOrder",
+      "name": "performerOrder",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "request-relevantHistory",
+      "url": "http://hl7.org/fhir/StructureDefinition/request-relevantHistory",
+      "name": "relevantHistory",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "request-replaces",
+      "url": "http://hl7.org/fhir/StructureDefinition/request-replaces",
+      "name": "replaces",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "request-statusReason",
+      "url": "http://hl7.org/fhir/StructureDefinition/request-statusReason",
+      "name": "statusReason",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "resource-approvalDate",
+      "url": "http://hl7.org/fhir/StructureDefinition/resource-approvalDate",
+      "name": "approvalDate",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "resource-effectivePeriod",
+      "url": "http://hl7.org/fhir/StructureDefinition/resource-effectivePeriod",
+      "name": "effectivePeriod",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "resource-lastReviewDate",
+      "url": "http://hl7.org/fhir/StructureDefinition/resource-lastReviewDate",
+      "name": "lastReviewDate",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "resource-pertainsToGoal",
+      "url": "http://hl7.org/fhir/StructureDefinition/resource-pertainsToGoal",
+      "name": "pertainsToGoal",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "servicerequest-geneticsItem",
+      "url": "http://hl7.org/fhir/StructureDefinition/servicerequest-geneticsItem",
+      "name": "Item",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "servicerequest-precondition",
+      "url": "http://hl7.org/fhir/StructureDefinition/servicerequest-precondition",
+      "name": "precondition",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "servicerequest-questionnaireRequest",
+      "url": "http://hl7.org/fhir/StructureDefinition/servicerequest-questionnaireRequest",
+      "name": "questionnaireRequest",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "specimen-collectionPriority",
+      "url": "http://hl7.org/fhir/StructureDefinition/specimen-collectionPriority",
+      "name": "collectionPriority",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "specimen-isDryWeight",
+      "url": "http://hl7.org/fhir/StructureDefinition/specimen-isDryWeight",
+      "name": "isDryWeight",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "specimen-processingTime",
+      "url": "http://hl7.org/fhir/StructureDefinition/specimen-processingTime",
+      "name": "processingTime",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "specimen-sequenceNumber",
+      "url": "http://hl7.org/fhir/StructureDefinition/specimen-sequenceNumber",
+      "name": "sequenceNumber",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "specimen-specialHandling",
+      "url": "http://hl7.org/fhir/StructureDefinition/specimen-specialHandling",
+      "name": "specialHandling",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "structuredefinition-ancestor",
+      "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-ancestor",
+      "name": "ancestor",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "structuredefinition-applicable-version",
+      "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-applicable-version",
+      "name": "applicable-version",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "structuredefinition-category",
+      "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-category",
+      "name": "category",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "structuredefinition-codegen-super",
+      "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-codegen-super",
+      "name": "codegen-super",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "structuredefinition-dependencies",
+      "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-dependencies",
+      "name": "dependencies",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "structuredefinition-display-hint",
+      "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-display-hint",
+      "name": "display-hint",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "structuredefinition-explicit-type-name",
+      "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-explicit-type-name",
+      "name": "explicit-type-name",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "structuredefinition-fhir-type",
+      "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+      "name": "fhir-type",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "structuredefinition-fmm-no-warnings",
+      "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm-no-warnings",
+      "name": "fmm-no-warnings",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "structuredefinition-fmm",
+      "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm",
+      "name": "fmm",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "structuredefinition-hierarchy",
+      "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-hierarchy",
+      "name": "hierarchy",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "structuredefinition-normative-version",
+      "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-normative-version",
+      "name": "normative-version",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "structuredefinition-security-category",
+      "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-security-category",
+      "name": "security-category",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "structuredefinition-standards-status",
+      "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status",
+      "name": "standards-status",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "structuredefinition-summary",
+      "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-summary",
+      "name": "summary",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "structuredefinition-table-name",
+      "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-table-name",
+      "name": "table-name",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "structuredefinition-template-status",
+      "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-template-status",
+      "name": "template-status",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "structuredefinition-wg",
+      "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg",
+      "name": "wg",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "structuredefinition-xml-no-order",
+      "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-xml-no-order",
+      "name": "xml-no-order",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "task-candidateList",
+      "url": "http://hl7.org/fhir/StructureDefinition/task-candidateList",
+      "name": "candidateList",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "task-replaces",
+      "url": "http://hl7.org/fhir/StructureDefinition/task-replaces",
+      "name": "replaces",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "timing-dayOfMonth",
+      "url": "http://hl7.org/fhir/StructureDefinition/timing-dayOfMonth",
+      "name": "dayOfMonth",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "timing-daysOfCycle",
+      "url": "http://hl7.org/fhir/StructureDefinition/timing-daysOfCycle",
+      "name": "daysOfCycle",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "timing-exact",
+      "url": "http://hl7.org/fhir/StructureDefinition/timing-exact",
+      "name": "exact",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "translation",
+      "url": "http://hl7.org/fhir/StructureDefinition/translation",
+      "name": "Translation",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "tz-code",
+      "url": "http://hl7.org/fhir/StructureDefinition/tz-code",
+      "name": "Timezone Code",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "tz-offset",
+      "url": "http://hl7.org/fhir/StructureDefinition/tz-offset",
+      "name": "Timezone Offset",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "usagecontext-group",
+      "url": "http://hl7.org/fhir/StructureDefinition/usagecontext-group",
+      "name": "group",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-activityStatusDate",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-activityStatusDate",
+      "name": "activityStatusDate",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-author",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-author",
+      "name": "author",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-authoritativeSource",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-authoritativeSource",
+      "name": "authoritativeSource",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-caseSensitive",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-caseSensitive",
+      "name": "caseSensitive",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-concept-comments",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-concept-comments",
+      "name": "concept-comments",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-concept-definition",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-concept-definition",
+      "name": "concept-definition",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-conceptOrder",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-conceptOrder",
+      "name": "conceptOrder",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-deprecated",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-deprecated",
+      "name": "deprecated",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-effectiveDate",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-effectiveDate",
+      "name": "effectiveDate",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-expand-group",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-expand-group",
+      "name": "expand-group",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-expand-rules",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-expand-rules",
+      "name": "expand-rules",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-expansionSource",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-expansionSource",
+      "name": "expansionSource",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-expirationDate",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-expirationDate",
+      "name": "expirationDate",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-expression",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-expression",
+      "name": "expression",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-extensible",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-extensible",
+      "name": "extensible",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-keyWord",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-keyWord",
+      "name": "keyWord",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-label",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-label",
+      "name": "label",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-map",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-map",
+      "name": "map",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-otherName",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-otherName",
+      "name": "otherName",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-parameterSource",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-parameterSource",
+      "name": "parameterSource",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-reference",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-reference",
+      "name": "reference",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-rules-text",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-rules-text",
+      "name": "rules-text",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-sourceReference",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-sourceReference",
+      "name": "sourceReference",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-special-status",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-special-status",
+      "name": "special-status",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-steward",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-steward",
+      "name": "steward",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-supplement",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-supplement",
+      "name": "supplement",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-system",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-system",
+      "name": "system",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-systemName",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-systemName",
+      "name": "systemName",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-systemRef",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-systemRef",
+      "name": "systemRef",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-toocostly",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-toocostly",
+      "name": "toocostly",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-trusted-expansion",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-trusted-expansion",
+      "name": "trusted-expansion",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-unclosed",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-unclosed",
+      "name": "unclosed",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-usage",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-usage",
+      "name": "usage",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-warning",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-warning",
+      "name": "warning",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "valueset-workflowStatus",
+      "url": "http://hl7.org/fhir/StructureDefinition/valueset-workflowStatus",
+      "name": "workflowStatus",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "variable",
+      "url": "http://hl7.org/fhir/StructureDefinition/variable",
+      "name": "Variable",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "workflow-episodeOfCare",
+      "url": "http://hl7.org/fhir/StructureDefinition/workflow-episodeOfCare",
+      "name": "episodeOfCare",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "workflow-instantiatesCanonical",
+      "url": "http://hl7.org/fhir/StructureDefinition/workflow-instantiatesCanonical",
+      "name": "instantiatesCanonical",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "workflow-instantiatesUri",
+      "url": "http://hl7.org/fhir/StructureDefinition/workflow-instantiatesUri",
+      "name": "instantiatesUri",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "workflow-reasonCode",
+      "url": "http://hl7.org/fhir/StructureDefinition/workflow-reasonCode",
+      "name": "reasonCode",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "workflow-reasonReference",
+      "url": "http://hl7.org/fhir/StructureDefinition/workflow-reasonReference",
+      "name": "reasonReference",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "workflow-relatedArtifact",
+      "url": "http://hl7.org/fhir/StructureDefinition/workflow-relatedArtifact",
+      "name": "relatedArtifact",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "workflow-researchStudy",
+      "url": "http://hl7.org/fhir/StructureDefinition/workflow-researchStudy",
+      "name": "researchStudy",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    },
+    {
+      "id": "workflow-supportingInfo",
+      "url": "http://hl7.org/fhir/StructureDefinition/workflow-supportingInfo",
+      "name": "supportingInfo",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+    }
+  ],
+  "Account": [
+    {
+      "id": "Account",
+      "url": "http://hl7.org/fhir/StructureDefinition/Account",
+      "name": "Account",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "ActivityDefinition": [
+    {
+      "id": "ActivityDefinition",
+      "url": "http://hl7.org/fhir/StructureDefinition/ActivityDefinition",
+      "name": "ActivityDefinition",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    },
+    {
+      "id": "shareableactivitydefinition",
+      "url": "http://hl7.org/fhir/StructureDefinition/shareableactivitydefinition",
+      "name": "Shareable ActivityDefinition",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/ActivityDefinition"
+    }
+  ],
+  "Group": [
+    {
+      "id": "actualgroup",
+      "url": "http://hl7.org/fhir/StructureDefinition/actualgroup",
+      "name": "Actual Group",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Group"
+    },
+    {
+      "id": "Group",
+      "url": "http://hl7.org/fhir/StructureDefinition/Group",
+      "name": "Group",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    },
+    {
+      "id": "groupdefinition",
+      "url": "http://hl7.org/fhir/StructureDefinition/groupdefinition",
+      "name": "Group Definition",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Group"
+    }
+  ],
+  "Address": [
+    {
+      "id": "Address",
+      "url": "http://hl7.org/fhir/StructureDefinition/Address",
+      "name": "Address",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "AdverseEvent": [
+    {
+      "id": "AdverseEvent",
+      "url": "http://hl7.org/fhir/StructureDefinition/AdverseEvent",
+      "name": "AdverseEvent",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Age": [
+    {
+      "id": "Age",
+      "url": "http://hl7.org/fhir/StructureDefinition/Age",
+      "name": "Age",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Quantity"
+    }
+  ],
+  "AllergyIntolerance": [
+    {
+      "id": "AllergyIntolerance",
+      "url": "http://hl7.org/fhir/StructureDefinition/AllergyIntolerance",
+      "name": "AllergyIntolerance",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Annotation": [
+    {
+      "id": "Annotation",
+      "url": "http://hl7.org/fhir/StructureDefinition/Annotation",
+      "name": "Annotation",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "Appointment": [
+    {
+      "id": "Appointment",
+      "url": "http://hl7.org/fhir/StructureDefinition/Appointment",
+      "name": "Appointment",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "AppointmentResponse": [
+    {
+      "id": "AppointmentResponse",
+      "url": "http://hl7.org/fhir/StructureDefinition/AppointmentResponse",
+      "name": "AppointmentResponse",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Attachment": [
+    {
+      "id": "Attachment",
+      "url": "http://hl7.org/fhir/StructureDefinition/Attachment",
+      "name": "Attachment",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "AuditEvent": [
+    {
+      "id": "AuditEvent",
+      "url": "http://hl7.org/fhir/StructureDefinition/AuditEvent",
+      "name": "AuditEvent",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    },
+    {
+      "id": "ehrsrle-auditevent",
+      "url": "http://hl7.org/fhir/StructureDefinition/ehrsrle-auditevent",
+      "name": "EHRS FM Record Lifecycle Event - Audit Event",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/AuditEvent"
+    }
+  ],
+  "BackboneElement": [
+    {
+      "id": "BackboneElement",
+      "url": "http://hl7.org/fhir/StructureDefinition/BackboneElement",
+      "name": "BackboneElement",
+      "kind": "complex-type",
+      "abstract": true,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "base64Binary": [
+    {
+      "id": "base64Binary",
+      "url": "http://hl7.org/fhir/StructureDefinition/base64Binary",
+      "name": "base64Binary",
+      "kind": "primitive-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "Basic": [
+    {
+      "id": "Basic",
+      "url": "http://hl7.org/fhir/StructureDefinition/Basic",
+      "name": "Basic",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Binary": [
+    {
+      "id": "Binary",
+      "url": "http://hl7.org/fhir/StructureDefinition/Binary",
+      "name": "Binary",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Resource"
+    }
+  ],
+  "BiologicallyDerivedProduct": [
+    {
+      "id": "BiologicallyDerivedProduct",
+      "url": "http://hl7.org/fhir/StructureDefinition/BiologicallyDerivedProduct",
+      "name": "BiologicallyDerivedProduct",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Observation": [
+    {
+      "id": "bmi",
+      "url": "http://hl7.org/fhir/StructureDefinition/bmi",
+      "name": "observation-bmi",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/vitalsigns"
+    },
+    {
+      "id": "bodyheight",
+      "url": "http://hl7.org/fhir/StructureDefinition/bodyheight",
+      "name": "observation-bodyheight",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/vitalsigns"
+    },
+    {
+      "id": "bodytemp",
+      "url": "http://hl7.org/fhir/StructureDefinition/bodytemp",
+      "name": "observation-bodytemp",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/vitalsigns"
+    },
+    {
+      "id": "bodyweight",
+      "url": "http://hl7.org/fhir/StructureDefinition/bodyweight",
+      "name": "observation-bodyweight",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/vitalsigns"
+    },
+    {
+      "id": "bp",
+      "url": "http://hl7.org/fhir/StructureDefinition/bp",
+      "name": "observation-bp",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/vitalsigns"
+    },
+    {
+      "id": "cholesterol",
+      "url": "http://hl7.org/fhir/StructureDefinition/cholesterol",
+      "name": "Example Lipid Profile",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Observation"
+    },
+    {
+      "id": "devicemetricobservation",
+      "url": "http://hl7.org/fhir/StructureDefinition/devicemetricobservation",
+      "name": "Device Metric Observation Profile",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Observation"
+    },
+    {
+      "id": "hdlcholesterol",
+      "url": "http://hl7.org/fhir/StructureDefinition/hdlcholesterol",
+      "name": "Example Lipid Profile",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Observation"
+    },
+    {
+      "id": "headcircum",
+      "url": "http://hl7.org/fhir/StructureDefinition/headcircum",
+      "name": "observation-headcircum",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/vitalsigns"
+    },
+    {
+      "id": "heartrate",
+      "url": "http://hl7.org/fhir/StructureDefinition/heartrate",
+      "name": "observation-heartrate",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/vitalsigns"
+    },
+    {
+      "id": "ldlcholesterol",
+      "url": "http://hl7.org/fhir/StructureDefinition/ldlcholesterol",
+      "name": "Example Lipid Profile",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Observation"
+    },
+    {
+      "id": "observation-genetics",
+      "url": "http://hl7.org/fhir/StructureDefinition/observation-genetics",
+      "name": "Observation-genetics",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Observation"
+    },
+    {
+      "id": "Observation",
+      "url": "http://hl7.org/fhir/StructureDefinition/Observation",
+      "name": "Observation",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    },
+    {
+      "id": "oxygensat",
+      "url": "http://hl7.org/fhir/StructureDefinition/oxygensat",
+      "name": "observation-oxygensat",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/vitalsigns"
+    },
+    {
+      "id": "resprate",
+      "url": "http://hl7.org/fhir/StructureDefinition/resprate",
+      "name": "observation-resprate",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/vitalsigns"
+    },
+    {
+      "id": "triglyceride",
+      "url": "http://hl7.org/fhir/StructureDefinition/triglyceride",
+      "name": "Example Lipid Profile",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Observation"
+    },
+    {
+      "id": "vitalsigns",
+      "url": "http://hl7.org/fhir/StructureDefinition/vitalsigns",
+      "name": "observation-vitalsigns",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Observation"
+    },
+    {
+      "id": "vitalspanel",
+      "url": "http://hl7.org/fhir/StructureDefinition/vitalspanel",
+      "name": "observation-vitalspanel",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/vitalsigns"
+    }
+  ],
+  "BodyStructure": [
+    {
+      "id": "BodyStructure",
+      "url": "http://hl7.org/fhir/StructureDefinition/BodyStructure",
+      "name": "BodyStructure",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "boolean": [
+    {
+      "id": "boolean",
+      "url": "http://hl7.org/fhir/StructureDefinition/boolean",
+      "name": "boolean",
+      "kind": "primitive-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "Bundle": [
+    {
+      "id": "Bundle",
+      "url": "http://hl7.org/fhir/StructureDefinition/Bundle",
+      "name": "Bundle",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Resource"
+    }
+  ],
+  "canonical": [
+    {
+      "id": "canonical",
+      "url": "http://hl7.org/fhir/StructureDefinition/canonical",
+      "name": "canonical",
+      "kind": "primitive-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/uri"
+    }
+  ],
+  "CapabilityStatement": [
+    {
+      "id": "CapabilityStatement",
+      "url": "http://hl7.org/fhir/StructureDefinition/CapabilityStatement",
+      "name": "CapabilityStatement",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "CarePlan": [
+    {
+      "id": "CarePlan",
+      "url": "http://hl7.org/fhir/StructureDefinition/CarePlan",
+      "name": "CarePlan",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "CareTeam": [
+    {
+      "id": "CareTeam",
+      "url": "http://hl7.org/fhir/StructureDefinition/CareTeam",
+      "name": "CareTeam",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Composition": [
+    {
+      "id": "catalog",
+      "url": "http://hl7.org/fhir/StructureDefinition/catalog",
+      "name": "Profile for Catalog",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Composition"
+    },
+    {
+      "id": "clinicaldocument",
+      "url": "http://hl7.org/fhir/StructureDefinition/clinicaldocument",
+      "name": "Clinical Document",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Composition"
+    },
+    {
+      "id": "Composition",
+      "url": "http://hl7.org/fhir/StructureDefinition/Composition",
+      "name": "Composition",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    },
+    {
+      "id": "example-composition",
+      "url": "http://hl7.org/fhir/StructureDefinition/example-composition",
+      "name": "DocumentStructure",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Composition"
+    },
+    {
+      "id": "example-section-library",
+      "url": "http://hl7.org/fhir/StructureDefinition/example-section-library",
+      "name": "DocumentSectionLibrary",
+      "kind": "complex-type",
+      "abstract": true,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Composition"
+    }
+  ],
+  "CatalogEntry": [
+    {
+      "id": "CatalogEntry",
+      "url": "http://hl7.org/fhir/StructureDefinition/CatalogEntry",
+      "name": "CatalogEntry",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "GuidanceResponse": [
+    {
+      "id": "cdshooksguidanceresponse",
+      "url": "http://hl7.org/fhir/StructureDefinition/cdshooksguidanceresponse",
+      "name": "CDS Hooks GuidanceResponse",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/GuidanceResponse"
+    },
+    {
+      "id": "GuidanceResponse",
+      "url": "http://hl7.org/fhir/StructureDefinition/GuidanceResponse",
+      "name": "GuidanceResponse",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "RequestGroup": [
+    {
+      "id": "cdshooksrequestgroup",
+      "url": "http://hl7.org/fhir/StructureDefinition/cdshooksrequestgroup",
+      "name": "CDS Hooks RequestGroup",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/RequestGroup"
+    },
+    {
+      "id": "RequestGroup",
+      "url": "http://hl7.org/fhir/StructureDefinition/RequestGroup",
+      "name": "RequestGroup",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "PlanDefinition": [
+    {
+      "id": "cdshooksserviceplandefinition",
+      "url": "http://hl7.org/fhir/StructureDefinition/cdshooksserviceplandefinition",
+      "name": "CDS Hooks Service PlanDefinition",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/PlanDefinition"
+    },
+    {
+      "id": "computableplandefinition",
+      "url": "http://hl7.org/fhir/StructureDefinition/computableplandefinition",
+      "name": "Computable PlanDefinition",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/PlanDefinition"
+    },
+    {
+      "id": "PlanDefinition",
+      "url": "http://hl7.org/fhir/StructureDefinition/PlanDefinition",
+      "name": "PlanDefinition",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    },
+    {
+      "id": "shareableplandefinition",
+      "url": "http://hl7.org/fhir/StructureDefinition/shareableplandefinition",
+      "name": "Shareable PlanDefinition",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/PlanDefinition"
+    }
+  ],
+  "ChargeItem": [
+    {
+      "id": "ChargeItem",
+      "url": "http://hl7.org/fhir/StructureDefinition/ChargeItem",
+      "name": "ChargeItem",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "ChargeItemDefinition": [
+    {
+      "id": "ChargeItemDefinition",
+      "url": "http://hl7.org/fhir/StructureDefinition/ChargeItemDefinition",
+      "name": "ChargeItemDefinition",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Claim": [
+    {
+      "id": "Claim",
+      "url": "http://hl7.org/fhir/StructureDefinition/Claim",
+      "name": "Claim",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "ClaimResponse": [
+    {
+      "id": "ClaimResponse",
+      "url": "http://hl7.org/fhir/StructureDefinition/ClaimResponse",
+      "name": "ClaimResponse",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "ClinicalImpression": [
+    {
+      "id": "ClinicalImpression",
+      "url": "http://hl7.org/fhir/StructureDefinition/ClinicalImpression",
+      "name": "ClinicalImpression",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "code": [
+    {
+      "id": "code",
+      "url": "http://hl7.org/fhir/StructureDefinition/code",
+      "name": "code",
+      "kind": "primitive-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/string"
+    }
+  ],
+  "CodeableConcept": [
+    {
+      "id": "CodeableConcept",
+      "url": "http://hl7.org/fhir/StructureDefinition/CodeableConcept",
+      "name": "CodeableConcept",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "CodeSystem": [
+    {
+      "id": "CodeSystem",
+      "url": "http://hl7.org/fhir/StructureDefinition/CodeSystem",
+      "name": "CodeSystem",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    },
+    {
+      "id": "shareablecodesystem",
+      "url": "http://hl7.org/fhir/StructureDefinition/shareablecodesystem",
+      "name": "Shareable CodeSystem",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/CodeSystem"
+    }
+  ],
+  "Coding": [
+    {
+      "id": "Coding",
+      "url": "http://hl7.org/fhir/StructureDefinition/Coding",
+      "name": "Coding",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "Communication": [
+    {
+      "id": "Communication",
+      "url": "http://hl7.org/fhir/StructureDefinition/Communication",
+      "name": "Communication",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "CommunicationRequest": [
+    {
+      "id": "CommunicationRequest",
+      "url": "http://hl7.org/fhir/StructureDefinition/CommunicationRequest",
+      "name": "CommunicationRequest",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "CompartmentDefinition": [
+    {
+      "id": "CompartmentDefinition",
+      "url": "http://hl7.org/fhir/StructureDefinition/CompartmentDefinition",
+      "name": "CompartmentDefinition",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "ConceptMap": [
+    {
+      "id": "ConceptMap",
+      "url": "http://hl7.org/fhir/StructureDefinition/ConceptMap",
+      "name": "ConceptMap",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Condition": [
+    {
+      "id": "Condition",
+      "url": "http://hl7.org/fhir/StructureDefinition/Condition",
+      "name": "Condition",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Consent": [
+    {
+      "id": "Consent",
+      "url": "http://hl7.org/fhir/StructureDefinition/Consent",
+      "name": "Consent",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "ContactDetail": [
+    {
+      "id": "ContactDetail",
+      "url": "http://hl7.org/fhir/StructureDefinition/ContactDetail",
+      "name": "ContactDetail",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "ContactPoint": [
+    {
+      "id": "ContactPoint",
+      "url": "http://hl7.org/fhir/StructureDefinition/ContactPoint",
+      "name": "ContactPoint",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "Contract": [
+    {
+      "id": "Contract",
+      "url": "http://hl7.org/fhir/StructureDefinition/Contract",
+      "name": "Contract",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Contributor": [
+    {
+      "id": "Contributor",
+      "url": "http://hl7.org/fhir/StructureDefinition/Contributor",
+      "name": "Contributor",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "Count": [
+    {
+      "id": "Count",
+      "url": "http://hl7.org/fhir/StructureDefinition/Count",
+      "name": "Count",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Quantity"
+    }
+  ],
+  "Coverage": [
+    {
+      "id": "Coverage",
+      "url": "http://hl7.org/fhir/StructureDefinition/Coverage",
+      "name": "Coverage",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "CoverageEligibilityRequest": [
+    {
+      "id": "CoverageEligibilityRequest",
+      "url": "http://hl7.org/fhir/StructureDefinition/CoverageEligibilityRequest",
+      "name": "CoverageEligibilityRequest",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "CoverageEligibilityResponse": [
+    {
+      "id": "CoverageEligibilityResponse",
+      "url": "http://hl7.org/fhir/StructureDefinition/CoverageEligibilityResponse",
+      "name": "CoverageEligibilityResponse",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Questionnaire": [
+    {
+      "id": "cqf-questionnaire",
+      "url": "http://hl7.org/fhir/StructureDefinition/cqf-questionnaire",
+      "name": "CQF-Questionnaire",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Questionnaire"
+    },
+    {
+      "id": "Questionnaire",
+      "url": "http://hl7.org/fhir/StructureDefinition/Questionnaire",
+      "name": "Questionnaire",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Library": [
+    {
+      "id": "cqllibrary",
+      "url": "http://hl7.org/fhir/StructureDefinition/cqllibrary",
+      "name": "CQL Library",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Library"
+    },
+    {
+      "id": "Library",
+      "url": "http://hl7.org/fhir/StructureDefinition/Library",
+      "name": "Library",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    },
+    {
+      "id": "shareablelibrary",
+      "url": "http://hl7.org/fhir/StructureDefinition/shareablelibrary",
+      "name": "Shareable Library",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Library"
+    }
+  ],
+  "DataRequirement": [
+    {
+      "id": "DataRequirement",
+      "url": "http://hl7.org/fhir/StructureDefinition/DataRequirement",
+      "name": "DataRequirement",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "date": [
+    {
+      "id": "date",
+      "url": "http://hl7.org/fhir/StructureDefinition/date",
+      "name": "date",
+      "kind": "primitive-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "dateTime": [
+    {
+      "id": "dateTime",
+      "url": "http://hl7.org/fhir/StructureDefinition/dateTime",
+      "name": "dateTime",
+      "kind": "primitive-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "decimal": [
+    {
+      "id": "decimal",
+      "url": "http://hl7.org/fhir/StructureDefinition/decimal",
+      "name": "decimal",
+      "kind": "primitive-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "Definition": [
+    {
+      "id": "Definition",
+      "url": "http://hl7.org/fhir/StructureDefinition/Definition",
+      "name": "Definition",
+      "kind": "logical",
+      "abstract": false
+    }
+  ],
+  "DetectedIssue": [
+    {
+      "id": "DetectedIssue",
+      "url": "http://hl7.org/fhir/StructureDefinition/DetectedIssue",
+      "name": "DetectedIssue",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Device": [
+    {
+      "id": "Device",
+      "url": "http://hl7.org/fhir/StructureDefinition/Device",
+      "name": "Device",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "DeviceDefinition": [
+    {
+      "id": "DeviceDefinition",
+      "url": "http://hl7.org/fhir/StructureDefinition/DeviceDefinition",
+      "name": "DeviceDefinition",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "DeviceMetric": [
+    {
+      "id": "DeviceMetric",
+      "url": "http://hl7.org/fhir/StructureDefinition/DeviceMetric",
+      "name": "DeviceMetric",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "DeviceRequest": [
+    {
+      "id": "DeviceRequest",
+      "url": "http://hl7.org/fhir/StructureDefinition/DeviceRequest",
+      "name": "DeviceRequest",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "DeviceUseStatement": [
+    {
+      "id": "DeviceUseStatement",
+      "url": "http://hl7.org/fhir/StructureDefinition/DeviceUseStatement",
+      "name": "DeviceUseStatement",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "DiagnosticReport": [
+    {
+      "id": "diagnosticreport-genetics",
+      "url": "http://hl7.org/fhir/StructureDefinition/diagnosticreport-genetics",
+      "name": "DiagnosticReport-Genetics",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DiagnosticReport"
+    },
+    {
+      "id": "DiagnosticReport",
+      "url": "http://hl7.org/fhir/StructureDefinition/DiagnosticReport",
+      "name": "DiagnosticReport",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    },
+    {
+      "id": "hlaresult",
+      "url": "http://hl7.org/fhir/StructureDefinition/hlaresult",
+      "name": "Profile for HLA Genotyping Results",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DiagnosticReport"
+    },
+    {
+      "id": "lipidprofile",
+      "url": "http://hl7.org/fhir/StructureDefinition/lipidprofile",
+      "name": "Example Lipid Profile",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DiagnosticReport"
+    }
+  ],
+  "Distance": [
+    {
+      "id": "Distance",
+      "url": "http://hl7.org/fhir/StructureDefinition/Distance",
+      "name": "Distance",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Quantity"
+    }
+  ],
+  "DocumentManifest": [
+    {
+      "id": "DocumentManifest",
+      "url": "http://hl7.org/fhir/StructureDefinition/DocumentManifest",
+      "name": "DocumentManifest",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "DocumentReference": [
+    {
+      "id": "DocumentReference",
+      "url": "http://hl7.org/fhir/StructureDefinition/DocumentReference",
+      "name": "DocumentReference",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "DomainResource": [
+    {
+      "id": "DomainResource",
+      "url": "http://hl7.org/fhir/StructureDefinition/DomainResource",
+      "name": "DomainResource",
+      "kind": "resource",
+      "abstract": true,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Resource"
+    }
+  ],
+  "Dosage": [
+    {
+      "id": "Dosage",
+      "url": "http://hl7.org/fhir/StructureDefinition/Dosage",
+      "name": "Dosage",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/BackboneElement"
+    }
+  ],
+  "Duration": [
+    {
+      "id": "Duration",
+      "url": "http://hl7.org/fhir/StructureDefinition/Duration",
+      "name": "Duration",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Quantity"
+    }
+  ],
+  "EffectEvidenceSynthesis": [
+    {
+      "id": "EffectEvidenceSynthesis",
+      "url": "http://hl7.org/fhir/StructureDefinition/EffectEvidenceSynthesis",
+      "name": "EffectEvidenceSynthesis",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Provenance": [
+    {
+      "id": "ehrsrle-provenance",
+      "url": "http://hl7.org/fhir/StructureDefinition/ehrsrle-provenance",
+      "name": "EHRS FM Record Lifecycle Event - Provenance",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Provenance"
+    },
+    {
+      "id": "provenance-relevant-history",
+      "url": "http://hl7.org/fhir/StructureDefinition/provenance-relevant-history",
+      "name": "Provenance Relevant History",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Provenance"
+    },
+    {
+      "id": "Provenance",
+      "url": "http://hl7.org/fhir/StructureDefinition/Provenance",
+      "name": "Provenance",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Element": [
+    {
+      "id": "Element",
+      "url": "http://hl7.org/fhir/StructureDefinition/Element",
+      "name": "Element",
+      "kind": "complex-type",
+      "abstract": true
+    }
+  ],
+  "ElementDefinition": [
+    {
+      "id": "elementdefinition-de",
+      "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-de",
+      "name": "DataElement constraint on ElementDefinition data type",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/ElementDefinition"
+    },
+    {
+      "id": "ElementDefinition",
+      "url": "http://hl7.org/fhir/StructureDefinition/ElementDefinition",
+      "name": "ElementDefinition",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/BackboneElement"
+    }
+  ],
+  "Encounter": [
+    {
+      "id": "Encounter",
+      "url": "http://hl7.org/fhir/StructureDefinition/Encounter",
+      "name": "Encounter",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Endpoint": [
+    {
+      "id": "Endpoint",
+      "url": "http://hl7.org/fhir/StructureDefinition/Endpoint",
+      "name": "Endpoint",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "EnrollmentRequest": [
+    {
+      "id": "EnrollmentRequest",
+      "url": "http://hl7.org/fhir/StructureDefinition/EnrollmentRequest",
+      "name": "EnrollmentRequest",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "EnrollmentResponse": [
+    {
+      "id": "EnrollmentResponse",
+      "url": "http://hl7.org/fhir/StructureDefinition/EnrollmentResponse",
+      "name": "EnrollmentResponse",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "EpisodeOfCare": [
+    {
+      "id": "EpisodeOfCare",
+      "url": "http://hl7.org/fhir/StructureDefinition/EpisodeOfCare",
+      "name": "EpisodeOfCare",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Event": [
+    {
+      "id": "Event",
+      "url": "http://hl7.org/fhir/StructureDefinition/Event",
+      "name": "Event",
+      "kind": "logical",
+      "abstract": false
+    }
+  ],
+  "EventDefinition": [
+    {
+      "id": "EventDefinition",
+      "url": "http://hl7.org/fhir/StructureDefinition/EventDefinition",
+      "name": "EventDefinition",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Evidence": [
+    {
+      "id": "Evidence",
+      "url": "http://hl7.org/fhir/StructureDefinition/Evidence",
+      "name": "Evidence",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    },
+    {
+      "id": "synthesis",
+      "url": "http://hl7.org/fhir/StructureDefinition/synthesis",
+      "name": "Evidence Synthesis Profile",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Evidence"
+    }
+  ],
+  "EvidenceVariable": [
+    {
+      "id": "EvidenceVariable",
+      "url": "http://hl7.org/fhir/StructureDefinition/EvidenceVariable",
+      "name": "EvidenceVariable",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    },
+    {
+      "id": "picoelement",
+      "url": "http://hl7.org/fhir/StructureDefinition/picoelement",
+      "name": "PICO Element Profile",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/EvidenceVariable"
+    }
+  ],
+  "ExampleScenario": [
+    {
+      "id": "ExampleScenario",
+      "url": "http://hl7.org/fhir/StructureDefinition/ExampleScenario",
+      "name": "ExampleScenario",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "ExplanationOfBenefit": [
+    {
+      "id": "ExplanationOfBenefit",
+      "url": "http://hl7.org/fhir/StructureDefinition/ExplanationOfBenefit",
+      "name": "ExplanationOfBenefit",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Expression": [
+    {
+      "id": "Expression",
+      "url": "http://hl7.org/fhir/StructureDefinition/Expression",
+      "name": "Expression",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "FamilyMemberHistory": [
+    {
+      "id": "familymemberhistory-genetic",
+      "url": "http://hl7.org/fhir/StructureDefinition/familymemberhistory-genetic",
+      "name": "Family member history for genetics analysis",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/FamilyMemberHistory"
+    },
+    {
+      "id": "FamilyMemberHistory",
+      "url": "http://hl7.org/fhir/StructureDefinition/FamilyMemberHistory",
+      "name": "FamilyMemberHistory",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "FiveWs": [
+    {
+      "id": "FiveWs",
+      "url": "http://hl7.org/fhir/StructureDefinition/FiveWs",
+      "name": "FiveWs",
+      "kind": "logical",
+      "abstract": false
+    }
+  ],
+  "Flag": [
+    {
+      "id": "Flag",
+      "url": "http://hl7.org/fhir/StructureDefinition/Flag",
+      "name": "Flag",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Goal": [
+    {
+      "id": "Goal",
+      "url": "http://hl7.org/fhir/StructureDefinition/Goal",
+      "name": "Goal",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "GraphDefinition": [
+    {
+      "id": "GraphDefinition",
+      "url": "http://hl7.org/fhir/StructureDefinition/GraphDefinition",
+      "name": "GraphDefinition",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "HealthcareService": [
+    {
+      "id": "HealthcareService",
+      "url": "http://hl7.org/fhir/StructureDefinition/HealthcareService",
+      "name": "HealthcareService",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "HumanName": [
+    {
+      "id": "HumanName",
+      "url": "http://hl7.org/fhir/StructureDefinition/HumanName",
+      "name": "HumanName",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "id": [
+    {
+      "id": "id",
+      "url": "http://hl7.org/fhir/StructureDefinition/id",
+      "name": "id",
+      "kind": "primitive-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/string"
+    }
+  ],
+  "Identifier": [
+    {
+      "id": "Identifier",
+      "url": "http://hl7.org/fhir/StructureDefinition/Identifier",
+      "name": "Identifier",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "ImagingStudy": [
+    {
+      "id": "ImagingStudy",
+      "url": "http://hl7.org/fhir/StructureDefinition/ImagingStudy",
+      "name": "ImagingStudy",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Immunization": [
+    {
+      "id": "Immunization",
+      "url": "http://hl7.org/fhir/StructureDefinition/Immunization",
+      "name": "Immunization",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "ImmunizationEvaluation": [
+    {
+      "id": "ImmunizationEvaluation",
+      "url": "http://hl7.org/fhir/StructureDefinition/ImmunizationEvaluation",
+      "name": "ImmunizationEvaluation",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "ImmunizationRecommendation": [
+    {
+      "id": "ImmunizationRecommendation",
+      "url": "http://hl7.org/fhir/StructureDefinition/ImmunizationRecommendation",
+      "name": "ImmunizationRecommendation",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "ImplementationGuide": [
+    {
+      "id": "ImplementationGuide",
+      "url": "http://hl7.org/fhir/StructureDefinition/ImplementationGuide",
+      "name": "ImplementationGuide",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "instant": [
+    {
+      "id": "instant",
+      "url": "http://hl7.org/fhir/StructureDefinition/instant",
+      "name": "instant",
+      "kind": "primitive-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "InsurancePlan": [
+    {
+      "id": "InsurancePlan",
+      "url": "http://hl7.org/fhir/StructureDefinition/InsurancePlan",
+      "name": "InsurancePlan",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "integer": [
+    {
+      "id": "integer",
+      "url": "http://hl7.org/fhir/StructureDefinition/integer",
+      "name": "integer",
+      "kind": "primitive-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "Invoice": [
+    {
+      "id": "Invoice",
+      "url": "http://hl7.org/fhir/StructureDefinition/Invoice",
+      "name": "Invoice",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Linkage": [
+    {
+      "id": "Linkage",
+      "url": "http://hl7.org/fhir/StructureDefinition/Linkage",
+      "name": "Linkage",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "List": [
+    {
+      "id": "List",
+      "url": "http://hl7.org/fhir/StructureDefinition/List",
+      "name": "List",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Location": [
+    {
+      "id": "Location",
+      "url": "http://hl7.org/fhir/StructureDefinition/Location",
+      "name": "Location",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "markdown": [
+    {
+      "id": "markdown",
+      "url": "http://hl7.org/fhir/StructureDefinition/markdown",
+      "name": "markdown",
+      "kind": "primitive-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/string"
+    }
+  ],
+  "MarketingStatus": [
+    {
+      "id": "MarketingStatus",
+      "url": "http://hl7.org/fhir/StructureDefinition/MarketingStatus",
+      "name": "MarketingStatus",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/BackboneElement"
+    }
+  ],
+  "Measure": [
+    {
+      "id": "Measure",
+      "url": "http://hl7.org/fhir/StructureDefinition/Measure",
+      "name": "Measure",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    },
+    {
+      "id": "shareablemeasure",
+      "url": "http://hl7.org/fhir/StructureDefinition/shareablemeasure",
+      "name": "Shareable Measure",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Measure"
+    }
+  ],
+  "MeasureReport": [
+    {
+      "id": "MeasureReport",
+      "url": "http://hl7.org/fhir/StructureDefinition/MeasureReport",
+      "name": "MeasureReport",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Media": [
+    {
+      "id": "Media",
+      "url": "http://hl7.org/fhir/StructureDefinition/Media",
+      "name": "Media",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Medication": [
+    {
+      "id": "Medication",
+      "url": "http://hl7.org/fhir/StructureDefinition/Medication",
+      "name": "Medication",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "MedicationAdministration": [
+    {
+      "id": "MedicationAdministration",
+      "url": "http://hl7.org/fhir/StructureDefinition/MedicationAdministration",
+      "name": "MedicationAdministration",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "MedicationDispense": [
+    {
+      "id": "MedicationDispense",
+      "url": "http://hl7.org/fhir/StructureDefinition/MedicationDispense",
+      "name": "MedicationDispense",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "MedicationKnowledge": [
+    {
+      "id": "MedicationKnowledge",
+      "url": "http://hl7.org/fhir/StructureDefinition/MedicationKnowledge",
+      "name": "MedicationKnowledge",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "MedicationRequest": [
+    {
+      "id": "MedicationRequest",
+      "url": "http://hl7.org/fhir/StructureDefinition/MedicationRequest",
+      "name": "MedicationRequest",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "MedicationStatement": [
+    {
+      "id": "MedicationStatement",
+      "url": "http://hl7.org/fhir/StructureDefinition/MedicationStatement",
+      "name": "MedicationStatement",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "MedicinalProduct": [
+    {
+      "id": "MedicinalProduct",
+      "url": "http://hl7.org/fhir/StructureDefinition/MedicinalProduct",
+      "name": "MedicinalProduct",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "MedicinalProductAuthorization": [
+    {
+      "id": "MedicinalProductAuthorization",
+      "url": "http://hl7.org/fhir/StructureDefinition/MedicinalProductAuthorization",
+      "name": "MedicinalProductAuthorization",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "MedicinalProductContraindication": [
+    {
+      "id": "MedicinalProductContraindication",
+      "url": "http://hl7.org/fhir/StructureDefinition/MedicinalProductContraindication",
+      "name": "MedicinalProductContraindication",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "MedicinalProductIndication": [
+    {
+      "id": "MedicinalProductIndication",
+      "url": "http://hl7.org/fhir/StructureDefinition/MedicinalProductIndication",
+      "name": "MedicinalProductIndication",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "MedicinalProductIngredient": [
+    {
+      "id": "MedicinalProductIngredient",
+      "url": "http://hl7.org/fhir/StructureDefinition/MedicinalProductIngredient",
+      "name": "MedicinalProductIngredient",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "MedicinalProductInteraction": [
+    {
+      "id": "MedicinalProductInteraction",
+      "url": "http://hl7.org/fhir/StructureDefinition/MedicinalProductInteraction",
+      "name": "MedicinalProductInteraction",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "MedicinalProductManufactured": [
+    {
+      "id": "MedicinalProductManufactured",
+      "url": "http://hl7.org/fhir/StructureDefinition/MedicinalProductManufactured",
+      "name": "MedicinalProductManufactured",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "MedicinalProductPackaged": [
+    {
+      "id": "MedicinalProductPackaged",
+      "url": "http://hl7.org/fhir/StructureDefinition/MedicinalProductPackaged",
+      "name": "MedicinalProductPackaged",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "MedicinalProductPharmaceutical": [
+    {
+      "id": "MedicinalProductPharmaceutical",
+      "url": "http://hl7.org/fhir/StructureDefinition/MedicinalProductPharmaceutical",
+      "name": "MedicinalProductPharmaceutical",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "MedicinalProductUndesirableEffect": [
+    {
+      "id": "MedicinalProductUndesirableEffect",
+      "url": "http://hl7.org/fhir/StructureDefinition/MedicinalProductUndesirableEffect",
+      "name": "MedicinalProductUndesirableEffect",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "MessageDefinition": [
+    {
+      "id": "MessageDefinition",
+      "url": "http://hl7.org/fhir/StructureDefinition/MessageDefinition",
+      "name": "MessageDefinition",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "MessageHeader": [
+    {
+      "id": "MessageHeader",
+      "url": "http://hl7.org/fhir/StructureDefinition/MessageHeader",
+      "name": "MessageHeader",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Meta": [
+    {
+      "id": "Meta",
+      "url": "http://hl7.org/fhir/StructureDefinition/Meta",
+      "name": "Meta",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "MetadataResource": [
+    {
+      "id": "MetadataResource",
+      "url": "http://hl7.org/fhir/StructureDefinition/MetadataResource",
+      "name": "MetadataResource",
+      "kind": "logical",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "MolecularSequence": [
+    {
+      "id": "MolecularSequence",
+      "url": "http://hl7.org/fhir/StructureDefinition/MolecularSequence",
+      "name": "MolecularSequence",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Money": [
+    {
+      "id": "Money",
+      "url": "http://hl7.org/fhir/StructureDefinition/Money",
+      "name": "Money",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "Quantity": [
+    {
+      "id": "MoneyQuantity",
+      "url": "http://hl7.org/fhir/StructureDefinition/MoneyQuantity",
+      "name": "MoneyQuantity",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Quantity"
+    },
+    {
+      "id": "Quantity",
+      "url": "http://hl7.org/fhir/StructureDefinition/Quantity",
+      "name": "Quantity",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    },
+    {
+      "id": "SimpleQuantity",
+      "url": "http://hl7.org/fhir/StructureDefinition/SimpleQuantity",
+      "name": "SimpleQuantity",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Quantity"
+    }
+  ],
+  "NamingSystem": [
+    {
+      "id": "NamingSystem",
+      "url": "http://hl7.org/fhir/StructureDefinition/NamingSystem",
+      "name": "NamingSystem",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Narrative": [
+    {
+      "id": "Narrative",
+      "url": "http://hl7.org/fhir/StructureDefinition/Narrative",
+      "name": "Narrative",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "NutritionOrder": [
+    {
+      "id": "NutritionOrder",
+      "url": "http://hl7.org/fhir/StructureDefinition/NutritionOrder",
+      "name": "NutritionOrder",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "ObservationDefinition": [
+    {
+      "id": "ObservationDefinition",
+      "url": "http://hl7.org/fhir/StructureDefinition/ObservationDefinition",
+      "name": "ObservationDefinition",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "oid": [
+    {
+      "id": "oid",
+      "url": "http://hl7.org/fhir/StructureDefinition/oid",
+      "name": "oid",
+      "kind": "primitive-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/uri"
+    }
+  ],
+  "OperationDefinition": [
+    {
+      "id": "OperationDefinition",
+      "url": "http://hl7.org/fhir/StructureDefinition/OperationDefinition",
+      "name": "OperationDefinition",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "OperationOutcome": [
+    {
+      "id": "OperationOutcome",
+      "url": "http://hl7.org/fhir/StructureDefinition/OperationOutcome",
+      "name": "OperationOutcome",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Organization": [
+    {
+      "id": "Organization",
+      "url": "http://hl7.org/fhir/StructureDefinition/Organization",
+      "name": "Organization",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "OrganizationAffiliation": [
+    {
+      "id": "OrganizationAffiliation",
+      "url": "http://hl7.org/fhir/StructureDefinition/OrganizationAffiliation",
+      "name": "OrganizationAffiliation",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "ParameterDefinition": [
+    {
+      "id": "ParameterDefinition",
+      "url": "http://hl7.org/fhir/StructureDefinition/ParameterDefinition",
+      "name": "ParameterDefinition",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "Parameters": [
+    {
+      "id": "Parameters",
+      "url": "http://hl7.org/fhir/StructureDefinition/Parameters",
+      "name": "Parameters",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Resource"
+    }
+  ],
+  "Patient": [
+    {
+      "id": "Patient",
+      "url": "http://hl7.org/fhir/StructureDefinition/Patient",
+      "name": "Patient",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "PaymentNotice": [
+    {
+      "id": "PaymentNotice",
+      "url": "http://hl7.org/fhir/StructureDefinition/PaymentNotice",
+      "name": "PaymentNotice",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "PaymentReconciliation": [
+    {
+      "id": "PaymentReconciliation",
+      "url": "http://hl7.org/fhir/StructureDefinition/PaymentReconciliation",
+      "name": "PaymentReconciliation",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Period": [
+    {
+      "id": "Period",
+      "url": "http://hl7.org/fhir/StructureDefinition/Period",
+      "name": "Period",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "Person": [
+    {
+      "id": "Person",
+      "url": "http://hl7.org/fhir/StructureDefinition/Person",
+      "name": "Person",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Population": [
+    {
+      "id": "Population",
+      "url": "http://hl7.org/fhir/StructureDefinition/Population",
+      "name": "Population",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/BackboneElement"
+    }
+  ],
+  "positiveInt": [
+    {
+      "id": "positiveInt",
+      "url": "http://hl7.org/fhir/StructureDefinition/positiveInt",
+      "name": "positiveInt",
+      "kind": "primitive-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/integer"
+    }
+  ],
+  "Practitioner": [
+    {
+      "id": "Practitioner",
+      "url": "http://hl7.org/fhir/StructureDefinition/Practitioner",
+      "name": "Practitioner",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "PractitionerRole": [
+    {
+      "id": "PractitionerRole",
+      "url": "http://hl7.org/fhir/StructureDefinition/PractitionerRole",
+      "name": "PractitionerRole",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Procedure": [
+    {
+      "id": "Procedure",
+      "url": "http://hl7.org/fhir/StructureDefinition/Procedure",
+      "name": "Procedure",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "ProdCharacteristic": [
+    {
+      "id": "ProdCharacteristic",
+      "url": "http://hl7.org/fhir/StructureDefinition/ProdCharacteristic",
+      "name": "ProdCharacteristic",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/BackboneElement"
+    }
+  ],
+  "ProductShelfLife": [
+    {
+      "id": "ProductShelfLife",
+      "url": "http://hl7.org/fhir/StructureDefinition/ProductShelfLife",
+      "name": "ProductShelfLife",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/BackboneElement"
+    }
+  ],
+  "QuestionnaireResponse": [
+    {
+      "id": "QuestionnaireResponse",
+      "url": "http://hl7.org/fhir/StructureDefinition/QuestionnaireResponse",
+      "name": "QuestionnaireResponse",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Range": [
+    {
+      "id": "Range",
+      "url": "http://hl7.org/fhir/StructureDefinition/Range",
+      "name": "Range",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "Ratio": [
+    {
+      "id": "Ratio",
+      "url": "http://hl7.org/fhir/StructureDefinition/Ratio",
+      "name": "Ratio",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "Reference": [
+    {
+      "id": "Reference",
+      "url": "http://hl7.org/fhir/StructureDefinition/Reference",
+      "name": "Reference",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "RelatedArtifact": [
+    {
+      "id": "RelatedArtifact",
+      "url": "http://hl7.org/fhir/StructureDefinition/RelatedArtifact",
+      "name": "RelatedArtifact",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "RelatedPerson": [
+    {
+      "id": "RelatedPerson",
+      "url": "http://hl7.org/fhir/StructureDefinition/RelatedPerson",
+      "name": "RelatedPerson",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Request": [
+    {
+      "id": "Request",
+      "url": "http://hl7.org/fhir/StructureDefinition/Request",
+      "name": "Request",
+      "kind": "logical",
+      "abstract": false
+    }
+  ],
+  "ResearchDefinition": [
+    {
+      "id": "ResearchDefinition",
+      "url": "http://hl7.org/fhir/StructureDefinition/ResearchDefinition",
+      "name": "ResearchDefinition",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "ResearchElementDefinition": [
+    {
+      "id": "ResearchElementDefinition",
+      "url": "http://hl7.org/fhir/StructureDefinition/ResearchElementDefinition",
+      "name": "ResearchElementDefinition",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "ResearchStudy": [
+    {
+      "id": "ResearchStudy",
+      "url": "http://hl7.org/fhir/StructureDefinition/ResearchStudy",
+      "name": "ResearchStudy",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "ResearchSubject": [
+    {
+      "id": "ResearchSubject",
+      "url": "http://hl7.org/fhir/StructureDefinition/ResearchSubject",
+      "name": "ResearchSubject",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Resource": [
+    {
+      "id": "Resource",
+      "url": "http://hl7.org/fhir/StructureDefinition/Resource",
+      "name": "Resource",
+      "kind": "resource",
+      "abstract": true
+    }
+  ],
+  "RiskAssessment": [
+    {
+      "id": "RiskAssessment",
+      "url": "http://hl7.org/fhir/StructureDefinition/RiskAssessment",
+      "name": "RiskAssessment",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "RiskEvidenceSynthesis": [
+    {
+      "id": "RiskEvidenceSynthesis",
+      "url": "http://hl7.org/fhir/StructureDefinition/RiskEvidenceSynthesis",
+      "name": "RiskEvidenceSynthesis",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "SampledData": [
+    {
+      "id": "SampledData",
+      "url": "http://hl7.org/fhir/StructureDefinition/SampledData",
+      "name": "SampledData",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "Schedule": [
+    {
+      "id": "Schedule",
+      "url": "http://hl7.org/fhir/StructureDefinition/Schedule",
+      "name": "Schedule",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "SearchParameter": [
+    {
+      "id": "SearchParameter",
+      "url": "http://hl7.org/fhir/StructureDefinition/SearchParameter",
+      "name": "SearchParameter",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "ServiceRequest": [
+    {
+      "id": "servicerequest-genetics",
+      "url": "http://hl7.org/fhir/StructureDefinition/servicerequest-genetics",
+      "name": "ServiceRequest-Genetics",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/ServiceRequest"
+    },
+    {
+      "id": "ServiceRequest",
+      "url": "http://hl7.org/fhir/StructureDefinition/ServiceRequest",
+      "name": "ServiceRequest",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "ValueSet": [
+    {
+      "id": "shareablevalueset",
+      "url": "http://hl7.org/fhir/StructureDefinition/shareablevalueset",
+      "name": "Shareable ValueSet",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/ValueSet"
+    },
+    {
+      "id": "ValueSet",
+      "url": "http://hl7.org/fhir/StructureDefinition/ValueSet",
+      "name": "ValueSet",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Signature": [
+    {
+      "id": "Signature",
+      "url": "http://hl7.org/fhir/StructureDefinition/Signature",
+      "name": "Signature",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "Slot": [
+    {
+      "id": "Slot",
+      "url": "http://hl7.org/fhir/StructureDefinition/Slot",
+      "name": "Slot",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Specimen": [
+    {
+      "id": "Specimen",
+      "url": "http://hl7.org/fhir/StructureDefinition/Specimen",
+      "name": "Specimen",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "SpecimenDefinition": [
+    {
+      "id": "SpecimenDefinition",
+      "url": "http://hl7.org/fhir/StructureDefinition/SpecimenDefinition",
+      "name": "SpecimenDefinition",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "string": [
+    {
+      "id": "string",
+      "url": "http://hl7.org/fhir/StructureDefinition/string",
+      "name": "string",
+      "kind": "primitive-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "StructureDefinition": [
+    {
+      "id": "StructureDefinition",
+      "url": "http://hl7.org/fhir/StructureDefinition/StructureDefinition",
+      "name": "StructureDefinition",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "StructureMap": [
+    {
+      "id": "StructureMap",
+      "url": "http://hl7.org/fhir/StructureDefinition/StructureMap",
+      "name": "StructureMap",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Subscription": [
+    {
+      "id": "Subscription",
+      "url": "http://hl7.org/fhir/StructureDefinition/Subscription",
+      "name": "Subscription",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Substance": [
+    {
+      "id": "Substance",
+      "url": "http://hl7.org/fhir/StructureDefinition/Substance",
+      "name": "Substance",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "SubstanceAmount": [
+    {
+      "id": "SubstanceAmount",
+      "url": "http://hl7.org/fhir/StructureDefinition/SubstanceAmount",
+      "name": "SubstanceAmount",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/BackboneElement"
+    }
+  ],
+  "SubstanceNucleicAcid": [
+    {
+      "id": "SubstanceNucleicAcid",
+      "url": "http://hl7.org/fhir/StructureDefinition/SubstanceNucleicAcid",
+      "name": "SubstanceNucleicAcid",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "SubstancePolymer": [
+    {
+      "id": "SubstancePolymer",
+      "url": "http://hl7.org/fhir/StructureDefinition/SubstancePolymer",
+      "name": "SubstancePolymer",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "SubstanceProtein": [
+    {
+      "id": "SubstanceProtein",
+      "url": "http://hl7.org/fhir/StructureDefinition/SubstanceProtein",
+      "name": "SubstanceProtein",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "SubstanceReferenceInformation": [
+    {
+      "id": "SubstanceReferenceInformation",
+      "url": "http://hl7.org/fhir/StructureDefinition/SubstanceReferenceInformation",
+      "name": "SubstanceReferenceInformation",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "SubstanceSourceMaterial": [
+    {
+      "id": "SubstanceSourceMaterial",
+      "url": "http://hl7.org/fhir/StructureDefinition/SubstanceSourceMaterial",
+      "name": "SubstanceSourceMaterial",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "SubstanceSpecification": [
+    {
+      "id": "SubstanceSpecification",
+      "url": "http://hl7.org/fhir/StructureDefinition/SubstanceSpecification",
+      "name": "SubstanceSpecification",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "SupplyDelivery": [
+    {
+      "id": "SupplyDelivery",
+      "url": "http://hl7.org/fhir/StructureDefinition/SupplyDelivery",
+      "name": "SupplyDelivery",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "SupplyRequest": [
+    {
+      "id": "SupplyRequest",
+      "url": "http://hl7.org/fhir/StructureDefinition/SupplyRequest",
+      "name": "SupplyRequest",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "Task": [
+    {
+      "id": "Task",
+      "url": "http://hl7.org/fhir/StructureDefinition/Task",
+      "name": "Task",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "TerminologyCapabilities": [
+    {
+      "id": "TerminologyCapabilities",
+      "url": "http://hl7.org/fhir/StructureDefinition/TerminologyCapabilities",
+      "name": "TerminologyCapabilities",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "TestReport": [
+    {
+      "id": "TestReport",
+      "url": "http://hl7.org/fhir/StructureDefinition/TestReport",
+      "name": "TestReport",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "TestScript": [
+    {
+      "id": "TestScript",
+      "url": "http://hl7.org/fhir/StructureDefinition/TestScript",
+      "name": "TestScript",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "time": [
+    {
+      "id": "time",
+      "url": "http://hl7.org/fhir/StructureDefinition/time",
+      "name": "time",
+      "kind": "primitive-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "Timing": [
+    {
+      "id": "Timing",
+      "url": "http://hl7.org/fhir/StructureDefinition/Timing",
+      "name": "Timing",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/BackboneElement"
+    }
+  ],
+  "TriggerDefinition": [
+    {
+      "id": "TriggerDefinition",
+      "url": "http://hl7.org/fhir/StructureDefinition/TriggerDefinition",
+      "name": "TriggerDefinition",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "unsignedInt": [
+    {
+      "id": "unsignedInt",
+      "url": "http://hl7.org/fhir/StructureDefinition/unsignedInt",
+      "name": "unsignedInt",
+      "kind": "primitive-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/integer"
+    }
+  ],
+  "uri": [
+    {
+      "id": "uri",
+      "url": "http://hl7.org/fhir/StructureDefinition/uri",
+      "name": "uri",
+      "kind": "primitive-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "url": [
+    {
+      "id": "url",
+      "url": "http://hl7.org/fhir/StructureDefinition/url",
+      "name": "url",
+      "kind": "primitive-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/uri"
+    }
+  ],
+  "UsageContext": [
+    {
+      "id": "UsageContext",
+      "url": "http://hl7.org/fhir/StructureDefinition/UsageContext",
+      "name": "UsageContext",
+      "kind": "complex-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ],
+  "uuid": [
+    {
+      "id": "uuid",
+      "url": "http://hl7.org/fhir/StructureDefinition/uuid",
+      "name": "uuid",
+      "kind": "primitive-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/uri"
+    }
+  ],
+  "VerificationResult": [
+    {
+      "id": "VerificationResult",
+      "url": "http://hl7.org/fhir/StructureDefinition/VerificationResult",
+      "name": "VerificationResult",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "VisionPrescription": [
+    {
+      "id": "VisionPrescription",
+      "url": "http://hl7.org/fhir/StructureDefinition/VisionPrescription",
+      "name": "VisionPrescription",
+      "kind": "resource",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+    }
+  ],
+  "xhtml": [
+    {
+      "id": "xhtml",
+      "url": "http://hl7.org/fhir/StructureDefinition/xhtml",
+      "name": "xhtml",
+      "kind": "primitive-type",
+      "abstract": false,
+      "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+    }
+  ]
+}

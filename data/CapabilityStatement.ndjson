@@ -1,0 +1,6 @@
+{"url":"http://hl7.org/fhir/CapabilityStatement/base","resourceType":"CapabilityStatement","version":"4.0.1","id":"base"}
+{"url":"http://hl7.org/fhir/CapabilityStatement/base2","resourceType":"CapabilityStatement","version":"4.0.1","id":"base2"}
+{"url":"urn:uuid:68D043B5-9ECF-4559-A57A-396E0D452311","resourceType":"CapabilityStatement","version":"20130510","id":"example"}
+{"url":"http://hl7.org/fhir/knowledge-repository","resourceType":"CapabilityStatement","id":"knowledge-repository"}
+{"url":"http://hl7.org/fhir/measure-processor","resourceType":"CapabilityStatement","id":"measure-processor"}
+{"url":"http://hl7.org/fhir/terminology-server","resourceType":"CapabilityStatement","version":"4.0.1","id":"terminology-server"}
