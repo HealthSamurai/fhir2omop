@@ -8,6 +8,36 @@ alwaysApply: false
 
 This project maps FHIR R4 resources to OMOP CDM (Common Data Model) for observational health data research.
 
+## Bootstrap from zero
+
+```sh
+# 1. Clone with all submodules (CommonDataModel + ~38 reference implementations under refs/refs/)
+git clone --recurse-submodules https://github.com/HealthSamurai/fhir2omop
+cd fhir2omop
+# Already cloned without --recurse-submodules? Run:
+git submodule update --init --recursive
+
+# 2. Install dependencies (uses Bun, not npm)
+bun install
+
+# 3. Download FHIR R4 core metadata (~3.7 MB gzipped, 4,574 resources)
+#    Writes both fhir-core/ (full) and data/ (slim {url, resourceType, version, id})
+bun src/load-fhir-core.ts
+
+# 4. Sanity checks
+bun scripts/fhir-structuredef.ts --kind resource --list   # 146 base FHIR resource types
+bun scripts/omop-table.ts --list                          # 39 OMOP CDM v5.4 tables
+ls mapspec/                                               # Per-resource mapping docs
+```
+
+What gets pulled by submodules:
+- `CommonDataModel/` — OHDSI source-of-truth: `inst/csv/OMOP_CDMv5.4_*.csv`, DDL for 15 SQL dialects
+- `refs/refs/*` — 38 reference implementations (HL7 IG, FhirToCdm, NACHC, omoponfhir, etc.). Pre-analyzed summaries live alongside in `refs/*.md`.
+
+What gets generated locally and is gitignored:
+- `fhir-core/` and `data/` — produced by `bun src/load-fhir-core.ts`
+- `node_modules/` — produced by `bun install`
+
 ## Project Resources
 
 ### Documentation

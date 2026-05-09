@@ -1,0 +1,627 @@
+{
+  "generated_at": "2026-05-09T10:51:53.886Z",
+  "source_query": "all:OMOP",
+  "total": 33,
+  "fhir_omop_strict_count": 3,
+  "papers": [
+    {
+      "id": "2604.24572",
+      "title": "FastOMOP: A Foundational Architecture for Reliable Agentic Real-World Evidence Generation on OMOP CDM data",
+      "authors": [
+        "Niko Moeller-Grell",
+        "Shihao Shenzhang",
+        "Zhangshu Joshua Jiang",
+        "Richard JB Dobson",
+        "Vishnu V Chandrabalan"
+      ],
+      "published": "2026-04-27",
+      "url": "https://arxiv.org/abs/2604.24572v1",
+      "summary": "The Observational Medical Outcomes Partnership Common Data Model (OMOP CDM), maintained by the Observational Health Data Sciences and Informatics (OHDSI) collaboration, enabled the harmonisation of electronic health records data of nearly one billion patients in 83 countries. Yet generating real-world evidence (RWE) from these repositories remains a manual process requiring clinical, epidemiological and technical expertise. LLMs and multi-agent systems have shown promise for clinical tasks, but RWE automation exposes a fundamental challenge: agentic systems introduce emergent behaviours, coordination failures and safety risks that existing approaches fail to govern. No infrastructure exists to ensure agentic RWE generation is flexible, safe and auditable across the lifecycle. We introduce FastOMOP, an open-source multi-agent architecture that addresses this gap by separating three infrastructure layers, governance, observability and orchestration, from pluggable agent-teams. Governance is enforced at the process boundary through deterministic validation independent of agent reasoning, ensuring no compromised or hallucinating agent can bypass safety controls. Agent teams for phenotyping, study design and statistical analysis inherit these guarantees through controlled tool exposure. We validated FastOMOP using a natural-language-to-SQL agent team across three OMOP CDM datasets: synthetic data from Synthea, MIMIC-IV and a real-world NHS dataset from Lancashire Teaching Hospitals (IDRIL). FastOMOP achieved reliability scores of 0.84-0.94 with perfect adversarial and out-of-scope block rates, demonstrating process-boundary governance delivers safety guarantees independent of model choice. These results indicate that the reliability gap in RWE deployment is architectural rather than model capability, and establish FastOMOP as a governed architecture for progressive RWE automation.",
+      "fhir_omop_strict": false,
+      "pdf": "2604.24572/pdf/2604.24572.pdf"
+    },
+    {
+      "id": "2602.11223",
+      "title": "Patient Digital Twins for Chronic Care: Technical Hurdles, Lessons Learned, and the Road Ahead",
+      "authors": [
+        "Micheal P. Papazoglou",
+        "Bernd J. Krämer",
+        "Mira Raheem",
+        "Amal Elgammal"
+      ],
+      "published": "2026-02-11",
+      "url": "https://arxiv.org/abs/2602.11223v1",
+      "summary": "Chronic diseases constitute the principal burden of morbidity, mortality, and healthcare costs worldwide, yet current health systems remain fragmented and predominantly reactive. Patient Medical Digital Twins (PMDTs) offer a paradigm shift: holistic, continuously updated digital counterparts of patients that integrate clinical, genomic, lifestyle, and quality-of-life data. We report early implementations of PMDTs via ontology-driven modeling and federated analytics pilots. Insights from the QUALITOP oncology study and a distributed AI platform confirm both feasibility and challenges: aligning with HL7 FHIR and OMOP standards, embedding privacy governance, scaling federated queries, and designing intuitive clinician interfaces. We also highlight technical gains, such as automated reasoning over multimodal blueprints and predictive analytics for patient outcomes. By reflecting on these experiences, we outline actionable insights for software engineers and identify opportunities, such as DSLs and model-driven engineering, to advance PMDTs toward trustworthy, adaptive chronic care ecosystems.",
+      "fhir_omop_strict": true,
+      "pdf": "2602.11223/pdf/2602.11223.pdf"
+    },
+    {
+      "id": "2512.03098",
+      "title": "An AI Implementation Science Study to Improve Trustworthy Data in a Large Healthcare System",
+      "authors": [
+        "Benoit L. Marteau",
+        "Andrew Hornback",
+        "Shaun Q. Tan",
+        "Christian Lowson",
+        "Jason Woloff",
+        "May D. Wang"
+      ],
+      "published": "2025-12-01",
+      "url": "https://arxiv.org/abs/2512.03098v2",
+      "summary": "The rapid growth of Artificial Intelligence (AI) in healthcare has sparked interest in Trustworthy AI and AI Implementation Science, both of which are essential for accelerating clinical adoption. However, strict regulations, gaps between research and clinical settings, and challenges in evaluating AI systems continue to hinder real-world implementation. This study presents an AI implementation case study within Shriners Childrens (SC), a large multisite pediatric system, showcasing the modernization of SCs Research Data Warehouse (RDW) to OMOP CDM v5.4 within a secure Microsoft Fabric environment. We introduce a Python-based data quality assessment tool compatible with SCs infrastructure, extending OHDsi's R/Java-based Data Quality Dashboard (DQD) and integrating Trustworthy AI principles using the METRIC framework. This extension enhances data quality evaluation by addressing informative missingness, redundancy, timeliness, and distributional consistency. We also compare systematic and case-specific AI implementation strategies for Craniofacial Microsomia (CFM) using the FHIR standard. Our contributions include a real-world evaluation of AI implementations, integration of Trustworthy AI principles into data quality assessment, and insights into hybrid implementation strategies that blend systematic infrastructure with use-case-driven approaches to advance AI in healthcare.",
+      "fhir_omop_strict": true,
+      "pdf": "2512.03098/pdf/2512.03098.pdf"
+    },
+    {
+      "id": "2511.20285",
+      "title": "Schema Matching on Graph: Iterative Graph Exploration for Efficient and Explainable Data Integration",
+      "authors": [
+        "Mingyu Jeon",
+        "Jaeyoung Suh",
+        "Suwan Cho"
+      ],
+      "published": "2025-11-25",
+      "url": "https://arxiv.org/abs/2511.20285v2",
+      "summary": "Schema matching is a critical task in data integration, particularly in the medical domain where disparate Electronic Health Record (EHR) systems must be aligned to standard models like OMOP CDM. While Large Language Models (LLMs) have shown promise in schema matching, they suffer from hallucination and lack of up-to-date domain knowledge. Knowledge Graphs (KGs) offer a solution by providing structured, verifiable knowledge. However, existing KG-augmented LLM approaches often rely on inefficient complex multi-hop queries or storage-intensive vector-based retrieval methods. This paper introduces SMoG (Schema Matching on Graph), a novel framework that leverages iterative execution of simple 1-hop SPARQL queries, inspired by successful strategies in Knowledge Graph Question Answering (KGQA). SMoG enhances explainability and reliability by generating human-verifiable query paths while significantly reducing storage requirements by directly querying SPARQL endpoints. Experimental results on real-world medical datasets demonstrate that SMoG achieves performance comparable to state-of-the-art baselines, validating its effectiveness and efficiency in KG-augmented schema matching.",
+      "fhir_omop_strict": false,
+      "pdf": "2511.20285/pdf/2511.20285.pdf"
+    },
+    {
+      "id": "2511.21724",
+      "title": "AD-CDO: A Lightweight Ontology for Representing Eligibility Criteria in Alzheimer's Disease Clinical Trials",
+      "authors": [
+        "Zenan Sun",
+        "Rashmie Abeysinghe",
+        "Xiaojin Li",
+        "Xinyue Hu",
+        "Licong Cui",
+        "Guo-Qiang Zhang",
+        "Jiang Bian",
+        "Cui Tao"
+      ],
+      "published": "2025-11-20",
+      "url": "https://arxiv.org/abs/2511.21724v1",
+      "summary": "Objective This study introduces the Alzheimer's Disease Common Data Element Ontology for Clinical Trials (AD-CDO), a lightweight, semantically enriched ontology designed to represent and standardize key eligibility criteria concepts in Alzheimer's disease (AD) clinical trials. Materials and Methods We extracted high-frequency concepts from more than 1,500 AD clinical trials on ClinicalTrials.gov and organized them into seven semantic categories: Disease, Medication, Diagnostic Test, Procedure, Social Determinants of Health, Rating Criteria, and Fertility. Each concept was annotated with standard biomedical vocabularies, including the UMLS, OMOP Standardized Vocabularies, DrugBank, NDC, and NLM VSAC value sets. To balance coverage and manageability, we applied the Jenks Natural Breaks method to identify an optimal set of representative concepts. Results The optimized AD-CDO achieved over 63% coverage of extracted trial concepts while maintaining interpretability and compactness. The ontology effectively captured the most frequent and clinically meaningful entities used in AD eligibility criteria. We demonstrated AD-CDO's practical utility through two use cases: (a) an ontology-driven trial simulation system for formal modeling and virtual execution of clinical trials, and (b) an entity normalization task mapping raw clinical text to ontology-aligned terms, enabling consistency and integration with EHR data. Discussion AD-CDO bridges the gap between broad biomedical ontologies and task-specific trial modeling needs. It supports multiple downstream applications, including phenotyping algorithm development, cohort identification, and structured data integration. Conclusion By harmonizing essential eligibility entities and aligning them with standardized vocabularies, AD-CDO provides a versatile foundation for ontology-driven AD clinical trial research.",
+      "fhir_omop_strict": false,
+      "pdf": "2511.21724/pdf/2511.21724.pdf"
+    },
+    {
+      "id": "2511.09017",
+      "title": "OMOP ETL Framework for Semi-Structured Health Data",
+      "authors": [
+        "Jacob Desmond",
+        "Ryan Wartmann",
+        "Chng Wei Lau",
+        "Steven Thomas",
+        "Paul M. Middleton",
+        "Jeewani Anupama Ginige"
+      ],
+      "published": "2025-11-12",
+      "url": "https://arxiv.org/abs/2511.09017v1",
+      "summary": "Healthcare data are generated in many different formats, which makes it difficult to integrate and reuse across institutions and studies. Standardisation is required to enable consistent large-scale analysis. The OMOP-CDM, developed by the OHDSI community, provides one widely adopted standard. Our framework achieves schema-agnostic transformation by extending upon existing literature in using human-readable YAML specification to support both relational (Microsoft SQL Server (MSSQL)) and document-based (MongoDB) data sources. It also incorporates critical production readiness features: provenance-aware mapping and support for incremental updates. We validated the pipeline using 2.7 million patient records and 27 million encounters across six hospitals spanning two decades of records. The resulting OMOP-CDM dataset demonstrated an acceptable level of data quality with a 97% overall passing rate based on the OHDSI Data Quality Dashboard check. Our work provides a reusable blueprint for large-scale data harmonisation, directly supporting real-world medical data research.",
+      "fhir_omop_strict": false,
+      "pdf": "2511.09017/pdf/2511.09017.pdf"
+    },
+    {
+      "id": "2511.09337",
+      "title": "TempoQL: A Readable, Precise, and Portable Query System for Electronic Health Record Data",
+      "authors": [
+        "Ziyong Ma",
+        "Richard D. Boyce",
+        "Adam Perer",
+        "Venkatesh Sivaraman"
+      ],
+      "published": "2025-11-12",
+      "url": "https://arxiv.org/abs/2511.09337v1",
+      "summary": "Electronic health record (EHR) data is an essential data source for machine learning for health, but researchers and clinicians face steep barriers in extracting and validating EHR data for modeling. Existing tools incur trade-offs between expressivity and usability and are typically specialized to a single data standard, making it difficult to write temporal queries that are ready for modern model-building pipelines and adaptable to new datasets. This paper introduces TempoQL, a Python-based toolkit designed to lower these barriers. TempoQL provides a simple, human-readable language for temporal queries; support for multiple EHR data standards, including OMOP, MEDS, and others; and an interactive notebook-based query interface with optional large language model (LLM) authoring assistance. Through a performance evaluation and two use cases on different datasets, we demonstrate that TempoQL simplifies the creation of cohorts for machine learning while maintaining precision, speed, and reproducibility.",
+      "fhir_omop_strict": false,
+      "pdf": "2511.09337/pdf/2511.09337.pdf"
+    },
+    {
+      "id": "2511.02340",
+      "title": "Chronic Kidney Disease Prognosis Prediction Using Transformer",
+      "authors": [
+        "Yohan Lee",
+        "DongGyun Kang",
+        "SeHoon Park",
+        "Sa-Yoon Park",
+        "Kwangsoo Kim"
+      ],
+      "published": "2025-11-04",
+      "url": "https://arxiv.org/abs/2511.02340v2",
+      "summary": "Chronic Kidney Disease (CKD) affects nearly 10\\% of the global population and often progresses to end-stage renal failure. Accurate prognosis prediction is vital for timely interventions and resource optimization. We present a transformer-based framework for predicting CKD progression using multi-modal electronic health records (EHR) from the Seoul National University Hospital OMOP Common Data Model. Our approach (\\textbf{ProQ-BERT}) integrates demographic, clinical, and laboratory data, employing quantization-based tokenization for continuous lab values and attention mechanisms for interpretability. The model was pretrained with masked language modeling and fine-tuned for binary classification tasks predicting progression from stage 3a to stage 5 across varying follow-up and assessment periods. Evaluated on a cohort of 91,816 patients, our model consistently outperformed CEHR-BERT, achieving ROC-AUC up to 0.995 and PR-AUC up to 0.989 for short-term prediction. These results highlight the effectiveness of transformer architectures and temporal design choices in clinical prognosis modeling, offering a promising direction for personalized CKD care.",
+      "fhir_omop_strict": false,
+      "pdf": "2511.02340/pdf/2511.02340.pdf"
+    },
+    {
+      "id": "2509.08247",
+      "title": "The CRITICAL Records Integrated Standardization Pipeline (CRISP): End-to-End Processing of Large-scale Multi-institutional OMOP CDM Data",
+      "authors": [
+        "Xiaolong Luo",
+        "Michael Lingzhi Li"
+      ],
+      "published": "2025-09-10",
+      "url": "https://arxiv.org/abs/2509.08247v2",
+      "summary": "While existing critical care EHR datasets such as MIMIC and eICU have enabled significant advances in clinical AI research, the CRITICAL dataset opens new frontiers by providing extensive scale and diversity -- containing 1.95 billion records from 371,365 patients across four geographically diverse CTSA institutions. CRITICAL's unique strength lies in capturing full-spectrum patient journeys, including pre-ICU, ICU, and post-ICU encounters across both inpatient and outpatient settings. This multi-institutional, longitudinal perspective creates transformative opportunities for developing generalizable predictive models and advancing health equity research. However, the richness of this multi-site resource introduces substantial complexity in data harmonization, with heterogeneous collection practices and diverse vocabulary usage patterns requiring sophisticated preprocessing approaches. We present CRISP to unlock the full potential of this valuable resource. CRISP systematically transforms raw Observational Medical Outcomes Partnership Common Data Model data into ML-ready datasets through: (1) transparent data quality management with comprehensive audit trails, (2) cross-vocabulary mapping of heterogeneous medical terminologies to unified SNOMED-CT standards, with deduplication and unit standardization, (3) modular architecture with parallel optimization enabling complete dataset processing in $<$1 day even on standard computing hardware, and (4) comprehensive baseline model benchmarks spanning multiple clinical prediction tasks to establish reproducible performance standards. By providing processing pipeline, baseline implementations, and detailed transformation documentation, CRISP saves researchers months of preprocessing effort and democratizes access to large-scale multi-institutional critical care data, enabling them to focus on advancing clinical AI.",
+      "fhir_omop_strict": false,
+      "pdf": "2509.08247/pdf/2509.08247.pdf"
+    },
+    {
+      "id": "2509.03828",
+      "title": "An Agentic Model Context Protocol Framework for Medical Concept Standardization",
+      "authors": [
+        "Jaerong Ahn",
+        "Andrew Wen",
+        "Nan Wang",
+        "Heling Jia",
+        "Zhiyi Yue",
+        "Sunyang Fu",
+        "Hongfang Liu"
+      ],
+      "published": "2025-09-04",
+      "url": "https://arxiv.org/abs/2509.03828v1",
+      "summary": "The Observational Medical Outcomes Partnership (OMOP) common data model (CDM) provides a standardized representation of heterogeneous health data to support large-scale, multi-institutional research. One critical step in data standardization using OMOP CDM is the mapping of source medical terms to OMOP standard concepts, a procedure that is resource-intensive and error-prone. While large language models (LLMs) have the potential to facilitate this process, their tendency toward hallucination makes them unsuitable for clinical deployment without training and expert validation. Here, we developed a zero-training, hallucination-preventive mapping system based on the Model Context Protocol (MCP), a standardized and secure framework allowing LLMs to interact with external resources and tools. The system enables explainable mapping and significantly improves efficiency and accuracy with minimal effort. It provides real-time vocabulary lookups and structured reasoning outputs suitable for immediate use in both exploratory and production environments.",
+      "fhir_omop_strict": false,
+      "pdf": "2509.03828/pdf/2509.03828.pdf"
+    },
+    {
+      "id": "2507.14376",
+      "title": "Schemora: schema matching via multi-stage recommendation and metadata enrichment using off-the-shelf llms",
+      "authors": [
+        "Osman Erman Gungor",
+        "Derak Paulsen",
+        "William Kang"
+      ],
+      "published": "2025-07-18",
+      "url": "https://arxiv.org/abs/2507.14376v1",
+      "summary": "Schema matching is essential for integrating heterogeneous data sources and enhancing dataset discovery, yet it remains a complex and resource-intensive problem. We introduce SCHEMORA, a schema matching framework that combines large language models with hybrid retrieval techniques in a prompt-based approach, enabling efficient identification of candidate matches without relying on labeled training data or exhaustive pairwise comparisons. By enriching schema metadata and leveraging both vector-based and lexical retrieval, SCHEMORA improves matching accuracy and scalability. Evaluated on the MIMIC-OMOP benchmark, it establishes new state-of-the-art performance, with gains of 7.49% in HitRate@5 and 3.75% in HitRate@3 over previous best results. To our knowledge, this is the first LLM-based schema matching method with an open-source implementation, accompanied by analysis that underscores the critical role of retrieval and provides practical guidance on model selection.",
+      "fhir_omop_strict": false,
+      "pdf": "2507.14376/pdf/2507.14376.pdf"
+    },
+    {
+      "id": "2507.03067",
+      "title": "Large Language Models for Automating Clinical Data Standardization: HL7 FHIR Use Case",
+      "authors": [
+        "Alvaro Riquelme",
+        "Pedro Costa",
+        "Catalina Martinez"
+      ],
+      "published": "2025-07-03",
+      "url": "https://arxiv.org/abs/2507.03067v1",
+      "summary": "For years, semantic interoperability standards have sought to streamline the exchange of clinical data, yet their deployment remains time-consuming, resource-intensive, and technically challenging. To address this, we introduce a semi-automated approach that leverages large language models specifically GPT-4o and Llama 3.2 405b to convert structured clinical datasets into HL7 FHIR format while assessing accuracy, reliability, and security. Applying our method to the MIMIC-IV database, we combined embedding techniques, clustering algorithms, and semantic retrieval to craft prompts that guide the models in mapping each tabular field to its corresponding FHIR resource. In an initial benchmark, resource identification achieved a perfect F1-score, with GPT-4o outperforming Llama 3.2 thanks to the inclusion of FHIR resource schemas within the prompt. Under real-world conditions, accuracy dipped slightly to 94 %, but refinements to the prompting strategy restored robust mappings. Error analysis revealed occasional hallucinations of non-existent attributes and mismatches in granularity, which more detailed prompts can mitigate. Overall, our study demonstrates the feasibility of context-aware, LLM-driven transformation of clinical data into HL7 FHIR, laying the groundwork for semi-automated interoperability workflows. Future work will focus on fine-tuning models with specialized medical corpora, extending support to additional standards such as HL7 CDA and OMOP, and developing an interactive interface to enable expert validation and iterative refinement.",
+      "fhir_omop_strict": true,
+      "pdf": "2507.03067/pdf/2507.03067.pdf"
+    },
+    {
+      "id": "2505.09794",
+      "title": "Automated Detection of Clinical Entities in Lung and Breast Cancer Reports Using NLP Techniques",
+      "authors": [
+        "J. Moreno-Casanova",
+        "J. M. Auñón",
+        "A. Mártinez-Pérez",
+        "M. E. Pérez-Martínez",
+        "M. E. Gas-López"
+      ],
+      "published": "2025-05-14",
+      "url": "https://arxiv.org/abs/2505.09794v1",
+      "summary": "Research projects, including those focused on cancer, rely on the manual extraction of information from clinical reports. This process is time-consuming and prone to errors, limiting the efficiency of data-driven approaches in healthcare. To address these challenges, Natural Language Processing (NLP) offers an alternative for automating the extraction of relevant data from electronic health records (EHRs). In this study, we focus on lung and breast cancer due to their high incidence and the significant impact they have on public health. Early detection and effective data management in both types of cancer are crucial for improving patient outcomes. To enhance the accuracy and efficiency of data extraction, we utilized GMV's NLP tool uQuery, which excels at identifying relevant entities in clinical texts and converting them into standardized formats such as SNOMED and OMOP. uQuery not only detects and classifies entities but also associates them with contextual information, including negated entities, temporal aspects, and patient-related details. In this work, we explore the use of NLP techniques, specifically Named Entity Recognition (NER), to automatically identify and extract key clinical information from EHRs related to these two cancers. A dataset from Health Research Institute Hospital La Fe (IIS La Fe), comprising 200 annotated breast cancer and 400 lung cancer reports, was used, with eight clinical entities manually labeled using the Doccano platform. To perform NER, we fine-tuned the bsc-bio-ehr-en3 model, a RoBERTa-based biomedical linguistic model pre-trained in Spanish. Fine-tuning was performed using the Transformers architecture, enabling accurate recognition of clinical entities in these cancer types. Our results demonstrate strong overall performance, particularly in identifying entities like MET and PAT, although challenges remain with less frequent entities like EVOL.",
+      "fhir_omop_strict": false,
+      "pdf": "2505.09794/pdf/2505.09794.pdf"
+    },
+    {
+      "id": "2505.04728",
+      "title": "Data Standards in Audiology: A Mixed-Methods Exploration of Community Perspectives and Implementation Considerations",
+      "authors": [
+        "Charlotte Vercammen",
+        "Antje Heinrich",
+        "Christophe Lesimple",
+        "Alessia Paglialonga",
+        "Jan-Willem A. Wasmann",
+        "Mareike Buhl"
+      ],
+      "published": "2025-05-07",
+      "url": "https://arxiv.org/abs/2505.04728v4",
+      "summary": "Objective: This study addresses conceptual issues around data standardisation in audiology, and outlines steps toward achieving it. It reports a survey of the computational audiology community on their current understanding, needs, and preferences concerning data standards. Based on survey findings and a panel discussion, recommendations are made concerning moving forward with standardisation in audiology. Design: Mixed-methods: 1) review of existing standardisation efforts; 2) a survey of the computational audiology community; 3) expert panel discussion in a dedicated session at the 2024 Virtual Conference of Computational Audiology. Sample: Survey: 82 members of the global community; Panel discussion: five experts. Results: A prerequisite for any global audiology database are agreed data standards. Although many are familiar with the general idea, few know of existing initiatives, or have actively participated in them. Ninety percent of respondents expressed willingness to follow or contribute to standardisation efforts. The panel discussed relevant initiatives (e.g. OMOP, openEHR, Noah) and explored both challenges (around harmonisation) and opportunities (alignment with other medical fields and conversion among approaches). Conclusions: Combining conceptual discussion with stakeholder views, the study offers guidance for implementing interoperable data standards in audiology. It highlights community support, key issues to address, and suggests paths for future work.",
+      "fhir_omop_strict": false,
+      "pdf": "2505.04728/pdf/2505.04728.pdf"
+    },
+    {
+      "id": "2504.08329",
+      "title": "MedRep: Medical Concept Representation for General Electronic Health Record Foundation Models",
+      "authors": [
+        "Junmo Kim",
+        "Namkyeong Lee",
+        "Jiwon Kim",
+        "Kwangsoo Kim"
+      ],
+      "published": "2025-04-11",
+      "url": "https://arxiv.org/abs/2504.08329v3",
+      "summary": "Electronic health record (EHR) foundation models have been an area ripe for exploration with their improved performance in various medical tasks. Despite the rapid advances, there exists a fundamental limitation: Processing unseen medical codes out of vocabulary. This problem limits the generalizability of EHR foundation models and the integration of models trained with different vocabularies. To alleviate this problem, we propose a set of novel medical concept representations (MedRep) for EHR foundation models based on the observational medical outcome partnership (OMOP) common data model (CDM). For concept representation learning, we enrich the information of each concept with a minimal definition through large language model (LLM) prompts and complement the text-based representations through the graph ontology of OMOP vocabulary. Our approach outperforms the vanilla EHR foundation model and the model with a previously introduced medical code tokenizer in diverse prediction tasks. We also demonstrate the generalizability of MedRep through external validation.",
+      "fhir_omop_strict": false,
+      "pdf": "2504.08329/pdf/2504.08329.pdf"
+    },
+    {
+      "id": "2410.05046",
+      "title": "Named Clinical Entity Recognition Benchmark",
+      "authors": [
+        "Wadood M Abdul",
+        "Marco AF Pimentel",
+        "Muhammad Umar Salman",
+        "Tathagata Raha",
+        "Clément Christophe",
+        "Praveen K Kanithi",
+        "Nasir Hayat",
+        "Ronnie Rajan",
+        "Shadab Khan"
+      ],
+      "published": "2024-10-07",
+      "url": "https://arxiv.org/abs/2410.05046v1",
+      "summary": "This technical report introduces a Named Clinical Entity Recognition Benchmark for evaluating language models in healthcare, addressing the crucial natural language processing (NLP) task of extracting structured information from clinical narratives to support applications like automated coding, clinical trial cohort identification, and clinical decision support. The leaderboard provides a standardized platform for assessing diverse language models, including encoder and decoder architectures, on their ability to identify and classify clinical entities across multiple medical domains. A curated collection of openly available clinical datasets is utilized, encompassing entities such as diseases, symptoms, medications, procedures, and laboratory measurements. Importantly, these entities are standardized according to the Observational Medical Outcomes Partnership (OMOP) Common Data Model, ensuring consistency and interoperability across different healthcare systems and datasets, and a comprehensive evaluation of model performance. Performance of models is primarily assessed using the F1-score, and it is complemented by various assessment modes to provide comprehensive insights into model performance. The report also includes a brief analysis of models evaluated to date, highlighting observed trends and limitations. By establishing this benchmarking framework, the leaderboard aims to promote transparency, facilitate comparative analyses, and drive innovation in clinical entity recognition tasks, addressing the need for robust evaluation methods in healthcare NLP.",
+      "fhir_omop_strict": false,
+      "pdf": "2410.05046/pdf/2410.05046.pdf"
+    },
+    {
+      "id": "2410.09076",
+      "title": "Llettuce: An Open Source Natural Language Processing Tool for the Translation of Medical Terms into Uniform Clinical Encoding",
+      "authors": [
+        "James Mitchell-White",
+        "Reza Omdivar",
+        "Benjamin Partridge",
+        "Esmond Urwin",
+        "Karthikeyan Sivakumar",
+        "Ruizhe Li",
+        "Andy Rae",
+        "Xiaoyan Wang",
+        "Theresia Mina",
+        "Tom Giles",
+        "Diego Garcia-Gil",
+        "Tim Beck",
+        "John Chambers",
+        "Grazziela Figueredo",
+        "Philip R Quinlan"
+      ],
+      "published": "2024-10-04",
+      "url": "https://arxiv.org/abs/2410.09076v2",
+      "summary": "This paper introduces Llettuce, an open-source tool designed to address the complexities of converting medical terms into OMOP standard concepts. Unlike existing solutions such as the Athena database search and Usagi, which struggle with semantic nuances and require substantial manual input, Llettuce leverages advanced natural language processing, including large language models and fuzzy matching, to automate and enhance the mapping process. Developed with a focus on GDPR compliance, Llettuce can be deployed locally, ensuring data protection while maintaining high performance in converting informal medical terms to standardised concepts.",
+      "fhir_omop_strict": false,
+      "pdf": "2410.09076/pdf/2410.09076.pdf"
+    },
+    {
+      "id": "2408.01869",
+      "title": "MALADE: Orchestration of LLM-powered Agents with Retrieval Augmented Generation for Pharmacovigilance",
+      "authors": [
+        "Jihye Choi",
+        "Nils Palumbo",
+        "Prasad Chalasani",
+        "Matthew M. Engelhard",
+        "Somesh Jha",
+        "Anivarya Kumar",
+        "David Page"
+      ],
+      "published": "2024-08-03",
+      "url": "https://arxiv.org/abs/2408.01869v1",
+      "summary": "In the era of Large Language Models (LLMs), given their remarkable text understanding and generation abilities, there is an unprecedented opportunity to develop new, LLM-based methods for trustworthy medical knowledge synthesis, extraction and summarization. This paper focuses on the problem of Pharmacovigilance (PhV), where the significance and challenges lie in identifying Adverse Drug Events (ADEs) from diverse text sources, such as medical literature, clinical notes, and drug labels. Unfortunately, this task is hindered by factors including variations in the terminologies of drugs and outcomes, and ADE descriptions often being buried in large amounts of narrative text. We present MALADE, the first effective collaborative multi-agent system powered by LLM with Retrieval Augmented Generation for ADE extraction from drug label data. This technique involves augmenting a query to an LLM with relevant information extracted from text resources, and instructing the LLM to compose a response consistent with the augmented data. MALADE is a general LLM-agnostic architecture, and its unique capabilities are: (1) leveraging a variety of external sources, such as medical literature, drug labels, and FDA tools (e.g., OpenFDA drug information API), (2) extracting drug-outcome association in a structured format along with the strength of the association, and (3) providing explanations for established associations. Instantiated with GPT-4 Turbo or GPT-4o, and FDA drug label data, MALADE demonstrates its efficacy with an Area Under ROC Curve of 0.90 against the OMOP Ground Truth table of ADEs. Our implementation leverages the Langroid multi-agent LLM framework and can be found at https://github.com/jihyechoi77/malade.",
+      "fhir_omop_strict": false,
+      "pdf": "2408.01869/pdf/2408.01869.pdf"
+    },
+    {
+      "id": "2406.16341",
+      "title": "EHRCon: Dataset for Checking Consistency between Unstructured Notes and Structured Tables in Electronic Health Records",
+      "authors": [
+        "Yeonsu Kwon",
+        "Jiho Kim",
+        "Gyubok Lee",
+        "Seongsu Bae",
+        "Daeun Kyung",
+        "Wonchul Cha",
+        "Tom Pollard",
+        "Alistair Johnson",
+        "Edward Choi"
+      ],
+      "published": "2024-06-24",
+      "url": "https://arxiv.org/abs/2406.16341v2",
+      "summary": "Electronic Health Records (EHRs) are integral for storing comprehensive patient medical records, combining structured data (e.g., medications) with detailed clinical notes (e.g., physician notes). These elements are essential for straightforward data retrieval and provide deep, contextual insights into patient care. However, they often suffer from discrepancies due to unintuitive EHR system designs and human errors, posing serious risks to patient safety. To address this, we developed EHRCon, a new dataset and task specifically designed to ensure data consistency between structured tables and unstructured notes in EHRs. EHRCon was crafted in collaboration with healthcare professionals using the MIMIC-III EHR dataset, and includes manual annotations of 4,101 entities across 105 clinical notes checked against database entries for consistency. EHRCon has two versions, one using the original MIMIC-III schema, and another using the OMOP CDM schema, in order to increase its applicability and generalizability. Furthermore, leveraging the capabilities of large language models, we introduce CheckEHR, a novel framework for verifying the consistency between clinical notes and database tables. CheckEHR utilizes an eight-stage process and shows promising results in both few-shot and zero-shot settings. The code is available at https://github.com/dustn1259/EHRCon.",
+      "fhir_omop_strict": false,
+      "pdf": "2406.16341/pdf/2406.16341.pdf"
+    },
+    {
+      "id": "2402.04400",
+      "title": "CEHR-GPT: Generating Electronic Health Records with Chronological Patient Timelines",
+      "authors": [
+        "Chao Pang",
+        "Xinzhuo Jiang",
+        "Nishanth Parameshwar Pavinkurve",
+        "Krishna S. Kalluri",
+        "Elise L. Minto",
+        "Jason Patterson",
+        "Linying Zhang",
+        "George Hripcsak",
+        "Gamze Gürsoy",
+        "Noémie Elhadad",
+        "Karthik Natarajan"
+      ],
+      "published": "2024-02-06",
+      "url": "https://arxiv.org/abs/2402.04400v2",
+      "summary": "Synthetic Electronic Health Records (EHR) have emerged as a pivotal tool in advancing healthcare applications and machine learning models, particularly for researchers without direct access to healthcare data. Although existing methods, like rule-based approaches and generative adversarial networks (GANs), generate synthetic data that resembles real-world EHR data, these methods often use a tabular format, disregarding temporal dependencies in patient histories and limiting data replication. Recently, there has been a growing interest in leveraging Generative Pre-trained Transformers (GPT) for EHR data. This enables applications like disease progression analysis, population estimation, counterfactual reasoning, and synthetic data generation. In this work, we focus on synthetic data generation and demonstrate the capability of training a GPT model using a particular patient representation derived from CEHR-BERT, enabling us to generate patient sequences that can be seamlessly converted to the Observational Medical Outcomes Partnership (OMOP) data format.",
+      "fhir_omop_strict": false,
+      "pdf": "2402.04400/pdf/2402.04400.pdf"
+    },
+    {
+      "id": "2309.13175",
+      "title": "American Family Cohort, a data resource description",
+      "authors": [
+        "Deepa Balraj",
+        "Ayin Vala",
+        "Shiying Hao",
+        "Melanie Philofsky",
+        "Anna Tsvetkova",
+        "Elena Trach",
+        "Shravani Priya Narra",
+        "Oleg Zhuk",
+        "Mary Shamkhorskaya",
+        "Jim Singer",
+        "Joseph Mesterhazy",
+        "Somalee Datta",
+        "Isabella Chu",
+        "David Rehkopf"
+      ],
+      "published": "2023-09-22",
+      "url": "https://arxiv.org/abs/2309.13175v1",
+      "summary": "This manuscript is a research resource description and presents a large and novel Electronic Health Records (EHR) data resource, American Family Cohort (AFC). The AFC data is derived from Centers for Medicare and Medicaid Services (CMS) certified American Board of Family Medicine (ABFM) PRIME registry. The PRIME registry is the largest national Qualified Clinical Data Registry (QCDR) for Primary Care. The data is converted to a popular common data model, the Observational Health Data Sciences and Informatics (OHDSI) Observational Medical Outcomes Partnership (OMOP) Common Data Model (CDM). The resource presents approximately 90 million encounters for 7.5 million patients. All 100% of the patients present age, gender, and address information, and 73% report race. Nealy 93% of patients have lab data in LOINC, 86% have medication data in RxNorm, 93% have diagnosis in SNOWMED and ICD, 81% have procedures in HCPCS or CPT, and 61% have insurance information. The richness, breadth, and diversity of this research accessible and research ready data is expected to accelerate observational studies in many diverse areas. We expect this resource to facilitate research in many years to come.",
+      "fhir_omop_strict": false,
+      "pdf": "2309.13175/pdf/2309.13175.pdf"
+    },
+    {
+      "id": "2304.05929",
+      "title": "ReDWINE: A Clinical Datamart with Text Analytical Capabilities to Facilitate Rehabilitation Research",
+      "authors": [
+        "David Oniani",
+        "Bambang Parmanto",
+        "Andi Saptono",
+        "Allyn Bove",
+        "Janet Freburger",
+        "Shyam Visweswaran Nickie Cappella",
+        "Brian McLay",
+        "Jonathan C. Silverstein",
+        "Michael J. Becich",
+        "Anthony Delitto",
+        "Elizabeth Skidmore",
+        "Yanshan Wang"
+      ],
+      "published": "2023-04-12",
+      "url": "https://arxiv.org/abs/2304.05929v1",
+      "summary": "Rehabilitation research focuses on determining the components of a treatment intervention, the mechanism of how these components lead to recovery and rehabilitation, and ultimately the optimal intervention strategies to maximize patients' physical, psychologic, and social functioning. Traditional randomized clinical trials that study and establish new interventions face several challenges, such as high cost and time commitment. Observational studies that use existing clinical data to observe the effect of an intervention have shown several advantages over RCTs. Electronic Health Records (EHRs) have become an increasingly important resource for conducting observational studies. To support these studies, we developed a clinical research datamart, called ReDWINE (Rehabilitation Datamart With Informatics iNfrastructure for rEsearch), that transforms the rehabilitation-related EHR data collected from the UPMC health care system to the Observational Health Data Sciences and Informatics (OHDSI) Observational Medical Outcomes Partnership (OMOP) Common Data Model (CDM) to facilitate rehabilitation research. The standardized EHR data stored in ReDWINE will further reduce the time and effort required by investigators to pool, harmonize, clean, and analyze data from multiple sources, leading to more robust and comprehensive research findings. ReDWINE also includes deployment of data visualization and data analytics tools to facilitate cohort definition and clinical data analysis. These include among others the Open Health Natural Language Processing (OHNLP) toolkit, a high-throughput NLP pipeline, to provide text analytical capabilities at scale in ReDWINE. Using this comprehensive representation of patient data in ReDWINE for rehabilitation research will facilitate real-world evidence for health interventions and outcomes.",
+      "fhir_omop_strict": false,
+      "pdf": "2304.05929/pdf/2304.05929.pdf"
+    },
+    {
+      "id": "2209.04732",
+      "title": "Ontologizing Health Systems Data at Scale: Making Translational Discovery a Reality",
+      "authors": [
+        "Tiffany J. Callahan",
+        "Adrianne L. Stefanski",
+        "Jordan M. Wyrwa",
+        "Chenjie Zeng",
+        "Anna Ostropolets",
+        "Juan M. Banda",
+        "William A. Baumgartner",
+        "Richard D. Boyce",
+        "Elena Casiraghi",
+        "Ben D. Coleman",
+        "Janine H. Collins",
+        "Sara J. Deakyne-Davies",
+        "James A. Feinstein",
+        "Melissa A. Haendel",
+        "Asiyah Y. Lin",
+        "Blake Martin",
+        "Nicolas A. Matentzoglu",
+        "Daniella Meeker",
+        "Justin Reese",
+        "Jessica Sinclair",
+        "Sanya B. Taneja",
+        "Katy E. Trinkley",
+        "Nicole A. Vasilevsky",
+        "Andrew Williams",
+        "Xingman A. Zhang",
+        "Joshua C. Denny",
+        "Peter N. Robinson",
+        "Patrick Ryan",
+        "George Hripcsak",
+        "Tellen D. Bennett",
+        "Lawrence E. Hunter",
+        "Michael G. Kahn"
+      ],
+      "published": "2022-09-10",
+      "url": "https://arxiv.org/abs/2209.04732v2",
+      "summary": "Background: Common data models solve many challenges of standardizing electronic health record (EHR) data, but are unable to semantically integrate all the resources needed for deep phenotyping. Open Biological and Biomedical Ontology (OBO) Foundry ontologies provide computable representations of biological knowledge and enable the integration of heterogeneous data. However, mapping EHR data to OBO ontologies requires significant manual curation and domain expertise. Objective: We introduce OMOP2OBO, an algorithm for mapping Observational Medical Outcomes Partnership (OMOP) vocabularies to OBO ontologies. Results: Using OMOP2OBO, we produced mappings for 92,367 conditions, 8611 drug ingredients, and 10,673 measurement results, which covered 68-99% of concepts used in clinical practice when examined across 24 hospitals. When used to phenotype rare disease patients, the mappings helped systematically identify undiagnosed patients who might benefit from genetic testing. Conclusions: By aligning OMOP vocabularies to OBO ontologies our algorithm presents new opportunities to advance EHR-based deep phenotyping.",
+      "fhir_omop_strict": false,
+      "pdf": "2209.04732/pdf/2209.04732.pdf"
+    },
+    {
+      "id": "2205.02933",
+      "title": "Temporal Events Detector for Pregnancy Care (TED-PC): A Rule-based Algorithm to Infer Gestational Age and Delivery Date from Electronic Health Records of Pregnant Women with and without COVID-19",
+      "authors": [
+        "Tianchu Lyu",
+        "Chen Liang",
+        "Jihong Liu",
+        "Berry Campbell",
+        "Peiyin Hung",
+        "Yi-Wen Shih",
+        "Nadia Ghumman",
+        "Xiaoming Li"
+      ],
+      "published": "2022-05-01",
+      "url": "https://arxiv.org/abs/2205.02933v1",
+      "summary": "Objective: To develop a rule-based algorithm that detects temporal information of clinical events during pregnancy for women with COVID-19 by inferring gestational weeks and delivery dates from Electronic Health Records (EHR) from the National COVID Cohort Collaborate (N3C). Materials and Methods: The EHR are normalized by the Observational Medical Outcomes Partnership (OMOP) Clinical Data Model (CDM). EHR phenotyping resulted in 270,897 pregnant women (2018-06-01 to 2021-05-31). We developed a rule-based algorithm and performed a multi-level evaluation to test content validity and clinical validity of the algorithm; and extreme value analysis for individuals with <150 or >300 days of gestation. Results: The algorithm identified 296,194 pregnancies (16,659 COVID-19 174 and 744 without COVID-19 peri-pandemic) in 270,897 pregnant women. For inferring gestational age, 95% cases (n=40) have moderate-high accuracy (Cohen Kappa = 0.62); 100% cases (n=40) have moderate-high granularity of temporal information (Cohen Kappa = 1). For inferring delivery dates, the accuracy is 100% (Cohen Kappa = 1). Accuracy of gestational age detection for extreme length of gestation is 93.3% (Cohen Kappa = 1). Mothers with COVID-19 showed higher prevalence in obesity (35.1% vs. 29.5%), diabetes (17.8% vs. 17.0%), chronic obstructive pulmonary disease (COPD) (0.2% vs. 0.1%), respiratory distress syndrome (ARDS) (1.8% vs. 0.2%). Discussion: We explored the characteristics of pregnant women by different timing of COVID-19 with our algorithm: the first to infer temporal information from complete antenatal care and detect the timing of SARS-CoV-2 infection for pregnant women using N3C. Conclusion: The algorithm shows excellent validity in inferring gestational age and delivery dates, which supports national EHR cohorts on N3C studying the impact of COVID-19 on pregnancy.",
+      "fhir_omop_strict": false,
+      "pdf": "2205.02933/pdf/2205.02933.pdf"
+    },
+    {
+      "id": "2204.09599",
+      "title": "Radiology Text Analysis System (RadText): Architecture and Evaluation",
+      "authors": [
+        "Song Wang",
+        "Mingquan Lin",
+        "Ying Ding",
+        "George Shih",
+        "Zhiyong Lu",
+        "Yifan Peng"
+      ],
+      "published": "2022-03-19",
+      "url": "https://arxiv.org/abs/2204.09599v1",
+      "summary": "Analyzing radiology reports is a time-consuming and error-prone task, which raises the need for an efficient automated radiology report analysis system to alleviate the workloads of radiologists and encourage precise diagnosis. In this work, we present RadText, an open-source radiology text analysis system developed by Python. RadText offers an easy-to-use text analysis pipeline, including de-identification, section segmentation, sentence split and word tokenization, named entity recognition, parsing, and negation detection. RadText features a flexible modular design, provides a hybrid text processing schema, and supports raw text processing and local processing, which enables better usability and improved data privacy. RadText adopts BioC as the unified interface, and also standardizes the input / output into a structured representation compatible with Observational Medical Outcomes Partnership (OMOP) Common Data Model (CDM). This allows for a more systematic approach to observational research across multiple, disparate data sources. We evaluated RadText on the MIMIC-CXR dataset, with five new disease labels we annotated for this work. RadText demonstrates highly accurate classification performances, with an average precision of, a recall of 0.94, and an F-1 score of 0.92. We have made our code, documentation, examples, and the test set available at https://github.com/bionlplab/radtext .",
+      "fhir_omop_strict": false,
+      "pdf": "2204.09599/pdf/2204.09599.pdf"
+    },
+    {
+      "id": "2109.08235",
+      "title": "Integrating Flowsheet Data in OMOP Common Data Model for Clinical Research",
+      "authors": [
+        "Tina Seto",
+        "Lillian Sung",
+        "Jose Posada",
+        "Priyamvada Desai",
+        "Susan Weber",
+        "Somalee Datta"
+      ],
+      "published": "2021-09-16",
+      "url": "https://arxiv.org/abs/2109.08235v1",
+      "summary": "Flowsheet data presents unique challenges and opportunities for integration into standardized Common Data Models (CDMs) such as the Observational Medical Outcomes Partnership (OMOP) CDM from the Observational Health Data Sciences and Informatics (OHDSI) program. These data are a potentially rich source of detailed curated health outcomes data such as pain scores, vital signs, lines drains and airways (LDA) and other measurements that can be invaluable in building a robust model of patient health journey during an inpatient stay. We present two approaches to integration of flowsheet measures into the OMOP CDM. One approach was computationally straightforward but of potentially limited research utility. The second approach was far more computationally and labor intensive and involved mapping to standardized terms in controlled clinical vocabularies such as Logical Observation Identifiers Names and Codes (LOINC), resulting in a research data set of higher utility to population health studies.",
+      "fhir_omop_strict": false,
+      "pdf": "2109.08235/pdf/2109.08235.pdf"
+    },
+    {
+      "id": "2106.13265",
+      "title": "Disease Progression Modeling Workbench 360",
+      "authors": [
+        "Parthasarathy Suryanarayanan",
+        "Prithwish Chakraborty",
+        "Piyush Madan",
+        "Kibichii Bore",
+        "William Ogallo",
+        "Rachita Chandra",
+        "Mohamed Ghalwash",
+        "Italo Buleje",
+        "Sekou Remy",
+        "Shilpa Mahatma",
+        "Pablo Meyer",
+        "Jianying Hu"
+      ],
+      "published": "2021-06-24",
+      "url": "https://arxiv.org/abs/2106.13265v1",
+      "summary": "In this work we introduce Disease Progression Modeling workbench 360 (DPM360) opensource clinical informatics framework for collaborative research and delivery of healthcare AI. DPM360, when fully developed, will manage the entire modeling life cycle, from data analysis (e.g., cohort identification) to machine learning algorithm development and prototyping. DPM360 augments the advantages of data model standardization and tooling (OMOP-CDM, Athena, ATLAS) provided by the widely-adopted OHDSI initiative with a powerful machine learning training framework, and a mechanism for rapid prototyping through automatic deployment of models as containerized services to a cloud environment.",
+      "fhir_omop_strict": false,
+      "pdf": "2106.13265/pdf/2106.13265.pdf"
+    },
+    {
+      "id": "2007.10286",
+      "title": "COVID-19 SignSym: a fast adaptation of a general clinical NLP tool to identify and normalize COVID-19 signs and symptoms to OMOP common data model",
+      "authors": [
+        "Jingqi Wang",
+        "Noor Abu-el-rub",
+        "Josh Gray",
+        "Huy Anh Pham",
+        "Yujia Zhou",
+        "Frank Manion",
+        "Mei Liu",
+        "Xing Song",
+        "Hua Xu",
+        "Masoud Rouhizadeh",
+        "Yaoyun Zhang"
+      ],
+      "published": "2020-07-13",
+      "url": "https://arxiv.org/abs/2007.10286v4",
+      "summary": "The COVID-19 pandemic swept across the world rapidly, infecting millions of people. An efficient tool that can accurately recognize important clinical concepts of COVID-19 from free text in electronic health records (EHRs) will be valuable to accelerate COVID-19 clinical research. To this end, this study aims at adapting the existing CLAMP natural language processing tool to quickly build COVID-19 SignSym, which can extract COVID-19 signs/symptoms and their 8 attributes (body location, severity, temporal expression, subject, condition, uncertainty, negation, and course) from clinical text. The extracted information is also mapped to standard concepts in the Observational Medical Outcomes Partnership common data model. A hybrid approach of combining deep learning-based models, curated lexicons, and pattern-based rules was applied to quickly build the COVID-19 SignSym from CLAMP, with optimized performance. Our extensive evaluation using 3 external sites with clinical notes of COVID-19 patients, as well as the online medical dialogues of COVID-19, shows COVID-19 Sign-Sym can achieve high performance across data sources. The workflow used for this study can be generalized to other use cases, where existing clinical natural language processing tools need to be customized for specific information needs within a short time. COVID-19 SignSym is freely accessible to the research community as a downloadable package (https://clamp.uth.edu/covid/nlp.php) and has been used by 16 healthcare organizations to support clinical research of COVID-19.",
+      "fhir_omop_strict": false,
+      "pdf": "2007.10286/pdf/2007.10286.pdf"
+    },
+    {
+      "id": "2007.05611",
+      "title": "Deep Contextual Clinical Prediction with Reverse Distillation",
+      "authors": [
+        "Rohan S. Kodialam",
+        "Rebecca Boiarsky",
+        "Justin Lim",
+        "Neil Dixit",
+        "Aditya Sai",
+        "David Sontag"
+      ],
+      "published": "2020-07-10",
+      "url": "https://arxiv.org/abs/2007.05611v2",
+      "summary": "Healthcare providers are increasingly using machine learning to predict patient outcomes to make meaningful interventions. However, despite innovations in this area, deep learning models often struggle to match performance of shallow linear models in predicting these outcomes, making it difficult to leverage such techniques in practice. In this work, motivated by the task of clinical prediction from insurance claims, we present a new technique called Reverse Distillation which pretrains deep models by using high-performing linear models for initialization. We make use of the longitudinal structure of insurance claims datasets to develop Self Attention with Reverse Distillation, or SARD, an architecture that utilizes a combination of contextual embedding, temporal embedding and self-attention mechanisms and most critically is trained via reverse distillation. SARD outperforms state-of-the-art methods on multiple clinical prediction outcomes, with ablation studies revealing that reverse distillation is a primary driver of these improvements. Code is available at https://github.com/clinicalml/omop-learn.",
+      "fhir_omop_strict": false,
+      "pdf": "2007.05611/pdf/2007.05611.pdf"
+    },
+    {
+      "id": "1901.07601",
+      "title": "CREATE: Cohort Retrieval Enhanced by Analysis of Text from Electronic Health Records using OMOP Common Data Model",
+      "authors": [
+        "Sijia Liu",
+        "Yanshan Wang",
+        "Andrew Wen",
+        "Liwei Wang",
+        "Na Hong",
+        "Feichen Shen",
+        "Steven Bedrick",
+        "William Hersh",
+        "Hongfang Liu"
+      ],
+      "published": "2019-01-22",
+      "url": "https://arxiv.org/abs/1901.07601v1",
+      "summary": "Background: Widespread adoption of electronic health records (EHRs) has enabled secondary use of EHR data for clinical research and healthcare delivery. Natural language processing (NLP) techniques have shown promise in their capability to extract the embedded information in unstructured clinical data, and information retrieval (IR) techniques provide flexible and scalable solutions that can augment the NLP systems for retrieving and ranking relevant records. Methods: In this paper, we present the implementation of Cohort Retrieval Enhanced by Analysis of Text from EHRs (CREATE), a cohort retrieval system that can execute textual cohort selection queries on both structured and unstructured EHR data. CREATE is a proof-of-concept system that leverages a combination of structured queries and IR techniques on NLP results to improve cohort retrieval performance while adopting the Observational Medical Outcomes Partnership (OMOP) Common Data Model (CDM) to enhance model portability. The NLP component empowered by cTAKES is used to extract CDM concepts from textual queries. We design a hierarchical index in Elasticsearch to support CDM concept search utilizing IR techniques and frameworks. Results: Our case study on 5 cohort identification queries evaluated using the IR metric, P@5 (Precision at 5) at both the patient-level and document-level, demonstrates that CREATE achieves an average P@5 of 0.90, which outperforms systems using only structured data or only unstructured data with average P@5s of 0.54 and 0.74, respectively.",
+      "fhir_omop_strict": false,
+      "pdf": "1901.07601/pdf/1901.07601.pdf"
+    },
+    {
+      "id": "1807.06638",
+      "title": "Developing a Portable Natural Language Processing Based Phenotyping System",
+      "authors": [
+        "Himanshu Sharma",
+        "Chengsheng Mao",
+        "Yizhen Zhang",
+        "Haleh Vatani",
+        "Liang Yao",
+        "Yizhen Zhong",
+        "Luke Rasmussen",
+        "Guoqian Jiang",
+        "Jyotishman Pathak",
+        "Yuan Luo"
+      ],
+      "published": "2018-07-17",
+      "url": "https://arxiv.org/abs/1807.06638v1",
+      "summary": "This paper presents a portable phenotyping system that is capable of integrating both rule-based and statistical machine learning based approaches. Our system utilizes UMLS to extract clinically relevant features from the unstructured text and then facilitates portability across different institutions and data systems by incorporating OHDSI's OMOP Common Data Model (CDM) to standardize necessary data elements. Our system can also store the key components of rule-based systems (e.g., regular expression matches) in the format of OMOP CDM, thus enabling the reuse, adaptation and extension of many existing rule-based clinical NLP systems. We experimented with our system on the corpus from i2b2's Obesity Challenge as a pilot study. Our system facilitates portable phenotyping of obesity and its 15 comorbidities based on the unstructured patient discharge summaries, while achieving a performance that often ranked among the top 10 of the challenge participants. This standardization enables a consistent application of numerous rule-based and machine learning based classification techniques downstream.",
+      "fhir_omop_strict": false,
+      "pdf": "1807.06638/pdf/1807.06638.pdf"
+    },
+    {
+      "id": "1511.03036",
+      "title": "Semantic processing of EHR data for clinical research",
+      "authors": [
+        "Hong Sun",
+        "Kristof Depraetere",
+        "Jos De Roo",
+        "Giovanni Mels",
+        "Boris De Vloed",
+        "Marc Twagirumukiza",
+        "Dirk Colaert"
+      ],
+      "published": "2015-11-10",
+      "url": "https://arxiv.org/abs/1511.03036v1",
+      "summary": "There is a growing need to semantically process and integrate clinical data from different sources for clinical research. This paper presents an approach to integrate EHRs from heterogeneous resources and generate integrated data in different data formats or semantics to support various clinical research applications. The proposed approach builds semantic data virtualization layers on top of data sources, which generate data in the requested semantics or formats on demand. This approach avoids upfront dumping to and synchronizing of the data with various representations. Data from different EHR systems are first mapped to RDF data with source semantics, and then converted to representations with harmonized domain semantics where domain ontologies and terminologies are used to improve reusability. It is also possible to further convert data to application semantics and store the converted results in clinical research databases, e.g. i2b2, OMOP, to support different clinical research settings. Semantic conversions between different representations are explicitly expressed using N3 rules and executed by an N3 Reasoner (EYE), which can also generate proofs of the conversion processes. The solution presented in this paper has been applied to real-world applications that process large scale EHR data.",
+      "fhir_omop_strict": false,
+      "pdf": "1511.03036/pdf/1511.03036.pdf"
+    },
+    {
+      "id": "1110.0641",
+      "title": "Identifying relationships between drugs and medical conditions: winning experience in the Challenge 2 of the OMOP 2010 Cup",
+      "authors": [
+        "Vladimir Nikulin"
+      ],
+      "published": "2011-10-04",
+      "url": "https://arxiv.org/abs/1110.0641v1",
+      "summary": "There is a growing interest in using a longitudinal observational databases to detect drug safety signal. In this paper we present a novel method, which we used online during the OMOP Cup. We consider homogeneous ensembling, which is based on random re-sampling (known, also, as bagging) as a main innovation compared to the previous publications in the related field. This study is based on a very large simulated database of the 10 million patients records, which was created by the Observational Medical Outcomes Partnership (OMOP). Compared to the traditional classification problem, the given data are unlabelled. The objective of this study is to discover hidden associations between drugs and conditions. The main idea of the approach, which we used during the OMOP Cup is to compare the numbers of observed and expected patterns. This comparison may be organised in several different ways, and the outcomes (base learners) may be quite different as well. It is proposed to construct the final decision function as an ensemble of the base learners. Our method was recognised formally by the Organisers of the OMOP Cup as a top performing method for the Challenge N2.",
+      "fhir_omop_strict": false,
+      "pdf": "1110.0641/pdf/1110.0641.pdf"
+    }
+  ]
+}
