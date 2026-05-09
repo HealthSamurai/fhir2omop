@@ -1,8 +1,8 @@
-# Practitioner / PractitionerRole → provider
+# Practitioner → provider
 
-OMOP CDM v5.4. The `provider` table stores individual healthcare providers. FHIR splits this across `Practitioner` (identity, name, qualifications) and `PractitionerRole` (specialty, organization affiliation).
+OMOP CDM v5.4. The `provider` table stores individual healthcare providers. FHIR splits provider information across `Practitioner` (identity, name, qualifications, gender, birth date) and `PractitionerRole` (specialty, organization affiliation). This document covers the Practitioner-driven fields. For specialty and care_site enrichment via PractitionerRole, see [`../PractitionerRole/provider.md`](../PractitionerRole/provider.md).
 
-## Field Mapping
+## Field Mapping (Practitioner-sourced)
 
 | FHIR Path | OMOP Field | Type | Required | Notes |
 |---|---|---|---|---|
@@ -10,17 +10,16 @@ OMOP CDM v5.4. The `provider` table stores individual healthcare providers. FHIR
 | `Practitioner.name[0]` (formatted) | `provider_name` | HumanName → varchar(255) | No | `"{family}, {given}"` or `text`. omoponfhir uses `family + ", " + given` (lines 337-354). fhir-x-omop uses `"{given} {family}"` format (line 13). |
 | `Practitioner.identifier` (NPI) | `npi` | string → varchar(20) | No | NPI from system `http://hl7.org/fhir/sid/us-npi`. The National Provider Number issued by CMS. fhir-x-omop filters identifiers by NPI system (lines 15-21). |
 | (none) | `dea` | varchar(20) | No | DEA identifier for controlled substance prescriptions. Not standard in FHIR R4 Practitioner. Could be extracted from `Practitioner.qualification` or a custom identifier system. |
-| `PractitionerRole.specialty[0]` | `specialty_concept_id` | CodeableConcept → integer (FK CONCEPT) | No | SNOMED or NUCC specialty → OMOP concept. Represents the most common or most specific specialty. 0 if unmapped. fhir-to-omop-demo extracts from PractitionerRole.specialty[0].coding[0] (lines 10-23, 44). |
-| `PractitionerRole.organization` | `care_site_id` | ref → integer (FK CARE_SITE) | No | Organization affiliation from PractitionerRole. This is the location that the provider primarily practices in. omoponfhir creates a CareSite from the Practitioner's address if no PractitionerRole link exists (lines 358-375). |
 | `Practitioner.birthDate` | `year_of_birth` | date → integer | No | Year component of birth date. fhir-x-omop extracts via `int(x.split('-')[0])` (line 30). |
 | `Practitioner.gender` | `gender_concept_id` | code → integer (FK CONCEPT) | No | Same mapping as Patient: male→8507, female→8532, other→8521, unknown→8551. See vocabulary table below. |
 | `Practitioner.identifier` (best) | `provider_source_value` | string → varchar(50) | No | NPI or first identifier value. Use this field to link back to providers in the source data for ETL error checking. omoponfhir uses `identifierFirstRep.value` (lines 388-392). fhir-x-omop uses `Practitioner.id` (line 26). |
-| `PractitionerRole.specialty[0]` text | `specialty_source_value` | string → varchar(50) | No | Raw specialty code as it appears in source data. Includes physician specialties (internal medicine, emergency medicine) and allied health professionals (nurses, midwives, pharmacists). fhir-to-omop-demo uses `specialty.concept_code` (line 49). fhir-x-omop falls back to `qualification[0].code.coding[0].code` (line 31). |
-| (none) | `specialty_source_concept_id` | integer (FK CONCEPT) | No | 0. Often zero as many sites use proprietary codes to store physician specialty. |
 | `Practitioner.gender` | `gender_source_value` | code → varchar(50) | No | Verbatim gender code as it appears in source data. fhir-x-omop uppercases the value (line 29). |
 | (none) | `gender_source_concept_id` | integer (FK CONCEPT) | No | 0. Often zero as many sites use proprietary codes to store provider gender. |
+| `Practitioner.qualification[0].code` (fallback) | `specialty_source_value` | string → varchar(50) | No | When no PractitionerRole exists, fhir-x-omop falls back to `qualification[0].code.coding[0].code` (line 31). The primary source is `PractitionerRole.specialty[0]` -- see [`../PractitionerRole/provider.md`](../PractitionerRole/provider.md). |
 
-Fields with no FHIR source: `dea` (no standard FHIR element), `specialty_source_concept_id`, `gender_source_concept_id` default to `0`.
+Fields populated from PractitionerRole (`specialty_concept_id`, `care_site_id`, primary `specialty_source_value`, `specialty_source_concept_id`): see [`../PractitionerRole/provider.md`](../PractitionerRole/provider.md).
+
+Fields with no FHIR source: `dea` (no standard FHIR element), `gender_source_concept_id` default to `0`.
 
 FHIR fields with no OMOP target: `Practitioner.active`, `Practitioner.telecom`, `Practitioner.address` (used indirectly to create care_site/location), `Practitioner.photo`, `Practitioner.communication`, `Practitioner.qualification` (except as fallback specialty source).
 
@@ -38,55 +37,7 @@ FHIR fields with no OMOP target: `Practitioner.active`, `Practitioner.telecom`, 
 
 Same mapping as `Patient.gender`. omoponfhir-v54 uses `OmopConceptMapping.omopForAdministrativeGenderCode()` (lines 86-105) which maps null → 8551 (UNKNOWN). Per OMOP Themis convention, absent gender should be 0, not 8551.
 
-### Specialty (`PractitionerRole.specialty` → `specialty_concept_id`)
-
-Specialty mapping depends on the source vocabulary. Common vocabularies:
-
-| Source Vocabulary | System URI | OMOP Vocabulary | Notes |
-|---|---|---|---|
-| NUCC Provider Taxonomy | `http://nucc.org/provider-taxonomy` | NUCC | US healthcare provider taxonomy; ~800 codes. Most common for US data. |
-| SNOMED CT | `http://snomed.info/sct` | SNOMED | International; specialty concepts in hierarchy under `394658006 Clinical specialty`. |
-| HL7 v2 Provider Role | `http://terminology.hl7.org/CodeSystem/practitioner-role` | — | Coarse granularity (doctor, nurse, etc.); requires custom mapping. |
-
-Example NUCC specialty mappings:
-
-| NUCC Code | Display | OMOP concept_id | OMOP concept_name |
-|---|---|---|---|
-| `207Q00000X` | Family Medicine | 38004459 | Family Medicine |
-| `207R00000X` | Internal Medicine | 38004456 | Internal Medicine |
-| `207V00000X` | Obstetrics & Gynecology | 38004461 | Obstetrics/Gynecology |
-| `208D00000X` | General Practice | 38004446 | General Practice |
-| `208600000X` | Surgery | 38004447 | Surgery |
-| (unmapped) | — | 0 | No matching concept |
-
-fhir-to-omop-demo comments reference concept 38004459 as an example for "General Practice" (Practitioner.jq line 28).
-
-## Practitioner vs PractitionerRole
-
-| Aspect | Practitioner | PractitionerRole |
-|---|---|---|
-| Identity (name, NPI) | Yes | No (references Practitioner) |
-| Specialty | No | Yes (`specialty[]`) |
-| Organization | No | Yes (`organization`) |
-| Location | Via `address[]` | Via `location[]` |
-| Period of practice | No | Yes (`period`) |
-| OMOP provider row | One per Practitioner | Enriches the Practitioner's provider row |
-
-Strategy: Create one `provider` row per Practitioner. If PractitionerRole exists, use it to populate `specialty_concept_id` and `care_site_id`. If multiple PractitionerRoles exist for one Practitioner, use the first or most recent.
-
 ## Reference Resolution
-
-### PractitionerRole → Practitioner + Provider enrichment
-
-PractitionerRole links a Practitioner to an Organization with role/specialty context. Resolution strategy:
-
-1. **Extract Practitioner reference**: `PractitionerRole.practitioner.reference` → resolve to find/create the provider row.
-2. **Extract specialty**: `PractitionerRole.specialty[0].coding[0]` → look up OMOP concept via NUCC or SNOMED vocabulary tables. Store code in `specialty_source_value`, mapped concept in `specialty_concept_id`.
-3. **Extract organization**: `PractitionerRole.organization.reference` → resolve to `care_site_id` via the Organization/care_site mapper.
-4. **Multiple PractitionerRoles per Practitioner**: OMOP `provider` has a single `specialty_concept_id` and `care_site_id`. If multiple roles exist:
-   - Use the most recent (by `PractitionerRole.period.end`) or the most specific specialty.
-   - fhir-to-omop-demo emits separate rows for Practitioner and PractitionerRole, then merges them (PractitionerRole.jq lines 31-53).
-   - omoponfhir does not handle PractitionerRole separately — it processes only the Practitioner resource.
 
 ### Provider address → care_site + location
 
@@ -115,8 +66,6 @@ These references can point to `Practitioner` or `PractitionerRole`. If the refer
 | No NPI identifier | `npi` = null. Non-US providers or systems without NPI. Use first available identifier for `provider_source_value`. |
 | Multiple identifiers | Pick NPI first (`system = http://hl7.org/fhir/sid/us-npi`), then first identifier. omoponfhir uses `identifierFirstRep` (line 388). |
 | No PractitionerRole for Practitioner | `specialty_concept_id` = 0, `care_site_id` = null. Provider row is valid but sparse. fhir-x-omop falls back to `Practitioner.qualification[0].code` for specialty (line 31). |
-| Multiple PractitionerRoles | Single `provider` row. Use first/most-recent role for specialty and care_site. Log if multiple roles found. fhir-to-omop-demo warns via `debug()` (PractitionerRole.jq line 12). |
-| PractitionerRole without Practitioner reference | Cannot create provider row (no identity). Log and skip. |
 | Practitioner.gender absent | `gender_concept_id` = 0, `gender_source_value` = null. |
 | Practitioner referenced but not in bundle | Deferred resolution. Create stub provider with `provider_source_value` = reference string, populate later. NACHC defaults `provider_id` to 1. |
 | Duplicate Practitioner (same identifier, different resources) | Deduplicate by identifier value. omoponfhir searches `providerSourceValue` column to find existing provider (lines 153-168). |
@@ -125,14 +74,16 @@ These references can point to `Practitioner` or `PractitionerRole`. If the refer
 
 ## Implementation Comparison
 
+PractitionerRole-specific behaviors below are documented in [`../PractitionerRole/provider.md`](../PractitionerRole/provider.md).
+
 | Aspect | HL7 IG (FSH) | omoponfhir-v54 | fhir-to-omop-demo | fhir-x-omop | ETL-German | NACHC |
 |---|---|---|---|---|---|---|
 | Direction | F↔O (logical model) | F↔O | F→O | F→O (+ O→F) | F→O | F→O |
 | `provider_id` strategy | 1..1 integer | IdMapping (FHIR↔OMOP) | uses FHIR `.id` | `int(Practitioner.id)` | (no dedicated mapper) | autogen sequence |
 | `provider_name` format | 0..1 string | `"family, given"` | null (from PractitionerRole.display) | `"given family"` | — | — |
 | NPI extraction | 0..1 string | `identifierFirstRep.value` | `.npi` (pre-extracted) | filter by NPI system | — | — |
-| Specialty source | — (no FML map) | not mapped (no PractitionerRole handling) | PractitionerRole.specialty[0] | `qualification[0].code` | — | — |
-| `care_site_id` source | 0..1 FK CareSite | created from Practitioner.address | PractitionerRole.location_ids[0] | not mapped | — | default 1 |
+| Specialty source | — (no FML map) | not mapped (no PractitionerRole handling -- see PractitionerRole/provider.md) | see PractitionerRole/provider.md | `qualification[0].code` (fallback) | — | — |
+| `care_site_id` source | 0..1 FK CareSite | created from Practitioner.address | see PractitionerRole/provider.md | not mapped | — | default 1 |
 | Gender mapping | 0..1 code | `OmopConceptMapping` enum | pre-computed `.gender_concept_id` | `gender.upper()` (source only) | — | — |
 | `year_of_birth` | 0..1 integer | not mapped | not mapped | `birthDate.split('-')[0]` | — | — |
 | Deduplication | — | search by providerSourceValue | no | no | — | — |
@@ -155,10 +106,6 @@ These references can point to `Practitioner` or `PractitionerRole`. If the refer
 - fhir-to-omop-demo jq (Practitioner): `refs/refs/fhir-to-omop-demo/demo/translate/map/Practitioner.jq`
   - Provider row output with NPI, gender_concept_id: lines 16-31
   - Also creates person row (unusual): lines 33-52
-- fhir-to-omop-demo jq (PractitionerRole): `refs/refs/fhir-to-omop-demo/demo/translate/map/PractitionerRole.jq`
-  - Specialty extraction with multi-coding warning: lines 10-23
-  - Merge-based approach (PractitionerRole enriches provider row): lines 31-53
-  - care_site_id from location_ids[0]: line 45
 - fhir-x-omop Python (to_omop): `refs/refs/fhir-x-omop/fhir_x_omop/to_omop/provider.py`
   - Name formatting: lines 7-13
   - NPI extraction by system: lines 15-21
@@ -167,7 +114,5 @@ These references can point to `Practitioner` or `PractitionerRole`. If the refer
   - Specialty fallback to qualification: line 31
 - fhir-x-omop Python (to_fhir): `refs/refs/fhir-x-omop/fhir_x_omop/to_fhir/practitioner.py`
   - Reverse mapping: provider → Practitioner: lines 9-34
-  - NUCC system for specialty: line 28
 - OMOP CDM v5.4 provider spec: `CommonDataModel/inst/csv/OMOP_CDMv5.4_Field_Level.csv`
 - FHIR R4 Practitioner: https://hl7.org/fhir/R4/practitioner.html
-- FHIR R4 PractitionerRole: https://hl7.org/fhir/R4/practitionerrole.html

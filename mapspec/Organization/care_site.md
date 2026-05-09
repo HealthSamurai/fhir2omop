@@ -1,6 +1,6 @@
 # Organization → care_site
 
-OMOP CDM v5.4. The `care_site` table contains a list of uniquely identified institutional (physical or organizational) units where healthcare delivery is practiced (offices, wards, hospitals, clinics, etc.). FHIR `Organization` maps here. FHIR `Location` can also contribute care_site rows in some implementations (see fhir-to-omop-demo).
+OMOP CDM v5.4. The `care_site` table contains a list of uniquely identified institutional (physical or organizational) units where healthcare delivery is practiced (offices, wards, hospitals, clinics, etc.). FHIR `Organization` is the primary source. FHIR `Location` can also contribute care_site rows in some implementations -- see [`../Location/care_site.md`](../Location/care_site.md).
 
 ## Field Mapping
 
@@ -9,7 +9,7 @@ OMOP CDM v5.4. The `care_site` table contains a list of uniquely identified inst
 | (generated) | `care_site_id` | integer | Yes (PK) | Surrogate key. Assign an ID to each combination of a location and nature of the site. omoponfhir uses `IdMapping` (FHIR ID ↔ OMOP ID, lines 117-118). fhir-to-omop-demo uses `Organization.id` directly (line 14). ETL-German pre-loads from CSV with sequential IDs (CARE_SITE.csv line 1+). |
 | `Organization.name` | `care_site_name` | string → varchar(255) | No | The name of the care site as it appears in the source data. omoponfhir sets via `careSite.setCareSiteName(myOrganization.getName())` (line 246). fhir-to-omop-demo uses `.name` (line 15). ETL-German pre-loads from CSV (e.g., "Innere Medizin", "Kardiologie"). |
 | `Organization.type[0].coding[0]` | `place_of_service_concept_id` | CodeableConcept → integer (FK CONCEPT) | No | High-level characterization of the care site. Should be a concept from the Visit domain. omoponfhir maps via `OmopConceptMapping.omopForOrganizationTypeCode()` (lines 253-263). fhir-to-omop-demo sets null (line 16). ETL-German pre-loads concept IDs from CSV (e.g., 4318944, 45765841). 0 if unmapped. |
-| `Organization.address` → Location | `location_id` | ref → integer (FK LOCATION) | No | The location_id from the LOCATION table representing the physical location of the care site. omoponfhir resolves via `AddressUtil.searchAndUpdate()` on `Organization.address[0]` (lines 240, 267-275). fhir-to-omop-demo sets null from Organization, but creates a care_site row from Location.jq with `location_id = Location.id` (Location.jq line 36). ETL-German does not set location_id. |
+| `Organization.address` → Location | `location_id` | ref → integer (FK LOCATION) | No | The location_id from the LOCATION table representing the physical location of the care site. omoponfhir resolves via `AddressUtil.searchAndUpdate()` on `Organization.address[0]` (lines 240, 267-275). fhir-to-omop-demo sets null from Organization. ETL-German does not set location_id. |
 | `Organization.identifier[0].value` or `Organization.name` | `care_site_source_value` | varchar(50) | No | The identifier of the care site as it appears in the source data. Could be separate from the care site name. omoponfhir uses `identifierFirstRep.value` (lines 234-238). fhir-to-omop-demo uses `.identifier[0].value` via `synthea_id` (line 18). ETL-German uses FAB department codes (e.g., "0100", "0300"). |
 | `Organization.type[0]` text or code | `place_of_service_source_value` | varchar(50) | No | The source code for the place of service as it appears in the source data. Raw organization type code before vocabulary mapping. fhir-to-omop-demo sets null (line 19). ETL-German does not populate this field. |
 
@@ -81,7 +81,7 @@ Two strategies are used by reference implementations:
 
 1. **omoponfhir approach (address-based):** Resolve `Organization.address[0]` to a Location row. `AddressUtil.searchAndUpdate()` searches for an existing location matching the address components (address_1, city, state, zip) and creates one if not found. The returned `location_id` is assigned to `care_site.location_id` (OmopOrganization.java lines 240, 267-275). This is run twice in the code -- once at line 240 for the first address and again in the loop at lines 267-275; the loop breaks after the first address since OMOP stores only one location per care site.
 
-2. **fhir-to-omop-demo approach (Location resource-based):** The Organization mapper does NOT set `location_id` (sets null, line 17). Instead, the Location.jq mapper creates a SECOND care_site row from the FHIR Location resource, using `Location.managingOrganization` as the `care_site_id` and `Location.id` as the `location_id` (Location.jq lines 32-38). This means a single Organization can produce two care_site rows -- one from the Organization resource (with name and source value) and one from the Location resource (with location_id). This may cause duplicates if not reconciled.
+2. **fhir-to-omop-demo approach (Location resource-based):** The Organization mapper does NOT set `location_id` (sets null, line 17). Instead, the Location.jq mapper produces an additional care_site row from the FHIR Location resource. A single Organization can therefore yield two care_site rows -- one from the Organization resource (with name and source value) and one from the Location resource (with location_id). This may cause duplicates if not reconciled. See also [`../Location/care_site.md`](../Location/care_site.md).
 
 ### Organization.partOf → Hierarchy
 
@@ -120,7 +120,7 @@ These references require the care_site row to exist before the referencing row i
 | Organization referenced but not in bundle | Deferred resolution. Create a stub care_site row with `care_site_source_value` = reference string. Populate name/type later when the Organization resource arrives. NACHC creates a single "Not Available" dummy care_site (id=1) for all unresolved references. |
 | Organization.address has multiple addresses | OMOP supports one location per care_site. omoponfhir breaks after the first address in the loop (line 274). Pick the primary/first address. |
 | Organization.identifier absent | `care_site_source_value` may be null. omoponfhir will throw NullPointerException on `identifier.getValue().isEmpty()` check (line 235) if identifiers list is empty. Use `Organization.name` or `Organization.id` as fallback. |
-| FHIR Location resource references Organization | fhir-to-omop-demo creates a care_site row from Location.jq using `managingOrganization` as `care_site_id` and `Location.id` as `location_id` (lines 32-38). This produces a second care_site row alongside the one from Organization.jq. Reconciliation needed. |
+| FHIR Location resource references Organization | Some implementations create an additional care_site row from the Location resource. Reconciliation needed. See [`../Location/care_site.md`](../Location/care_site.md). |
 | Organization.active = false | Most implementations ignore this flag and map inactive organizations. Consider filtering in ETL preprocessing or flagging for review. OMOP has no "active" concept for care_site. |
 | Very long care_site_name (>255 chars) | Truncate to 255 characters. `care_site_name` is varchar(255). German department names with hierarchy (e.g., "Intensivmedizin/Schwerpunkt Frauenheilkunde und Geburtshilfe") can approach this limit. |
 
@@ -166,10 +166,8 @@ These references require the care_site row to exist before the referencing row i
   - care_site_name = `.name`: line 15
   - place_of_service_concept_id = null: line 16
   - care_site_source_value = `.identifier[0].value` via `synthea_id`: lines 6-8, 18
-- fhir-to-omop-demo jq (Location, 41 lines): `refs/refs/fhir-to-omop-demo/demo/translate/map/Location.jq`
-  - SECOND care_site row from Location resource: lines 31-39
-  - care_site_id from `managingOrganization` reference: line 10, 33
-  - location_id = `.id` (Location.id): line 36
+- fhir-to-omop-demo jq (Location): `refs/refs/fhir-to-omop-demo/demo/translate/map/Location.jq`
+  - Additional care_site row from Location resource: lines 31-39 (see [`../Location/care_site.md`](../Location/care_site.md))
 - fhir-x-omop Python: no dedicated care_site/Organization mapper
   - care_site_id referenced in visit_occurrence mapper: `refs/refs/fhir-x-omop/fhir_x_omop/to_omop/visit_occurrence.py` line 36
   - Reverse: care_site_id → Organization reference: `refs/refs/fhir-x-omop/fhir_x_omop/to_fhir/encounter.py` line 81

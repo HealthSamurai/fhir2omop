@@ -11,18 +11,21 @@ This directory contains per-resource mapping specifications for converting FHIR 
 | [Condition](./Condition/) | `condition_occurrence` | — | Implemented |
 | [Observation](./Observation/) | `measurement`, `observation` | — | Implemented |
 | [Procedure](./Procedure/) | `procedure_occurrence` | `drug_exposure`, `device_exposure` | Not implemented |
-| [MedicationRequest](./Medication/) | `drug_exposure` | — | Implemented |
-| [MedicationStatement](./Medication/) | `drug_exposure` | — | Implemented |
-| MedicationDispense | `drug_exposure` | — | Not implemented |
-| MedicationAdministration | `drug_exposure` | — | Not implemented |
+| [MedicationRequest](./MedicationRequest/) | `drug_exposure` | — | Implemented |
+| [MedicationStatement](./MedicationStatement/) | `drug_exposure` | — | Implemented |
+| [MedicationDispense](./MedicationDispense/) | `drug_exposure` | — | Not implemented |
+| [MedicationAdministration](./MedicationAdministration/) | `drug_exposure` | — | Not implemented |
+| [Medication](./Medication/) (vocab) | (referenced concept) | — | Vocabulary linkage only |
 | [Immunization](./Immunization/) | `drug_exposure` | — | Not implemented |
 | [AllergyIntolerance](./AllergyIntolerance/) | `observation` | — | Implemented |
 | [DiagnosticReport](./DiagnosticReport/) | `measurement`, `observation` | `note`, `procedure_occurrence` | Not implemented |
-| [Practitioner](./Admin/) | `provider` | — | Not implemented |
-| [Organization](./Admin/) | `care_site` | `location` | Not implemented |
+| [Practitioner](./Practitioner/) | `provider` | — | Not implemented |
+| [PractitionerRole](./PractitionerRole/) | `provider` (enrichment) | — | Not implemented |
+| [Organization](./Organization/) | `care_site` | `location` | Not implemented |
+| [Location](./Location/) | `location` | `care_site` | Not implemented |
 | [Device](./Device/) | `device_exposure` | — | Not implemented |
 | [Specimen](./Specimen/) | `specimen` | — | Not implemented |
-| [Coverage](./Coverage/) | `payer_plan_period` | `cost` | Not implemented |
+| Coverage | `payer_plan_period` | `cost` | Not started — no folder yet |
 
 ## Domain Routing
 
@@ -84,21 +87,31 @@ OMOP uses `*_type_concept_id` to track data provenance:
 
 ## Directory Structure
 
+One folder per FHIR ResourceType. Folders are strictly named for the
+FHIR resource they document (no meta-groupings).
+
 ```
 mapspec/
-├── _overview.md          ← this file
-├── TODO.md               ← tracking
-├── Patient/              ← person, death, location, observation_period
-├── Encounter/            ← visit_occurrence
-├── Condition/            ← condition_occurrence
-├── Observation/          ← measurement, observation (OMOP)
-├── Procedure/            ← procedure_occurrence
-├── Medication/           ← drug_exposure (MedRequest, MedStatement, etc.)
-├── Immunization/         ← drug_exposure (CVX)
-├── AllergyIntolerance/   ← observation
-├── DiagnosticReport/     ← measurement, observation, note
-├── Admin/                ← provider, care_site
-├── Device/               ← device_exposure (stub)
-├── Specimen/             ← specimen (stub)
-└── Coverage/             ← payer_plan_period (stub)
+├── _overview.md             ← this file
+├── _references.md           ← external links, papers, official IGs
+├── TODO.md                  ← tracking
+├── AllergyIntolerance/      ← observation
+├── Condition/               ← condition_occurrence
+├── Device/                  ← device_exposure
+├── DiagnosticReport/        ← measurement, observation, note, procedure_occurrence
+├── Encounter/               ← visit_occurrence
+├── Immunization/            ← drug_exposure
+├── Location/                ← location, care_site
+├── Medication/              ← vocabulary linkage (no direct OMOP target)
+├── MedicationAdministration/← drug_exposure
+├── MedicationDispense/      ← drug_exposure
+├── MedicationRequest/       ← drug_exposure (canonical drug_exposure field map)
+├── MedicationStatement/     ← drug_exposure
+├── Observation/             ← measurement, observation
+├── Organization/            ← care_site
+├── Patient/                 ← person, death, location, observation_period
+├── Practitioner/            ← provider
+├── PractitionerRole/        ← provider (enrichment of Practitioner)
+├── Procedure/               ← procedure_occurrence
+└── Specimen/                ← specimen
 ```
