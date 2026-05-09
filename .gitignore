@@ -30,12 +30,13 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 # IntelliJ based IDEs
 .idea
 
-# Cursor IDE
-.cursor
-
 # Finder (MacOS) folder config
 .DS_Store
 
-# FHIR metadata cache
-fhir-core
-data
+# Runtime state
+.hyper/_runtime
+.hyper/_test_*
+.hyper/_tmp_*
+.hyper/tmp_*
+.kimi-results
+.claude/
