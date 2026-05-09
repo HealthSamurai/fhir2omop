@@ -128,6 +128,106 @@
 - **OMOPHub**: https://omophub.com
   - REST API access to Athena vocabularies without database setup
 
+## FHIR↔OMOP Reference Implementations (git submodules in refs/)
+
+### Standards & Specifications
+
+- **fhir-omop-ig** (HL7) — HL7 Official FHIR↔OMOP Implementation Guide
+  - https://github.com/HL7/fhir-omop-ig (15 ★)
+  - Bidirectional conversion specification between FHIR and OMOP
+- **fhir2omop-cookbook** (CodeX HL7) — FHIR-to-OMOP Cookbook starter guide
+  - https://github.com/CodeX-HL7-FHIR-Accelerator/fhir2omop-cookbook (4 ★)
+  - Methodology, use cases, and patterns for mapping FHIR→OMOP
+- **Vulcan-Fhir-to-OMOP-Mapping-Project** — Prior FHIR-OMOP mapping work
+  - https://github.com/OMOP-FHIR-Terminologies-Subgroup/Vulcan-Fhir-to-OMOP-Mapping-Project (1 ★)
+- **Vulcan-FHIR-to-OMOP** — FHIR-to-OMOP ETL utilities (Vulcan project)
+  - https://github.com/timsbiomed/Vulcan-FHIR-to-OMOP
+- **omop-fhir-terminologies-docs** — OMOP+FHIR Terminologies Subgroup documents
+  - https://github.com/OMOP-FHIR-Terminologies-Subgroup/Documents (1 ★)
+- **OMOPinFHIR** (Firely) — Logical models in FHIR representing the OMOP data model
+  - https://github.com/FirelyTeam/OMOPinFHIR
+- **ohdsi-fhir.github.io** — OHDSI FHIR Workgroup repository
+  - https://github.com/ohdsi-fhir/ohdsi-fhir.github.io (3 ★)
+- **fhir-reasoning-omop-ri** (HL7) — Reference implementation for OMOP→FHIR transformations (dQM focus)
+  - https://github.com/HL7/fhir-reasoning-omop-ri (2 ★)
+- **mcode-omop** — FHIR mCODE to OMOP Oncology CDM analysis
+  - https://github.com/mcode/mcode-omop (2 ★)
+
+### FHIR→OMOP Converters & ETL
+
+- **FhirToCdm** (OHDSI) — .NET Core FHIR HL7→OMOP CDM converter
+  - https://github.com/OHDSI/FhirToCdm (19 ★)
+- **ETL-German-FHIR-Core** (OHDSI) — German MII FHIR→OMOP ETL
+  - https://github.com/OHDSI/ETL-German-FHIR-Core (9 ★)
+- **HealthcareLakeETL** — FHIR→OMOP using PySpark on AWS Glue
+  - https://github.com/spe-uob/2020-HealthcareLakeETL (14 ★)
+- **NACHC-fhir-to-omop** — Java FHIR→OMOP tools
+  - https://github.com/NACHC-CAD/fhir-to-omop (12 ★)
+- **fhir-to-omop-demo** — Demo converting Synthea FHIR data to OMOP
+  - https://github.com/barabo/fhir-to-omop-demo (11 ★)
+- **omop_etl_public** (Georgia Tech) — Generic OMOP ETL for raw datafile and FHIR ingestion
+  - https://github.com/gt-health/omop_etl_public (8 ★)
+- **avalon-fhir-omop** (Foxtrot) — FHIR→OMOP translation engine
+  - https://github.com/foxtrotcommunications/foxtrotcommunications-avalon-public
+- **fhir-x-omop** (Stoa Medical) — Bidirectional, composable FHIR R4↔OMOP CDM 5.3 mapping in code
+  - https://github.com/Stoa-Medical/fhir-x-omop
+- **coreason-omop-etl-fhir-bridge** — Interoperability layer for mapping FHIR→OMOP
+  - https://github.com/CoReason-AI/coreason-omop-etl-fhir-bridge
+- **tofhir-mappings** (SRDC) — Executable mapping definitions from OMOP/CDA to HL7 FHIR
+  - https://github.com/srdc/tofhir-mappings
+
+### OMOP on FHIR (FHIR servers backed by OMOP)
+
+- **omoponfhir-main** — Main OMOPonFHIR project settings & orchestration
+  - https://github.com/omoponfhir/omoponfhir-main (47 ★)
+- **omoponfhir-main-r4-sql** — OMOP v5.3 on FHIR R4 with SQLRender
+  - https://github.com/omoponfhir/omoponfhir-main-r4-sql (17 ★)
+- **omoponfhir-v54-r4** — OMOP v5.4 on FHIR R4 with SQLRender
+  - https://github.com/omoponfhir/omoponfhir-main-v54-r4 (11 ★)
+- **omoponfhir-omopv5-r4-mapping** — OMOP v5 to FHIR R4 mapping layer
+  - https://github.com/omoponfhir/omoponfhir-omopv5-r4-mapping (6 ★)
+- **omoponfhir-extractor** (PheMA) — Tool for extracting OMOP data as FHIR resources
+  - https://github.com/PheMA/omoponfhir-extractor (1 ★)
+- **GT-FHIR** — Georgia Tech FHIR server + OMOP mapping docs (R4)
+  - https://github.com/gt-health/GT-FHIR
+- **GT-FHIR2** — OMOP on FHIR (Georgia Tech, updated version)
+  - https://github.com/myungchoi/GT-FHIR2 (3 ★)
+
+### OMOP→FHIR & Knowledge Graphs
+
+- **FHIROntopOMOP** — OMOP as FHIR Knowledge Graph via Ontop
+  - https://github.com/fhircat/FHIROntopOMOP (21 ★)
+- **omopfhirmap** — CLI tool for ATLAS cohort↔FHIR bundle mapping
+  - https://github.com/dermatologist/omopfhirmap (11 ★)
+- **mends-on-fhir** — OMOP→FHIR for chronic disease surveillance
+  - https://github.com/mends-on-fhir/mends-on-fhir
+- **omop-vocab-on-fhir** — OMOP vocabulary→FHIR CodeSystem converter
+  - https://github.com/jhu-bids/omop-vocab-on-fhir (2 ★)
+- **n3c-ingest** — Convert N3C OMOP vocab tables to OWL, SemanticSQL, and FHIR
+  - https://github.com/timsbiomed/n3c-ingest
+
+### Specialized & Domain-Specific
+
+- **recruit** (MIRACUM) — Cloud-native clinical trial recruitment using FHIR + OMOP CDM
+  - https://github.com/miracum/recruit (8 ★)
+- **fhirform-ohdsi** — FHIR server transforming QuestionnaireResponses to OHDSI OMOP CDM
+  - https://github.com/dermatologist/fhirform-ohdsi
+- **REDHotOMOP** — Bridging FHIR and OMOP CDM for observational research + EHR integration
+  - https://github.com/salvolpe/REDHotOMOP (1 ★)
+- **clarity-export-api** — ClarityNLP module for exporting results to OMOP, FHIR, etc.
+  - https://github.com/ClarityNLP/export-api (1 ★)
+- **mercurius-mcp-py** — CQL-FHIR-OMOP MCP server (Python)
+  - https://github.com/StarLiu1/mercurius-mcp-py
+- **kameheads-omop** — Python OMOP package with LLM queries, MCP server, and FHIR import
+  - https://github.com/kameheads/omop
+
+### Sample Data
+
+- **omop-fhir-data** (CU-DBMI) — OMOP/FHIR test data
+  - https://github.com/CU-DBMI/omop-fhir-data (5 ★)
+- **healthcare-europe-sample** — Sample EHR data in FHIR, OMOP and Synthea format for European countries
+  - https://github.com/science-automation/healthcare-europe-sample (2 ★)
+
 ## Key Publications
 
 - Schuemie M, Reps J, Black A, et al. "Health-Analytics Data to Evidence Suite (HADES): Open-Source Software for Observational Research." Stud Health Technol Inform. 2024 Jan 25;310:966-970. doi: 10.3233/SHTI231108

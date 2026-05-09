@@ -40,3 +40,81 @@
 [submodule "refs/refs/Vulcan-Fhir-to-OMOP-Mapping-Project"]
 	path = refs/refs/Vulcan-Fhir-to-OMOP-Mapping-Project
 	url = https://github.com/OMOP-FHIR-Terminologies-Subgroup/Vulcan-Fhir-to-OMOP-Mapping-Project.git
+[submodule "refs/refs/omoponfhir-main"]
+	path = refs/refs/omoponfhir-main
+	url = https://github.com/omoponfhir/omoponfhir-main.git
+[submodule "refs/refs/omoponfhir-main-r4-sql"]
+	path = refs/refs/omoponfhir-main-r4-sql
+	url = https://github.com/omoponfhir/omoponfhir-main-r4-sql.git
+[submodule "refs/refs/fhir-to-omop-demo"]
+	path = refs/refs/fhir-to-omop-demo
+	url = https://github.com/barabo/fhir-to-omop-demo.git
+[submodule "refs/refs/omop_etl_public"]
+	path = refs/refs/omop_etl_public
+	url = https://github.com/gt-health/omop_etl_public.git
+[submodule "refs/refs/recruit"]
+	path = refs/refs/recruit
+	url = https://github.com/miracum/recruit.git
+[submodule "refs/refs/omoponfhir-omopv5-r4-mapping"]
+	path = refs/refs/omoponfhir-omopv5-r4-mapping
+	url = https://github.com/omoponfhir/omoponfhir-omopv5-r4-mapping.git
+[submodule "refs/refs/omop-fhir-data"]
+	path = refs/refs/omop-fhir-data
+	url = https://github.com/CU-DBMI/omop-fhir-data.git
+[submodule "refs/refs/GT-FHIR2"]
+	path = refs/refs/GT-FHIR2
+	url = https://github.com/myungchoi/GT-FHIR2.git
+[submodule "refs/refs/ohdsi-fhir.github.io"]
+	path = refs/refs/ohdsi-fhir.github.io
+	url = https://github.com/ohdsi-fhir/ohdsi-fhir.github.io.git
+[submodule "refs/refs/omop-vocab-on-fhir"]
+	path = refs/refs/omop-vocab-on-fhir
+	url = https://github.com/jhu-bids/omop-vocab-on-fhir.git
+[submodule "refs/refs/mcode-omop"]
+	path = refs/refs/mcode-omop
+	url = https://github.com/mcode/mcode-omop.git
+[submodule "refs/refs/OMOPinFHIR"]
+	path = refs/refs/OMOPinFHIR
+	url = https://github.com/FirelyTeam/OMOPinFHIR.git
+[submodule "refs/refs/REDHotOMOP"]
+	path = refs/refs/REDHotOMOP
+	url = https://github.com/salvolpe/REDHotOMOP.git
+[submodule "refs/refs/fhirform-ohdsi"]
+	path = refs/refs/fhirform-ohdsi
+	url = https://github.com/dermatologist/fhirform-ohdsi.git
+[submodule "refs/refs/fhir-x-omop"]
+	path = refs/refs/fhir-x-omop
+	url = https://github.com/Stoa-Medical/fhir-x-omop.git
+[submodule "refs/refs/avalon-fhir-omop"]
+	path = refs/refs/avalon-fhir-omop
+	url = https://github.com/foxtrotcommunications/foxtrotcommunications-avalon-public.git
+[submodule "refs/refs/tofhir-mappings"]
+	path = refs/refs/tofhir-mappings
+	url = https://github.com/srdc/tofhir-mappings.git
+[submodule "refs/refs/Vulcan-FHIR-to-OMOP"]
+	path = refs/refs/Vulcan-FHIR-to-OMOP
+	url = https://github.com/timsbiomed/Vulcan-FHIR-to-OMOP.git
+[submodule "refs/refs/n3c-ingest"]
+	path = refs/refs/n3c-ingest
+	url = https://github.com/timsbiomed/n3c-ingest.git
+[submodule "refs/refs/omoponfhir-extractor"]
+	path = refs/refs/omoponfhir-extractor
+	url = https://github.com/PheMA/omoponfhir-extractor.git
+[submodule "refs/refs/coreason-omop-etl-fhir-bridge"]
+	path = refs/refs/coreason-omop-etl-fhir-bridge
+	url = https://github.com/CoReason-AI/coreason-omop-etl-fhir-bridge.git
+[submodule "refs/refs/clarity-export-api"]
+	path = refs/refs/clarity-export-api
+	url = https://github.com/ClarityNLP/export-api.git
+[submodule "refs/refs/omop-fhir-terminologies-docs"]
+	path = refs/refs/omop-fhir-terminologies-docs
+	url = https://github.com/OMOP-FHIR-Terminologies-Subgroup/Documents.git
+[submodule "refs/refs/healthcare-europe-sample"]
+	path = refs/refs/healthcare-europe-sample
+	url = https://github.com/science-automation/healthcare-europe-sample.git
+[submodule "refs/refs/mercurius-mcp-py"]
+	path = refs/refs/mercurius-mcp-py
+	url = https://github.com/StarLiu1/mercurius-mcp-py.git
+[submodule "refs/refs/kameheads-omop"]
+	path = refs/refs/kameheads-omop
+	url = https://github.com/kameheads/omop.git
