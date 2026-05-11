@@ -1,0 +1,530 @@
+{
+  "$schema": "../schema/edge.schema.json",
+  "fhir_resource": "Procedure",
+  "omop_table": "procedure_occurrence",
+  "direction": "fhir-to-omop",
+  "status": "documented",
+  "primary": true,
+  "required": true,
+  "condition": "status is completed (recommended); code domain_id is Procedure",
+  "narrative_md": "One FHIR Procedure maps to one procedure_occurrence row. Domain routing may redirect codes with non-Procedure domain_id to drug_exposure, device_exposure, measurement, or observation. Only completed procedures should produce rows. performed[x] is polymorphic (dateTime or Period) and at least procedure_date is required -- skip the resource if no date is available.",
+  "implementation_in_project": null,
+  "fields": [
+    {
+      "omop_column": "procedure_occurrence_id",
+      "fhir_path": "Procedure.id",
+      "fhir_type": "id",
+      "omop_type": "integer",
+      "required": true,
+      "pk": true,
+      "notes": "Surrogate key. Generated via hash/sequence/lookup of Procedure.id. HL7 IG leaves as TODO. NACHC uses FhirToOmopIdGenerator.getId().",
+      "sources": [
+        {
+          "comment": "TODO/commented placeholder — no concrete strategy",
+          "references": [
+            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Procedure.fml", "lines": [11, 16] }
+          ]
+        },
+        {
+          "comment": "Sequence via IdMapping lookup table",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopProcedure.java", "lines": [369, 513] }
+          ]
+        },
+        {
+          "comment": "FhirToOmopIdGenerator.getId() — dedicated ID generation utility",
+          "references": [
+            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/procedure/OmopProcedureBuilder.java", "lines": [74, 119] }
+          ]
+        },
+        {
+          "comment": "int(Procedure.id) — verbatim FHIR id cast to integer",
+          "references": [
+            { "project": "fhir-x-omop", "kind": "python", "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/procedure_occurrence.py" }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "person_id",
+      "fhir_path": "Procedure.subject",
+      "fhir_type": "Reference(Patient)",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "PERSON",
+      "notes": "Resolve Patient reference to integer person_id. Skip resource if unresolved."
+    },
+    {
+      "omop_column": "procedure_concept_id",
+      "fhir_path": "Procedure.code",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "CONCEPT",
+      "concept_map": "procedure_code",
+      "notes": "Map SNOMED/CPT/ICD-10-PCS/OPS code to OMOP standard concept via vocabulary lookup. Use concept_relationship (Maps to) for non-standard codes. 0 if unmapped. Check domain_id for routing.",
+      "sources": [
+        {
+          "comment": "DB lookup via OmopConceptToUse — standard concept resolution from vocabulary tables",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopProcedure.java", "lines": [401, 410] }
+          ]
+        },
+        {
+          "comment": "DB lookup via LookupCode; one row per coding",
+          "references": [
+            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [416, 417] }
+          ]
+        },
+        {
+          "comment": "Full vocab lookup with OPS/SNOMED/DICOM priority + domain routing",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ProcedureMapper.java", "lines": [628, 701] }
+          ]
+        },
+        {
+          "comment": "Hardcoded to 0 — no vocabulary lookup performed",
+          "references": [
+            { "project": "fhir-x-omop", "kind": "python", "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/procedure_occurrence.py" }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "procedure_date",
+      "fhir_path": "Procedure.performedDateTime | Procedure.performedPeriod.start",
+      "fhir_type": "dateTime",
+      "omop_type": "date",
+      "required": true,
+      "notes": "performedDateTime date part, or performedPeriod.start date part. Required -- skip resource if absent."
+    },
+    {
+      "omop_column": "procedure_datetime",
+      "fhir_path": "Procedure.performedDateTime | Procedure.performedPeriod.start",
+      "fhir_type": "dateTime",
+      "omop_type": "datetime",
+      "notes": "Full ISO datetime. Same source as procedure_date but preserves time component."
+    },
+    {
+      "omop_column": "procedure_end_date",
+      "fhir_path": "Procedure.performedPeriod.end",
+      "fhir_type": "dateTime",
+      "omop_type": "date",
+      "notes": "End date for procedures with duration. For performedDateTime, ETL-German leaves null; NACHC sets end = start.",
+      "sources": [
+        {
+          "comment": "Sets end_date = start when performedDateTime (no Period.end available)",
+          "references": [
+            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/procedure/OmopProcedureBuilder.java", "lines": [87, 109], "notes": "ProcedureParser.java lines 87-109: Period only, end falls back to start" }
+          ]
+        },
+        {
+          "comment": "Leaves null for performedDateTime; only maps Period.end",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ProcedureMapper.java", "lines": [165, 172] }
+          ]
+        },
+        {
+          "comment": "Period only (always casts to Period, fails for performedDateTime)",
+          "references": [
+            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [445, 446] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "procedure_end_datetime",
+      "fhir_path": "Procedure.performedPeriod.end",
+      "fhir_type": "dateTime",
+      "omop_type": "datetime",
+      "notes": "Full ISO datetime of procedure end."
+    },
+    {
+      "omop_column": "procedure_type_concept_id",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "integer",
+      "required": true,
+      "fk": "CONCEPT",
+      "constant": 32817,
+      "concept_map": "procedure_type",
+      "notes": "32817 = 'EHR'. Provenance of the record. FhirToCdm and ETL-German use 32817; omoponfhir and NACHC use 44786630 (Primary Procedure).",
+      "sources": [
+        {
+          "comment": "32817 (EHR) — recommended modern convention",
+          "references": [
+            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [426, 426] },
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ProcedureMapper.java", "lines": [703, 734], "notes": "uses CONCEPT_EHR constant = 32817" }
+          ]
+        },
+        {
+          "comment": "44786630 (Primary Procedure) — legacy choice",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopProcedure.java", "lines": [64, 64] },
+            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/procedure/OmopProcedureBuilder.java", "lines": [97, 97] }
+          ]
+        },
+        {
+          "comment": "Varies by code system URI — 32818/32820 depending on source",
+          "references": [
+            { "project": "fhir-x-omop", "kind": "python", "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/procedure_occurrence.py", "lines": [14, 18] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "modifier_concept_id",
+      "fhir_path": "Procedure.bodySite[0]",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "fk": "CONCEPT",
+      "notes": "SNOMED body site mapped to OMOP concept. Take first bodySite[0] entry; remaining entries are lost. ETL-German also checks OPS site localization extension. 0 if unmapped or absent.",
+      "sources": [
+        {
+          "comment": "SNOMED body site + OPS site localization extension — most complete body site handling",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ProcedureMapper.java", "lines": [1007, 1082] }
+          ]
+        },
+        {
+          "comment": "Not mapped — body site ignored",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopProcedure.java", "notes": "No body site mapping in constructOmop()" },
+            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [407, 451] }
+          ]
+        },
+        {
+          "comment": "Defaults to 0 — no lookup performed",
+          "references": [
+            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/procedure/OmopProcedureBuilder.java", "lines": [99, 116] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "modifier_source_value",
+      "fhir_path": "Procedure.bodySite[0].coding[0].code",
+      "fhir_type": "code",
+      "omop_type": "varchar(50)",
+      "notes": "Raw body site code string. NACHC defaults to 'Not Available' if null."
+    },
+    {
+      "omop_column": "provider_id",
+      "fhir_path": "Procedure.performer[0].actor",
+      "fhir_type": "Reference(Practitioner)",
+      "omop_type": "integer",
+      "fk": "PROVIDER",
+      "notes": "First Practitioner-typed performer. Non-Practitioner performers (Organization, Device) are ignored. NACHC defaults to 1 when absent.",
+      "sources": [
+        {
+          "comment": "Iterates performers, takes first Practitioner-typed actor; updates provider.specialty if function coded",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopProcedure.java", "lines": [449, 490] }
+          ]
+        },
+        {
+          "comment": "Defaults to provider_id = 1 when no performer present",
+          "references": [
+            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/procedure/OmopProcedureBuilder.java", "lines": [99, 116] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "visit_occurrence_id",
+      "fhir_path": "Procedure.encounter",
+      "fhir_type": "Reference(Encounter)",
+      "omop_type": "integer",
+      "fk": "VISIT_OCCURRENCE",
+      "notes": "Resolve Encounter reference to integer visit_occurrence_id. Null if unresolved (optional field)."
+    },
+    {
+      "omop_column": "visit_detail_id",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "integer",
+      "fk": "VISIT_DETAIL",
+      "notes": "Not mapped. No direct FHIR equivalent. FhirToCdm sets it equal to visit_occurrence_id (non-standard)."
+    },
+    {
+      "omop_column": "procedure_source_value",
+      "fhir_path": "Procedure.code.coding[best].code",
+      "fhir_type": "code",
+      "omop_type": "varchar(50)",
+      "notes": "Raw procedure code string. Best code by vocabulary priority (SNOMED > CPT > ICD-10-PCS). Truncate to 50 characters."
+    },
+    {
+      "omop_column": "procedure_source_concept_id",
+      "fhir_path": "Procedure.code",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "fk": "CONCEPT",
+      "notes": "Source vocabulary concept_id (non-standard). Lookup the source code in its native vocabulary. NACHC copies procedure_concept_id here if null. 0 if unmapped."
+    },
+    {
+      "omop_column": "quantity",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "integer",
+      "notes": "FHIR Procedure has no quantity field. NACHC defaults to 1. Most implementations leave null.",
+      "sources": [
+        {
+          "comment": "Defaults to 1",
+          "references": [
+            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/procedure/OmopProcedureBuilder.java", "lines": [99, 116] },
+            { "project": "fhir-x-omop", "kind": "python", "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/procedure_occurrence.py" }
+          ]
+        },
+        {
+          "comment": "Left null — no quantity mapping",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopProcedure.java", "lines": [369, 513] },
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ProcedureMapper.java" }
+          ]
+        }
+      ]
+    }
+  ],
+  "vocabularies": [
+    {
+      "name": "procedure_code",
+      "entries": [
+        {
+          "source_code": "http://snomed.info/sct",
+          "source_display": "SNOMED CT",
+          "target_concept_id": null,
+          "target_concept_name": "SNOMED vocabulary_id",
+          "notes": "Preferred. Directly maps to standard concepts in Procedure domain. Some codes have domain_id != Procedure requiring domain routing."
+        },
+        {
+          "source_code": "http://www.ama-assn.org/go/cpt",
+          "source_display": "CPT-4",
+          "target_concept_id": null,
+          "target_concept_name": "CPT4 vocabulary_id",
+          "notes": "US billing codes. Standard in OMOP Procedure domain. Direct concept lookup."
+        },
+        {
+          "source_code": "http://hl7.org/fhir/sid/icd-10-pcs",
+          "source_display": "ICD-10-PCS",
+          "target_concept_id": null,
+          "target_concept_name": "ICD10PCS vocabulary_id",
+          "notes": "US inpatient procedure codes. Non-standard -- map via concept_relationship (Maps to) to standard SNOMED concepts."
+        },
+        {
+          "source_code": "http://hl7.org/fhir/sid/icd-9-cm",
+          "source_display": "ICD-9-CM (Vol 3)",
+          "target_concept_id": null,
+          "target_concept_name": "ICD9Proc vocabulary_id",
+          "notes": "Legacy US procedure codes. Map via concept_relationship (Maps to) to standard concepts."
+        },
+        {
+          "source_code": "https://www.cms.gov/Medicare/Coding/HCPCSReleaseCodeSets",
+          "source_display": "HCPCS",
+          "target_concept_id": null,
+          "target_concept_name": "HCPCS vocabulary_id",
+          "notes": "US healthcare common procedure coding. Maps to standard concepts."
+        },
+        {
+          "source_code": "http://fhir.de/CodeSystem/bfarm/ops",
+          "source_display": "OPS",
+          "target_concept_id": null,
+          "target_concept_name": "OPS vocabulary_id",
+          "notes": "German procedure classification. Used by ETL-German. Requires custom ops_standard_domain_lookup table."
+        }
+      ]
+    },
+    {
+      "name": "procedure_type",
+      "entries": [
+        {
+          "source_code": "EHR",
+          "source_display": "EHR",
+          "target_concept_id": 32817,
+          "target_concept_name": "EHR"
+        },
+        {
+          "source_code": "Primary Procedure",
+          "source_display": "Primary Procedure (legacy)",
+          "target_concept_id": 44786630,
+          "target_concept_name": "Primary Procedure",
+          "notes": "Legacy choice from older CDM conventions. Used by omoponfhir and NACHC."
+        }
+      ]
+    },
+    {
+      "name": "body_site",
+      "entries": [
+        {
+          "source_code": "http://snomed.info/sct",
+          "source_display": "SNOMED CT (Body Structure)",
+          "target_concept_id": null,
+          "target_concept_name": "SNOMED body site concept",
+          "notes": "Body site concepts under SNOMED hierarchy 442083009 (Anatomical or acquired body structure). Map to OMOP concept_id."
+        }
+      ]
+    },
+    {
+      "name": "status_filter",
+      "entries": [
+        {
+          "source_code": "completed",
+          "source_display": "Completed",
+          "target_concept_id": null,
+          "target_concept_name": "Map",
+          "notes": "All implementations accept this status."
+        },
+        {
+          "source_code": "in-progress",
+          "source_display": "In Progress",
+          "target_concept_id": null,
+          "target_concept_name": "Skip or Map",
+          "notes": "ETL-German accepts. Most others skip."
+        },
+        {
+          "source_code": "not-done",
+          "source_display": "Not Done",
+          "target_concept_id": null,
+          "target_concept_name": "Skip",
+          "notes": "Procedure was not performed. Always skip."
+        },
+        {
+          "source_code": "entered-in-error",
+          "source_display": "Entered in Error",
+          "target_concept_id": null,
+          "target_concept_name": "Skip",
+          "notes": "Data quality issue. Always skip. ETL-German also deletes previously mapped records."
+        },
+        {
+          "source_code": "stopped",
+          "source_display": "Stopped",
+          "target_concept_id": null,
+          "target_concept_name": "Skip",
+          "notes": "Procedure was halted. Most implementations skip."
+        },
+        {
+          "source_code": "preparation",
+          "source_display": "Preparation",
+          "target_concept_id": null,
+          "target_concept_name": "Skip",
+          "notes": "Procedure not yet started. Most implementations skip."
+        }
+      ]
+    }
+  ],
+  "concept_maps": ["procedure_code", "procedure_type", "body_site"],
+  "references": [
+    {
+      "project": "fhir-omop-ig",
+      "kind": "fml",
+      "path": "refs/refs/fhir-omop-ig/input/maps/Procedure.fml",
+      "notes": "29 lines. Maps code and performed[x] only. procedure_occurrence_id and person_id are commented-out TODOs."
+    },
+    {
+      "project": "omoponfhir",
+      "kind": "java",
+      "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopProcedure.java",
+      "lines": [1, 515],
+      "notes": "Bidirectional. constructOmop() at lines 369-513. Type concept 44786630. No status filtering, no body site, no domain routing."
+    },
+    {
+      "project": "FhirToCdm",
+      "kind": "csharp",
+      "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
+      "notes": "CreateProcedureOccurrence() lines 407-451. One row per coding. Type concept 32817. Partial domain routing."
+    },
+    {
+      "project": "ETL-German-FHIR-Core",
+      "kind": "java",
+      "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ProcedureMapper.java",
+      "lines": [1, 1140],
+      "notes": "Most complete: OPS/SNOMED/DICOM, full domain routing, body site + OPS localization, device_exposure from usedCode, status filtering, incremental updates."
+    },
+    {
+      "project": "NACHC-fhir-to-omop",
+      "kind": "java",
+      "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/procedure/OmopProcedureBuilder.java",
+      "lines": [1, 136],
+      "notes": "DSTU3. Domain routing to Procedure/Measurement/Observation/Condition. Defaults: provider_id=1, quantity=1, modifier_concept_id=0."
+    },
+    {
+      "project": "fhir-x-omop",
+      "kind": "python",
+      "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/procedure_occurrence.py",
+      "notes": "34 lines. Minimal mapper with all concept_ids hardcoded to 0. performedDateTime only."
+    },
+    {
+      "project": "HealthcareLakeETL",
+      "kind": "python",
+      "path": "refs/refs/HealthcareLakeETL/mappings/procedure_occurrence.py",
+      "notes": "44 lines. PySpark column-level transformation. Period.start only. No concept mapping."
+    }
+  ],
+  "edge_cases": [
+    {
+      "case": "Multiple bodySite entries",
+      "handling": "Take first bodySite[0] for modifier_concept_id. ETL-German filters to SNOMED codings only. Remaining body sites are lost.",
+      "implementations": ["ETL-German"]
+    },
+    {
+      "case": "Multiple performer entries",
+      "handling": "Iterate and take first Practitioner-typed actor for provider_id. Non-Practitioner performers (Organization, Device) are ignored.",
+      "implementations": ["omoponfhir", "ETL-German"]
+    },
+    {
+      "case": "Multiple code.coding entries",
+      "handling": "Select best coding by vocabulary priority (SNOMED > CPT > ICD-10-PCS). ETL-German uses OPS > DICOM > SNOMED priority. FhirToCdm creates one row per coding. HL7 IG takes first coding only.",
+      "implementations": ["ETL-German", "FhirToCdm", "fhir-omop-ig"]
+    },
+    {
+      "case": "Code with non-Procedure domain",
+      "handling": "Route to appropriate OMOP table (drug_exposure, observation, measurement) based on standard concept's domain_id.",
+      "implementations": ["ETL-German", "NACHC", "FhirToCdm"]
+    },
+    {
+      "case": "Missing performed[x] (no date)",
+      "handling": "Skip resource. procedure_date is required. ETL-German logs warning and returns null.",
+      "implementations": ["ETL-German"]
+    },
+    {
+      "case": "Missing subject reference",
+      "handling": "Skip resource. person_id is required. omoponfhir throws FHIRException. ETL-German logs and returns null.",
+      "implementations": ["omoponfhir", "ETL-German"]
+    },
+    {
+      "case": "Missing code",
+      "handling": "Skip resource. procedure_concept_id is required (0 is acceptable). ETL-German logs and skips.",
+      "implementations": ["ETL-German"]
+    },
+    {
+      "case": "status = entered-in-error",
+      "handling": "Skip resource. For incremental loads, delete any previously mapped record.",
+      "implementations": ["ETL-German"]
+    },
+    {
+      "case": "Extremely long procedure_source_value",
+      "handling": "OMOP field is varchar(50). Truncate code string to 50 characters. No implementation explicitly handles this."
+    },
+    {
+      "case": "usedCode (device codes) present",
+      "handling": "ETL-German creates device_exposure rows from Procedure.usedCode codings. Other implementations ignore this field.",
+      "implementations": ["ETL-German"]
+    },
+    {
+      "case": "focalDevice present",
+      "handling": "Could create device_exposure row. ETL-German handles usedCode (not focalDevice) for device exposure. No standard mapping for focalDevice."
+    },
+    {
+      "case": "reasonReference to Condition",
+      "handling": "Could populate fact_relationship to link procedure and condition. Not implemented in any reference."
+    },
+    {
+      "case": "performedDateTime (not Period)",
+      "handling": "Date part goes to procedure_date/procedure_datetime. procedure_end_date: ETL-German leaves null, NACHC sets end = start.",
+      "implementations": ["ETL-German", "NACHC", "omoponfhir"]
+    },
+    {
+      "case": "Procedure.category present",
+      "handling": "Could inform procedure_type_concept_id, but no implementation uses it. omoponfhir has commented-out code for this."
+    }
+  ]
+}

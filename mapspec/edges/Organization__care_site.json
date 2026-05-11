@@ -1,0 +1,361 @@
+{
+  "$schema": "../schema/edge.schema.json",
+  "fhir_resource": "Organization",
+  "omop_table": "care_site",
+  "direction": "fhir-to-omop",
+  "status": "documented",
+  "primary": true,
+  "required": true,
+  "narrative_md": "Each FHIR Organization maps to one OMOP care_site row representing a healthcare facility or department. Organization.name becomes care_site_name, Organization.type maps to place_of_service_concept_id via OrganizationType vocabulary, and Organization.address resolves to a location row linked via location_id. FHIR Location can also contribute care_site rows in some implementations (see Location__care_site edge). FHIR Organization.partOf hierarchy is flattened -- each level becomes a separate care_site row with no parent linkage.",
+  "implementation_in_project": null,
+  "fields": [
+    {
+      "omop_column": "care_site_id",
+      "fhir_path": "(generated)",
+      "fhir_type": "id",
+      "omop_type": "integer",
+      "required": true,
+      "pk": true,
+      "notes": "Surrogate key. omoponfhir uses IdMapping (FHIR ID <-> OMOP ID). fhir-to-omop-demo uses Organization.id directly. ETL-German pre-loads sequential IDs from CSV.",
+      "sources": [
+        {
+          "comment": "Bidirectional IdMapping table (FHIR ID <-> OMOP integer ID) with deduplication by careSiteSourceValue",
+          "references": [
+            { "project": "omoponfhir-v54", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopOrganization.java", "lines": [117, 137], "notes": "IdMapping lookup then dedup by careSiteSourceValue (lines 122-137)" }
+          ]
+        },
+        {
+          "comment": "Uses Organization.id verbatim as the integer care_site_id",
+          "references": [
+            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Organization.jq", "lines": [14, 14], "notes": "care_site_id = .id" }
+          ]
+        },
+        {
+          "comment": "Pre-loads sequential IDs from static CSV at job startup; no Organization resource processing",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/listeners/FhirToOmopJobListener.java", "lines": [398, 432], "notes": "CARE_SITE.csv with sequential IDs and German FAB dept codes" }
+          ]
+        },
+        {
+          "comment": "Fixed id=1 single dummy record for all unresolved references",
+          "references": [
+            { "project": "NACHC-fhir-to-omop", "kind": "sql", "path": "refs/refs/NACHC-fhir-to-omop/src/main/resources/sqlserver/omop/5.4/location/create-location-and-caresite-dummy-records.sql", "notes": "Single dummy care_site (id=1, 'Not Available')" }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "care_site_name",
+      "fhir_path": "Organization.name",
+      "fhir_type": "string",
+      "omop_type": "varchar(255)",
+      "required": false,
+      "notes": "The name of the care site. Truncate to 255 characters if needed.",
+      "sources": [
+        {
+          "comment": "Sets care_site_name directly from Organization.getName()",
+          "references": [
+            { "project": "omoponfhir-v54", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopOrganization.java", "lines": [246, 246], "notes": "careSite.setCareSiteName(myOrganization.getName())" },
+            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Organization.jq", "lines": [15, 15], "notes": "care_site_name = .name" }
+          ]
+        },
+        {
+          "comment": "Pre-loaded German department names from static CSV (e.g., 'Innere Medizin', 'Kardiologie'); not sourced from Organization resource",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/resources/CARE_SITE.csv", "notes": "487-row CSV with German FAB department names" }
+          ]
+        },
+        {
+          "comment": "Fixed 'Not Available' for all dummy records",
+          "references": [
+            { "project": "NACHC-fhir-to-omop", "kind": "sql", "path": "refs/refs/NACHC-fhir-to-omop/src/main/resources/sqlserver/omop/5.4/location/create-location-and-caresite-dummy-records.sql", "lines": [1, 16] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "place_of_service_concept_id",
+      "fhir_path": "Organization.type[0].coding[0]",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "required": false,
+      "fk": "CONCEPT",
+      "concept_map": "organization_type",
+      "notes": "High-level characterization of the care site. Should be a concept from the Visit domain. omoponfhir maps via OmopConceptMapping enum (12 codes). 0 if unmapped.",
+      "sources": [
+        {
+          "comment": "Maps HL7 OrganizationType codes (prov/dept/team/govt/ins/edu/reli/crs/cg/bus/other) to Visit domain concept_ids via OmopConceptMapping enum; defaults to 8844 (Other Place of Service)",
+          "references": [
+            { "project": "omoponfhir-v54", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopOrganization.java", "lines": [249, 264], "notes": "OmopConceptMapping.omopForOrganizationTypeCode()" },
+            { "project": "omoponfhir-v54", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopConceptMapping.java", "lines": [107, 147], "notes": "Switch statement for 12 OrganizationType codes" }
+          ]
+        },
+        {
+          "comment": "Always null — Organization.type not mapped",
+          "references": [
+            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Organization.jq", "lines": [16, 16], "notes": "place_of_service_concept_id = null" }
+          ]
+        },
+        {
+          "comment": "Pre-loaded from CSV using German FAB specialty concepts (e.g., 45765841 = Internal Medicine) — deviates from OMOP CDM recommendation to use Visit domain",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/resources/CARE_SITE.csv", "notes": "487-row CSV with German FAB codes mapped to Specialty domain concepts" }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "location_id",
+      "fhir_path": "Organization.address",
+      "fhir_type": "Address",
+      "omop_type": "integer",
+      "required": false,
+      "fk": "LOCATION",
+      "notes": "Resolved from Organization.address[0] via address lookup-or-create pattern (omoponfhir AddressUtil). fhir-to-omop-demo sets null from Organization; relies on Location resource to populate via a second care_site row. OMOP supports one location per care_site.",
+      "sources": [
+        {
+          "comment": "Resolves Organization.address[0] to a location row via AddressUtil.searchAndUpdate() (lookup-or-create); breaks after first address",
+          "references": [
+            { "project": "omoponfhir-v54", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopOrganization.java", "lines": [240, 275], "notes": "AddressUtil.searchAndUpdate() at line 240 and in loop lines 267-275" }
+          ]
+        },
+        {
+          "comment": "Always null from Organization mapper; location_id is supplied instead by a second care_site row from the Location resource",
+          "references": [
+            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Organization.jq", "lines": [17, 17], "notes": "location_id = null on Organization-derived row" },
+            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Location.jq", "lines": [31, 39], "notes": "location_id set on the second care_site row from Location" }
+          ]
+        },
+        {
+          "comment": "Not set — ETL-German does not populate location_id on care_site rows",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/listeners/FhirToOmopJobListener.java", "lines": [398, 432], "notes": "CSV-loaded care_site rows omit location_id" }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "care_site_source_value",
+      "fhir_path": "Organization.identifier[0].value",
+      "fhir_type": "string",
+      "omop_type": "varchar(50)",
+      "required": false,
+      "notes": "Identifier for traceability and deduplication. Falls back to Organization.name or Organization.id if no identifier present.",
+      "sources": [
+        {
+          "comment": "Uses identifierFirstRep.value; also used as deduplication key (searches by careSiteSourceValue before creating)",
+          "references": [
+            { "project": "omoponfhir-v54", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopOrganization.java", "lines": [122, 238], "notes": "Dedup by careSiteSourceValue (122-137); identifier → source_value (234-238)" }
+          ]
+        },
+        {
+          "comment": "Uses .identifier[0].value via synthea_id helper variable",
+          "references": [
+            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Organization.jq", "lines": [6, 18], "notes": "synthea_id = .identifier[0].value; used on line 18" }
+          ]
+        },
+        {
+          "comment": "Uses German FAB department code (e.g., '0100', '0300') as source value",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/resources/CARE_SITE.csv", "notes": "FAB department codes used as care_site_source_value" }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "place_of_service_source_value",
+      "fhir_path": "Organization.type[0]",
+      "fhir_type": "string",
+      "omop_type": "varchar(50)",
+      "required": false,
+      "notes": "Raw organization type code or text before vocabulary mapping."
+    }
+  ],
+  "vocabularies": [
+    {
+      "name": "organization_type",
+      "entries": [
+        {
+          "source_code": "prov",
+          "source_display": "Healthcare Provider",
+          "target_concept_id": 4107295,
+          "target_concept_name": "Healthcare Provider",
+          "notes": "General healthcare delivery organization"
+        },
+        {
+          "source_code": "dept",
+          "source_display": "Hospital Department",
+          "target_concept_id": 4318944,
+          "target_concept_name": "Department",
+          "notes": "Organizational unit within a hospital"
+        },
+        {
+          "source_code": "team",
+          "source_display": "Organizational Team",
+          "target_concept_id": 4217012,
+          "target_concept_name": "Team",
+          "notes": "Care team or workgroup"
+        },
+        {
+          "source_code": "govt",
+          "source_display": "Government",
+          "target_concept_id": 4195901,
+          "target_concept_name": "Government",
+          "notes": "Government body"
+        },
+        {
+          "source_code": "ins",
+          "source_display": "Insurance Company",
+          "target_concept_id": 8844,
+          "target_concept_name": "Other Place of Service",
+          "notes": "No exact match; defaults to generic"
+        },
+        {
+          "source_code": "edu",
+          "source_display": "Educational Institute",
+          "target_concept_id": 4030303,
+          "target_concept_name": "Educational Institution",
+          "notes": "Teaching hospital, medical school"
+        },
+        {
+          "source_code": "reli",
+          "source_display": "Religious Institution",
+          "target_concept_id": 8844,
+          "target_concept_name": "Other Place of Service",
+          "notes": "No exact match"
+        },
+        {
+          "source_code": "crs",
+          "source_display": "Clinical Research Sponsor",
+          "target_concept_id": 8844,
+          "target_concept_name": "Other Place of Service",
+          "notes": "Clinical trial sponsor"
+        },
+        {
+          "source_code": "cg",
+          "source_display": "Community Group",
+          "target_concept_id": 4127377,
+          "target_concept_name": "Community Health Care",
+          "notes": "Community-based care"
+        },
+        {
+          "source_code": "bus",
+          "source_display": "Non-Healthcare Business",
+          "target_concept_id": 8844,
+          "target_concept_name": "Other Place of Service",
+          "notes": "Non-healthcare entity"
+        },
+        {
+          "source_code": "other",
+          "source_display": "Other",
+          "target_concept_id": 8844,
+          "target_concept_name": "Other Place of Service",
+          "notes": "Catch-all"
+        },
+        {
+          "source_code": "(absent)",
+          "source_display": "Absent",
+          "target_concept_id": 8844,
+          "target_concept_name": "Other Place of Service",
+          "notes": "omoponfhir default for unknown/absent type"
+        }
+      ]
+    }
+  ],
+  "concept_maps": ["organization_type"],
+  "references": [
+    {
+      "project": "fhir-omop-ig",
+      "kind": "fsh",
+      "path": "refs/refs/fhir-omop-ig/input/fsh/CareSite.fsh",
+      "notes": "All 6 care_site fields defined: lines 1-13"
+    },
+    {
+      "project": "omoponfhir-v54",
+      "kind": "java",
+      "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopOrganization.java",
+      "lines": [1, 279],
+      "notes": "Bidirectional Organization <-> care_site. Most complete. Dedup by careSiteSourceValue, address -> location via AddressUtil, OrganizationType -> concept via OmopConceptMapping."
+    },
+    {
+      "project": "omoponfhir-v54",
+      "kind": "java",
+      "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopConceptMapping.java",
+      "lines": [1, 250],
+      "notes": "OrganizationType enum (12 codes) and omopForOrganizationTypeCode() switch (lines 107-147)"
+    },
+    {
+      "project": "fhir-to-omop-demo",
+      "kind": "jq",
+      "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Organization.jq",
+      "notes": "Minimal care_site output: care_site_id=.id, care_site_name=.name, place_of_service_concept_id=null"
+    },
+    {
+      "project": "ETL-German-FHIR-Core",
+      "kind": "java",
+      "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/listeners/FhirToOmopJobListener.java",
+      "lines": [398, 432],
+      "notes": "Pre-loads care_site from static CSV at job startup. No Organization resource processing."
+    },
+    {
+      "project": "NACHC-fhir-to-omop",
+      "kind": "sql",
+      "path": "refs/refs/NACHC-fhir-to-omop/src/main/resources/sqlserver/omop/5.4/location/create-location-and-caresite-dummy-records.sql",
+      "notes": "Creates single dummy care_site (id=1, 'Not Available') for all unresolved references"
+    }
+  ],
+  "edge_cases": [
+    {
+      "case": "Missing Organization.name",
+      "handling": "care_site_name = null. OMOP allows null. Use care_site_source_value (identifier) for traceability.",
+      "implementations": ["omoponfhir-v54"]
+    },
+    {
+      "case": "No Organization.type",
+      "handling": "place_of_service_concept_id = 0, place_of_service_source_value = null. omoponfhir catches FHIRException silently, leaving field unset.",
+      "implementations": ["omoponfhir-v54", "fhir-to-omop-demo"]
+    },
+    {
+      "case": "Organization.partOf hierarchy",
+      "handling": "Flat mapping -- each level becomes a separate care_site row. No parent linkage preserved in OMOP.",
+      "implementations": ["omoponfhir-v54"]
+    },
+    {
+      "case": "Duplicate organizations (same identifier, different resources)",
+      "handling": "Deduplicate by care_site_source_value. omoponfhir searches by careSiteSourceValue before creating new rows. fhir-to-omop-demo does not deduplicate.",
+      "implementations": ["omoponfhir-v54"]
+    },
+    {
+      "case": "Multiple Organization.type[] entries",
+      "handling": "OMOP supports only one place_of_service_concept_id per care_site. Pick the most specific or first entry.",
+      "implementations": ["omoponfhir-v54"]
+    },
+    {
+      "case": "Organization referenced but not in bundle",
+      "handling": "Deferred resolution. Create a stub care_site row with care_site_source_value = reference string. NACHC creates a single dummy care_site (id=1) for all unresolved references.",
+      "implementations": ["NACHC-fhir-to-omop"]
+    },
+    {
+      "case": "Organization.address has multiple addresses",
+      "handling": "OMOP supports one location per care_site. Pick the primary/first address. omoponfhir breaks after the first address.",
+      "implementations": ["omoponfhir-v54"]
+    },
+    {
+      "case": "Organization.identifier absent",
+      "handling": "care_site_source_value may be null. Use Organization.name or Organization.id as fallback to avoid NullPointerException.",
+      "implementations": ["omoponfhir-v54"]
+    },
+    {
+      "case": "Organization.active = false",
+      "handling": "Most implementations ignore this flag and map inactive organizations. OMOP has no 'active' concept for care_site. Consider filtering in ETL preprocessing."
+    },
+    {
+      "case": "Very long care_site_name (>255 chars)",
+      "handling": "Truncate to 255 characters. care_site_name is varchar(255)."
+    },
+    {
+      "case": "FHIR Location resource references Organization",
+      "handling": "Some implementations create an additional care_site row from the Location resource. Reconciliation needed. See Location__care_site edge."
+    }
+  ]
+}

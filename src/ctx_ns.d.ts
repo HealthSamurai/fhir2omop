@@ -3,6 +3,9 @@ declare global {
     type Context = import("./$type_Context").Context;
 
     interface FnsRegistry {
+        _test_hashline_edit: {
+        nearby: typeof import("../.hyper/_test_hashline_edit/nearby").default;
+        };
         http: {
         loadRoutes: typeof import("./http/loadRoutes").default;
         match: typeof import("./http/match").default;

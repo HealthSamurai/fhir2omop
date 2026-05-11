@@ -1,0 +1,123 @@
+{
+  "$schema": "../schema/edge.schema.json",
+  "fhir_resource": "Location",
+  "omop_table": "care_site",
+  "direction": "fhir-to-omop",
+  "status": "documented",
+  "primary": false,
+  "required": false,
+  "condition": "Location.managingOrganization is present",
+  "narrative_md": "Secondary pattern: some implementations (notably fhir-to-omop-demo) create a care_site row from each FHIR Location resource, in addition to the primary care_site row from Organization. The Location-derived care_site row carries the location_id (linking to the location row from the same Location resource) while the Organization-derived row carries the name and place_of_service. The two rows share the same care_site_id and must be merged downstream. This pattern is NOT used by omoponfhir-v54, ETL-German, or NACHC.",
+  "implementation_in_project": null,
+  "fields": [
+    {
+      "omop_column": "care_site_id",
+      "fhir_path": "Location.managingOrganization.reference",
+      "fhir_type": "Reference(Organization)",
+      "omop_type": "integer",
+      "required": true,
+      "pk": true,
+      "notes": "Resolves to the Organization's care_site_id. Same care_site_id as the row produced by Organization -> care_site. The two rows describe the same care site.",
+      "sources": [
+        {
+          "comment": "Derives care_site_id from managingOrganization reference; same ID as Organization-derived row — only fhir-to-omop-demo uses this dual-row pattern",
+          "references": [
+            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Location.jq", "lines": [10, 33], "notes": "care_site_id from managingOrganization reference" }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "care_site_name",
+      "fhir_path": null,
+      "fhir_type": "string",
+      "omop_type": "varchar(255)",
+      "required": false,
+      "notes": "Typically null on this row. Set by the Organization-derived care_site row, not this one."
+    },
+    {
+      "omop_column": "place_of_service_concept_id",
+      "fhir_path": null,
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "required": false,
+      "fk": "CONCEPT",
+      "notes": "Typically null on this row. Set by the Organization-derived care_site row, not this one."
+    },
+    {
+      "omop_column": "location_id",
+      "fhir_path": "Location.id",
+      "fhir_type": "id",
+      "omop_type": "integer",
+      "required": false,
+      "fk": "LOCATION",
+      "notes": "Points to the location row produced from this same Location resource (see Location__location edge).",
+      "sources": [
+        {
+          "comment": "Sets location_id = Location.id on the second care_site row, linking back to the location row from the same resource — unique to fhir-to-omop-demo dual-row pattern",
+          "references": [
+            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Location.jq", "lines": [31, 39], "notes": "Second care_site row; location_id = .id (line 36)" }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "care_site_source_value",
+      "fhir_path": null,
+      "fhir_type": "string",
+      "omop_type": "varchar(50)",
+      "required": false,
+      "notes": "Typically null on this row. Set by the Organization-derived care_site row."
+    },
+    {
+      "omop_column": "place_of_service_source_value",
+      "fhir_path": null,
+      "fhir_type": "string",
+      "omop_type": "varchar(50)",
+      "required": false,
+      "notes": "Typically null on this row. Set by the Organization-derived care_site row."
+    }
+  ],
+  "vocabularies": [],
+  "concept_maps": [],
+  "references": [
+    {
+      "project": "fhir-to-omop-demo",
+      "kind": "jq",
+      "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Location.jq",
+      "notes": "Second care_site row from Location resource: lines 31-39. care_site_id from managingOrganization (line 10, 33), location_id = .id (line 36)."
+    },
+    {
+      "project": "fhir-to-omop-demo",
+      "kind": "jq",
+      "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Organization.jq",
+      "notes": "Organization-derived care_site row (no location_id): lines 11-22. location_id null in this row (line 17)."
+    }
+  ],
+  "edge_cases": [
+    {
+      "case": "Location.managingOrganization absent",
+      "handling": "No care_site_id available -- skip the care_site row. The location row is still emitted via the Location__location edge."
+    },
+    {
+      "case": "Location.managingOrganization references Organization not in bundle",
+      "handling": "Deferred resolution. Stub care_site_id; resolve when Organization arrives."
+    },
+    {
+      "case": "Multiple Locations under the same managingOrganization",
+      "handling": "Each Location emits a care_site row with the same care_site_id. Without merge, this produces duplicates -- a single Organization with N Locations yields 1 + N care_site rows."
+    },
+    {
+      "case": "Location with no address but with managingOrganization",
+      "handling": "care_site row emitted but location_id points at a sparse location row (lat/lng only or empty)."
+    },
+    {
+      "case": "Location with address but no managingOrganization",
+      "handling": "location row only -- no care_site row from this edge."
+    },
+    {
+      "case": "Duplicate care_site rows from Organization and Location",
+      "handling": "Merge before insert: group rows by care_site_id and coalesce non-null fields (name from Organization row, location_id from Location row). Or pick Organization row authoritatively and lose location_id linkage."
+    }
+  ]
+}

@@ -1,0 +1,382 @@
+{
+  "$schema": "../schema/edge.schema.json",
+  "fhir_resource": "Patient",
+  "omop_table": "person",
+  "direction": "fhir-to-omop",
+  "status": "implemented",
+  "primary": true,
+  "required": true,
+  "narrative_md": "Core demographics record. One FHIR Patient maps to exactly one OMOP person row. The person table is the central identity record \u2014 every OMOP event table carries a person_id FK.",
+  "implementation_in_project": "src/mapper/patient.ts",
+  "fields": [
+    {
+      "omop_column": "person_id",
+      "fhir_path": "Patient.id",
+      "fhir_type": "id",
+      "omop_type": "integer",
+      "required": true,
+      "pk": true,
+      "notes": "Surrogate key. Hash/sequence/lookup of Patient.id. HL7 IG FML leaves this as a TODO.",
+      "sources": [
+        {
+          "comment": "TODO/commented placeholder — no concrete strategy",
+          "references": [
+            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/PersonMap.fml" }
+          ]
+        },
+        {
+          "comment": "Direct copy from FPerson primary key",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPatient.java" }
+          ]
+        },
+        {
+          "comment": "Auto-incrementing sequence",
+          "references": [
+            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [20, 170], "notes": "CreatePersonAndLocations()" },
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/PatientMapper.java" },
+            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/person/OmopPersonBuilder.java" }
+          ]
+        },
+        {
+          "comment": "Reuse Patient.id verbatim as integer",
+          "references": [
+            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Patient.jq" }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "gender_concept_id",
+      "fhir_path": "Patient.gender",
+      "fhir_type": "code",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "CONCEPT",
+      "concept_map": "gender",
+      "notes": "male\u21928507, female\u21928532, other\u21928521, unknown\u21928551, absent\u21920",
+      "sources": [
+        {
+          "comment": "Standard concept_id lookup (8507/8532/8521/8551/0)",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPatient.java", "lines": [201, 213] },
+            { "project": "mends-on-fhir", "kind": "whistle-conceptmap", "path": "refs/refs/mends-on-fhir/whistle-mappings/synthea/concept-maps/Person.gender.conceptid.json" }
+          ]
+        },
+        {
+          "comment": "Pass-through FHIR code without translation (non-normative)",
+          "references": [
+            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/PersonMap.fml" }
+          ]
+        },
+        {
+          "comment": "Switch on code with 0 fallback for unknown/other",
+          "references": [
+            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [50, 63] }
+          ]
+        },
+        {
+          "comment": "Concept lookup including German extension support",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/PatientMapper.java", "lines": [607, 641] }
+          ]
+        },
+        {
+          "comment": "Prefer us-core-birthsex extension over Patient.gender",
+          "references": [
+            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Patient.jq" }
+          ]
+        },
+        {
+          "comment": "Null when no mapping found",
+          "references": [
+            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/util/mapping/GenderMapping.java" }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "gender_source_value",
+      "fhir_path": "Patient.gender",
+      "fhir_type": "code",
+      "omop_type": "varchar(50)"
+    },
+    {
+      "omop_column": "gender_source_concept_id",
+      "fhir_path": null,
+      "fhir_type": "code",
+      "omop_type": "integer",
+      "constant": 0
+    },
+    {
+      "omop_column": "year_of_birth",
+      "fhir_path": "Patient.birthDate",
+      "fhir_type": "date",
+      "omop_type": "integer",
+      "required": true,
+      "transform": "year(Patient.birthDate)"
+    },
+    {
+      "omop_column": "month_of_birth",
+      "fhir_path": "Patient.birthDate",
+      "fhir_type": "date",
+      "omop_type": "integer",
+      "transform": "month(Patient.birthDate)"
+    },
+    {
+      "omop_column": "day_of_birth",
+      "fhir_path": "Patient.birthDate",
+      "fhir_type": "date",
+      "omop_type": "integer",
+      "transform": "day(Patient.birthDate)"
+    },
+    {
+      "omop_column": "birth_datetime",
+      "fhir_path": "Patient.birthDate + patient-birthTime extension",
+      "fhir_type": "dateTime",
+      "omop_type": "datetime"
+    },
+    {
+      "omop_column": "race_concept_id",
+      "fhir_path": "Patient.extension[us-core-race].ombCategory",
+      "fhir_type": "code",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "CONCEPT",
+      "concept_map": "race"
+    },
+    {
+      "omop_column": "race_source_value",
+      "fhir_path": "Patient.extension[us-core-race].ombCategory.display",
+      "fhir_type": "code",
+      "omop_type": "varchar(50)"
+    },
+    {
+      "omop_column": "race_source_concept_id",
+      "fhir_path": null,
+      "fhir_type": "code",
+      "omop_type": "integer",
+      "constant": 0
+    },
+    {
+      "omop_column": "ethnicity_concept_id",
+      "fhir_path": "Patient.extension[us-core-ethnicity].ombCategory",
+      "fhir_type": "code",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "CONCEPT",
+      "concept_map": "ethnicity"
+    },
+    {
+      "omop_column": "ethnicity_source_value",
+      "fhir_path": "Patient.extension[us-core-ethnicity].ombCategory.display",
+      "fhir_type": "code",
+      "omop_type": "varchar(50)"
+    },
+    {
+      "omop_column": "ethnicity_source_concept_id",
+      "fhir_path": null,
+      "fhir_type": "code",
+      "omop_type": "integer",
+      "constant": 0
+    },
+    {
+      "omop_column": "location_id",
+      "fhir_path": "Patient.address",
+      "fhir_type": "Address",
+      "omop_type": "integer",
+      "fk": "LOCATION"
+    },
+    {
+      "omop_column": "provider_id",
+      "fhir_path": "Patient.generalPractitioner[0] (Practitioner)",
+      "fhir_type": "Reference(Practitioner)",
+      "omop_type": "integer",
+      "fk": "PROVIDER"
+    },
+    {
+      "omop_column": "care_site_id",
+      "fhir_path": "Patient.managingOrganization",
+      "fhir_type": "Reference(Organization)",
+      "omop_type": "integer",
+      "fk": "CARE_SITE"
+    },
+    {
+      "omop_column": "person_source_value",
+      "fhir_path": "Patient.identifier (best: SSN > MR > first)",
+      "fhir_type": "string",
+      "omop_type": "varchar(50)"
+    }
+  ],
+  "vocabularies": [
+    {
+      "name": "gender",
+      "entries": [
+        {
+          "source_code": "male",
+          "source_display": "Male",
+          "target_concept_id": 8507,
+          "target_concept_name": "MALE"
+        },
+        {
+          "source_code": "female",
+          "source_display": "Female",
+          "target_concept_id": 8532,
+          "target_concept_name": "FEMALE"
+        },
+        {
+          "source_code": "other",
+          "source_display": "Other",
+          "target_concept_id": 8521,
+          "target_concept_name": "OTHER"
+        },
+        {
+          "source_code": "unknown",
+          "source_display": "Unknown",
+          "target_concept_id": 8551,
+          "target_concept_name": "UNKNOWN"
+        },
+        {
+          "source_code": "(absent)",
+          "source_display": "Absent",
+          "target_concept_id": 0,
+          "target_concept_name": "No matching concept"
+        }
+      ]
+    },
+    {
+      "name": "race",
+      "entries": [
+        {
+          "source_code": "1002-5",
+          "source_display": "American Indian or Alaska Native",
+          "target_concept_id": 8657,
+          "target_concept_name": "American Indian or Alaska Native"
+        },
+        {
+          "source_code": "2028-9",
+          "source_display": "Asian",
+          "target_concept_id": 8515,
+          "target_concept_name": "Asian"
+        },
+        {
+          "source_code": "2054-5",
+          "source_display": "Black or African American",
+          "target_concept_id": 8516,
+          "target_concept_name": "Black or African American"
+        },
+        {
+          "source_code": "2076-8",
+          "source_display": "Native Hawaiian or Other Pacific Islander",
+          "target_concept_id": 8557,
+          "target_concept_name": "Native Hawaiian or Other Pacific Islander"
+        },
+        {
+          "source_code": "2106-3",
+          "source_display": "White",
+          "target_concept_id": 8527,
+          "target_concept_name": "White"
+        },
+        {
+          "source_code": "(absent)",
+          "source_display": "Absent",
+          "target_concept_id": 0,
+          "target_concept_name": "No matching concept"
+        }
+      ]
+    },
+    {
+      "name": "ethnicity",
+      "entries": [
+        {
+          "source_code": "2135-2",
+          "source_display": "Hispanic or Latino",
+          "target_concept_id": 38003563,
+          "target_concept_name": "Hispanic or Latino"
+        },
+        {
+          "source_code": "2186-5",
+          "source_display": "Not Hispanic or Latino",
+          "target_concept_id": 38003564,
+          "target_concept_name": "Not Hispanic or Latino"
+        },
+        {
+          "source_code": "(absent)",
+          "source_display": "Absent",
+          "target_concept_id": 0,
+          "target_concept_name": "No matching concept"
+        }
+      ]
+    }
+  ],
+  "concept_maps": ["gender", "race", "ethnicity"],
+  "references": [
+    {
+      "project": "fhir-omop-ig",
+      "kind": "fml",
+      "path": "refs/refs/fhir-omop-ig/input/maps/PersonMap.fml"
+    },
+    {
+      "project": "omoponfhir",
+      "kind": "java",
+      "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPatient.java",
+      "lines": [1, 1338]
+    },
+    {
+      "project": "FhirToCdm",
+      "kind": "csharp",
+      "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
+      "notes": "CreatePersonAndLocations() lines 20-170"
+    },
+    {
+      "project": "ETL-German-FHIR-Core",
+      "kind": "java",
+      "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/PatientMapper.java"
+    },
+    {
+      "project": "NACHC-fhir-to-omop",
+      "kind": "java",
+      "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/person/OmopPersonBuilder.java"
+    },
+    {
+      "project": "fhir-to-omop-demo",
+      "kind": "jq",
+      "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Patient.jq"
+    }
+  ],
+  "edge_cases": [
+    {
+      "case": "Missing birthDate",
+      "handling": "OMOP convention: drop person. Most implementations write year_of_birth=0.",
+      "implementations": ["ETL-German", "NACHC", "omoponfhir"]
+    },
+    {
+      "case": "Partial birthDate (year-only or year-month)",
+      "handling": "Year always populated; month/day null when not provided. birth_datetime null if incomplete."
+    },
+    {
+      "case": "Missing gender",
+      "handling": "gender_concept_id=0, gender_source_value=null. Per OMOP Themis, use 0 rather than 8551."
+    },
+    {
+      "case": "Multiple identifiers",
+      "handling": "Pick best by priority: SSN > MR > first. Encoding varies across implementations."
+    },
+    {
+      "case": "Multiple generalPractitioner entries",
+      "handling": "Filter to Practitioner references only. Take last (most recent) or first."
+    },
+    {
+      "case": "Multi-race patient (multiple ombCategory entries)",
+      "handling": "OMOP has single race_concept_id. Pick first, or use 8522 (Other), or write 0."
+    },
+    {
+      "case": "deceasedBoolean=true without date",
+      "handling": "Cannot create death row. See Patient__death edge."
+    },
+    {
+      "case": "Multiple address entries",
+      "handling": "Pick most recent home address. See Patient__location edge."
+    }
+  ]
+}

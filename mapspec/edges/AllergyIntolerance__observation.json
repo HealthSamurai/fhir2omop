@@ -1,0 +1,596 @@
+{
+  "$schema": "../schema/edge.schema.json",
+  "fhir_resource": "AllergyIntolerance",
+  "omop_table": "observation",
+  "direction": "fhir-to-omop",
+  "status": "implemented",
+  "primary": true,
+  "required": true,
+  "condition": "clinicalStatus is active or absent; verificationStatus is not entered-in-error or refuted",
+  "narrative_md": "FHIR AllergyIntolerance records patient allergies and intolerances. OMOP has no dedicated allergy table, so allergies are stored in the observation table with allergy-specific SNOMED concepts. One AllergyIntolerance maps to one observation row. Status filtering excludes inactive/resolved allergies and entered-in-error/refuted records.",
+  "implementation_in_project": "src/mapper/allergy-intolerance.ts",
+  "fields": [
+    {
+      "omop_column": "observation_id",
+      "fhir_path": "AllergyIntolerance.id",
+      "fhir_type": "id",
+      "omop_type": "integer",
+      "required": true,
+      "pk": true,
+      "notes": "Surrogate key from AllergyIntolerance.id. Hash or sequence via ctx.ids.getId()."
+    },
+    {
+      "omop_column": "person_id",
+      "fhir_path": "AllergyIntolerance.patient",
+      "fhir_type": "Reference(Patient)",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "PERSON",
+      "notes": "Resolve Patient reference via ctx.ids.resolveRef()."
+    },
+    {
+      "omop_column": "observation_concept_id",
+      "fhir_path": "AllergyIntolerance.code",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "CONCEPT",
+      "notes": "SNOMED allergy/substance concept. Requires vocabulary lookup. This project: 0 (placeholder). omoponfhir: category-driven (food->4188027, medication->439224, default->40772948). FhirToCdm: direct vocab lookup on code.",
+      "sources": [
+        {
+          "comment": "Category-based concept (allergy category → concept_id); substance goes to value_as_concept_id",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopAllergyIntolerance.java", "lines": [408, 431] },
+            { "project": "omoponfhir-v54", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopAllergyIntolerance.java", "lines": [408, 431] }
+          ]
+        },
+        {
+          "comment": "Direct substance concept via vocabulary lookup on AllergyIntolerance.code",
+          "references": [
+            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Allergy.fml", "lines": [14, 18] },
+            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [471, 473] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "observation_date",
+      "fhir_path": "AllergyIntolerance.onsetDateTime | AllergyIntolerance.onsetPeriod.start | AllergyIntolerance.recordedDate",
+      "fhir_type": "dateTime",
+      "omop_type": "date",
+      "required": true,
+      "transform": "dateTime -> date; fallback chain: onsetDateTime -> onsetPeriod.start -> recordedDate",
+      "notes": "If all absent, the record is skipped.",
+      "sources": [
+        {
+          "comment": "Full fallback chain: onsetDateTime → onsetPeriod.start → recordedDate; skip if all absent",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopAllergyIntolerance.java", "lines": [387, 389] }
+          ]
+        },
+        {
+          "comment": "recordedDate only (no onset fallback)",
+          "references": [
+            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [475, 475] }
+          ]
+        },
+        {
+          "comment": "onsetDateTime only (dateTime type, no Period or recordedDate fallback)",
+          "references": [
+            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Allergy.fml", "lines": [40, 40] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "observation_datetime",
+      "fhir_path": "AllergyIntolerance.onsetDateTime",
+      "fhir_type": "dateTime",
+      "omop_type": "datetime",
+      "required": false,
+      "notes": "Full ISO datetime when available. Null if source is date-only or from fallback."
+    },
+    {
+      "omop_column": "observation_type_concept_id",
+      "fhir_path": null,
+      "omop_type": "integer",
+      "required": true,
+      "constant": 32817,
+      "notes": "EHR. omoponfhir uses 38000280 (Observation recorded from EHR).",
+      "sources": [
+        {
+          "comment": "32817 (EHR) — modern OMOP CDM v6 recommendation",
+          "references": [
+            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [468, 468] }
+          ]
+        },
+        {
+          "comment": "38000280 (Observation recorded from EHR) — legacy type concept",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopAllergyIntolerance.java", "lines": [446, 446] },
+            { "project": "omoponfhir-v54", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopAllergyIntolerance.java", "lines": [446, 446] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "value_as_number",
+      "fhir_path": null,
+      "omop_type": "float",
+      "required": false,
+      "constant": null,
+      "notes": "Not applicable for allergy data."
+    },
+    {
+      "omop_column": "value_as_string",
+      "fhir_path": "AllergyIntolerance.reaction[*].manifestation[*].text",
+      "fhir_type": "string",
+      "omop_type": "varchar(60)",
+      "required": false,
+      "transform": "Concatenate all reaction manifestation display names, semicolon-separated.",
+      "notes": "All reactions and manifestations are included."
+    },
+    {
+      "omop_column": "value_as_concept_id",
+      "fhir_path": "AllergyIntolerance.reaction[0].manifestation[0]",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "required": false,
+      "fk": "CONCEPT",
+      "notes": "First reaction manifestation concept. Requires vocab lookup. This project: null (placeholder). HL7 IG FML maps manifestation code here. omoponfhir places the substance here instead.",
+      "sources": [
+        {
+          "comment": "Reaction manifestation code (first manifestation of first reaction)",
+          "references": [
+            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Allergy.fml", "lines": [42, 50] }
+          ]
+        },
+        {
+          "comment": "Substance concept (AllergyIntolerance.code, not manifestation) placed here; observation_concept_id holds category concept",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopAllergyIntolerance.java", "lines": [401, 405] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "qualifier_concept_id",
+      "fhir_path": null,
+      "omop_type": "integer",
+      "required": false,
+      "fk": "CONCEPT",
+      "constant": null,
+      "notes": "Could map type (allergy/intolerance) or criticality if standard concepts existed."
+    },
+    {
+      "omop_column": "qualifier_source_value",
+      "fhir_path": "AllergyIntolerance.type",
+      "fhir_type": "code",
+      "omop_type": "varchar(50)",
+      "required": false,
+      "notes": "\"allergy\" or \"intolerance\". Preserves the type distinction."
+    },
+    {
+      "omop_column": "unit_concept_id",
+      "fhir_path": null,
+      "omop_type": "integer",
+      "required": false,
+      "fk": "CONCEPT",
+      "constant": null,
+      "notes": "Not applicable for allergy data."
+    },
+    {
+      "omop_column": "unit_source_value",
+      "fhir_path": null,
+      "omop_type": "varchar(50)",
+      "required": false,
+      "constant": null,
+      "notes": "Not applicable for allergy data."
+    },
+    {
+      "omop_column": "provider_id",
+      "fhir_path": "AllergyIntolerance.asserter | AllergyIntolerance.recorder",
+      "fhir_type": "Reference(Practitioner | PractitionerRole)",
+      "omop_type": "integer",
+      "required": false,
+      "fk": "PROVIDER",
+      "transform": "Prefer asserter, fall back to recorder. Only Practitioner/PractitionerRole references are valid for provider_id.",
+      "notes": "omoponfhir uses recorder only.",
+      "sources": [
+        {
+          "comment": "recorder only (no asserter consideration)",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopAllergyIntolerance.java", "lines": [392, 398] }
+          ]
+        },
+        {
+          "comment": "Not mapped (provider_id left null or commented out)",
+          "references": [
+            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Allergy.fml", "lines": [20, 38], "notes": "Patient/encounter/provider all commented out as TODO" }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "visit_occurrence_id",
+      "fhir_path": "AllergyIntolerance.encounter",
+      "fhir_type": "Reference(Encounter)",
+      "omop_type": "integer",
+      "required": false,
+      "fk": "VISIT_OCCURRENCE",
+      "notes": "Resolve Encounter reference. Null if absent."
+    },
+    {
+      "omop_column": "visit_detail_id",
+      "fhir_path": null,
+      "omop_type": "integer",
+      "required": false,
+      "fk": "VISIT_DETAIL",
+      "notes": "Not mapped by any implementation."
+    },
+    {
+      "omop_column": "observation_source_value",
+      "fhir_path": "AllergyIntolerance.code.coding[best].code",
+      "fhir_type": "code",
+      "omop_type": "varchar(50)",
+      "required": false,
+      "notes": "Source allergy code (verbatim). Best coding selected by system priority (SNOMED > RxNorm > first)."
+    },
+    {
+      "omop_column": "observation_source_concept_id",
+      "fhir_path": null,
+      "omop_type": "integer",
+      "required": false,
+      "constant": 0,
+      "notes": "Could hold the non-standard concept for the source code if vocabulary lookup is available."
+    },
+    {
+      "omop_column": "value_source_value",
+      "fhir_path": "AllergyIntolerance.criticality",
+      "fhir_type": "code",
+      "omop_type": "varchar(50)",
+      "required": false,
+      "notes": "\"low\", \"high\", or \"unable-to-assess\". Preserves criticality."
+    },
+    {
+      "omop_column": "observation_event_id",
+      "fhir_path": null,
+      "omop_type": "integer",
+      "required": false,
+      "notes": "Not mapped. Could link to related records."
+    },
+    {
+      "omop_column": "obs_event_field_concept_id",
+      "fhir_path": null,
+      "omop_type": "integer",
+      "required": false,
+      "fk": "CONCEPT",
+      "notes": "Not mapped."
+    }
+  ],
+  "vocabularies": [
+    {
+      "name": "observation_concept_id_category_based",
+      "notes": "Approach A (omoponfhir): Category-based concept selection. Substance goes to value_as_concept_id; observation_concept_id represents the allergy category.",
+      "entries": [
+        {
+          "source_code": "food",
+          "source_display": "Food allergy category",
+          "target_concept_id": 4188027,
+          "target_concept_name": "Allergy to food",
+          "notes": "SNOMED"
+        },
+        {
+          "source_code": "medication",
+          "source_display": "Medication allergy category",
+          "target_concept_id": 439224,
+          "target_concept_name": "Allergy to drug",
+          "notes": "SNOMED"
+        },
+        {
+          "source_code": "environment",
+          "source_display": "Environmental allergy category",
+          "target_concept_id": 40772948,
+          "target_concept_name": "Allergy",
+          "notes": "SNOMED"
+        },
+        {
+          "source_code": "biologic",
+          "source_display": "Biologic allergy category",
+          "target_concept_id": 40772948,
+          "target_concept_name": "Allergy",
+          "notes": "SNOMED"
+        },
+        {
+          "source_code": "(absent)",
+          "source_display": "No category, substance domain = Drug",
+          "target_concept_id": 439224,
+          "target_concept_name": "Allergy to drug",
+          "notes": "SNOMED. Fallback when category is absent and substance domain is Drug."
+        },
+        {
+          "source_code": "(absent, other)",
+          "source_display": "No category, other domain",
+          "target_concept_id": 40772948,
+          "target_concept_name": "Allergy",
+          "notes": "SNOMED. Default fallback."
+        }
+      ]
+    },
+    {
+      "name": "observation_type_concept_id",
+      "entries": [
+        {
+          "source_code": "32817",
+          "source_display": "EHR",
+          "target_concept_id": 32817,
+          "target_concept_name": "EHR",
+          "notes": "Used by this project, FhirToCdm, fhir-to-omop-demo. Modern convention (OMOP CDM v6 recommendation)."
+        },
+        {
+          "source_code": "38000280",
+          "source_display": "Observation recorded from EHR",
+          "target_concept_id": 38000280,
+          "target_concept_name": "Observation recorded from EHR",
+          "notes": "Used by omoponfhir. Legacy type concept."
+        }
+      ]
+    },
+    {
+      "name": "clinicalStatus_filtering",
+      "notes": "Determines whether an AllergyIntolerance record is mapped or skipped.",
+      "entries": [
+        {
+          "source_code": "active",
+          "source_display": "Active",
+          "notes": "Map"
+        },
+        {
+          "source_code": "inactive",
+          "source_display": "Inactive",
+          "notes": "Skip -- historical, no longer clinically relevant"
+        },
+        {
+          "source_code": "resolved",
+          "source_display": "Resolved",
+          "notes": "Skip -- previously active, now resolved"
+        },
+        {
+          "source_code": "(absent)",
+          "source_display": "Not provided",
+          "notes": "Map -- not required in FHIR; map permissively"
+        }
+      ]
+    },
+    {
+      "name": "verificationStatus_filtering",
+      "notes": "Determines whether an AllergyIntolerance record is mapped or skipped.",
+      "entries": [
+        {
+          "source_code": "confirmed",
+          "source_display": "Confirmed",
+          "notes": "Map"
+        },
+        {
+          "source_code": "unconfirmed",
+          "source_display": "Unconfirmed",
+          "notes": "Map"
+        },
+        {
+          "source_code": "provisional",
+          "source_display": "Provisional",
+          "notes": "Map"
+        },
+        {
+          "source_code": "differential",
+          "source_display": "Differential",
+          "notes": "Map"
+        },
+        {
+          "source_code": "entered-in-error",
+          "source_display": "Entered in Error",
+          "notes": "Skip -- data entry error"
+        },
+        {
+          "source_code": "refuted",
+          "source_display": "Refuted",
+          "notes": "Skip -- clinically ruled out"
+        },
+        {
+          "source_code": "(absent)",
+          "source_display": "Not provided",
+          "notes": "Map -- map permissively"
+        }
+      ]
+    },
+    {
+      "name": "allergy_type",
+      "notes": "AllergyIntolerance.type stored in qualifier_source_value. No standard OMOP concept exists for this distinction.",
+      "entries": [
+        {
+          "source_code": "allergy",
+          "source_display": "Allergy",
+          "notes": "Immune-mediated reaction"
+        },
+        {
+          "source_code": "intolerance",
+          "source_display": "Intolerance",
+          "notes": "Non-immune-mediated reaction"
+        }
+      ]
+    },
+    {
+      "name": "criticality",
+      "notes": "AllergyIntolerance.criticality stored in value_source_value.",
+      "entries": [
+        {
+          "source_code": "low",
+          "source_display": "Low Risk",
+          "notes": "Low risk for future life-threatening reactions"
+        },
+        {
+          "source_code": "high",
+          "source_display": "High Risk",
+          "notes": "High risk for future life-threatening reactions"
+        },
+        {
+          "source_code": "unable-to-assess",
+          "source_display": "Unable to Assess",
+          "notes": "Unable to assess the risk"
+        }
+      ]
+    }
+  ],
+  "references": [
+    {
+      "project": "fhir-omop-ig",
+      "kind": "fml",
+      "path": "refs/refs/fhir-omop-ig/input/maps/Allergy.fml",
+      "notes": "51 lines. Maps code -> observation_concept_id, onset -> observation_date, reaction.manifestation -> value_as_concept_id. Patient/encounter/provider commented out (TODO). Status: draft."
+    },
+    {
+      "project": "omoponfhir",
+      "kind": "java",
+      "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopAllergyIntolerance.java",
+      "lines": [350, 449],
+      "notes": "Bidirectional (449 lines). Category-driven concept selection: food->4188027, medication->439224, default->40772948. Substance -> value_as_concept_id. Type concept = 38000280."
+    },
+    {
+      "project": "omoponfhir-v54",
+      "kind": "java",
+      "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopAllergyIntolerance.java",
+      "lines": [350, 450],
+      "notes": "450 lines. Identical logic to omoponfhir."
+    },
+    {
+      "project": "FhirToCdm",
+      "kind": "csharp",
+      "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
+      "lines": [453, 480],
+      "notes": "Maps AllergyIntolerance -> observation via vocabulary lookup on code. Uses recordedDate for date. No status filtering. Minimal field coverage."
+    },
+    {
+      "project": "fhir-to-omop-demo",
+      "kind": "jq",
+      "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/AllergyIntolerance.jq",
+      "notes": "48 lines. Divergent: maps to condition_occurrence (not observation). Uses recordedDate for start date. Type concept = 32817."
+    }
+  ],
+  "edge_cases": [
+    {
+      "case": "No onsetDateTime, no onsetPeriod, no recordedDate",
+      "handling": "Skip the record -- observation_date is NOT NULL. This project returns null.",
+      "implementations": ["this project"]
+    },
+    {
+      "case": "onsetPeriod.start only (no onsetDateTime)",
+      "handling": "Use onsetPeriod.start as observation_date.",
+      "implementations": ["this project"]
+    },
+    {
+      "case": "recordedDate only (no onset fields)",
+      "handling": "Use as last-resort date.",
+      "implementations": ["this project", "FhirToCdm", "fhir-to-omop-demo"]
+    },
+    {
+      "case": "No code or empty code.coding[]",
+      "handling": "Skip the record -- cannot identify the substance.",
+      "implementations": ["this project"]
+    },
+    {
+      "case": "code with text only (no coding)",
+      "handling": "Skip -- no structured code to map.",
+      "implementations": ["this project"]
+    },
+    {
+      "case": "Multiple reaction entries",
+      "handling": "Concatenate all manifestation display names into value_as_string, semicolon-separated.",
+      "implementations": ["this project"]
+    },
+    {
+      "case": "Multiple manifestation per reaction",
+      "handling": "Include all in value_as_string concatenation.",
+      "implementations": ["this project"]
+    },
+    {
+      "case": "category = medication",
+      "handling": "Code might overlap with drug concepts. Still maps to observation, not drug_exposure.",
+      "implementations": ["this project", "omoponfhir", "FhirToCdm", "fhir-omop-ig"]
+    },
+    {
+      "case": "category = food",
+      "handling": "omoponfhir sets observation_concept_id = 4188027 (Allergy to food). This project: not yet implemented.",
+      "implementations": ["omoponfhir"]
+    },
+    {
+      "case": "criticality present",
+      "handling": "Stored in value_source_value.",
+      "implementations": ["this project"]
+    },
+    {
+      "case": "type = intolerance",
+      "handling": "Stored in qualifier_source_value. No separate OMOP handling.",
+      "implementations": ["this project"]
+    },
+    {
+      "case": "verificationStatus = entered-in-error",
+      "handling": "Skip the record.",
+      "implementations": ["this project"]
+    },
+    {
+      "case": "verificationStatus = refuted",
+      "handling": "Skip the record.",
+      "implementations": ["this project"]
+    },
+    {
+      "case": "clinicalStatus = inactive or resolved",
+      "handling": "Skip the record.",
+      "implementations": ["this project"]
+    },
+    {
+      "case": "clinicalStatus absent",
+      "handling": "Map permissively (not required in FHIR).",
+      "implementations": ["this project"]
+    },
+    {
+      "case": "asserter is a Patient (self-reported)",
+      "handling": "Cannot map to OMOP provider_id -- set null. resolveRef will produce an ID but it won't correspond to a provider row.",
+      "implementations": ["this project"]
+    },
+    {
+      "case": "recorder is a RelatedPerson",
+      "handling": "Cannot map to OMOP provider_id -- set null.",
+      "implementations": ["this project"]
+    },
+    {
+      "case": "reaction[].severity present",
+      "handling": "Lost -- no OMOP field for severity. Could store in qualifier_source_value but this project uses it for type.",
+      "implementations": ["this project"]
+    },
+    {
+      "case": "reaction[].substance differs from code",
+      "handling": "The per-reaction substance is lost. Only code (top-level) is mapped.",
+      "implementations": ["this project"]
+    },
+    {
+      "case": "note[] present",
+      "handling": "Lost -- no standard OMOP target. Could append to value_as_string but would mix with manifestation text.",
+      "implementations": ["this project"]
+    },
+    {
+      "case": "Multiple coding in code",
+      "handling": "Best coding selected by system priority (SNOMED preferred).",
+      "implementations": ["this project"]
+    },
+    {
+      "case": "onsetAge or onsetRange",
+      "handling": "Not handled -- only onsetDateTime and onsetPeriod supported. Would require birth date to compute absolute date.",
+      "implementations": ["this project"]
+    },
+    {
+      "case": "onsetString",
+      "handling": "Not handled -- free-text onset cannot produce a date. Skip or store in a separate field.",
+      "implementations": ["this project"]
+    }
+  ]
+}

@@ -1,0 +1,220 @@
+{
+  "$schema": "../schema/edge.schema.json",
+  "fhir_resource": "Location",
+  "omop_table": "location",
+  "direction": "fhir-to-omop",
+  "status": "documented",
+  "primary": true,
+  "required": true,
+  "narrative_md": "Each FHIR Location maps to one OMOP location row representing a physical address. Location.address fields map to address_1, address_2, city, state, zip, county, and country. Location.position maps to latitude/longitude. The location table is shared with Patient.address -- both populate the same table and rows should be deduplicated by address components to avoid duplicates.",
+  "implementation_in_project": null,
+  "fields": [
+    {
+      "omop_column": "location_id",
+      "fhir_path": "(generated)",
+      "fhir_type": "id",
+      "omop_type": "integer",
+      "required": true,
+      "pk": true,
+      "notes": "Surrogate key. Each unique address should be assigned a unique key. fhir-to-omop-demo uses Location.id directly.",
+      "sources": [
+        {
+          "comment": "Uses Location.id verbatim as the location_id integer",
+          "references": [
+            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Location.jq", "notes": "location_id = .id from Location resource" }
+          ]
+        },
+        {
+          "comment": "Address-based lookup-or-create via AddressUtil.searchAndUpdate(); returns existing location_id if address already present",
+          "references": [
+            { "project": "omoponfhir-v54", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopOrganization.java", "lines": [240, 275], "notes": "AddressUtil.searchAndUpdate() on Organization.address — no standalone Location resource handling" }
+          ]
+        },
+        {
+          "comment": "Single dummy location (id=1) for all unresolved references — no real address mapping",
+          "references": [
+            { "project": "NACHC-fhir-to-omop", "kind": "sql", "path": "refs/refs/NACHC-fhir-to-omop/src/main/resources/sqlserver/omop/5.4/location/create-location-and-caresite-dummy-records.sql", "notes": "Creates single dummy location row id=1" }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "address_1",
+      "fhir_path": "Location.address.line[0]",
+      "fhir_type": "string",
+      "omop_type": "varchar(50)",
+      "required": false,
+      "notes": "First line of street address."
+    },
+    {
+      "omop_column": "address_2",
+      "fhir_path": "Location.address.line[1]",
+      "fhir_type": "string",
+      "omop_type": "varchar(50)",
+      "required": false,
+      "notes": "Second line of street address. If more than 2 address lines, concatenate third+ into address_2 or drop them."
+    },
+    {
+      "omop_column": "city",
+      "fhir_path": "Location.address.city",
+      "fhir_type": "string",
+      "omop_type": "varchar(50)",
+      "required": false,
+      "notes": "City."
+    },
+    {
+      "omop_column": "state",
+      "fhir_path": "Location.address.state",
+      "fhir_type": "string",
+      "omop_type": "varchar(2)",
+      "required": false,
+      "notes": "State. May need normalization (e.g., 'California' -> 'CA'). varchar(2) may force lossy mapping for international locations."
+    },
+    {
+      "omop_column": "zip",
+      "fhir_path": "Location.address.postalCode",
+      "fhir_type": "string",
+      "omop_type": "varchar(9)",
+      "required": false,
+      "notes": "3-, 5-, or 9-digit US zip; international codes also allowed. Truncate if >9 chars."
+    },
+    {
+      "omop_column": "county",
+      "fhir_path": "Location.address.district",
+      "fhir_type": "string",
+      "omop_type": "varchar(20)",
+      "required": false,
+      "notes": "FHIR district is the closest analog to OMOP county."
+    },
+    {
+      "omop_column": "location_source_value",
+      "fhir_path": "Location.id",
+      "fhir_type": "string",
+      "omop_type": "varchar(50)",
+      "required": false,
+      "notes": "Verbatim source identifier or full address text (Location.address.text) for traceability.",
+      "sources": [
+        {
+          "comment": "Uses Location.id as the source value for traceability",
+          "references": [
+            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Location.jq", "notes": "location_source_value = Location.id" }
+          ]
+        },
+        {
+          "comment": "Uses full address text (Location.address.text) as source value alternative",
+          "references": [
+            { "project": "omoponfhir-v54", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopOrganization.java", "lines": [240, 275], "notes": "AddressUtil handles source value from address components" }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "country_concept_id",
+      "fhir_path": "Location.address.country",
+      "fhir_type": "string",
+      "omop_type": "integer",
+      "required": false,
+      "fk": "CONCEPT",
+      "transform": "map(Location.address.country, Geography domain)",
+      "notes": "Mapped to OMOP Geography domain concept. 0 if unmapped.",
+      "sources": [
+        {
+          "comment": "Maps country string to Geography domain concept_id; defaults to 0 when no mapping found",
+          "references": [
+            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Location.jq", "notes": "country_concept_id from Location.address.country" }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "country_source_value",
+      "fhir_path": "Location.address.country",
+      "fhir_type": "string",
+      "omop_type": "varchar(80)",
+      "required": false,
+      "notes": "Country name verbatim."
+    },
+    {
+      "omop_column": "latitude",
+      "fhir_path": "Location.position.latitude",
+      "fhir_type": "decimal",
+      "omop_type": "float",
+      "required": false,
+      "notes": "Must be between -90 and 90."
+    },
+    {
+      "omop_column": "longitude",
+      "fhir_path": "Location.position.longitude",
+      "fhir_type": "decimal",
+      "omop_type": "float",
+      "required": false,
+      "notes": "Must be between -180 and 180."
+    }
+  ],
+  "vocabularies": [],
+  "concept_maps": [],
+  "references": [
+    {
+      "project": "fhir-to-omop-demo",
+      "kind": "jq",
+      "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Location.jq",
+      "notes": "Creates both a location row and a care_site row from Location resource. Location row: address fields + lat/lng."
+    },
+    {
+      "project": "omoponfhir-v54",
+      "kind": "java",
+      "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopOrganization.java",
+      "lines": [240, 275],
+      "notes": "AddressUtil.searchAndUpdate() resolves addresses from Organization.address into location rows. No standalone Location resource handling."
+    },
+    {
+      "project": "NACHC-fhir-to-omop",
+      "kind": "sql",
+      "path": "refs/refs/NACHC-fhir-to-omop/src/main/resources/sqlserver/omop/5.4/location/create-location-and-caresite-dummy-records.sql",
+      "notes": "Creates single dummy location (id=1) for all unresolved references."
+    }
+  ],
+  "edge_cases": [
+    {
+      "case": "Multiple Location.address.line[] entries beyond 2",
+      "handling": "OMOP location has only address_1 and address_2. Concatenate the third+ lines into address_2 or drop them."
+    },
+    {
+      "case": "Location.address absent but Location.position present",
+      "handling": "Create a location row with only latitude/longitude populated; address fields null."
+    },
+    {
+      "case": "Location.position absent",
+      "handling": "latitude and longitude null. OMOP allows nulls."
+    },
+    {
+      "case": "State name not 2-letter abbreviation",
+      "handling": "Normalize (e.g., 'California' -> 'CA'). The OMOP state field is varchar(2). For international locations, the 2-char limit may force lossy mapping."
+    },
+    {
+      "case": "zip > 9 chars (international postal codes)",
+      "handling": "Truncate to 9 characters or store in location_source_value."
+    },
+    {
+      "case": "Country present but no concept mapping",
+      "handling": "country_source_value = country name verbatim; country_concept_id = 0."
+    },
+    {
+      "case": "Latitude/longitude out of valid range (-90..90 / -180..180)",
+      "handling": "Reject or null. OMOP DDL constraints in some dialects enforce this."
+    },
+    {
+      "case": "Same address appearing in both Patient.address and Location",
+      "handling": "Deduplicate by (address_1, city, state, zip). Re-use existing location_id.",
+      "implementations": ["omoponfhir-v54"]
+    },
+    {
+      "case": "Multiple Locations with identical addresses but different Location.id",
+      "handling": "Choose one canonical location row; map both Location.id values to it via the ID-mapping table."
+    },
+    {
+      "case": "Location with managingOrganization",
+      "handling": "Used to derive a care_site row in the dual-source pattern. See Location__care_site edge."
+    }
+  ]
+}

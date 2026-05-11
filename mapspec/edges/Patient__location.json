@@ -1,0 +1,198 @@
+{
+  "$schema": "../schema/edge.schema.json",
+  "fhir_resource": "Patient",
+  "omop_table": "location",
+  "direction": "fhir-to-omop",
+  "status": "documented",
+  "primary": false,
+  "required": false,
+  "condition": "Patient.address is present with usable fields",
+  "narrative_md": "Address normalization. One Patient produces at most one location row (most recent home address). The location_id is then set as person.location_id FK.",
+  "implementation_in_project": null,
+  "fields": [
+    {
+      "fhir_path": null,
+      "omop_column": "location_id",
+      "fhir_type": "generated",
+      "omop_type": "integer",
+      "required": true,
+      "pk": true,
+      "notes": "Auto-generated primary key",
+      "sources": [
+        {
+          "comment": "Search-or-create with dedup by (address_1, city, state, zip); shared location_id across persons at same address",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPatient.java", "notes": "searchAndUpdate pattern with dedup" },
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/PatientMapper.java", "lines": [293, 334], "notes": "Deferred via post_process_map; dedup in PostProcessTask" }
+          ]
+        },
+        {
+          "comment": "Per-patient row, no dedup — one location row per person regardless of address uniqueness",
+          "references": [
+            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [20, 170], "notes": "CreatePersonAndLocations() per-patient row" }
+          ]
+        },
+        {
+          "comment": "Default location_id = 1 — address not actually mapped",
+          "references": [
+            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/person/OmopPersonBuilder.java" }
+          ]
+        }
+      ]
+    },
+    {
+      "fhir_path": "Patient.address.line[0]",
+      "omop_column": "address_1",
+      "fhir_type": "string",
+      "omop_type": "varchar(50)",
+      "required": false,
+      "notes": "Truncate at 50 chars"
+    },
+    {
+      "fhir_path": "Patient.address.line[1]",
+      "omop_column": "address_2",
+      "fhir_type": "string",
+      "omop_type": "varchar(50)",
+      "required": false,
+      "notes": "Null if line has only one entry. Concatenate beyond 2 lines."
+    },
+    {
+      "fhir_path": "Patient.address.city",
+      "omop_column": "city",
+      "fhir_type": "string",
+      "omop_type": "varchar(50)",
+      "required": false
+    },
+    {
+      "fhir_path": "Patient.address.state",
+      "omop_column": "state",
+      "fhir_type": "string",
+      "omop_type": "varchar(2)",
+      "required": false,
+      "notes": "Truncate to 2 chars (US state code)"
+    },
+    {
+      "fhir_path": "Patient.address.postalCode",
+      "omop_column": "zip",
+      "fhir_type": "string",
+      "omop_type": "varchar(9)",
+      "required": false,
+      "notes": "Up to 9 chars (ZIP+4)"
+    },
+    {
+      "fhir_path": "Patient.address.district",
+      "omop_column": "county",
+      "fhir_type": "string",
+      "omop_type": "varchar(20)",
+      "required": false
+    },
+    {
+      "fhir_path": "Patient.address.country",
+      "omop_column": "country_source_value",
+      "fhir_type": "string",
+      "omop_type": "varchar(80)",
+      "required": false
+    },
+    {
+      "fhir_path": null,
+      "omop_column": "country_concept_id",
+      "fhir_type": "lookup",
+      "omop_type": "integer",
+      "required": false,
+      "fk": "CONCEPT",
+      "transform": "Map country to OMOP Geography concept",
+      "constant": 0,
+      "notes": "Map country to OMOP Geography concept. Default 0."
+    },
+    {
+      "fhir_path": null,
+      "omop_column": "location_source_value",
+      "fhir_type": "computed",
+      "omop_type": "varchar(50)",
+      "required": false,
+      "transform": "concat(line, city, state, zip, country)",
+      "notes": "line, city, state, zip, country joined",
+      "sources": [
+        {
+          "comment": "Concatenated \"zip;city;country\" stored as dataOne in deferred post_process_map row",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/PatientMapper.java", "lines": [293, 334], "notes": "dataOne = zip;city;country, dataTwo = lines;state" }
+          ]
+        },
+        {
+          "comment": "Full address fields mapped directly without explicit source_value field",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPatient.java" },
+            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [20, 170] }
+          ]
+        }
+      ]
+    },
+    {
+      "fhir_path": "Patient.address.extension.where(url='http://hl7.org/fhir/StructureDefinition/geolocation').extension.where(url='latitude').valueDecimal",
+      "omop_column": "latitude",
+      "fhir_type": "decimal",
+      "omop_type": "float",
+      "required": false,
+      "notes": "Range -90..90"
+    },
+    {
+      "fhir_path": "Patient.address.extension.where(url='http://hl7.org/fhir/StructureDefinition/geolocation').extension.where(url='longitude').valueDecimal",
+      "omop_column": "longitude",
+      "fhir_type": "decimal",
+      "omop_type": "float",
+      "required": false,
+      "notes": "Range -180..180"
+    }
+  ],
+  "references": [
+    {
+      "project": "omoponfhir",
+      "kind": "java",
+      "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPatient.java",
+      "notes": "searchAndUpdate pattern with dedup"
+    },
+    {
+      "project": "FhirToCdm",
+      "kind": "csharp",
+      "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
+      "notes": "CreatePersonAndLocations() -- per-patient row, no dedup"
+    },
+    {
+      "project": "ETL-German-FHIR-Core",
+      "kind": "java",
+      "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/PatientMapper.java",
+      "notes": "Deferred via post_process_map lines 293-334"
+    }
+  ],
+  "edge_cases": [
+    {
+      "case": "Multiple line[] entries (>2)",
+      "handling": "OMOP only has address_1 and address_2. Concatenate beyond into address_2 or drop."
+    },
+    {
+      "case": "State longer than 2 chars (e.g. California)",
+      "handling": "Lookup abbreviation or truncate to first 2 letters."
+    },
+    {
+      "case": "Non-US ZIP (alphanumeric)",
+      "handling": "Store as-is up to 9 chars."
+    },
+    {
+      "case": "address.text only (no structured fields)",
+      "handling": "Store in location_source_value; leave structured fields null."
+    },
+    {
+      "case": "Geocoding extension absent",
+      "handling": "latitude/longitude null."
+    },
+    {
+      "case": "Multiple home addresses",
+      "handling": "Pick most recent. OMOP only stores one; address history lost."
+    },
+    {
+      "case": "Same address shared by multiple persons",
+      "handling": "Deduplicate (shared location_id) or duplicate (one row per person). Both valid."
+    }
+  ]
+}

@@ -1,0 +1,500 @@
+{
+  "$schema": "../schema/edge.schema.json",
+  "fhir_resource": "Coverage",
+  "omop_table": "payer_plan_period",
+  "direction": "fhir-to-omop",
+  "status": "documented",
+  "primary": true,
+  "required": true,
+  "condition": "Coverage.status = 'active'",
+  "narrative_md": "FHIR Coverage captures a patient's insurance enrollment (payer, plan, coverage period, subscriber relationship). It maps to OMOP payer_plan_period, which records continuous enrollment under a specific health benefit plan from a given payer. Unlike clinical event tables, payer_plan_period carries no _type_concept_id; it is purely administrative. One active Coverage resource produces one payer_plan_period row. Overlapping or adjacent periods for the same person/payer may be collapsed.",
+  "implementation_in_project": null,
+  "fields": [
+    {
+      "omop_column": "payer_plan_period_id",
+      "fhir_path": "Coverage.id",
+      "fhir_type": "id",
+      "omop_type": "integer",
+      "required": true,
+      "pk": true,
+      "notes": "Surrogate key. Generated via hash/sequence/lookup of Coverage.id."
+    },
+    {
+      "omop_column": "person_id",
+      "fhir_path": "Coverage.beneficiary",
+      "fhir_type": "Reference(Patient)",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "PERSON",
+      "notes": "Resolve Patient reference to integer person_id via the same ID mapping used by the Patient mapper."
+    },
+    {
+      "omop_column": "payer_plan_period_start_date",
+      "fhir_path": "Coverage.period.start",
+      "fhir_type": "dateTime",
+      "omop_type": "date",
+      "required": true,
+      "notes": "Coverage start date. If absent, use ETL epoch or earliest known date. NOT NULL in OMOP.",
+      "sources": [
+        {
+          "comment": "MIN(billablePeriod.start) grouped by patient+insurer (derived from EOB, not Coverage directly)",
+          "references": [
+            { "project": "avalon-fhir-omop", "kind": "sql", "path": "refs/refs/avalon-fhir-omop/omop-views/models/omop_payer_plan_period.sql", "lines": [30, 51] }
+          ]
+        },
+        {
+          "comment": "period.start from Coverage (reverse direction: OMOP→FHIR, from payer_plan_period_start_date)",
+          "references": [
+            { "project": "mends-on-fhir", "kind": "whistle", "path": "refs/refs/mends-on-fhir/whistle-mappings/synthea/whistle-functions/zzPPP_CoverageImpl.wstl", "lines": [34, 35] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "payer_plan_period_end_date",
+      "fhir_path": "Coverage.period.end",
+      "fhir_type": "dateTime",
+      "omop_type": "date",
+      "required": true,
+      "notes": "Coverage end date. If absent or open-ended, use 9999-12-31 or ETL end date. NOT NULL in OMOP.",
+      "sources": [
+        {
+          "comment": "MAX(COALESCE(billablePeriod.end, billablePeriod.start)) — uses start as fallback when end is absent",
+          "references": [
+            { "project": "avalon-fhir-omop", "kind": "sql", "path": "refs/refs/avalon-fhir-omop/omop-views/models/omop_payer_plan_period.sql", "lines": [30, 51] }
+          ]
+        },
+        {
+          "comment": "period.end from Coverage (reverse direction: OMOP→FHIR)",
+          "references": [
+            { "project": "mends-on-fhir", "kind": "whistle", "path": "refs/refs/mends-on-fhir/whistle-mappings/synthea/whistle-functions/zzPPP_CoverageImpl.wstl", "lines": [34, 35] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "payer_concept_id",
+      "fhir_path": "Coverage.payor[0]",
+      "fhir_type": "Reference(Organization|Patient|RelatedPerson)",
+      "omop_type": "integer",
+      "required": false,
+      "fk": "CONCEPT",
+      "concept_map": "payer",
+      "transform": "resolve payor[0] -> Organization.name -> OMOP Payer vocabulary lookup",
+      "notes": "OMOP Payer vocabulary concept (vocabulary_id='Payer', domain_id='Payer'). Resolve Organization reference, map name to payer concept. Default: 0. If payor references Patient (self-pay), use concept_id 436.",
+      "sources": [
+        {
+          "comment": "Mapped via 130-entry ConceptMap (OMOP payer_concept_id ↔ FHIR v3-ActCode) — reverse direction (OMOP→FHIR)",
+          "references": [
+            { "project": "mends-on-fhir", "kind": "json", "path": "refs/refs/mends-on-fhir/whistle-mappings/synthea/concept-maps/PPP.payor-concept-id--Coverage.type.json" }
+          ]
+        },
+        {
+          "comment": "All concept_ids = 0 or NULL (no vocabulary lookup performed)",
+          "references": [
+            { "project": "avalon-fhir-omop", "kind": "sql", "path": "refs/refs/avalon-fhir-omop/omop-views/models/omop_payer_plan_period.sql", "lines": [35, 47] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "payer_source_value",
+      "fhir_path": "Coverage.payor[0]",
+      "fhir_type": "Reference(Organization|Patient|RelatedPerson)",
+      "omop_type": "varchar(50)",
+      "required": false,
+      "transform": "resolve payor[0] -> Organization.name or Reference.display",
+      "notes": "Verbatim payer name or identifier. Resolve Organization reference and extract Organization.name. Fallback to Reference.display. Truncate to 50 chars.",
+      "sources": [
+        {
+          "comment": "insurer.display from ExplanationOfBenefit (no Coverage direct mapping)",
+          "references": [
+            { "project": "avalon-fhir-omop", "kind": "sql", "path": "refs/refs/avalon-fhir-omop/omop-views/models/omop_payer_plan_period.sql", "lines": [8, 28] }
+          ]
+        },
+        {
+          "comment": "payor[0].display (from PPP.plan_source_value) — reverse OMOP→FHIR direction",
+          "references": [
+            { "project": "mends-on-fhir", "kind": "whistle", "path": "refs/refs/mends-on-fhir/whistle-mappings/synthea/whistle-functions/zzPPP_CoverageImpl.wstl", "lines": [51, 51] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "payer_source_concept_id",
+      "fhir_path": null,
+      "fhir_type": "integer",
+      "omop_type": "integer",
+      "required": false,
+      "fk": "CONCEPT",
+      "constant": 0,
+      "notes": "Source concept for the payer if a non-standard vocabulary is used. Default: 0."
+    },
+    {
+      "omop_column": "plan_concept_id",
+      "fhir_path": "Coverage.type.coding[0].code",
+      "fhir_type": "code",
+      "omop_type": "integer",
+      "required": false,
+      "fk": "CONCEPT",
+      "concept_map": "plan_type",
+      "transform": "map Coverage.type (v3-ActCode) to OMOP Plan vocabulary",
+      "notes": "Map Coverage.type to OMOP Plan vocabulary. No standard OMOP vocabulary maps directly to Coverage.type. Default: 0."
+    },
+    {
+      "omop_column": "plan_source_value",
+      "fhir_path": "Coverage.type.text | Coverage.class.where(type.coding.code='plan').name | Coverage.class.where(type.coding.code='plan').value",
+      "fhir_type": "string",
+      "omop_type": "varchar(50)",
+      "required": false,
+      "transform": "Use Coverage.type.text, or class entry where type.coding.code='plan'. Concatenate group+plan if both present.",
+      "notes": "Plan name as it appears in source. Truncate to 50 chars."
+    },
+    {
+      "omop_column": "plan_source_concept_id",
+      "fhir_path": null,
+      "fhir_type": "integer",
+      "omop_type": "integer",
+      "required": false,
+      "fk": "CONCEPT",
+      "constant": 0,
+      "notes": "Source concept for the plan. Default: 0."
+    },
+    {
+      "omop_column": "sponsor_concept_id",
+      "fhir_path": "Coverage.policyHolder",
+      "fhir_type": "Reference(Organization|Patient|RelatedPerson)",
+      "omop_type": "integer",
+      "required": false,
+      "fk": "CONCEPT",
+      "transform": "resolve policyHolder -> Organization.name -> OMOP Sponsor vocabulary lookup",
+      "notes": "OMOP Sponsor vocabulary concept. The policyHolder (often the employer) is the sponsor. Default: 0."
+    },
+    {
+      "omop_column": "sponsor_source_value",
+      "fhir_path": "Coverage.policyHolder",
+      "fhir_type": "Reference(Organization|Patient|RelatedPerson)",
+      "omop_type": "varchar(50)",
+      "required": false,
+      "transform": "resolve policyHolder -> Organization.name or identifier",
+      "notes": "Sponsor name from policyHolder reference. Truncate to 50 chars."
+    },
+    {
+      "omop_column": "sponsor_source_concept_id",
+      "fhir_path": null,
+      "fhir_type": "integer",
+      "omop_type": "integer",
+      "required": false,
+      "fk": "CONCEPT",
+      "constant": 0,
+      "notes": "Source concept for the sponsor. Default: 0."
+    },
+    {
+      "omop_column": "family_source_value",
+      "fhir_path": "Coverage.subscriberId",
+      "fhir_type": "string",
+      "omop_type": "varchar(50)",
+      "required": false,
+      "notes": "The subscriber ID links all family members under the same policy. Truncate to 50 chars."
+    },
+    {
+      "omop_column": "stop_reason_concept_id",
+      "fhir_path": null,
+      "fhir_type": "integer",
+      "omop_type": "integer",
+      "required": false,
+      "fk": "CONCEPT",
+      "constant": 0,
+      "notes": "FHIR Coverage has no stop reason field. If Coverage.status='cancelled', could use a concept for cancellation. Default: 0."
+    },
+    {
+      "omop_column": "stop_reason_source_value",
+      "fhir_path": null,
+      "fhir_type": "string",
+      "omop_type": "varchar(50)",
+      "required": false,
+      "notes": "Not directly available from FHIR Coverage. Could store Coverage.status if not 'active'."
+    },
+    {
+      "omop_column": "stop_reason_source_concept_id",
+      "fhir_path": null,
+      "fhir_type": "integer",
+      "omop_type": "integer",
+      "required": false,
+      "fk": "CONCEPT",
+      "constant": 0,
+      "notes": "Default: 0."
+    }
+  ],
+  "vocabularies": [
+    {
+      "name": "payer",
+      "entries": [
+        {
+          "source_code": "Medicare",
+          "source_display": "Organization name containing 'Medicare'",
+          "target_concept_id": 280,
+          "target_concept_name": "Medicare"
+        },
+        {
+          "source_code": "Medicare Managed Care",
+          "source_display": "Medicare HMO/PPO payor",
+          "target_concept_id": 281,
+          "target_concept_name": "Medicare Managed Care"
+        },
+        {
+          "source_code": "Medicaid",
+          "source_display": "State Medicaid organization",
+          "target_concept_id": 289,
+          "target_concept_name": "Medicaid"
+        },
+        {
+          "source_code": "Medicaid Managed Care",
+          "source_display": "Medicaid MCO",
+          "target_concept_id": 290,
+          "target_concept_name": "Medicaid Managed Care"
+        },
+        {
+          "source_code": "TRICARE",
+          "source_display": "Military insurance",
+          "target_concept_id": 296,
+          "target_concept_name": "DoD TRICARE"
+        },
+        {
+          "source_code": "VA",
+          "source_display": "VA coverage",
+          "target_concept_id": 302,
+          "target_concept_name": "Veteran Care"
+        },
+        {
+          "source_code": "Private",
+          "source_display": "Generic commercial insurer",
+          "target_concept_id": 327,
+          "target_concept_name": "Private Health Insurance"
+        },
+        {
+          "source_code": "HMO",
+          "source_display": "HMO commercial plan",
+          "target_concept_id": 329,
+          "target_concept_name": "Commercial Managed Care - HMO"
+        },
+        {
+          "source_code": "PPO",
+          "source_display": "PPO commercial plan",
+          "target_concept_id": 330,
+          "target_concept_name": "Commercial Managed Care - PPO"
+        },
+        {
+          "source_code": "Managed Care",
+          "source_display": "Generic managed care",
+          "target_concept_id": 340,
+          "target_concept_name": "Managed Care, Unspecified"
+        },
+        {
+          "source_code": "Self-pay",
+          "source_display": "Coverage.type = 'pay' (self-pay) or payor references Patient",
+          "target_concept_id": 436,
+          "target_concept_name": "Self-pay"
+        },
+        {
+          "source_code": "Charity",
+          "source_display": "Charity coverage",
+          "target_concept_id": 438,
+          "target_concept_name": "Charity"
+        },
+        {
+          "source_code": "Workers Comp",
+          "source_display": "Workers compensation",
+          "target_concept_id": 447,
+          "target_concept_name": "Worker's Compensation"
+        },
+        {
+          "source_code": "(unmapped)",
+          "source_display": "Payor cannot be mapped to OMOP vocabulary",
+          "target_concept_id": 0,
+          "target_concept_name": "No matching concept"
+        }
+      ]
+    },
+    {
+      "name": "plan_type",
+      "entries": [
+        {
+          "source_code": "EHCPOL",
+          "source_display": "Extended healthcare",
+          "target_concept_id": 327,
+          "target_concept_name": "Private Health Insurance",
+          "notes": "v3-ActCode"
+        },
+        {
+          "source_code": "HIP",
+          "source_display": "Health insurance plan policy",
+          "target_concept_id": 327,
+          "target_concept_name": "Private Health Insurance",
+          "notes": "v3-ActCode"
+        },
+        {
+          "source_code": "MCPOL",
+          "source_display": "Managed care policy",
+          "target_concept_id": 340,
+          "target_concept_name": "Managed Care, Unspecified",
+          "notes": "v3-ActCode"
+        },
+        {
+          "source_code": "SUBSIDMC",
+          "source_display": "Subsidized managed care program",
+          "target_concept_id": null,
+          "target_concept_name": "Medicare/Medicaid Managed Care",
+          "notes": "v3-ActCode; ambiguous -- could be Medicare or Medicaid"
+        },
+        {
+          "source_code": "SUBSUPP",
+          "source_display": "Subsidized supplemental health program",
+          "target_concept_id": null,
+          "target_concept_name": "Medicare/Medicaid",
+          "notes": "v3-ActCode; ambiguous"
+        },
+        {
+          "source_code": "MILITARY",
+          "source_display": "Military health program",
+          "target_concept_id": 296,
+          "target_concept_name": "DoD TRICARE",
+          "notes": "v3-ActCode"
+        },
+        {
+          "source_code": "VET",
+          "source_display": "Veteran health program",
+          "target_concept_id": 302,
+          "target_concept_name": "Veteran Care",
+          "notes": "v3-ActCode"
+        },
+        {
+          "source_code": "WCBPOL",
+          "source_display": "Workers compensation",
+          "target_concept_id": 447,
+          "target_concept_name": "Worker's Compensation",
+          "notes": "v3-ActCode"
+        },
+        {
+          "source_code": "CHAR",
+          "source_display": "Charity program",
+          "target_concept_id": 438,
+          "target_concept_name": "Charity",
+          "notes": "v3-ActCode"
+        },
+        {
+          "source_code": "pay",
+          "source_display": "Self-pay",
+          "target_concept_id": 436,
+          "target_concept_name": "Self-pay",
+          "notes": "coverage-selfpay CodeSystem"
+        },
+        {
+          "source_code": "SAFNET",
+          "source_display": "Safety net clinic program",
+          "target_concept_id": null,
+          "target_concept_name": "HRSA Program",
+          "notes": "v3-ActCode; concept_id ~307 but may not exist in all vocabs"
+        }
+      ]
+    }
+  ],
+  "concept_maps": ["payer", "plan_type"],
+  "references": [
+    {
+      "project": "fhir-omop-ig",
+      "kind": "fsh",
+      "path": "refs/refs/fhir-omop-ig/input/fsh/PayerPlanPeriod.fsh",
+      "notes": "Logical model defining all 17 payer_plan_period fields. No FML mapping from Coverage."
+    },
+    {
+      "project": "mends-on-fhir",
+      "kind": "whistle",
+      "path": "refs/refs/mends-on-fhir/whistle-mappings/synthea/whistle-functions/PPP_Coverage.wstl",
+      "notes": "Reverse direction (OMOP to FHIR). Delegates to zzPPP_CoverageImpl.wstl."
+    },
+    {
+      "project": "mends-on-fhir",
+      "kind": "whistle",
+      "path": "refs/refs/mends-on-fhir/whistle-mappings/synthea/whistle-functions/zzPPP_CoverageImpl.wstl",
+      "notes": "Implementation: Coverage.id from PPP_id (line 10), beneficiary from person_id (line 29), period from dates (lines 34-35), payor from plan_source_value (line 51), type via ConceptMap (lines 71-76)."
+    },
+    {
+      "project": "mends-on-fhir",
+      "kind": "json",
+      "path": "refs/refs/mends-on-fhir/whistle-mappings/synthea/concept-maps/PPP.payor-concept-id--Coverage.type.json",
+      "notes": "ConceptMap with ~130 OMOP payer concept_ids mapped to FHIR v3-ActCode codes. Reverse direction."
+    },
+    {
+      "project": "avalon-fhir-omop",
+      "kind": "sql",
+      "path": "refs/refs/avalon-fhir-omop/omop-views/models/omop_payer_plan_period.sql",
+      "notes": "Derives payer_plan_period from ExplanationOfBenefit (not Coverage). GROUP BY patient+insurer with MIN/MAX dates. All concept_ids = 0 or NULL."
+    },
+    {
+      "project": "FhirToCdm",
+      "kind": "csharp",
+      "path": "refs/refs/FhirToCdm/CdmPersonBuilder.cs",
+      "notes": "PayerPlanPeriodsRaw list (lines 31-32), BuildPayerPlanPeriods + period collapsing (lines 486-507), SetPayerPlanPeriodId (lines 388-457)."
+    },
+    {
+      "project": "omop-fhir-data",
+      "kind": "json",
+      "path": "refs/refs/omop-fhir-data/synthea-cohort-010/Payer_Plan_Period_0000000000.json",
+      "notes": "Synthea sample data: all concept_ids = 0, payer_source_value = UUID, plan_source_value = insurer name."
+    }
+  ],
+  "edge_cases": [
+    {
+      "case": "Missing Coverage.period",
+      "handling": "Both payer_plan_period_start_date and payer_plan_period_end_date are NOT NULL. Use ETL epoch date for start, 9999-12-31 or current date for end. Log warning."
+    },
+    {
+      "case": "Open-ended period (period.end absent)",
+      "handling": "Coverage is still active. Use 9999-12-31 or the ETL run date as payer_plan_period_end_date."
+    },
+    {
+      "case": "period.end < period.start",
+      "handling": "Data quality error. Skip the record or swap dates with a warning.",
+      "implementations": ["avalon-fhir-omop"]
+    },
+    {
+      "case": "Coverage.status != 'active'",
+      "handling": "Skip Coverage resources with status cancelled, draft, or entered-in-error. Do not create a payer_plan_period row."
+    },
+    {
+      "case": "Multiple payor[] entries",
+      "handling": "OMOP has a single payer_source_value per row. Options: (a) take the first payor, (b) create one row per payor with the same period, (c) concatenate payor names (truncated to 50 chars)."
+    },
+    {
+      "case": "payor references Patient (self-pay)",
+      "handling": "Set payer_source_value = 'Self-pay' or patient name, payer_concept_id = 436."
+    },
+    {
+      "case": "No Organization resource for payor",
+      "handling": "Use Reference.display as fallback for payer_source_value. If no display, use the reference string itself."
+    },
+    {
+      "case": "Overlapping Coverage periods (same person, same payer)",
+      "handling": "Collapse into a single payer_plan_period row with MIN(start), MAX(end). FhirToCdm does this via CanPayerPlanPeriodBeCombined() -- combines when payer+plan source values match.",
+      "implementations": ["FhirToCdm"]
+    },
+    {
+      "case": "Coverage.class[] absent",
+      "handling": "No plan details available. plan_source_value = null. Use Coverage.type.text if available."
+    },
+    {
+      "case": "Multiple Coverage resources for same person",
+      "handling": "Create one payer_plan_period row per Coverage (per payer/plan/period combination). May collapse adjacent/overlapping periods."
+    },
+    {
+      "case": "subscriberId too long for varchar(50)",
+      "handling": "Truncate to 50 characters."
+    },
+    {
+      "case": "Coverage from EOB (no discrete Coverage resource)",
+      "handling": "Derive payer_plan_period from ExplanationOfBenefit.billablePeriod + insurer. Group by patient+insurer, MIN/MAX dates.",
+      "implementations": ["avalon-fhir-omop"]
+    }
+  ]
+}

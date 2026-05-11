@@ -1,0 +1,492 @@
+{
+  "$schema": "../schema/edge.schema.json",
+  "fhir_resource": "DiagnosticReport",
+  "omop_table": "note",
+  "direction": "fhir-to-omop",
+  "status": "documented",
+  "primary": false,
+  "required": false,
+  "condition": "DiagnosticReport.conclusion is non-empty or DiagnosticReport.presentedForm contains text-extractable attachments",
+  "narrative_md": "When a DiagnosticReport carries free-text content -- either a conclusion string or one or more presentedForm attachments -- a note row is created to preserve the unstructured clinical narrative. This is independent of the domain-routed rows (measurement, observation, procedure_occurrence) that are produced from the report's LOINC code and conclusionCode. A single DiagnosticReport may produce both a domain-routed row and a note row. No reference implementation currently maps DiagnosticReport.conclusion/presentedForm to the OMOP note table; omoponfhir's DocumentReference mapper is the closest reference.",
+  "implementation_in_project": null,
+  "fields": [
+    {
+      "omop_column": "note_id",
+      "fhir_path": null,
+      "fhir_type": "id",
+      "omop_type": "integer",
+      "required": true,
+      "pk": true,
+      "notes": "Surrogate key. Hash/sequence of DiagnosticReport.id + content source indicator (conclusion vs presentedForm index). Must be unique across all note sources."
+    },
+    {
+      "omop_column": "person_id",
+      "fhir_path": "DiagnosticReport.subject",
+      "fhir_type": "Reference(Patient)",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "PERSON",
+      "notes": "Resolve Patient/{id} reference to integer person_id. Skip row if unresolvable."
+    },
+    {
+      "omop_column": "note_date",
+      "fhir_path": "DiagnosticReport.effective[x]",
+      "fhir_type": "dateTime|Period",
+      "omop_type": "date",
+      "required": true,
+      "notes": "Date component of effectiveDateTime, or effectivePeriod.start. If absent, fall back to DiagnosticReport.issued (instant). Skip resource if no date available."
+    },
+    {
+      "omop_column": "note_datetime",
+      "fhir_path": "DiagnosticReport.effective[x]",
+      "fhir_type": "dateTime|Period",
+      "omop_type": "datetime",
+      "notes": "Full timestamp from effectiveDateTime, effectivePeriod.start, or issued. Set time to midnight if not given."
+    },
+    {
+      "omop_column": "note_type_concept_id",
+      "fhir_path": "DiagnosticReport.category",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "CONCEPT",
+      "concept_map": "note_type",
+      "notes": "Maps the report's provenance/origin. Use 32817 (EHR) as the default. This field captures where the note came from (the source system), not what kind of note it is (that is note_class_concept_id).",
+      "sources": [
+        {
+          "comment": "Set from DocumentReference.type via LOINC→NoteType enum mapping (OmopNoteTypeMapping); defaults to concept from type lookup",
+          "references": [
+            { "project": "omoponfhir-v54-r4", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopDocumentReference.java", "lines": [239, 279] }
+          ]
+        },
+        {
+          "comment": "Field listed as required but set to null in skeleton mapping",
+          "references": [
+            { "project": "fhir-to-omop-demo", "kind": "bash", "path": "refs/refs/fhir-to-omop-demo/data/convert/mapping/010-DiagnosticReport-note.sh", "lines": [14, 29] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "note_class_concept_id",
+      "fhir_path": "DiagnosticReport.category",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "CONCEPT",
+      "concept_map": "note_class",
+      "notes": "Maps the report category to a LOINC Document Type concept per OMOP CDM specification. Map LAB -> 44814645 (Note), RAD -> 44814641 (Radiology report), PAT -> 44814642 (Pathology report). 0 if unmappable.",
+      "sources": [
+        {
+          "comment": "Defaults to Concept(0); note_class_concept_id is technically non-compliant when 0 (required field)",
+          "references": [
+            { "project": "omoponfhir-v54-r4", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopDocumentReference.java", "lines": [384, 386] }
+          ]
+        },
+        {
+          "comment": "Field listed as required but set to null in skeleton mapping",
+          "references": [
+            { "project": "fhir-to-omop-demo", "kind": "bash", "path": "refs/refs/fhir-to-omop-demo/data/convert/mapping/010-DiagnosticReport-note.sh", "lines": [14, 29] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "note_title",
+      "fhir_path": "DiagnosticReport.code.coding[0].display",
+      "fhir_type": "string",
+      "omop_type": "varchar(250)",
+      "notes": "Display text of the report's primary code (typically LOINC). E.g. 'History and physical note'. Truncate to 250 characters. Fall back to DiagnosticReport.code.text or the LOINC code itself."
+    },
+    {
+      "omop_column": "note_text",
+      "fhir_path": "DiagnosticReport.conclusion | DiagnosticReport.presentedForm[].data",
+      "fhir_type": "string|base64Binary",
+      "omop_type": "varchar(MAX)",
+      "required": true,
+      "notes": "For conclusion: use the string directly. For presentedForm: base64-decode the data field. Only text/plain content types stored directly; other types require extraction or conversion. If both exist, create separate note rows or concatenate.",
+      "sources": [
+        {
+          "comment": "Maps DocumentReference.content.attachment.data (text/plain only); rejects non-text/plain; concatenates multiple attachments",
+          "references": [
+            { "project": "omoponfhir-v54-r4", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopDocumentReference.java", "lines": [346, 381] }
+          ]
+        },
+        {
+          "comment": "Field listed but set to null; example shows Synthea presentedForm text/plain base64-encoded content",
+          "references": [
+            { "project": "fhir-to-omop-demo", "kind": "bash", "path": "refs/refs/fhir-to-omop-demo/data/convert/mapping/010-DiagnosticReport-note.sh", "lines": [119, 124] }
+          ]
+        },
+        {
+          "comment": "BuildNote method exists but note creation is commented out (//TMP: NOTE)",
+          "references": [
+            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/CdmPersonBuilder.cs", "lines": [700, 710], "notes": "line 358 comment: //TMP: NOTE" }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "encoding_concept_id",
+      "fhir_path": "DiagnosticReport.presentedForm[].contentType",
+      "fhir_type": "code",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "CONCEPT",
+      "constant": 32678,
+      "notes": "32678 = UTF-8. FHIR strings are always UTF-8. For presentedForm, check contentType and encoding; default to 32678 for text/plain."
+    },
+    {
+      "omop_column": "language_concept_id",
+      "fhir_path": "DiagnosticReport.presentedForm[].language | DiagnosticReport.language",
+      "fhir_type": "code",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "CONCEPT",
+      "concept_map": "language",
+      "notes": "Map BCP-47/ISO 639 language codes to OMOP concepts descended from 4182347 (World Languages). en/en-US -> 4180186, de -> 4182948, fr -> 4181536, es -> 4182511. Fall back to DiagnosticReport.language. 0 if absent."
+    },
+    {
+      "omop_column": "provider_id",
+      "fhir_path": "DiagnosticReport.performer[0]",
+      "fhir_type": "Reference(Practitioner)",
+      "omop_type": "integer",
+      "fk": "PROVIDER",
+      "notes": "First performer reference resolved to provider_id. Filter to Practitioner-typed references. resultsInterpreter[0] is an alternative source.",
+      "sources": [
+        {
+          "comment": "Resolved from DocumentReference.author[0] (Practitioner reference only)",
+          "references": [
+            { "project": "omoponfhir-v54-r4", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopDocumentReference.java", "lines": [312, 326] }
+          ]
+        },
+        {
+          "comment": "Field listed but set to null; no performer resolution",
+          "references": [
+            { "project": "fhir-to-omop-demo", "kind": "bash", "path": "refs/refs/fhir-to-omop-demo/data/convert/mapping/010-DiagnosticReport-note.sh", "lines": [14, 29] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "visit_occurrence_id",
+      "fhir_path": "DiagnosticReport.encounter",
+      "fhir_type": "Reference(Encounter)",
+      "omop_type": "integer",
+      "fk": "VISIT_OCCURRENCE",
+      "notes": "Resolve Encounter/{id} to visit_occurrence_id. If unresolvable, log warning but still create the note row with null.",
+      "sources": [
+        {
+          "comment": "Resolved from DocumentReference.context.encounter[0]",
+          "references": [
+            { "project": "omoponfhir-v54-r4", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopDocumentReference.java", "lines": [329, 343] }
+          ]
+        },
+        {
+          "comment": "Field listed but set to null; no encounter resolution",
+          "references": [
+            { "project": "fhir-to-omop-demo", "kind": "bash", "path": "refs/refs/fhir-to-omop-demo/data/convert/mapping/010-DiagnosticReport-note.sh", "lines": [14, 29] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "visit_detail_id",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "integer",
+      "fk": "VISIT_DETAIL",
+      "notes": "Leave null unless visit details are modeled."
+    },
+    {
+      "omop_column": "note_source_value",
+      "fhir_path": "DiagnosticReport.category.coding[0].code",
+      "fhir_type": "code",
+      "omop_type": "varchar(50)",
+      "notes": "The source value mapped to note_class_concept_id. Store the raw category code (e.g. 'LAB', 'RAD', 'PAT')."
+    },
+    {
+      "omop_column": "note_event_id",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "integer",
+      "notes": "If the note should be linked to a corresponding domain-routed row (e.g. the measurement_id or procedure_occurrence_id generated from the same DiagnosticReport), store that row's primary key here."
+    },
+    {
+      "omop_column": "note_event_field_concept_id",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "integer",
+      "fk": "CONCEPT",
+      "notes": "The CONCEPT_ID identifying which table note_event_id references. Use: 1147138 (measurement.measurement_id), 1147127 (observation.observation_id), 1147082 (procedure_occurrence.procedure_occurrence_id). Leave null if note_event_id is null."
+    }
+  ],
+  "vocabularies": [
+    {
+      "name": "note_type",
+      "entries": [
+        {
+          "source_code": "EHR",
+          "source_display": "EHR (default)",
+          "target_concept_id": 32817,
+          "target_concept_name": "EHR",
+          "notes": "Default for DiagnosticReport. Reports typically originate from electronic health record systems."
+        },
+        {
+          "source_code": "EHR encounter",
+          "source_display": "EHR encounter record",
+          "target_concept_id": 32827,
+          "target_concept_name": "EHR encounter record"
+        },
+        {
+          "source_code": "EHR admin",
+          "source_display": "EHR administration",
+          "target_concept_id": 32821,
+          "target_concept_name": "EHR administration"
+        }
+      ]
+    },
+    {
+      "name": "note_class",
+      "entries": [
+        {
+          "source_code": "LAB",
+          "source_display": "Laboratory",
+          "target_concept_id": 44814645,
+          "target_concept_name": "Note",
+          "notes": "Generic note type for lab"
+        },
+        {
+          "source_code": "RAD",
+          "source_display": "Radiology",
+          "target_concept_id": 44814641,
+          "target_concept_name": "Radiology report"
+        },
+        {
+          "source_code": "PAT",
+          "source_display": "Pathology",
+          "target_concept_id": 44814642,
+          "target_concept_name": "Pathology report"
+        },
+        {
+          "source_code": "MB",
+          "source_display": "Microbiology",
+          "target_concept_id": 44814645,
+          "target_concept_name": "Note",
+          "notes": "Generic note type for microbiology"
+        },
+        {
+          "source_code": "OTH",
+          "source_display": "Other",
+          "target_concept_id": 44814645,
+          "target_concept_name": "Note"
+        },
+        {
+          "source_code": "(absent)",
+          "source_display": "No category",
+          "target_concept_id": 0,
+          "target_concept_name": "No matching concept"
+        }
+      ]
+    },
+    {
+      "name": "encoding",
+      "entries": [
+        {
+          "source_code": "UTF-8",
+          "source_display": "UTF-8",
+          "target_concept_id": 32678,
+          "target_concept_name": "UTF-8",
+          "notes": "Only standard encoding concept defined in OMOP vocabulary. FHIR strings are always UTF-8."
+        },
+        {
+          "source_code": "ASCII",
+          "source_display": "ASCII",
+          "target_concept_id": 0,
+          "target_concept_name": "No standard OMOP concept"
+        },
+        {
+          "source_code": "(other)",
+          "source_display": "Other encoding",
+          "target_concept_id": 0,
+          "target_concept_name": "No standard OMOP concept"
+        }
+      ]
+    },
+    {
+      "name": "language",
+      "entries": [
+        {
+          "source_code": "en",
+          "source_display": "English",
+          "target_concept_id": 4180186,
+          "target_concept_name": "English language"
+        },
+        {
+          "source_code": "de",
+          "source_display": "German",
+          "target_concept_id": 4182948,
+          "target_concept_name": "German language"
+        },
+        {
+          "source_code": "fr",
+          "source_display": "French",
+          "target_concept_id": 4181536,
+          "target_concept_name": "French language"
+        },
+        {
+          "source_code": "es",
+          "source_display": "Spanish",
+          "target_concept_id": 4182511,
+          "target_concept_name": "Spanish language"
+        },
+        {
+          "source_code": "pt",
+          "source_display": "Portuguese",
+          "target_concept_id": 4181898,
+          "target_concept_name": "Portuguese language"
+        },
+        {
+          "source_code": "zh",
+          "source_display": "Chinese",
+          "target_concept_id": 4181721,
+          "target_concept_name": "Chinese language"
+        },
+        {
+          "source_code": "(absent)",
+          "source_display": "No language specified",
+          "target_concept_id": 0,
+          "target_concept_name": "No matching concept"
+        }
+      ]
+    },
+    {
+      "name": "note_event_field",
+      "entries": [
+        {
+          "source_code": "measurement",
+          "source_display": "measurement.measurement_id",
+          "target_concept_id": 1147138,
+          "target_concept_name": "measurement.measurement_id"
+        },
+        {
+          "source_code": "observation",
+          "source_display": "observation.observation_id",
+          "target_concept_id": 1147127,
+          "target_concept_name": "observation.observation_id"
+        },
+        {
+          "source_code": "procedure_occurrence",
+          "source_display": "procedure_occurrence.procedure_occurrence_id",
+          "target_concept_id": 1147082,
+          "target_concept_name": "procedure_occurrence.procedure_occurrence_id"
+        }
+      ]
+    }
+  ],
+  "concept_maps": ["note_type", "note_class", "language"],
+  "references": [
+    {
+      "project": "ETL-German-FHIR-Core",
+      "kind": "java",
+      "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/DiagnosticReportMapper.java",
+      "notes": "Primary reference for DiagnosticReport mapping, but does not produce note rows. Only handles conclusionCode for domain routing."
+    },
+    {
+      "project": "fhir-to-omop-demo",
+      "kind": "bash",
+      "path": "refs/refs/fhir-to-omop-demo/data/convert/mapping/010-DiagnosticReport-note.sh",
+      "notes": "Skeleton with all 16 note fields listed but all set to null. Contains example DiagnosticReport with presentedForm base64-encoded text/plain content."
+    },
+    {
+      "project": "omoponfhir-v54-r4",
+      "kind": "java",
+      "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopDocumentReference.java",
+      "lines": [225, 389],
+      "notes": "Closest reference for FHIR narrative to OMOP note mapping. Maps DocumentReference (not DiagnosticReport) with subject, author, encounter, attachment data (text/plain only)."
+    },
+    {
+      "project": "omoponfhir-v54-r4",
+      "kind": "java",
+      "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopNoteTypeMapping.java",
+      "lines": [19, 28],
+      "notes": "10 Note Type to LOINC concept mappings."
+    },
+    {
+      "project": "FhirToCdm",
+      "kind": "csharp",
+      "path": "refs/refs/FhirToCdm/CdmPersonBuilder.cs",
+      "notes": "Note entity exists, BuildNote method at line 700, but note creation is commented out (//TMP: NOTE at line 358)."
+    },
+    {
+      "project": "fhir-omop-ig",
+      "kind": "fsh",
+      "path": "refs/refs/fhir-omop-ig/input/fsh/Note.fsh",
+      "notes": "HL7 official Note logical model with all 16 fields. No FML transformation rules for DiagnosticReport->note."
+    }
+  ],
+  "edge_cases": [
+    {
+      "case": "Empty conclusion (empty string or whitespace only)",
+      "handling": "Do not create a note row. note_text is required and must be non-empty. Check conclusion.trim().length > 0 before creating the row."
+    },
+    {
+      "case": "Binary attachment (application/pdf, image/png, application/dicom)",
+      "handling": "Skip the attachment for note creation. Log a warning. OMOP note_text is designed for free text, not binary content. Consider extracting text from PDFs with a dedicated parser."
+    },
+    {
+      "case": "Multiple presentedForm entries",
+      "handling": "Create one note row per text-extractable attachment, each with a unique note_id. Differentiate via note_id generation strategy (hash of DiagnosticReport.id + attachment index)."
+    },
+    {
+      "case": "Large text (presentedForm > 1MB)",
+      "handling": "OMOP note_text is varchar(MAX). However, downstream NLP tools may have size limits. Consider truncating or splitting at a configurable maximum with a log warning."
+    },
+    {
+      "case": "No contentType on presentedForm",
+      "handling": "Assume text/plain if the data field is present and decodable as valid UTF-8 text. Otherwise skip the attachment.",
+      "implementations": ["omoponfhir"]
+    },
+    {
+      "case": "presentedForm.url without data",
+      "handling": "The attachment references an external document. Either fetch the content at ETL time and inline it, or skip the attachment with a log warning."
+    },
+    {
+      "case": "Base64 decoding failure",
+      "handling": "Skip the attachment and log an error. The data field may be corrupted or not valid base64."
+    },
+    {
+      "case": "Encoding mismatch (non-UTF-8 text)",
+      "handling": "Attempt to detect encoding and transcode to UTF-8 before storing. Set encoding_concept_id = 32678 after successful transcoding. If transcoding fails, use 0."
+    },
+    {
+      "case": "presentedForm.language differs across attachments",
+      "handling": "Each note row should reflect the language of its specific attachment. Do not assume all attachments share the same language."
+    },
+    {
+      "case": "Status is preliminary, registered, or entered-in-error",
+      "handling": "ETL-German rejects non-final statuses. For notes, preliminary reports may still contain valuable narrative. Consider accepting preliminary notes but tagging them. Reject entered-in-error.",
+      "implementations": ["ETL-German"]
+    },
+    {
+      "case": "subject references Group (not Patient)",
+      "handling": "Not supported. OMOP requires a single person_id. Skip the resource."
+    },
+    {
+      "case": "No effective[x] and no issued",
+      "handling": "No date available. OMOP note_date is required. Skip the resource and log a warning."
+    },
+    {
+      "case": "DiagnosticReport has conclusion but no conclusionCode",
+      "handling": "Still create a note row. The conclusion text is independent of the structured conclusionCode. A report can have a textual interpretation without coded findings."
+    },
+    {
+      "case": "HTML content in presentedForm (text/html)",
+      "handling": "Strip HTML tags to produce plain text for note_text, or store HTML as-is for NLP pipelines that can process it. Document the approach in ETL conventions."
+    },
+    {
+      "case": "Both conclusion and presentedForm text exist",
+      "handling": "Option A (recommended): Create two separate note rows. Option B: Concatenate with delimiter. Option C: Prefer presentedForm as primary note, store conclusion in note_title."
+    }
+  ]
+}

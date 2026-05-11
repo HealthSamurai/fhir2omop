@@ -1,0 +1,174 @@
+{
+  "$schema": "../schema/edge.schema.json",
+  "fhir_resource": "Patient",
+  "omop_table": "death",
+  "direction": "fhir-to-omop",
+  "status": "documented",
+  "primary": false,
+  "required": false,
+  "condition": "Patient.deceasedDateTime is present",
+  "narrative_md": "Mortality record. At most one death row per person. Only created when Patient.deceasedDateTime is present \u2014 deceasedBoolean=true without a date cannot produce a row because death_date is NOT NULL.",
+  "implementation_in_project": "src/mapper/patient.ts",
+  "fields": [
+    {
+      "omop_column": "person_id",
+      "fhir_path": "Patient.person_id",
+      "fhir_type": "integer",
+      "omop_type": "integer",
+      "required": true,
+      "pk": true,
+      "fk": "PERSON"
+    },
+    {
+      "omop_column": "death_date",
+      "fhir_path": "Patient.deceasedDateTime",
+      "fhir_type": "dateTime",
+      "omop_type": "date",
+      "required": true,
+      "transform": "dateTime \u2192 date",
+      "notes": "NOT NULL \u2014 this is why deceasedBoolean=true cannot produce a row",
+      "sources": [
+        {
+          "comment": "Populate from deceasedDateTime; drop row if only deceasedBoolean=true (log warning)",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPatient.java" },
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/PatientMapper.java", "lines": [653, 675], "notes": "Death staging via post_process_map" }
+          ]
+        },
+        {
+          "comment": "Not implemented \u2014 death row not created at all (mortality data silently lost)",
+          "references": [
+            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs" },
+            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/person/OmopPersonBuilder.java" }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "death_datetime",
+      "fhir_path": "Patient.deceasedDateTime",
+      "fhir_type": "dateTime",
+      "omop_type": "datetime",
+      "required": false
+    },
+    {
+      "omop_column": "death_type_concept_id",
+      "fhir_path": null,
+      "omop_type": "integer",
+      "required": false,
+      "constant": 32817,
+      "notes": "EHR. ETL-German uses 32887 (EHR record patient status Deceased)",
+      "sources": [
+        {
+          "comment": "Constant 32817 (EHR) — generic default for FHIR-sourced data",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPatient.java" }
+          ]
+        },
+        {
+          "comment": "Constant 32887 (EHR record patient status Deceased) — more specific provenance concept",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/Constants.java", "notes": "CONCEPT_EHR_RECORD_STATUS_DECEASED" },
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/PatientMapper.java", "lines": [653, 675] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "cause_concept_id",
+      "fhir_path": null,
+      "omop_type": "integer",
+      "required": false,
+      "constant": 0,
+      "notes": "Patient resource has no cause-of-death field. Populate from Observation LOINC 69453-9 in post-processing."
+    },
+    {
+      "omop_column": "cause_source_value",
+      "fhir_path": null,
+      "omop_type": "varchar(50)",
+      "required": false,
+      "constant": null
+    },
+    {
+      "omop_column": "cause_source_concept_id",
+      "fhir_path": null,
+      "omop_type": "integer",
+      "required": false,
+      "constant": 0
+    }
+  ],
+  "vocabularies": [
+    {
+      "name": "death_type",
+      "entries": [
+        {
+          "target_concept_id": 32817,
+          "target_concept_name": "EHR",
+          "notes": "Default for FHIR-sourced data"
+        },
+        {
+          "target_concept_id": 32887,
+          "target_concept_name": "EHR record patient status Deceased",
+          "notes": "ETL-German"
+        },
+        {
+          "target_concept_id": 32815,
+          "target_concept_name": "Claim",
+          "notes": "If from claims"
+        },
+        {
+          "target_concept_id": 32885,
+          "target_concept_name": "Death Certificate",
+          "notes": "Vital records"
+        }
+      ]
+    }
+  ],
+  "references": [
+    {
+      "project": "omoponfhir",
+      "kind": "java",
+      "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPatient.java"
+    },
+    {
+      "project": "ETL-German-FHIR-Core",
+      "kind": "java",
+      "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/PatientMapper.java",
+      "notes": "Death staging via post_process_map lines 653-675"
+    },
+    {
+      "project": "fhir-omop-ig",
+      "kind": "fsh",
+      "path": "refs/refs/fhir-omop-ig/input/fsh/Death.fsh",
+      "notes": "Logical model only, no FML"
+    }
+  ],
+  "edge_cases": [
+    {
+      "case": "deceasedBoolean=true only",
+      "handling": "No row created; log warning. death_date is NOT NULL.",
+      "implementations": ["this project", "ETL-German"]
+    },
+    {
+      "case": "deceasedBoolean=false",
+      "handling": "No row \u2014 person is alive."
+    },
+    {
+      "case": "Partial deceasedDateTime (e.g. 2024-03)",
+      "handling": "Pad to last day of month per OMOP Themis. death_datetime left null."
+    },
+    {
+      "case": "Patient updated to alive (incremental)",
+      "handling": "Delete existing death row by person_id.",
+      "implementations": ["ETL-German"]
+    },
+    {
+      "case": "birthDate after deceasedDateTime",
+      "handling": "Data quality error \u2014 log and skip."
+    },
+    {
+      "case": "6 of 9 surveyed implementations silently lose mortality data",
+      "handling": "FhirToCdm, omopfhirmap, NACHC, fhir-to-omop-demo, fhir-x-omop do not create death rows."
+    }
+  ]
+}

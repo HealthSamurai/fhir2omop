@@ -1,0 +1,539 @@
+{
+  "$schema": "../schema/edge.schema.json",
+  "fhir_resource": "Specimen",
+  "omop_table": "specimen",
+  "direction": "fhir-to-omop",
+  "status": "documented",
+  "primary": true,
+  "required": true,
+  "narrative_md": "One FHIR Specimen maps to exactly one OMOP specimen row. The specimen table captures biological samples collected from a person, including specimen type, collection date, quantity, anatomic site, and disease status. Specimen type (kind of material) maps to specimen_concept_id via SNOMED, while specimen_type_concept_id is a provenance metadata field (EHR = 32817). Collection date is required in OMOP but optional in FHIR.",
+  "implementation_in_project": null,
+  "fields": [
+    {
+      "omop_column": "specimen_id",
+      "fhir_path": "Specimen.id",
+      "fhir_type": "id",
+      "omop_type": "integer",
+      "required": true,
+      "pk": true,
+      "transform": "hash_or_sequence(Specimen.id)",
+      "notes": "Surrogate key. Hash/sequence/lookup of Specimen.id. Store FHIR ID or first identifier in specimen_source_id for traceability."
+    },
+    {
+      "omop_column": "person_id",
+      "fhir_path": "Specimen.subject",
+      "fhir_type": "Reference(Patient)",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "PERSON",
+      "transform": "resolve_patient_reference(Specimen.subject)",
+      "notes": "Resolve Patient reference to integer person_id. Subject must be a Patient -- reject Device, Group, Location, Substance subjects."
+    },
+    {
+      "omop_column": "specimen_concept_id",
+      "fhir_path": "Specimen.type",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "CONCEPT",
+      "concept_map": "specimen_type",
+      "notes": "Map to OMOP concept in Specimen domain. Prefer SNOMED coding if multiple codings present. Fall back to 0 if no mapping found.",
+      "sources": [
+        {
+          "comment": "SNOMED-preferred multi-coding lookup via ConceptService; iterates codings, picks SNOMED first",
+          "references": [
+            { "project": "omoponfhir-v54", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopSpecimen.java", "lines": [264, 312] }
+          ]
+        },
+        {
+          "comment": "Logical model only — no FML transform for Specimen; field defined but not implemented",
+          "references": [
+            { "project": "fhir-omop-ig", "kind": "fsh", "path": "refs/refs/fhir-omop-ig/input/fsh/Specimen.fsh", "lines": [1, 22] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "specimen_type_concept_id",
+      "fhir_path": null,
+      "fhir_type": "constant",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "CONCEPT",
+      "constant": 32817,
+      "notes": "Provenance of the specimen record, not the kind of specimen. Set to 32817 (EHR) for EHR-sourced data. omoponfhir hardcodes 0.",
+      "sources": [
+        {
+          "comment": "Hardcoded to 0 — provenance not captured",
+          "references": [
+            { "project": "omoponfhir-v54", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopSpecimen.java", "lines": [387, 387], "notes": "specimen_.setSpecimenTypeConcept(new Concept(0L))" }
+          ]
+        },
+        {
+          "comment": "32817 (EHR) — recommended for EHR-sourced FHIR data",
+          "references": [
+            { "project": "fhir-omop-ig", "kind": "fsh", "path": "refs/refs/fhir-omop-ig/input/fsh/Specimen.fsh", "lines": [1, 22], "notes": "field defined in logical model as provenance concept" }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "specimen_date",
+      "fhir_path": "Specimen.collection.collected[x]",
+      "fhir_type": "dateTime | Period",
+      "omop_type": "date",
+      "required": true,
+      "transform": "date_component(collected[x]); if Period use Period.start; fallback to Specimen.receivedTime",
+      "notes": "OMOP requires this field (NOT NULL). If collected[x] is a Period, use Period.start. If absent, try Specimen.receivedTime as fallback.",
+      "sources": [
+        {
+          "comment": "collectedDateTime only — throws FHIRException if absent or if type is Period",
+          "references": [
+            { "project": "omoponfhir-v54", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopSpecimen.java", "lines": [330, 342] },
+            { "project": "omoponfhir-v54", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-r4-server/src/main/java/edu/gatech/chai/omoponfhir/r4/provider/SpecimenResourceProvider.java", "lines": [269, 285] }
+          ]
+        },
+        {
+          "comment": "Maps specimen_date from OMOP (O→F direction); no FHIR→OMOP date extraction logic",
+          "references": [
+            { "project": "tofhir-mappings", "kind": "json", "path": "refs/refs/tofhir-mappings/mappings/omop/specimen-mapping.json", "lines": [44, 61] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "specimen_datetime",
+      "fhir_path": "Specimen.collection.collected[x]",
+      "fhir_type": "dateTime | Period",
+      "omop_type": "datetime",
+      "required": false,
+      "transform": "full_datetime(collected[x]); if date-only append T00:00:00",
+      "notes": "Full datetime of collection. Same source as specimen_date but preserves time component."
+    },
+    {
+      "omop_column": "quantity",
+      "fhir_path": "Specimen.collection.quantity.value",
+      "fhir_type": "decimal",
+      "omop_type": "float",
+      "required": false,
+      "notes": "Amount of specimen collected. Direct numeric copy from collection.quantity.value."
+    },
+    {
+      "omop_column": "unit_concept_id",
+      "fhir_path": "Specimen.collection.quantity",
+      "fhir_type": "Quantity",
+      "omop_type": "integer",
+      "required": false,
+      "fk": "CONCEPT",
+      "concept_map": "ucum_unit",
+      "transform": "lookup_ucum(quantity.code where quantity.system = 'http://unitsofmeasure.org')",
+      "notes": "Look up UCUM code in CONCEPT table (vocabulary_id = 'UCUM'). Default 0 if lookup fails."
+    },
+    {
+      "omop_column": "unit_source_value",
+      "fhir_path": "Specimen.collection.quantity.unit",
+      "fhir_type": "string",
+      "omop_type": "varchar(50)",
+      "required": false,
+      "notes": "Raw unit string. Prefer quantity.unit (human-readable); fall back to quantity.code (UCUM code)."
+    },
+    {
+      "omop_column": "anatomic_site_concept_id",
+      "fhir_path": "Specimen.collection.bodySite",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "required": false,
+      "fk": "CONCEPT",
+      "concept_map": "anatomic_site",
+      "notes": "SNOMED body site code mapped to OMOP concept. Use first coding from bodySite.coding[]. Default 0 if unmapped."
+    },
+    {
+      "omop_column": "anatomic_site_source_value",
+      "fhir_path": "Specimen.collection.bodySite.text",
+      "fhir_type": "string",
+      "omop_type": "varchar(50)",
+      "required": false,
+      "notes": "Source text for anatomic site. Prefer bodySite.text, then coding[0].display, then coding[0].code."
+    },
+    {
+      "omop_column": "disease_status_concept_id",
+      "fhir_path": "Specimen.condition",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "required": false,
+      "fk": "CONCEPT",
+      "constant": 0,
+      "notes": "Semantic mismatch: FHIR condition describes specimen quality (hemolyzed, lipemic), not patient disease status. Most implementations set 0."
+    },
+    {
+      "omop_column": "disease_status_source_value",
+      "fhir_path": "Specimen.condition.text",
+      "fhir_type": "string",
+      "omop_type": "varchar(50)",
+      "required": false,
+      "notes": "Source text for disease/condition status. Prefer condition.text, then coding[0].display, then coding[0].code."
+    },
+    {
+      "omop_column": "specimen_source_id",
+      "fhir_path": "Specimen.identifier[0].value",
+      "fhir_type": "string",
+      "omop_type": "varchar(50)",
+      "required": false,
+      "notes": "Source system identifier. omoponfhir uses first identifier value. Can also use Specimen.accessionIdentifier.value.",
+      "sources": [
+        {
+          "comment": "First Specimen.identifier value (not accessionIdentifier)",
+          "references": [
+            { "project": "omoponfhir-v54", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopSpecimen.java", "lines": [247, 252] }
+          ]
+        },
+        {
+          "comment": "Hashed specimen_id string (O→F direction, not FHIR identifier)",
+          "references": [
+            { "project": "tofhir-mappings", "kind": "json", "path": "refs/refs/tofhir-mappings/mappings/omop/specimen-mapping.json", "lines": [33, 33] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "specimen_source_value",
+      "fhir_path": "Specimen.type.text",
+      "fhir_type": "string",
+      "omop_type": "varchar(50)",
+      "required": false,
+      "notes": "Verbatim source code/text for the specimen type. Populated when specimen_concept_id is 0 (unmapped). Use type.text if available, otherwise system|code or display of first coding, truncated to 50 chars."
+    }
+  ],
+  "vocabularies": [
+    {
+      "name": "specimen_type",
+      "entries": [
+        {
+          "source_code": "119297000",
+          "source_display": "Blood specimen",
+          "target_concept_id": 4045667,
+          "target_concept_name": "Blood specimen"
+        },
+        {
+          "source_code": "119361006",
+          "source_display": "Plasma specimen",
+          "target_concept_id": 4046275,
+          "target_concept_name": "Plasma specimen"
+        },
+        {
+          "source_code": "119364003",
+          "source_display": "Serum specimen",
+          "target_concept_id": 4045666,
+          "target_concept_name": "Serum specimen"
+        },
+        {
+          "source_code": "122555007",
+          "source_display": "Venous blood specimen",
+          "target_concept_id": 4046280,
+          "target_concept_name": "Venous blood specimen"
+        },
+        {
+          "source_code": "258580003",
+          "source_display": "Whole blood sample",
+          "target_concept_id": 4264829,
+          "target_concept_name": "Whole blood"
+        },
+        {
+          "source_code": "119339001",
+          "source_display": "Stool specimen",
+          "target_concept_id": 4002890,
+          "target_concept_name": "Stool specimen"
+        },
+        {
+          "source_code": "122575003",
+          "source_display": "Urine specimen",
+          "target_concept_id": 4045668,
+          "target_concept_name": "Urine specimen"
+        },
+        {
+          "source_code": "258529004",
+          "source_display": "Throat swab",
+          "target_concept_id": 4218410,
+          "target_concept_name": "Throat swab"
+        },
+        {
+          "source_code": "309051001",
+          "source_display": "Body fluid sample",
+          "target_concept_id": 4046274,
+          "target_concept_name": "Body fluid sample"
+        },
+        {
+          "source_code": "119376003",
+          "source_display": "Tissue specimen",
+          "target_concept_id": 4002893,
+          "target_concept_name": "Tissue specimen"
+        },
+        {
+          "source_code": "258566005",
+          "source_display": "Deoxyribonucleic acid sample",
+          "target_concept_id": 4046281,
+          "target_concept_name": "Deoxyribonucleic acid sample"
+        },
+        {
+          "source_code": "119342007",
+          "source_display": "Saliva specimen",
+          "target_concept_id": 4045669,
+          "target_concept_name": "Saliva specimen"
+        },
+        {
+          "source_code": "258587000",
+          "source_display": "Buffy coat",
+          "target_concept_id": 4215183,
+          "target_concept_name": "Buffy coat"
+        },
+        {
+          "source_code": "119359002",
+          "source_display": "Bone marrow specimen",
+          "target_concept_id": 4000626,
+          "target_concept_name": "Bone marrow specimen"
+        },
+        {
+          "source_code": "(unmapped)",
+          "source_display": "--",
+          "target_concept_id": 0,
+          "target_concept_name": "No matching concept"
+        }
+      ]
+    },
+    {
+      "name": "specimen_type_concept",
+      "entries": [
+        {
+          "source_code": "EHR",
+          "source_display": "EHR-sourced data",
+          "target_concept_id": 32817,
+          "target_concept_name": "EHR"
+        },
+        {
+          "source_code": "EHR encounter",
+          "source_display": "EHR encounter record",
+          "target_concept_id": 32882,
+          "target_concept_name": "EHR encounter record"
+        },
+        {
+          "source_code": "Claim",
+          "source_display": "Claims data",
+          "target_concept_id": 32810,
+          "target_concept_name": "Claim"
+        },
+        {
+          "source_code": "Lab",
+          "source_display": "Lab result",
+          "target_concept_id": 32856,
+          "target_concept_name": "Lab"
+        },
+        {
+          "source_code": "Patient self-report",
+          "source_display": "Survey/PRO",
+          "target_concept_id": 32865,
+          "target_concept_name": "Patient self-report"
+        }
+      ]
+    },
+    {
+      "name": "ucum_unit",
+      "entries": [
+        {
+          "source_code": "mL",
+          "source_display": "milliliter",
+          "target_concept_id": 8587,
+          "target_concept_name": "milliliter"
+        },
+        {
+          "source_code": "uL",
+          "source_display": "microliter",
+          "target_concept_id": 8585,
+          "target_concept_name": "microliter"
+        },
+        {
+          "source_code": "g",
+          "source_display": "gram",
+          "target_concept_id": 8504,
+          "target_concept_name": "gram"
+        },
+        {
+          "source_code": "mg",
+          "source_display": "milligram",
+          "target_concept_id": 8576,
+          "target_concept_name": "milligram"
+        },
+        {
+          "source_code": "{cells}",
+          "source_display": "cells",
+          "target_concept_id": 45891014,
+          "target_concept_name": "cells"
+        },
+        {
+          "source_code": "(unmapped)",
+          "source_display": "--",
+          "target_concept_id": 0,
+          "target_concept_name": "No matching concept"
+        }
+      ]
+    },
+    {
+      "name": "anatomic_site",
+      "entries": [
+        {
+          "source_code": "14016003",
+          "source_display": "Structure of median cubital vein",
+          "target_concept_id": 4138766,
+          "target_concept_name": "Structure of median cubital vein"
+        },
+        {
+          "source_code": "66480008",
+          "source_display": "Structure of left forearm",
+          "target_concept_id": 4263504,
+          "target_concept_name": "Structure of left forearm"
+        },
+        {
+          "source_code": "49852007",
+          "source_display": "Structure of median basilic vein",
+          "target_concept_id": 4139757,
+          "target_concept_name": "Structure of median basilic vein"
+        },
+        {
+          "source_code": "368208006",
+          "source_display": "Left upper arm structure",
+          "target_concept_id": 4136361,
+          "target_concept_name": "Left upper arm structure"
+        },
+        {
+          "source_code": "(unmapped)",
+          "source_display": "--",
+          "target_concept_id": 0,
+          "target_concept_name": "No matching concept"
+        }
+      ]
+    },
+    {
+      "name": "disease_status",
+      "entries": [
+        {
+          "source_code": "AUT",
+          "source_display": "Autolyzed",
+          "target_concept_id": null,
+          "target_concept_name": "No standard mapping",
+          "notes": "HL7 v2 Table 0493 specimen quality code; not a patient disease status"
+        },
+        {
+          "source_code": "CLOT",
+          "source_display": "Clotted",
+          "target_concept_id": null,
+          "target_concept_name": "No standard mapping",
+          "notes": "Specimen quality, not disease status"
+        },
+        {
+          "source_code": "HEM",
+          "source_display": "Hemolyzed",
+          "target_concept_id": null,
+          "target_concept_name": "No standard mapping",
+          "notes": "Specimen quality, not disease status"
+        },
+        {
+          "source_code": "(any)",
+          "source_display": "--",
+          "target_concept_id": 0,
+          "target_concept_name": "No matching concept",
+          "notes": "Semantic mismatch: FHIR condition describes specimen quality, not patient disease. Most implementations set 0."
+        }
+      ]
+    }
+  ],
+  "concept_maps": ["specimen_type", "ucum_unit", "anatomic_site"],
+  "references": [
+    {
+      "project": "fhir-omop-ig",
+      "kind": "fsh",
+      "path": "refs/refs/fhir-omop-ig/input/fsh/Specimen.fsh",
+      "lines": [1, 22],
+      "notes": "Logical model only; no FML transform map exists for Specimen."
+    },
+    {
+      "project": "omoponfhir-v54",
+      "kind": "java",
+      "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopSpecimen.java",
+      "lines": [1, 531],
+      "notes": "Bidirectional mapper. Most complete Specimen implementation. FHIR->OMOP: lines 234-390. OMOP->FHIR: lines 89-192. Subject validation: lines 392-408. specimen_type_concept_id hardcoded to 0: line 387."
+    },
+    {
+      "project": "tofhir-mappings",
+      "kind": "json",
+      "path": "refs/refs/tofhir-mappings/mappings/omop/specimen-mapping.json",
+      "notes": "OMOP-to-FHIR direction. Maps specimen_id, person_id, concept_code/vocabulary_id to Specimen.type, specimen_date to collectedDateTime, quantity + unit, and body site."
+    },
+    {
+      "project": "NACHC-fhir-to-omop",
+      "kind": "java",
+      "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/omop/yaorma/dvo/SpecimenDvo.java",
+      "lines": [32, 48],
+      "notes": "DVO only, no actual Specimen FHIR mapper."
+    }
+  ],
+  "edge_cases": [
+    {
+      "case": "Missing collection.collected[x]",
+      "handling": "OMOP specimen_date is NOT NULL. Options: (a) reject the resource and log warning, (b) fall back to Specimen.receivedTime, (c) use current date (not recommended). omoponfhir throws FHIRException.",
+      "implementations": ["omoponfhir-v54"]
+    },
+    {
+      "case": "collected[x] is a Period",
+      "handling": "OMOP only supports a single date/datetime, not a range. Use Period.start as the collection date. Period.end is lost. omoponfhir throws if collected is not a DateTimeType.",
+      "implementations": ["omoponfhir-v54"]
+    },
+    {
+      "case": "subject references non-Patient (Device, Group, Location, Substance)",
+      "handling": "Reject the resource. OMOP person_id requires a patient. Log warning with the unsupported resource type.",
+      "implementations": ["omoponfhir-v54"]
+    },
+    {
+      "case": "subject reference unresolvable (Patient not yet in OMOP)",
+      "handling": "Either: (a) process Patients first (dependency ordering), (b) defer Specimen to a retry queue, (c) reject. omoponfhir throws FHIRException if patient lookup returns null.",
+      "implementations": ["omoponfhir-v54"]
+    },
+    {
+      "case": "Missing Specimen.type",
+      "handling": "Set specimen_concept_id to 0 and leave specimen_source_value empty. omoponfhir treats type as required via the coding iteration logic -- null type will cause NPE.",
+      "implementations": ["omoponfhir-v54"]
+    },
+    {
+      "case": "Multiple codings in Specimen.type",
+      "handling": "Prefer SNOMED CT coding (http://snomed.info/sct). If no SNOMED, try any coding that maps to a known OMOP vocabulary. If none map, use concept_id 0.",
+      "implementations": ["omoponfhir-v54"]
+    },
+    {
+      "case": "Specimen.type uses HL7 v2 Table 0487",
+      "handling": "These codes (BLD, UR, TISS, etc.) are in the 'v2 Specimen Type' vocabulary in OMOP. Look up via vocabulary_id = 'v2 Specimen Type'. If not found, set 0 and preserve in source_value."
+    },
+    {
+      "case": "Specimen.parent (aliquot/derived specimen)",
+      "handling": "No OMOP field for parent-child specimen relationships. Lost in mapping. Could potentially be captured in fact_relationship with a custom relationship concept."
+    },
+    {
+      "case": "Specimen.status = entered-in-error",
+      "handling": "OMOP has no status field on specimen. Options: (a) skip the resource entirely (recommended), (b) insert anyway (bad data quality)."
+    },
+    {
+      "case": "Quantity without unit",
+      "handling": "Set unit_concept_id = 0, unit_source_value = null. The quantity value is still stored."
+    },
+    {
+      "case": "disease_status_concept_id semantic mismatch",
+      "handling": "FHIR Specimen.condition describes specimen quality (hemolyzed, clotted), not patient disease status. Most implementations set 0. If a clinical use case requires mapping, use vocabulary lookup for SNOMED or v2 codes."
+    },
+    {
+      "case": "Duplicate specimens",
+      "handling": "omoponfhir deduplicates on (patient, specimen_concept, collection_date) tuple. If a matching specimen exists, it updates rather than creating a duplicate. Other implementations do not deduplicate.",
+      "implementations": ["omoponfhir-v54"]
+    },
+    {
+      "case": "specimen_source_id truncation",
+      "handling": "OMOP field is varchar(50). FHIR identifiers (especially UUIDs in urn:uuid: format) can exceed 50 characters. Truncate or hash if necessary."
+    }
+  ]
+}

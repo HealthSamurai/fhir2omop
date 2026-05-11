@@ -1,0 +1,145 @@
+{
+  "$schema": "../schema/edge.schema.json",
+  "fhir_resource": "Medication",
+  "omop_table": "drug_exposure",
+  "direction": "fhir-to-omop",
+  "status": "documented",
+  "primary": true,
+  "required": false,
+  "condition": "Medication does not directly produce drug_exposure rows. Its code/ingredient data flows into drug_exposure via event resources (MedicationRequest, MedicationDispense, MedicationAdministration, MedicationStatement) when they carry a medicationReference pointing to a Medication resource.",
+  "narrative_md": "The FHIR Medication resource is a vocabulary/codeable-concept resource, not a medication event. It does NOT directly produce a drug_exposure row. Instead, its code and ingredient data are resolved into drug_concept_id and drug_source_value on drug_exposure rows produced by the four event resources (MedicationRequest, MedicationDispense, MedicationAdministration, MedicationStatement). This edge documents how Medication fields contribute to drug_exposure columns when referenced.",
+  "implementation_in_project": null,
+  "fields": [
+    {
+      "omop_column": "drug_concept_id",
+      "fhir_path": "Medication.code.coding[best]",
+      "fhir_type": "Coding",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "CONCEPT",
+      "transform": "Vocabulary lookup: resolve best coding (RxNorm > NDC > ATC > SNOMED) to OMOP standard concept via CONCEPT table",
+      "notes": "Set by the event mapper after resolving medicationReference. The 'best' coding is selected by vocabulary priority."
+    },
+    {
+      "omop_column": "drug_source_value",
+      "fhir_path": "Medication.code.coding[best].code",
+      "fhir_type": "code",
+      "omop_type": "varchar(50)",
+      "required": false,
+      "notes": "Raw source code from the highest-priority coding in Medication.code"
+    },
+    {
+      "omop_column": "drug_source_concept_id",
+      "fhir_path": "Medication.code.coding[best]",
+      "fhir_type": "Coding",
+      "omop_type": "integer",
+      "required": false,
+      "fk": "CONCEPT",
+      "transform": "Look up source vocabulary concept_id for the raw code (non-standard concept)",
+      "notes": "The source concept before mapping to standard vocabulary"
+    }
+  ],
+  "vocabularies": [
+    {
+      "name": "drug_code_systems",
+      "entries": [
+        {
+          "source_code": "http://www.nlm.nih.gov/research/umls/rxnorm",
+          "source_display": "RxNorm",
+          "target_concept_id": null,
+          "target_concept_name": "RxNorm",
+          "notes": "US primary drug vocabulary. Preferred source for drug_concept_id. Maps directly to OMOP standard concepts."
+        },
+        {
+          "source_code": "http://hl7.org/fhir/sid/ndc",
+          "source_display": "NDC (National Drug Code)",
+          "target_concept_id": null,
+          "target_concept_name": "NDC",
+          "notes": "US National Drug Code. Requires mapping to RxNorm standard concept via CONCEPT_RELATIONSHIP."
+        },
+        {
+          "source_code": "http://www.whocc.no/atc",
+          "source_display": "ATC (Anatomical Therapeutic Chemical)",
+          "target_concept_id": null,
+          "target_concept_name": "ATC",
+          "notes": "European classification. Used by ETL-German for German MII data. Extracted from Medication.ingredient[].itemCodeableConcept."
+        },
+        {
+          "source_code": "http://snomed.info/sct",
+          "source_display": "SNOMED CT (product codes)",
+          "target_concept_id": null,
+          "target_concept_name": "SNOMED",
+          "notes": "SNOMED CT product codes. Requires mapping to RxNorm standard concept."
+        }
+      ]
+    }
+  ],
+  "references": [
+    {
+      "project": "omoponfhir",
+      "kind": "java",
+      "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopMedicationRequest.java",
+      "lines": [547, 597],
+      "notes": "Resolves contained #-references in event resources. Iterates contained[] to find Medication by ID fragment, extracts Medication.code."
+    },
+    {
+      "project": "omoponfhir",
+      "kind": "java",
+      "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopMedicationStatement.java",
+      "lines": [751, 805],
+      "notes": "Same contained-reference resolution logic as MedicationRequest mapper."
+    },
+    {
+      "project": "fhir-to-omop-demo",
+      "kind": "jq",
+      "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Medication.jq",
+      "notes": "Two-phase merge: produces partial drug_exposure rows with concept info only; merged by ID with rows from MedicationRequest.jq in post-processing."
+    },
+    {
+      "project": "ETL-German-FHIR-Core",
+      "kind": "java",
+      "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/MedicationMapper.java",
+      "notes": "Pre-indexed map. Walks all Medication resources up front, builds medication_id_map keyed by resource ID for reference resolution. Extracts ATC codes from ingredients."
+    },
+    {
+      "project": "fhir-omop-ig",
+      "kind": "fml",
+      "path": "refs/refs/fhir-omop-ig/input/maps/medication.fml",
+      "notes": "Maps MedicationStatement only and assumes inline coding. Does not address Medication resource resolution."
+    }
+  ],
+  "edge_cases": [
+    {
+      "case": "medicationReference vs medicationCodeableConcept",
+      "handling": "Event resources may carry either medicationReference (pointing to a Medication resource) or inline medicationCodeableConcept. When only medicationReference is present, the Medication resource must be resolved to extract the code. Several implementations skip medicationReference entirely and only process inline codes.",
+      "implementations": ["FhirToCdm", "NACHC", "fhir-x-omop", "this project"]
+    },
+    {
+      "case": "Contained reference (#id)",
+      "handling": "Medication is embedded in the event resource's contained[] array. Iterate contained resources to find a Medication matching the fragment ID. Extract Medication.code. Fall back to Reference.display if no code found.",
+      "implementations": ["omoponfhir"]
+    },
+    {
+      "case": "Bundle-level reference resolution",
+      "handling": "Medication resources appear as separate entries in a Bundle alongside event resources. Requires pre-indexing all Medications by fullUrl/id before processing events. Two strategies: build an in-memory map (ETL-German) or produce partial rows and merge in post-processing (fhir-to-omop-demo).",
+      "implementations": ["ETL-German-FHIR-Core", "fhir-to-omop-demo"]
+    },
+    {
+      "case": "Medication.code absent but ingredient present",
+      "handling": "Some Medication resources carry no top-level code but have ingredient[].itemCodeableConcept with ATC codes. ETL-German extracts ATC from ingredients as the drug source value.",
+      "implementations": ["ETL-German-FHIR-Core"]
+    },
+    {
+      "case": "Multiple codings in Medication.code",
+      "handling": "Pick best coding by vocabulary priority: RxNorm > NDC > ATC > SNOMED > first. Use the selected code for drug_source_value and vocab lookup for drug_concept_id."
+    },
+    {
+      "case": "Medication.form (dosage form)",
+      "handling": "Not directly mapped to any OMOP column. Dose form is captured implicitly via drug_concept_id when using RxNorm clinical/branded drug products that encode form."
+    },
+    {
+      "case": "Medication.manufacturer and Medication.batch",
+      "handling": "Dropped. No corresponding OMOP drug_exposure columns."
+    }
+  ]
+}

@@ -1,0 +1,638 @@
+{
+  "$schema": "../schema/edge.schema.json",
+  "fhir_resource": "Encounter",
+  "omop_table": "visit_occurrence",
+  "direction": "fhir-to-omop",
+  "status": "implemented",
+  "primary": true,
+  "required": true,
+  "condition": "status in ('finished', 'in-progress')",
+  "narrative_md": "One FHIR Encounter maps to one visit_occurrence row. The visit_occurrence table is the OMOP anchor for linking clinical events to a care context -- every event table (condition_occurrence, measurement, drug_exposure, etc.) carries a visit_occurrence_id FK. Encounter.class maps to visit_concept_id via a small lookup table; period maps to start/end dates; participant maps to provider_id; serviceProvider maps to care_site_id. Planned and cancelled encounters are dropped.",
+  "implementation_in_project": "src/mapper/encounter.ts",
+  "fields": [
+    {
+      "omop_column": "visit_occurrence_id",
+      "fhir_path": "Encounter.id",
+      "fhir_type": "id",
+      "omop_type": "integer",
+      "required": true,
+      "pk": true,
+      "notes": "Surrogate key generated from Encounter.id. HL7 IG FML has this as TODO. NACHC uses auto-increment; omoponfhir uses IdMapping; our project hashes Encounter.id.",
+      "sources": [
+        {
+          "comment": "TODO/commented placeholder — no concrete ID strategy defined",
+          "references": [
+            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/EncounterVisit.fml" }
+          ]
+        },
+        {
+          "comment": "IdMapping lookup (FPerson-style): resolve FHIR ID to internal OMOP integer",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopEncounter.java", "lines": [285, 424] }
+          ]
+        },
+        {
+          "comment": "Auto-increment sequence",
+          "references": [
+            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/visitoccurrence/OmopVisitOccurrenceBuilder.java", "lines": [50, 88] },
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/EncounterInstitutionContactMapper.java", "lines": [312, 348] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "person_id",
+      "fhir_path": "Encounter.subject",
+      "fhir_type": "Reference(Patient)",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "PERSON",
+      "notes": "Resolve Patient reference. omoponfhir throws FHIRException if absent. ETL-German looks up by identifier or logical ID. Our project uses ctx.ids.resolveRef(), defaults to 0 if unresolved.",
+      "sources": [
+        {
+          "comment": "ctx.ids.resolveRef() — defaults to 0 if Patient not found",
+          "references": [
+            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Encounter.jq", "notes": ".subject.id" }
+          ]
+        },
+        {
+          "comment": "IdMapping.getOMOPfromFHIR() — returns null / skips encounter if subject missing",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopEncounter.java", "lines": [285, 300] }
+          ]
+        },
+        {
+          "comment": "Looks up by both identifier and logical ID; skips encounter if not found",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/EncounterInstitutionContactMapper.java", "lines": [264, 272] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "visit_concept_id",
+      "fhir_path": "Encounter.class.code",
+      "fhir_type": "code",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "CONCEPT",
+      "concept_map": "visit_type",
+      "notes": "See visit type vocabulary mapping. Small lookup table; 3-9 entries depending on implementation. Core consensus: IMP->9201, AMB->9202, EMER->9203.",
+      "sources": [
+        {
+          "comment": "Pass-through: code copied without concept translation",
+          "references": [
+            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/EncounterVisit.fml", "lines": [20, 24] }
+          ]
+        },
+        {
+          "comment": "Hardcoded enum: IMP/AMB/EMER only; unknown codes → 0",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopEncounter.java", "lines": [329, 346] }
+          ]
+        },
+        {
+          "comment": "Hardcoded: IMP→9201, EMER→9203, else 9202 (unknown codes fall to outpatient)",
+          "references": [
+            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [183, 188] },
+            { "project": "fhir-x-omop", "kind": "python", "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/visit_occurrence.py", "lines": [23, 29] }
+          ]
+        },
+        {
+          "comment": "DB-backed concept lookup including German-specific class codes; 0 for no match",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/EncounterInstitutionContactMapper.java", "lines": [312, 348] },
+            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/visitoccurrence/OmopVisitOccurrenceBuilder.java", "lines": [66, 74] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "visit_start_date",
+      "fhir_path": "Encounter.period.start",
+      "fhir_type": "dateTime",
+      "omop_type": "date",
+      "required": true,
+      "transform": "date(Encounter.period.start)",
+      "notes": "Date portion (YYYY-MM-DD). Skip encounter if absent (our project, ETL-German). omoponfhir writes epoch 0 if absent.",
+      "sources": [
+        {
+          "comment": "Skip record when period.start is absent",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/EncounterInstitutionContactMapper.java", "lines": [280, 298] }
+          ]
+        },
+        {
+          "comment": "Write epoch 0 (new Date(0)) when period.start is absent",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopEncounter.java", "lines": [329, 346] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "visit_start_datetime",
+      "fhir_path": "Encounter.period.start",
+      "fhir_type": "dateTime",
+      "omop_type": "datetime",
+      "notes": "Full ISO datetime. omoponfhir copies the start Date object directly."
+    },
+    {
+      "omop_column": "visit_end_date",
+      "fhir_path": "Encounter.period.end",
+      "fhir_type": "dateTime",
+      "omop_type": "date",
+      "required": true,
+      "transform": "date(Encounter.period.end) ?? visit_start_date",
+      "notes": "If absent, use visit_start_date (our project, NACHC, FhirToCdm). ETL-German uses LocalDate.now() for still-admitted patients.",
+      "sources": [
+        {
+          "comment": "Fallback to visit_start_date when period.end is absent",
+          "references": [
+            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/visitoccurrence/OmopVisitOccurrenceBuilder.java", "lines": [59, 61] },
+            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [173, 250] }
+          ]
+        },
+        {
+          "comment": "LocalDate.now() for still-admitted patients (CONCEPT_STILL_PATIENT status)",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/EncounterInstitutionContactMapper.java", "lines": [410, 424] }
+          ]
+        },
+        {
+          "comment": "Write epoch 0 when period.end is absent",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopEncounter.java", "lines": [329, 346] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "visit_end_datetime",
+      "fhir_path": "Encounter.period.end",
+      "fhir_type": "dateTime",
+      "omop_type": "datetime",
+      "notes": "Full ISO datetime; null if absent. ETL-German uses LocalDateTime.now() for CONCEPT_STILL_PATIENT cases."
+    },
+    {
+      "omop_column": "visit_type_concept_id",
+      "fhir_path": null,
+      "fhir_type": "integer",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "CONCEPT",
+      "constant": 32817,
+      "notes": "32817 (EHR) in our project and FhirToCdm. 44818518 (Visit derived from EHR) in omoponfhir and fhir-x-omop. Both acceptable; 32817 is OMOP-recommended for CDM v5.4.",
+      "sources": [
+        {
+          "comment": "Hardcoded 32817 (EHR) — OMOP-recommended for CDM v5.4",
+          "references": [
+            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [237, 237] }
+          ]
+        },
+        {
+          "comment": "Hardcoded 44818518 (Visit derived from EHR) — older vocabulary, still acceptable",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopEncounter.java", "lines": [285, 424] },
+            { "project": "fhir-x-omop", "kind": "python", "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/visit_occurrence.py", "lines": [34, 34] },
+            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Encounter.jq", "lines": [57, 57] }
+          ]
+        },
+        {
+          "comment": "Derived from Encounter.status via concept lookup (not a constant)",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/EncounterInstitutionContactMapper.java", "lines": [312, 348] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "provider_id",
+      "fhir_path": "Encounter.participant[0].individual",
+      "fhir_type": "Reference(Practitioner)",
+      "omop_type": "integer",
+      "fk": "PROVIDER",
+      "notes": "First Practitioner-typed participant (our project). omoponfhir uses getParticipantFirstRep(). fhir-to-omop-demo filters for PPRF (primary performer). fhir-x-omop filters for ATND (attending). NACHC defaults to 1.",
+      "sources": [
+        {
+          "comment": "First Practitioner-typed participant (type-filtered iteration)",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopEncounter.java", "lines": [371, 383] }
+          ]
+        },
+        {
+          "comment": "Filter for PPRF (primary performer) participant type",
+          "references": [
+            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Encounter.jq", "lines": [13, 15] }
+          ]
+        },
+        {
+          "comment": "Filter for ATND (attending) participant type",
+          "references": [
+            { "project": "fhir-x-omop", "kind": "python", "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/visit_occurrence.py", "lines": [7, 17] }
+          ]
+        },
+        {
+          "comment": "Default to constant provider_id = 1 (no resolution)",
+          "references": [
+            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/visitoccurrence/OmopVisitOccurrenceBuilder.java", "lines": [50, 88] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "care_site_id",
+      "fhir_path": "Encounter.serviceProvider",
+      "fhir_type": "Reference(Organization)",
+      "omop_type": "integer",
+      "fk": "CARE_SITE",
+      "notes": "Organization reference. Our project resolves via ctx.ids.resolveRef(). omoponfhir resolves via IdMapping. FhirToCdm creates a Provider from serviceProvider.display. NACHC defaults to 1.",
+      "sources": [
+        {
+          "comment": "IdMapping.getOMOPfromFHIR() → loads CareSite entity from serviceProvider reference",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopEncounter.java", "lines": [386, 396] }
+          ]
+        },
+        {
+          "comment": "Creates a Provider record from serviceProvider.display instead of linking to care_site",
+          "references": [
+            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [215, 224] }
+          ]
+        },
+        {
+          "comment": "Uses location[0].location.id instead of serviceProvider",
+          "references": [
+            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Encounter.jq", "lines": [59, 59] }
+          ]
+        },
+        {
+          "comment": "Default to constant care_site_id = 1 (no resolution)",
+          "references": [
+            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/visitoccurrence/OmopVisitOccurrenceBuilder.java", "lines": [50, 88] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "visit_source_value",
+      "fhir_path": "Encounter.class.code",
+      "fhir_type": "code",
+      "omop_type": "varchar(50)",
+      "notes": "Verbatim FHIR class code (our project, FhirToCdm). omoponfhir stores Encounter.id. NACHC stores encounter ID.",
+      "sources": [
+        {
+          "comment": "Verbatim Encounter.class.code stored as source value",
+          "references": [
+            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [173, 250] },
+            { "project": "fhir-x-omop", "kind": "python", "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/visit_occurrence.py", "notes": "type[0] coding, not class" }
+          ]
+        },
+        {
+          "comment": "Stores Encounter.id (not the class code) as source value",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopEncounter.java", "lines": [285, 424] },
+            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/visitoccurrence/OmopVisitOccurrenceBuilder.java", "lines": [50, 88] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "visit_source_concept_id",
+      "fhir_path": null,
+      "fhir_type": "integer",
+      "omop_type": "integer",
+      "constant": 0,
+      "notes": "0 in most implementations. NACHC maps via concept lookup when visitConcept has a Visit domain."
+    },
+    {
+      "omop_column": "admitted_from_concept_id",
+      "fhir_path": "Encounter.hospitalization.admitSource",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "fk": "CONCEPT",
+      "notes": "Requires vocabulary lookup. 0 if unmapped (our project, FhirToCdm). ETL-German stores in post_process_map for deferred resolution. No implementation in the reference set performs a complete vocabulary lookup."
+    },
+    {
+      "omop_column": "admitted_from_source_value",
+      "fhir_path": "Encounter.hospitalization.admitSource",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "varchar(50)",
+      "transform": "getSourceValue(admitSource).truncate(50)",
+      "notes": "Raw admit source code. Our project extracts via getSourceValue() and truncates to 50 chars. NACHC stores 'Not Available'."
+    },
+    {
+      "omop_column": "discharged_to_concept_id",
+      "fhir_path": "Encounter.hospitalization.dischargeDisposition",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "fk": "CONCEPT",
+      "concept_map": "discharge_disposition",
+      "notes": "Requires vocabulary lookup. 0 if unmapped (our project). fhir-x-omop maps home->8536, snf->8676, rehab->8615, exp->4216643. Most implementations default to 0.",
+      "sources": [
+        {
+          "comment": "Hardcoded 4-entry map: home→8536, snf→8676, rehab→8615, exp→4216643; else 0",
+          "references": [
+            { "project": "fhir-x-omop", "kind": "python", "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/visit_occurrence.py", "lines": [41, 46] }
+          ]
+        },
+        {
+          "comment": "Deferred to post_process_map for later vocabulary resolution",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/EncounterInstitutionContactMapper.java", "lines": [519, 571] }
+          ]
+        },
+        {
+          "comment": "No vocabulary lookup; defaults to 0",
+          "references": [
+            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [173, 250] },
+            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/EncounterVisit.fml", "lines": [31, 43], "notes": "pass-through code only" }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "discharged_to_source_value",
+      "fhir_path": "Encounter.hospitalization.dischargeDisposition",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "varchar(50)",
+      "transform": "getSourceValue(dischargeDisposition).truncate(50)",
+      "notes": "Raw discharge code. Our project extracts via getSourceValue(). fhir-x-omop uses the display."
+    },
+    {
+      "omop_column": "preceding_visit_occurrence_id",
+      "fhir_path": "Encounter.partOf",
+      "fhir_type": "Reference(Encounter)",
+      "omop_type": "integer",
+      "fk": "VISIT_OCCURRENCE",
+      "notes": "Previous encounter in a chain. Not widely used for this field; most implementations use partOf to link child encounters via visit_detail instead."
+    }
+  ],
+  "vocabularies": [
+    {
+      "name": "visit_type",
+      "entries": [
+        {
+          "source_code": "IMP",
+          "source_display": "Inpatient",
+          "target_concept_id": 9201,
+          "target_concept_name": "Inpatient Visit",
+          "notes": "Universal across all implementations"
+        },
+        {
+          "source_code": "ACUTE",
+          "source_display": "Acute",
+          "target_concept_id": 9201,
+          "target_concept_name": "Inpatient Visit",
+          "notes": "Acute care treated as inpatient (our project)"
+        },
+        {
+          "source_code": "AMB",
+          "source_display": "Ambulatory",
+          "target_concept_id": 9202,
+          "target_concept_name": "Outpatient Visit",
+          "notes": "Universal across all implementations"
+        },
+        {
+          "source_code": "EMER",
+          "source_display": "Emergency",
+          "target_concept_id": 9203,
+          "target_concept_name": "Emergency Room Visit",
+          "notes": "Universal across all implementations"
+        },
+        {
+          "source_code": "HH",
+          "source_display": "Home Health",
+          "target_concept_id": 581476,
+          "target_concept_name": "Home Visit",
+          "notes": "Our project. fhir-x-omop uses 581379 (Home Health)."
+        },
+        {
+          "source_code": "SS",
+          "source_display": "Short Stay",
+          "target_concept_id": 9202,
+          "target_concept_name": "Outpatient Visit",
+          "notes": "Short stay -> outpatient (our project)"
+        },
+        {
+          "source_code": "OBSENC",
+          "source_display": "Observation Encounter",
+          "target_concept_id": 9201,
+          "target_concept_name": "Inpatient Visit",
+          "notes": "Observation encounter -> inpatient (our project)"
+        },
+        {
+          "source_code": "FLD",
+          "source_display": "Field",
+          "target_concept_id": 9202,
+          "target_concept_name": "Outpatient Visit",
+          "notes": "Field -> outpatient (our project, omoponfhir O->F mapping)"
+        },
+        {
+          "source_code": "VR",
+          "source_display": "Virtual",
+          "target_concept_id": 9202,
+          "target_concept_name": "Outpatient Visit",
+          "notes": "Virtual -> outpatient (our project). fhir-x-omop uses 32036 (Telehealth)."
+        },
+        {
+          "source_code": "(unknown)",
+          "source_display": "Unknown/unmapped code",
+          "target_concept_id": 0,
+          "target_concept_name": "No matching concept",
+          "notes": "Default for unrecognized class codes (our project, omoponfhir, ETL-German)"
+        }
+      ]
+    },
+    {
+      "name": "visit_type_concept",
+      "entries": [
+        {
+          "source_code": "EHR",
+          "source_display": "EHR",
+          "target_concept_id": 32817,
+          "target_concept_name": "EHR",
+          "notes": "Our project, FhirToCdm. OMOP-recommended for CDM v5.4."
+        },
+        {
+          "source_code": "EHR-derived",
+          "source_display": "Visit derived from EHR",
+          "target_concept_id": 44818518,
+          "target_concept_name": "Visit derived from EHR",
+          "notes": "omoponfhir, fhir-x-omop, fhir-to-omop-demo. Older vocabulary."
+        }
+      ]
+    },
+    {
+      "name": "discharge_disposition",
+      "entries": [
+        {
+          "source_code": "home",
+          "source_display": "Home",
+          "target_concept_id": 8536,
+          "target_concept_name": "Home",
+          "notes": "fhir-x-omop"
+        },
+        {
+          "source_code": "snf",
+          "source_display": "Skilled Nursing Facility",
+          "target_concept_id": 8676,
+          "target_concept_name": "Skilled Nursing Facility",
+          "notes": "fhir-x-omop"
+        },
+        {
+          "source_code": "rehab",
+          "source_display": "Rehabilitation Hospital",
+          "target_concept_id": 8615,
+          "target_concept_name": "Rehabilitation Hospital",
+          "notes": "fhir-x-omop"
+        },
+        {
+          "source_code": "exp",
+          "source_display": "Patient died",
+          "target_concept_id": 4216643,
+          "target_concept_name": "Patient died",
+          "notes": "fhir-x-omop"
+        },
+        {
+          "source_code": "(unmapped)",
+          "source_display": "Unmapped",
+          "target_concept_id": 0,
+          "target_concept_name": "No matching concept",
+          "notes": "Our project, FhirToCdm"
+        }
+      ]
+    }
+  ],
+  "concept_maps": ["visit_type", "visit_type_concept", "discharge_disposition"],
+  "references": [
+    {
+      "project": "fhir-omop-ig",
+      "kind": "fml",
+      "path": "refs/refs/fhir-omop-ig/input/maps/EncounterVisit.fml",
+      "notes": "Normative IG; minimal (44 lines). Maps class->visit_concept_id, period->dates. Uses R5 field names."
+    },
+    {
+      "project": "omoponfhir",
+      "kind": "java",
+      "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopEncounter.java",
+      "lines": [1, 425],
+      "notes": "Bidirectional. Supports visit_detail via partOf, hospitalization mapping, multiple class codes."
+    },
+    {
+      "project": "FhirToCdm",
+      "kind": "csharp",
+      "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
+      "notes": "CreateVisitOccurrence() lines 173-250. Minimal F->O."
+    },
+    {
+      "project": "ETL-German-FHIR-Core",
+      "kind": "java",
+      "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/EncounterInstitutionContactMapper.java",
+      "lines": [1, 872],
+      "notes": "Most complete. German encounter classification, department transfers via visit_detail, incremental updates."
+    },
+    {
+      "project": "NACHC-fhir-to-omop",
+      "kind": "java",
+      "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/visitoccurrence/OmopVisitOccurrenceBuilder.java",
+      "lines": [1, 90],
+      "notes": "Visit occurrence building with DB-backed concept mapper."
+    },
+    {
+      "project": "fhir-to-omop-demo",
+      "kind": "jq",
+      "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Encounter.jq",
+      "notes": "Lightweight jq transform (146 lines). Also produces condition_occurrence, observation, procedure_occurrence from same Encounter."
+    },
+    {
+      "project": "fhir-x-omop",
+      "kind": "python",
+      "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/visit_occurrence.py",
+      "notes": "Bidirectional with lossless round-trip (55 lines). Has discharge concept mapping."
+    },
+    {
+      "project": "mends-on-fhir",
+      "kind": "whistle",
+      "path": "refs/refs/mends-on-fhir/whistle-mappings/synthea/whistle-functions/Visit_Encounter.wstl",
+      "notes": "O->F direction (107 lines). Uses ConceptMap JSON for visit_concept_id -> Encounter.class."
+    }
+  ],
+  "edge_cases": [
+    {
+      "case": "Missing period.start",
+      "handling": "Skip -- cannot create visit_occurrence without a start date.",
+      "implementations": ["this-project", "ETL-German"]
+    },
+    {
+      "case": "Missing period.end",
+      "handling": "Use visit_start_date as visit_end_date.",
+      "implementations": ["this-project", "NACHC", "FhirToCdm"]
+    },
+    {
+      "case": "Status = planned / cancelled / entered-in-error",
+      "handling": "Skip -- only finished and in-progress encounters produce rows.",
+      "implementations": ["this-project", "ETL-German"]
+    },
+    {
+      "case": "Status = unknown with no end date",
+      "handling": "ETL-German treats as CONCEPT_STILL_PATIENT and sets end date to now().",
+      "implementations": ["ETL-German"]
+    },
+    {
+      "case": "Multiple participants",
+      "handling": "Take first Practitioner reference for provider_id. Alternatives: ATND type (fhir-x-omop), PPRF primary performer (fhir-to-omop-demo).",
+      "implementations": ["this-project", "omoponfhir", "fhir-x-omop", "fhir-to-omop-demo"]
+    },
+    {
+      "case": "partOf (nested encounter)",
+      "handling": "Ideally creates visit_detail row linked to parent visit_occurrence. Our implementation does not yet support this.",
+      "implementations": ["ETL-German", "omoponfhir"]
+    },
+    {
+      "case": "No class code",
+      "handling": "visit_concept_id = 0.",
+      "implementations": ["this-project", "omoponfhir", "ETL-German"]
+    },
+    {
+      "case": "Class code not in lookup",
+      "handling": "visit_concept_id = 0 (our project, omoponfhir). FhirToCdm and fhir-x-omop default to 9202.",
+      "implementations": ["this-project", "omoponfhir", "FhirToCdm", "fhir-x-omop"]
+    },
+    {
+      "case": "ER-to-inpatient admission",
+      "handling": "Two separate encounters in FHIR; could merge into OMOP concept 262 (ER+Inpatient). No implementation does this automatically -- requires post-processing.",
+      "implementations": []
+    },
+    {
+      "case": "Missing subject",
+      "handling": "Skip -- cannot create visit_occurrence without person_id. All implementations skip or throw.",
+      "implementations": ["this-project", "omoponfhir", "ETL-German"]
+    },
+    {
+      "case": "Encounter with location[] transfers",
+      "handling": "ETL-German creates one visit_detail row per location with separate start/end dates. Other implementations ignore location transfers.",
+      "implementations": ["ETL-German"]
+    },
+    {
+      "case": "visit_type_concept_id variation",
+      "handling": "32817 (EHR) vs 44818518 (Visit derived from EHR). Both acceptable. Choose based on CDM version guidance.",
+      "implementations": ["this-project", "omoponfhir", "FhirToCdm", "fhir-x-omop"]
+    },
+    {
+      "case": "hospitalization absent",
+      "handling": "All admit/discharge fields default to 0/null. No error.",
+      "implementations": ["this-project", "FhirToCdm"]
+    },
+    {
+      "case": "Encounter without an id",
+      "handling": "visit_occurrence_id remains undefined. Most implementations require an ID for FK resolution by downstream mappers.",
+      "implementations": ["this-project"]
+    },
+    {
+      "case": "Long source values",
+      "handling": "Truncate admitted_from_source_value and discharged_to_source_value to 50 chars.",
+      "implementations": ["this-project", "ETL-German"]
+    }
+  ]
+}

@@ -1,0 +1,490 @@
+{
+  "$schema": "../schema/edge.schema.json",
+  "fhir_resource": "Observation",
+  "omop_table": "measurement",
+  "direction": "fhir-to-omop",
+  "status": "implemented",
+  "primary": true,
+  "required": false,
+  "condition": "category is laboratory or vital-signs (or absent/unknown -- default)",
+  "narrative_md": "Labs and vitals with numeric/coded results. Domain routing based on Observation.category: laboratory and vital-signs route here. Observations with components (e.g. blood pressure) are expanded -- each component produces its own measurement row.",
+  "implementation_in_project": "src/mapper/observation.ts",
+  "fields": [
+    {
+      "omop_column": "measurement_id",
+      "fhir_path": "Observation.id",
+      "fhir_type": "id",
+      "omop_type": "integer",
+      "required": true,
+      "pk": true,
+      "notes": "Generated deterministically from Observation.id. For component rows, suffixed with -comp-N (e.g. Observation.id + '-comp-0')."
+    },
+    {
+      "omop_column": "person_id",
+      "fhir_path": "Observation.subject",
+      "fhir_type": "Reference(Patient)",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "PERSON",
+      "notes": "Resolved from Observation.subject reference to Patient."
+    },
+    {
+      "omop_column": "measurement_concept_id",
+      "fhir_path": "Observation.code | Observation.component.code",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "CONCEPT",
+      "notes": "LOINC/SNOMED mapped to OMOP standard concept. For component rows, uses component.code instead of top-level code. Placeholder: 0 when concept lookup unavailable.",
+      "sources": [
+        {
+          "comment": "LOINC priority vocab lookup; 0 when not found",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java", "lines": [863, 1109], "notes": "constructOmopMeasurement" },
+            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Measurement.fml" }
+          ]
+        },
+        {
+          "comment": "Domain-based routing: LOINC code looked up in OMOP vocabulary for domain_id before mapping concept",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java", "lines": [542, 605], "notes": "LoincStandardDomainLookup drives routing and concept resolution" },
+            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Observation.jq", "lines": [14, 23], "notes": "domain-based routing via pre-joined vocabulary" }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "measurement_date",
+      "fhir_path": "Observation.effectiveDateTime | Observation.effectivePeriod.start",
+      "fhir_type": "dateTime",
+      "omop_type": "date",
+      "required": true,
+      "notes": "Falls back to effectivePeriod.start when effectiveDateTime is absent. Observation is skipped if neither is available.",
+      "sources": [
+        {
+          "comment": "effectivePeriod.start fallback; skip when both absent",
+          "references": [
+            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Measurement.fml", "lines": [30, 32], "notes": "dateTime, instant, Period.start" },
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java", "lines": [279, 291], "notes": "effectivePeriod fallback" },
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java", "lines": [1058, 1071], "notes": "effectiveDateTime / Period; falls back to Date(0) not skip" }
+          ]
+        },
+        {
+          "comment": "issued used as date fallback when effectiveDateTime absent",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java", "lines": [273, 276], "notes": "issued fallback" }
+          ]
+        },
+        {
+          "comment": "effectiveInstant also mapped (not handled by this project or most others)",
+          "references": [
+            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Measurement.fml", "lines": [29, 29], "notes": "line 29 handles effectiveInstant" }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "measurement_datetime",
+      "fhir_path": "Observation.effectiveDateTime | Observation.effectivePeriod.start",
+      "fhir_type": "dateTime",
+      "omop_type": "datetime"
+    },
+    {
+      "omop_column": "measurement_type_concept_id",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "integer",
+      "required": true,
+      "fk": "CONCEPT",
+      "constant": 32817,
+      "concept_map": "measurement_type",
+      "notes": "32817 = 'EHR'. Indicates the provenance of the measurement record.",
+      "sources": [
+        {
+          "comment": "32817 (EHR) constant for all FHIR→OMOP measurement rows",
+          "references": [
+            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Measurement.fml" },
+            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [482, 558], "notes": "CreateMeasurement()" },
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java" }
+          ]
+        },
+        {
+          "comment": "Category-sensitive type concept: laboratory→44818702, exam→44818701, survey→45905771 (OMOP→FHIR direction)",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java", "lines": [1080, 1104], "notes": "Category → type concept mapping" }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "operator_concept_id",
+      "fhir_path": "Observation.valueQuantity.comparator | Observation.component.valueQuantity.comparator",
+      "fhir_type": "code",
+      "omop_type": "integer",
+      "fk": "CONCEPT",
+      "concept_map": "operator",
+      "notes": "< -> 4171756, <= -> 4171754, >= -> 4171755, > -> 4172703. Null when comparator is absent."
+    },
+    {
+      "omop_column": "value_as_number",
+      "fhir_path": "Observation.valueQuantity.value | Observation.component.valueQuantity.value",
+      "fhir_type": "decimal",
+      "omop_type": "float",
+      "notes": "Numeric result value from valueQuantity. For component rows, uses component.valueQuantity.value."
+    },
+    {
+      "omop_column": "value_as_concept_id",
+      "fhir_path": "Observation.valueCodeableConcept | Observation.component.valueCodeableConcept",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "fk": "CONCEPT",
+      "notes": "Requires vocabulary lookup to map coded result to OMOP concept. Placeholder: null when lookup unavailable.",
+      "sources": [
+        {
+          "comment": "Full vocabulary lookup to resolve coded result to OMOP standard concept",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java", "lines": [963, 990], "notes": "valueCodeableConcept mapping with vocab lookup" },
+            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [538, 547], "notes": "ValueCodeableConcept lookup" },
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java", "lines": [1474, 1517], "notes": "setValueCodeableConceptInMeasurement" }
+          ]
+        },
+        {
+          "comment": "Passthrough of coding[0] without vocabulary lookup (interpretation → value_as_concept_id)",
+          "references": [
+            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Measurement.fml", "lines": [44, 50], "notes": "valueCodeableConcept + interpretation lines" }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "unit_source_value",
+      "fhir_path": "Observation.valueQuantity.unit | Observation.component.valueQuantity.unit",
+      "fhir_type": "string",
+      "omop_type": "varchar(50)",
+      "notes": "Human-readable unit string from the FHIR Quantity."
+    },
+    {
+      "omop_column": "unit_concept_id",
+      "fhir_path": "Observation.valueQuantity.code | Observation.component.valueQuantity.code",
+      "fhir_type": "code",
+      "omop_type": "integer",
+      "fk": "CONCEPT",
+      "notes": "UCUM unit code mapped to OMOP unit concept. Placeholder: null when lookup unavailable.",
+      "sources": [
+        {
+          "comment": "UCUM → OMOP vocabulary lookup performed at runtime",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java", "lines": [932, 961], "notes": "Unit concept lookup from UCUM vocab; fallback from reference range if valueQuantity.unit absent (lines 1013-1055)" },
+            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [526, 531], "notes": "Unit lookup" },
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java" },
+            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Observation.jq", "notes": "pre-joined vocabulary lookup" }
+          ]
+        },
+        {
+          "comment": "null constant — no UCUM lookup performed",
+          "references": [
+            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Measurement.fml", "notes": "unit concept not mapped in FML" }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "range_low",
+      "fhir_path": "Observation.referenceRange[0].low.value",
+      "fhir_type": "decimal",
+      "omop_type": "float",
+      "notes": "Lower bound of the first reference range. Only the first referenceRange entry is used."
+    },
+    {
+      "omop_column": "range_high",
+      "fhir_path": "Observation.referenceRange[0].high.value",
+      "fhir_type": "decimal",
+      "omop_type": "float",
+      "notes": "Upper bound of the first reference range. Only the first referenceRange entry is used."
+    },
+    {
+      "omop_column": "provider_id",
+      "fhir_path": "Observation.performer[0]",
+      "fhir_type": "Reference(Practitioner)",
+      "omop_type": "integer",
+      "fk": "PROVIDER",
+      "notes": "First performer reference resolved to provider_id."
+    },
+    {
+      "omop_column": "visit_occurrence_id",
+      "fhir_path": "Observation.encounter",
+      "fhir_type": "Reference(Encounter)",
+      "omop_type": "integer",
+      "fk": "VISIT_OCCURRENCE",
+      "notes": "Resolved from Observation.encounter reference."
+    },
+    {
+      "omop_column": "visit_detail_id",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "integer",
+      "fk": "VISIT_DETAIL",
+      "notes": "Not mapped. No direct FHIR equivalent.",
+      "sources": [
+        {
+          "comment": "visit_detail_id set to same value as visit_occurrence_id",
+          "references": [
+            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [517, 518], "notes": "visit_detail_id = visit_occurrence_id" }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "measurement_source_value",
+      "fhir_path": "Observation.code.coding[best].code | Observation.component.code.coding[best].code",
+      "fhir_type": "code",
+      "omop_type": "varchar(50)",
+      "notes": "Best code by vocabulary priority: LOINC > SNOMED > first available coding.",
+      "sources": [
+        {
+          "comment": "Best vocabulary priority (LOINC > SNOMED > first coding code)",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java", "notes": "LOINC code used" }
+          ]
+        },
+        {
+          "comment": "issued or note text used instead of code",
+          "references": [
+            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Measurement.fml", "notes": "issued or note → measurement_source_value per Implementation Comparison" }
+          ]
+        },
+        {
+          "comment": "identifier.value used as source value",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java", "lines": [863, 1109], "notes": "identifier.value per Implementation Comparison" }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "measurement_source_concept_id",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "integer",
+      "constant": 0
+    },
+    {
+      "omop_column": "unit_source_concept_id",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "integer",
+      "constant": 0
+    },
+    {
+      "omop_column": "value_source_value",
+      "fhir_path": "Observation.valueQuantity | Observation.valueString | Observation.valueCodeableConcept.text",
+      "fhir_type": "string",
+      "omop_type": "varchar(50)",
+      "transform": "concat(comparator, value, ' ', unit) | valueString | valueCodeableConcept.text",
+      "notes": "Computed: for valueQuantity concatenates comparator+value+unit; for valueString uses the string directly; for valueCodeableConcept uses .text. For component rows, derived from component values.",
+      "sources": [
+        {
+          "comment": "Composite string: comparator+value+unit (or valueString / CC text)",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java", "notes": "Quantity.value toString per Implementation Comparison" },
+            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "notes": "ValueAsNumber toString per Implementation Comparison" },
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java", "lines": [1529, 1554], "notes": "setValueQuantityInMeasurement" }
+          ]
+        },
+        {
+          "comment": "valueString → known concept IDs ('detected'/'not detected') attempted before falling back to value_source_value",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java", "lines": [991, 1003], "notes": "valueString → known concepts" }
+          ]
+        }
+      ]
+    }
+  ],
+  "vocabularies": [
+    {
+      "name": "operator",
+      "entries": [
+        {
+          "source_code": "<",
+          "source_display": "Less than",
+          "target_concept_id": 4171756,
+          "target_concept_name": "Less than"
+        },
+        {
+          "source_code": "<=",
+          "source_display": "Less than or equal to",
+          "target_concept_id": 4171754,
+          "target_concept_name": "Less than or equal to"
+        },
+        {
+          "source_code": ">=",
+          "source_display": "Greater than or equal to",
+          "target_concept_id": 4171755,
+          "target_concept_name": "Greater than or equal to"
+        },
+        {
+          "source_code": ">",
+          "source_display": "Greater than",
+          "target_concept_id": 4172703,
+          "target_concept_name": "Greater than"
+        },
+        {
+          "source_code": "(absent)",
+          "source_display": "No operator",
+          "target_concept_id": null,
+          "target_concept_name": "No operator"
+        }
+      ]
+    },
+    {
+      "name": "measurement_type",
+      "entries": [
+        {
+          "source_code": "EHR",
+          "source_display": "EHR",
+          "target_concept_id": 32817,
+          "target_concept_name": "EHR"
+        }
+      ]
+    },
+    {
+      "name": "vital_signs_loinc",
+      "entries": [
+        {
+          "source_code": "85354-9",
+          "source_display": "Blood pressure panel",
+          "target_concept_id": null,
+          "target_concept_name": "Parent panel -- expanded via components"
+        },
+        {
+          "source_code": "8480-6",
+          "source_display": "Systolic blood pressure",
+          "target_concept_id": 3004249,
+          "target_concept_name": "Systolic blood pressure"
+        },
+        {
+          "source_code": "8462-4",
+          "source_display": "Diastolic blood pressure",
+          "target_concept_id": 3012888,
+          "target_concept_name": "Diastolic blood pressure"
+        },
+        {
+          "source_code": "8310-5",
+          "source_display": "Body temperature",
+          "target_concept_id": 3020891,
+          "target_concept_name": "Body temperature"
+        },
+        {
+          "source_code": "8867-4",
+          "source_display": "Heart rate",
+          "target_concept_id": 3027018,
+          "target_concept_name": "Heart rate"
+        },
+        {
+          "source_code": "9279-1",
+          "source_display": "Respiratory rate",
+          "target_concept_id": 3024171,
+          "target_concept_name": "Respiratory rate"
+        },
+        {
+          "source_code": "2708-6",
+          "source_display": "Oxygen saturation in Arterial blood",
+          "target_concept_id": 3016502,
+          "target_concept_name": "Oxygen saturation"
+        },
+        {
+          "source_code": "29463-7",
+          "source_display": "Body weight",
+          "target_concept_id": 3013762,
+          "target_concept_name": "Body weight"
+        },
+        {
+          "source_code": "8302-2",
+          "source_display": "Body height",
+          "target_concept_id": 3036277,
+          "target_concept_name": "Body height"
+        },
+        {
+          "source_code": "39156-5",
+          "source_display": "Body mass index (BMI)",
+          "target_concept_id": 3038553,
+          "target_concept_name": "Body mass index"
+        }
+      ]
+    }
+  ],
+  "concept_maps": ["operator", "measurement_type"],
+  "references": [
+    {
+      "project": "fhir-omop-ig",
+      "kind": "fml",
+      "path": "refs/refs/fhir-omop-ig/input/maps/Measurement.fml",
+      "notes": "53 lines"
+    },
+    {
+      "project": "omoponfhir",
+      "kind": "java",
+      "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java",
+      "lines": [1, 2164]
+    },
+    {
+      "project": "FhirToCdm",
+      "kind": "csharp",
+      "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
+      "notes": "CreateMeasurement() lines 482-558"
+    },
+    {
+      "project": "ETL-German-FHIR-Core",
+      "kind": "java",
+      "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java"
+    },
+    {
+      "project": "fhir-to-omop-demo",
+      "kind": "jq",
+      "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Observation.jq",
+      "notes": "203 lines"
+    }
+  ],
+  "edge_cases": [
+    {
+      "case": "Missing effectiveDateTime",
+      "handling": "Skip -- measurement_date is required.",
+      "implementations": ["this project", "ETL-German"]
+    },
+    {
+      "case": "effectivePeriod instead of dateTime",
+      "handling": "Use period.start.",
+      "implementations": ["this project", "HL7 IG FML", "ETL-German", "omoponfhir"]
+    },
+    {
+      "case": "valueString (no value_as_string in measurement)",
+      "handling": "Captured in value_source_value only. omoponfhir attempts to map known strings to concept IDs."
+    },
+    {
+      "case": "Components (e.g. blood pressure)",
+      "handling": "Each component produces its own measurement row with suffixed ID. Parent metadata (date, subject, encounter, performer) is inherited.",
+      "implementations": ["this project", "omoponfhir", "ETL-German"]
+    },
+    {
+      "case": "Status not in {final, amended, corrected}",
+      "handling": "Skip entire observation.",
+      "implementations": ["this project", "ETL-German"]
+    },
+    {
+      "case": "Missing code.coding",
+      "handling": "Skip entire observation."
+    },
+    {
+      "case": "LOINC code not in OMOP vocabulary",
+      "handling": "measurement_concept_id=0. Code preserved in measurement_source_value."
+    },
+    {
+      "case": "Multiple referenceRange entries",
+      "handling": "Only first range used."
+    },
+    {
+      "case": "valueBoolean, valueInteger, valueRange, valueRatio",
+      "handling": "Not mapped. Could be coerced to value_as_number or value_source_value."
+    }
+  ]
+}

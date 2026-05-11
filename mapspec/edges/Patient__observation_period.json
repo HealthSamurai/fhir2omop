@@ -1,0 +1,185 @@
+{
+  "$schema": "../schema/edge.schema.json",
+  "fhir_resource": "Patient",
+  "omop_table": "observation_period",
+  "direction": "fhir-to-omop",
+  "status": "documented",
+  "primary": false,
+  "required": false,
+  "condition": "Derived per-person from data availability, not directly from Patient fields",
+  "narrative_md": "Observation period defines spans during which a person is observable. Not a direct field-level mapping from Patient \u2014 derived from event data availability. Most implementations either skip this table or emit a placeholder row at person-creation time.",
+  "implementation_in_project": null,
+  "fields": [
+    {
+      "omop_column": "observation_period_id",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "integer",
+      "required": true,
+      "pk": true,
+      "notes": "Generated primary key (auto-increment or deterministic hash)"
+    },
+    {
+      "omop_column": "person_id",
+      "fhir_path": "Patient.id",
+      "fhir_type": "id",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "PERSON",
+      "notes": "Foreign key to person table, derived from Patient.id"
+    },
+    {
+      "omop_column": "observation_period_start_date",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "date",
+      "required": true,
+      "transform": "min(event_date) across all OMOP clinical tables for this person, or fixed start (e.g. 1900-01-01), or registration date",
+      "notes": "Derived: earliest event date across all OMOP tables for the person; not directly from a Patient field",
+      "sources": [
+        {
+          "comment": "Fixed constant 1900-01-01 written at person-creation time (Strategy A — incorrect for production)",
+          "references": [
+            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/write/singlepatient/WriteOmopPersonToDatabase.java", "lines": [69, 82] }
+          ]
+        },
+        {
+          "comment": "min(event_date) across all clinical tables computed in post-processing (Strategy B)",
+          "references": [
+            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/CdmPersonBuilder.cs", "lines": [463, 475], "notes": "BuildObservationPeriods() with gap merging" },
+            { "project": "ETL-German-FHIR-Core", "kind": "sql", "path": "refs/refs/ETL-German-FHIR-Core/src/main/resources/post_processing/post_process_observation_period.sql" }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "observation_period_end_date",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "date",
+      "required": true,
+      "transform": "max(event_date) across all OMOP clinical tables for this person, or fixed end, or min(today, Patient.deceasedDateTime)",
+      "notes": "Derived: latest event date, or min(current_date, death_date) if deceased",
+      "sources": [
+        {
+          "comment": "Fixed constant 2100-01-01 written at person-creation time (Strategy A — incorrect for production)",
+          "references": [
+            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/write/singlepatient/WriteOmopPersonToDatabase.java", "lines": [69, 82] }
+          ]
+        },
+        {
+          "comment": "max(event_date) across clinical tables, with optional gap-merging into multiple periods (Strategy B)",
+          "references": [
+            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/CdmPersonBuilder.cs", "lines": [463, 475], "notes": "BuildObservationPeriods() configurable gap parameter" },
+            { "project": "ETL-German-FHIR-Core", "kind": "sql", "path": "refs/refs/ETL-German-FHIR-Core/src/main/resources/post_processing/post_process_observation_period.sql", "notes": "Caps at death_date when person is deceased" }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "period_type_concept_id",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "integer",
+      "required": true,
+      "fk": "CONCEPT",
+      "constant": 44814724,
+      "concept_map": "period_type",
+      "notes": "44814724 = 'Period covering healthcare encounters' (NACHC default)",
+      "sources": [
+        {
+          "comment": "Constant 44814724 ('Period covering healthcare encounters') hardcoded at person-creation",
+          "references": [
+            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/write/singlepatient/WriteOmopPersonToDatabase.java", "lines": [69, 82] }
+          ]
+        },
+        {
+          "comment": "Configurable — concept_id chosen per pipeline; ETL-German derives from SQL without explicit concept_id constant",
+          "references": [
+            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/CdmPersonBuilder.cs", "lines": [463, 475] },
+            { "project": "ETL-German-FHIR-Core", "kind": "sql", "path": "refs/refs/ETL-German-FHIR-Core/src/main/resources/post_processing/post_process_observation_period.sql" }
+          ]
+        }
+      ]
+    }
+  ],
+  "vocabularies": [
+    {
+      "name": "period_type",
+      "entries": [
+        {
+          "source_code": "44814724",
+          "source_display": "Period covering healthcare encounters",
+          "target_concept_id": 44814724,
+          "target_concept_name": "Period covering healthcare encounters"
+        },
+        {
+          "source_code": "44814723",
+          "source_display": "Period while enrolled in insurance",
+          "target_concept_id": 44814723,
+          "target_concept_name": "Period while enrolled in insurance"
+        },
+        {
+          "source_code": "44814725",
+          "source_display": "Period inferred by algorithm",
+          "target_concept_id": 44814725,
+          "target_concept_name": "Period inferred by algorithm"
+        },
+        {
+          "source_code": "32817",
+          "source_display": "EHR",
+          "target_concept_id": 32817,
+          "target_concept_name": "EHR"
+        }
+      ]
+    }
+  ],
+  "concept_maps": ["period_type"],
+  "references": [
+    {
+      "project": "NACHC-fhir-to-omop",
+      "kind": "java",
+      "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/write/singlepatient/WriteOmopPersonToDatabase.java",
+      "notes": "Fixed window 1900-01-01 to 2100-01-01, lines 69-82"
+    },
+    {
+      "project": "FhirToCdm",
+      "kind": "csharp",
+      "path": "refs/refs/FhirToCdm/CdmPersonBuilder.cs",
+      "notes": "BuildObservationPeriods() with gap merging, lines 463-475"
+    },
+    {
+      "project": "ETL-German-FHIR-Core",
+      "kind": "sql",
+      "path": "refs/refs/ETL-German-FHIR-Core/src/main/resources/post_processing/post_process_observation_period.sql",
+      "notes": "SQL post-processing step that derives observation_period from all loaded event tables"
+    }
+  ],
+  "edge_cases": [
+    {
+      "case": "Person has zero events",
+      "handling": "Skip the row (Strategy B) or use fixed window (Strategy A). Strategy B is preferred for production use."
+    },
+    {
+      "case": "Person is deceased",
+      "handling": "observation_period_end_date = min(latest_event, death_date). Do not extend past death."
+    },
+    {
+      "case": "Multiple disjoint observation windows",
+      "handling": "OMOP supports multiple rows per person. Use a gap parameter (e.g. 30 days) to merge adjacent periods or leave as separate rows."
+    },
+    {
+      "case": "Incremental loads",
+      "handling": "Re-derive end dates after each batch; rewrite affected observation_period rows for persons with new events."
+    },
+    {
+      "case": "Strategy A (fixed 1900-2100) is incorrect for production",
+      "handling": "Makes cohort definitions meaningless because every person appears observable for 200 years. Use Strategy B (min/max over events) for any analytic use.",
+      "implementations": ["NACHC"]
+    },
+    {
+      "case": "omoponfhir, fhir-to-omop-demo, and fhir-x-omop skip this table",
+      "handling": "Cohort tooling treats these persons as having zero observable time, effectively excluding them from all OHDSI analyses."
+    }
+  ]
+}

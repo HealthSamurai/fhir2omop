@@ -1,0 +1,408 @@
+{
+  "$schema": "../schema/edge.schema.json",
+  "fhir_resource": "DiagnosticReport",
+  "omop_table": "measurement",
+  "direction": "fhir-to-omop",
+  "status": "documented",
+  "primary": false,
+  "required": false,
+  "condition": "DiagnosticReport.code (LOINC) resolves to OMOP concept with domain_id = Measurement",
+  "narrative_md": "When a DiagnosticReport's LOINC code resolves to an OMOP concept with domain_id = Measurement, the report itself produces one or more measurement rows. Each conclusionCode entry generates a separate row. This is independent of the Observation results referenced by DiagnosticReport.result[], which are mapped by the Observation mapper. Lab panel codes (e.g. 24323-8 Comprehensive metabolic panel) are the primary Measurement-domain codes.",
+  "implementation_in_project": null,
+  "fields": [
+    {
+      "omop_column": "measurement_id",
+      "fhir_path": null,
+      "fhir_type": "id",
+      "omop_type": "integer",
+      "required": true,
+      "pk": true,
+      "notes": "Surrogate key. Hash/sequence of DiagnosticReport.id + conclusionCode index. Must be unique across all measurement sources."
+    },
+    {
+      "omop_column": "person_id",
+      "fhir_path": "DiagnosticReport.subject",
+      "fhir_type": "Reference(Patient)",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "PERSON",
+      "notes": "Resolve Patient/{id} reference to integer person_id. Skip row if unresolvable."
+    },
+    {
+      "omop_column": "measurement_concept_id",
+      "fhir_path": "DiagnosticReport.code",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "CONCEPT",
+      "notes": "LOINC code looked up in OMOP vocabulary. Must have domain_id = Measurement. Use first LOINC coding found. 0 if concept not found."
+    },
+    {
+      "omop_column": "measurement_date",
+      "fhir_path": "DiagnosticReport.effective[x]",
+      "fhir_type": "dateTime|Period",
+      "omop_type": "date",
+      "required": true,
+      "notes": "Date component of effectiveDateTime, or effectivePeriod.start. Skip row if absent (ETL-German behavior).",
+      "sources": [
+        {
+          "comment": "Skip resource if effective[x] absent; accepts effectiveDateTime or effectivePeriod.start",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/DiagnosticReportMapper.java", "lines": [607, 634] }
+          ]
+        },
+        {
+          "comment": "Uses effectivePeriod.start (parser extracts but does not map to OMOP)",
+          "references": [
+            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/fhir/parser/r4/diagnosticreport/DiagnosticReportParser.java", "lines": [112, 119] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "measurement_datetime",
+      "fhir_path": "DiagnosticReport.effective[x]",
+      "fhir_type": "dateTime|Period",
+      "omop_type": "datetime",
+      "notes": "Full timestamp from effectiveDateTime or effectivePeriod.start."
+    },
+    {
+      "omop_column": "measurement_time",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "varchar(10)",
+      "notes": "Legacy field. Leave null."
+    },
+    {
+      "omop_column": "measurement_type_concept_id",
+      "fhir_path": "DiagnosticReport.category",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "CONCEPT",
+      "concept_map": "diagnostic_report_category",
+      "notes": "ETL-German maps category via SOURCE_VOCABULARY_ID_DIAGNOSTIC_REPORT_CATEGORY custom concept map. Common defaults: 32817 (EHR) or 32856 (Lab result).",
+      "sources": [
+        {
+          "comment": "Custom source_to_concept_map keyed on 'DiagnosticReport_Category'; LAB→32856, others→32817",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/DiagnosticReportMapper.java", "lines": [187, 191] }
+          ]
+        },
+        {
+          "comment": "Field listed as required but left null in skeleton",
+          "references": [
+            { "project": "fhir-to-omop-demo", "kind": "bash", "path": "refs/refs/fhir-to-omop-demo/data/convert/mapping/009-DiagnosticReport-measurement.sh" }
+          ]
+        },
+        {
+          "comment": "Conceptual guidance: map category code to type concept",
+          "references": [
+            { "project": "fhir2omop-cookbook", "kind": "guidance", "path": "refs/fhir2omop-cookbook.md", "lines": [528, 575] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "operator_concept_id",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "integer",
+      "fk": "CONCEPT",
+      "notes": "ETL-German maps SNOMED conclusion interpretation codes to operator. Typically null for DiagnosticReport."
+    },
+    {
+      "omop_column": "value_as_number",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "float",
+      "notes": "DiagnosticReport conclusions are coded, not numeric. Leave null."
+    },
+    {
+      "omop_column": "value_as_concept_id",
+      "fhir_path": "DiagnosticReport.conclusionCode",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "fk": "CONCEPT",
+      "notes": "SNOMED conclusion code resolved to OMOP concept. ETL-German currently stores this in measurement_source_concept_id instead.",
+      "sources": [
+        {
+          "comment": "Not used; SNOMED conclusionCode concept stored in measurement_source_concept_id instead (line 339)",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/DiagnosticReportMapper.java", "lines": [303, 365] }
+          ]
+        },
+        {
+          "comment": "Conceptual guidance: conclusionCode should populate value_as_concept_id",
+          "references": [
+            { "project": "fhir2omop-cookbook", "kind": "guidance", "path": "refs/fhir2omop-cookbook.md", "lines": [528, 575] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "unit_concept_id",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "integer",
+      "fk": "CONCEPT",
+      "notes": "No units on DiagnosticReport-level measurements. Leave null."
+    },
+    {
+      "omop_column": "range_low",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "float",
+      "notes": "No reference ranges on DiagnosticReport. Leave null."
+    },
+    {
+      "omop_column": "range_high",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "float",
+      "notes": "No reference ranges on DiagnosticReport. Leave null."
+    },
+    {
+      "omop_column": "provider_id",
+      "fhir_path": "DiagnosticReport.performer[0]",
+      "fhir_type": "Reference(Practitioner)",
+      "omop_type": "integer",
+      "fk": "PROVIDER",
+      "notes": "First performer reference resolved to provider_id. Also consider resultsInterpreter[0]."
+    },
+    {
+      "omop_column": "visit_occurrence_id",
+      "fhir_path": "DiagnosticReport.encounter",
+      "fhir_type": "Reference(Encounter)",
+      "omop_type": "integer",
+      "fk": "VISIT_OCCURRENCE",
+      "notes": "Resolve Encounter/{id} to visit_occurrence_id."
+    },
+    {
+      "omop_column": "visit_detail_id",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "integer",
+      "fk": "VISIT_DETAIL",
+      "notes": "Leave null unless visit details are modeled."
+    },
+    {
+      "omop_column": "measurement_source_value",
+      "fhir_path": "DiagnosticReport.conclusionCode.coding[0].code",
+      "fhir_type": "code",
+      "omop_type": "varchar(50)",
+      "notes": "Verbatim SNOMED code from conclusionCode. ETL-German uses this field."
+    },
+    {
+      "omop_column": "measurement_source_concept_id",
+      "fhir_path": "DiagnosticReport.conclusionCode",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "fk": "CONCEPT",
+      "notes": "SNOMED conclusionCode resolved to OMOP concept ID. ETL-German stores the SNOMED concept here (line 339).",
+      "sources": [
+        {
+          "comment": "SNOMED conclusionCode concept stored here instead of value_as_concept_id (line 339); splits composite SNOMED expressions",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/DiagnosticReportMapper.java", "lines": [303, 365] }
+          ]
+        },
+        {
+          "comment": "Conceptual: conclusionCode maps to measurement_source_concept_id",
+          "references": [
+            { "project": "fhir2omop-cookbook", "kind": "guidance", "path": "refs/fhir2omop-cookbook.md", "lines": [528, 575] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "unit_source_value",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "varchar(50)",
+      "notes": "No units. Leave null."
+    },
+    {
+      "omop_column": "unit_source_concept_id",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "integer",
+      "fk": "CONCEPT",
+      "notes": "No units. Leave null."
+    },
+    {
+      "omop_column": "value_source_value",
+      "fhir_path": "DiagnosticReport.conclusionCode.coding[0].code",
+      "fhir_type": "code",
+      "omop_type": "varchar(50)",
+      "notes": "Verbatim SNOMED code. ETL-German stores this (line 344)."
+    },
+    {
+      "omop_column": "measurement_event_id",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "integer",
+      "notes": "Can link back to a related OMOP record if needed. Leave null."
+    },
+    {
+      "omop_column": "meas_event_field_concept_id",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "integer",
+      "fk": "CONCEPT",
+      "notes": "Leave null."
+    }
+  ],
+  "vocabularies": [
+    {
+      "name": "report_code_loinc",
+      "entries": [
+        {
+          "source_code": "24323-8",
+          "source_display": "Comprehensive metabolic panel",
+          "target_concept_id": 3004410,
+          "target_concept_name": "Comprehensive metabolic panel",
+          "notes": "Measurement domain"
+        },
+        {
+          "source_code": "24357-6",
+          "source_display": "Urinalysis macro panel",
+          "target_concept_id": 3002385,
+          "target_concept_name": "Urinalysis macro panel",
+          "notes": "Measurement domain"
+        },
+        {
+          "source_code": "58410-2",
+          "source_display": "CBC panel (blood)",
+          "target_concept_id": 3016502,
+          "target_concept_name": "CBC panel (blood)",
+          "notes": "Measurement domain"
+        }
+      ]
+    },
+    {
+      "name": "diagnostic_report_category",
+      "entries": [
+        {
+          "source_code": "LAB",
+          "source_display": "Laboratory studies",
+          "target_concept_id": 32856,
+          "target_concept_name": "Lab result",
+          "notes": "http://terminology.hl7.org/CodeSystem/v2-0074"
+        },
+        {
+          "source_code": "RAD",
+          "source_display": "Radiology",
+          "target_concept_id": 32817,
+          "target_concept_name": "EHR",
+          "notes": "http://terminology.hl7.org/CodeSystem/v2-0074"
+        },
+        {
+          "source_code": "PAT",
+          "source_display": "Pathology",
+          "target_concept_id": 32817,
+          "target_concept_name": "EHR",
+          "notes": "http://terminology.hl7.org/CodeSystem/v2-0074"
+        },
+        {
+          "source_code": "MB",
+          "source_display": "Microbiology",
+          "target_concept_id": 32817,
+          "target_concept_name": "EHR",
+          "notes": "http://terminology.hl7.org/CodeSystem/v2-0074"
+        },
+        {
+          "source_code": "(absent)",
+          "source_display": "No category",
+          "target_concept_id": 32817,
+          "target_concept_name": "EHR",
+          "notes": "Default when no category"
+        }
+      ]
+    }
+  ],
+  "concept_maps": ["diagnostic_report_category"],
+  "references": [
+    {
+      "project": "ETL-German-FHIR-Core",
+      "kind": "java",
+      "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/DiagnosticReportMapper.java",
+      "lines": [303, 365],
+      "notes": "Primary reference. createDiagnosticReportMeasurement() with full domain routing, LOINC lookup, SNOMED conclusionCode, composite SNOMED splitting."
+    },
+    {
+      "project": "fhir-to-omop-demo",
+      "kind": "bash",
+      "path": "refs/refs/fhir-to-omop-demo/data/convert/mapping/009-DiagnosticReport-measurement.sh",
+      "notes": "Skeleton mapping with all 23 measurement fields listed but all set to null."
+    },
+    {
+      "project": "NACHC-fhir-to-omop",
+      "kind": "java",
+      "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/fhir/parser/r4/diagnosticreport/DiagnosticReportParser.java",
+      "lines": [1, 120],
+      "notes": "Parser only -- extracts code, status, effectivePeriod. No OMOP output mapping."
+    },
+    {
+      "project": "fhir2omop-cookbook",
+      "kind": "guidance",
+      "path": "refs/fhir2omop-cookbook.md",
+      "lines": [528, 575],
+      "notes": "Conceptual mapping guidance. Documents domain-based routing and field correspondences."
+    }
+  ],
+  "edge_cases": [
+    {
+      "case": "No effectiveDateTime or effectivePeriod",
+      "handling": "ETL-German skips the resource entirely. Alternative: fall back to issued timestamp.",
+      "implementations": ["ETL-German"]
+    },
+    {
+      "case": "Status is registered, preliminary, cancelled, entered-in-error, or unknown",
+      "handling": "Reject. Accept only final, amended, corrected, appended. Preliminary results may change and should not be committed to the CDM.",
+      "implementations": ["ETL-German"]
+    },
+    {
+      "case": "No conclusionCode",
+      "handling": "ETL-German skips the resource. Without a conclusion, there is no value to store. Only the referenced Observations produce rows.",
+      "implementations": ["ETL-German"]
+    },
+    {
+      "case": "Multiple conclusionCode entries",
+      "handling": "Each code produces a separate measurement row. The measurement_concept_id (report LOINC) is the same across all rows; only measurement_source_concept_id and value_source_value differ.",
+      "implementations": ["ETL-German"]
+    },
+    {
+      "case": "Composite SNOMED in conclusionCode (e.g. 118247008:{363713009=373068000})",
+      "handling": "ETL-German splits composite expressions: base code before : maps to measurement_source_concept_id; attributes after :{ are parsed for interpretation codes mapped to operator_concept_id.",
+      "implementations": ["ETL-German"]
+    },
+    {
+      "case": "SNOMED codes joined with + (conjunction)",
+      "handling": "ETL-German splits on + and creates one row per component code.",
+      "implementations": ["ETL-German"]
+    },
+    {
+      "case": "No category",
+      "handling": "ETL-German skips the resource. Alternative: default to measurement_type_concept_id = 32817 (EHR).",
+      "implementations": ["ETL-German"]
+    },
+    {
+      "case": "LOINC code resolves to Observation or Procedure domain",
+      "handling": "Route to observation or procedure_occurrence table instead."
+    },
+    {
+      "case": "Report with result[] but no code or conclusionCode",
+      "handling": "No report-level row produced. The Observations in result[] are still mapped independently."
+    },
+    {
+      "case": "subject references Group (not Patient)",
+      "handling": "Not supported. OMOP requires a single person_id. Skip the resource."
+    },
+    {
+      "case": "Incremental updates (same DiagnosticReport reprocessed)",
+      "handling": "ETL-German deletes existing OMOP rows by fhirLogicalId or fhirIdentifier before re-inserting.",
+      "implementations": ["ETL-German"]
+    }
+  ]
+}

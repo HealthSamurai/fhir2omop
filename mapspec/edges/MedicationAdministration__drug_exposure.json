@@ -1,0 +1,492 @@
+{
+  "$schema": "../schema/edge.schema.json",
+  "fhir_resource": "MedicationAdministration",
+  "omop_table": "drug_exposure",
+  "direction": "fhir-to-omop",
+  "status": "documented",
+  "primary": true,
+  "required": true,
+  "narrative_md": "Inpatient medication administration events. Each MedicationAdministration produces one drug_exposure row distinguished by drug_type_concept_id = 38000179 (Physician administered drug). MedicationAdministration carries the richest route and dose-event timing information of the four medication resources.",
+  "implementation_in_project": null,
+  "fields": [
+    {
+      "omop_column": "drug_exposure_id",
+      "fhir_path": "MedicationAdministration.id",
+      "fhir_type": "id",
+      "omop_type": "integer",
+      "required": true,
+      "pk": true,
+      "notes": "Surrogate key. Generated deterministically from MedicationAdministration.id."
+    },
+    {
+      "omop_column": "person_id",
+      "fhir_path": "MedicationAdministration.subject",
+      "fhir_type": "Reference(Patient)",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "PERSON",
+      "notes": "Resolved from subject reference to Patient."
+    },
+    {
+      "omop_column": "drug_concept_id",
+      "fhir_path": "MedicationAdministration.medication[x]",
+      "fhir_type": "CodeableConcept/Reference(Medication)",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "CONCEPT",
+      "notes": "RxNorm / ATC / NDC mapped to OMOP standard concept. medicationCodeableConcept resolved inline; medicationReference resolved via Medication resource lookup. Placeholder: 0 when concept lookup unavailable.",
+      "sources": [
+        {
+          "comment": "ETL-German pre-indexes Medication resources via medication_id_map, then extracts ATC code for EU data",
+          "references": [
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/MedicationMapper.java",
+              "notes": "274 lines — ATC code extraction and concept lookup"
+            },
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/MedicationAdministrationMapper.java",
+              "notes": "Resolves references via pre-indexed medication_id_map"
+            }
+          ]
+        },
+        {
+          "comment": "fhir-to-omop-demo processes inline medicationCodeableConcept only; medicationReference requires external merge phase not implemented for MedicationAdministration",
+          "references": [
+            {
+              "project": "fhir-to-omop-demo",
+              "kind": "jq",
+              "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/MedicationAdministration.jq",
+              "notes": "59 lines"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "drug_exposure_start_date",
+      "fhir_path": "MedicationAdministration.effectiveDateTime | MedicationAdministration.effectivePeriod.start",
+      "fhir_type": "dateTime",
+      "omop_type": "date",
+      "required": true,
+      "notes": "Point-in-time (effectiveDateTime) or period start. Resource skipped if neither is available."
+    },
+    {
+      "omop_column": "drug_exposure_start_datetime",
+      "fhir_path": "MedicationAdministration.effectiveDateTime | MedicationAdministration.effectivePeriod.start",
+      "fhir_type": "dateTime",
+      "omop_type": "datetime",
+      "notes": "Full ISO datetime."
+    },
+    {
+      "omop_column": "drug_exposure_end_date",
+      "fhir_path": "MedicationAdministration.effectivePeriod.end",
+      "fhir_type": "dateTime",
+      "omop_type": "date",
+      "required": true,
+      "transform": "effectivePeriod.end ?? drug_exposure_start_date",
+      "notes": "When effectiveDateTime is used (single point), end = start. When effectivePeriod has no end, end = start. omoponfhir general rule: setDrugExposureEndDate(startDate) when no period end.",
+      "sources": [
+        {
+          "comment": "omoponfhir, ETL-German, and fhir-to-omop-demo all set end = start when effectiveDateTime (point in time) is used or period has no end",
+          "references": [
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/MedicationAdministrationMapper.java",
+              "notes": "Copies start date when no period end available"
+            },
+            {
+              "project": "fhir-to-omop-demo",
+              "kind": "jq",
+              "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/MedicationAdministration.jq",
+              "notes": "59 lines"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "drug_exposure_end_datetime",
+      "fhir_path": "MedicationAdministration.effectivePeriod.end",
+      "fhir_type": "dateTime",
+      "omop_type": "datetime",
+      "notes": "Full ISO datetime. Null if no period end."
+    },
+    {
+      "omop_column": "verbatim_end_date",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "date",
+      "notes": "Most implementations leave null. No direct FHIR source for MedicationAdministration."
+    },
+    {
+      "omop_column": "drug_type_concept_id",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "integer",
+      "required": true,
+      "fk": "CONCEPT",
+      "constant": 38000179,
+      "concept_map": "drug_type",
+      "notes": "38000179 = 'Physician administered drug (identified as procedure)'. fhir-to-omop-demo uses 32818 (EHR administration record). FhirToCdm/ETL-German use 32817 (EHR/CLAIM).",
+      "sources": [
+        {
+          "comment": "This project and consensus use 38000179 (Physician administered drug) as the most semantically precise type for MedicationAdministration",
+          "references": []
+        },
+        {
+          "comment": "fhir-to-omop-demo uses 32818 (EHR administration record) — a more generic EHR-record type",
+          "references": [
+            {
+              "project": "fhir-to-omop-demo",
+              "kind": "jq",
+              "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/MedicationAdministration.jq",
+              "lines": [39, 39],
+              "notes": "drug_type_concept_id = 32818 at line 39"
+            }
+          ]
+        },
+        {
+          "comment": "FhirToCdm and ETL-German use 32817 (EHR/CLAIM) universally across all medication resource types",
+          "references": [
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/MedicationAdministrationMapper.java",
+              "notes": "Uses CONCEPT_CLAIM (32817) for all medication resources"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "stop_reason",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "varchar(20)",
+      "notes": "MedicationAdministration does not commonly carry a discontinuation reason. Leave null."
+    },
+    {
+      "omop_column": "refills",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "integer",
+      "notes": "Not applicable. Refills are MedicationRequest-only. Leave null."
+    },
+    {
+      "omop_column": "quantity",
+      "fhir_path": "MedicationAdministration.dosage.dose.value",
+      "fhir_type": "decimal",
+      "omop_type": "float",
+      "notes": "Dose amount given. ETL-German computes mean of Range when doseRange is used.",
+      "sources": [
+        {
+          "comment": "ETL-German computes the arithmetic mean of doseRange.low and doseRange.high when a Range is used instead of a Quantity; other implementations leave quantity null in that case",
+          "references": [
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/MedicationAdministrationMapper.java",
+              "notes": "doseRange mean computation"
+            }
+          ]
+        },
+        {
+          "comment": "fhir-to-omop-demo reads dosage.dose.value directly with no Range handling",
+          "references": [
+            {
+              "project": "fhir-to-omop-demo",
+              "kind": "jq",
+              "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/MedicationAdministration.jq",
+              "notes": "59 lines"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "days_supply",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "integer",
+      "notes": "Not applicable to a single administration event. Leave null."
+    },
+    {
+      "omop_column": "sig",
+      "fhir_path": "MedicationAdministration.dosage.text",
+      "fhir_type": "string",
+      "omop_type": "varchar(MAX)",
+      "notes": "Free-text dosage instructions."
+    },
+    {
+      "omop_column": "route_concept_id",
+      "fhir_path": "MedicationAdministration.dosage.route",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "fk": "CONCEPT",
+      "concept_map": "route",
+      "notes": "Administration route via SNOMED to OMOP Route domain lookup. MedicationAdministration carries the richest route data of the four medication resources."
+    },
+    {
+      "omop_column": "route_source_value",
+      "fhir_path": "MedicationAdministration.dosage.route.text | MedicationAdministration.dosage.route.coding[0].display",
+      "fhir_type": "string",
+      "omop_type": "varchar(50)",
+      "notes": "Raw route text or first coding display."
+    },
+    {
+      "omop_column": "lot_number",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "varchar(50)",
+      "notes": "Vaccine-only field; not used for MedicationAdministration."
+    },
+    {
+      "omop_column": "provider_id",
+      "fhir_path": "MedicationAdministration.performer[0].actor",
+      "fhir_type": "Reference(Practitioner)",
+      "omop_type": "integer",
+      "fk": "PROVIDER",
+      "notes": "Administering clinician. First performer entry."
+    },
+    {
+      "omop_column": "visit_occurrence_id",
+      "fhir_path": "MedicationAdministration.context",
+      "fhir_type": "Reference(Encounter)",
+      "omop_type": "integer",
+      "fk": "VISIT_OCCURRENCE",
+      "notes": "Resolved from context reference to Encounter."
+    },
+    {
+      "omop_column": "visit_detail_id",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "integer",
+      "fk": "VISIT_DETAIL",
+      "notes": "Not mapped. FhirToCdm sets it equal to visit_occurrence_id (non-standard).",
+      "sources": [
+        {
+          "comment": "Most implementations leave null; FhirToCdm non-standardly copies visit_occurrence_id here",
+          "references": [
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/MedicationAdministrationMapper.java",
+              "notes": "Leaves visit_detail_id null"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "drug_source_value",
+      "fhir_path": "MedicationAdministration.medication[x].coding[best].code",
+      "fhir_type": "code",
+      "omop_type": "varchar(50)",
+      "notes": "Best code by vocabulary priority (RxNorm > ATC > NDC > first). ETL-German uses ATC code.",
+      "sources": [
+        {
+          "comment": "ETL-German specifically picks the ATC coding for European data",
+          "references": [
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/MedicationAdministrationMapper.java",
+              "notes": "ATC vocabulary used for drug_source_value"
+            }
+          ]
+        },
+        {
+          "comment": "fhir-to-omop-demo selects best coding by vocabulary priority (RxNorm > ATC > NDC > first)",
+          "references": [
+            {
+              "project": "fhir-to-omop-demo",
+              "kind": "jq",
+              "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/MedicationAdministration.jq",
+              "notes": "59 lines"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "drug_source_concept_id",
+      "fhir_path": "MedicationAdministration.medication[x]",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "fk": "CONCEPT",
+      "constant": 0,
+      "notes": "Source vocabulary concept. Placeholder: 0. fhir-to-omop-demo uses pre-computed source_concept_id.",
+      "sources": [
+        {
+          "comment": "fhir-to-omop-demo pre-computes source_concept_id via vocabulary lookup rather than defaulting to 0",
+          "references": [
+            {
+              "project": "fhir-to-omop-demo",
+              "kind": "jq",
+              "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/MedicationAdministration.jq",
+              "notes": "59 lines — pre-computed vocabulary concept"
+            }
+          ]
+        },
+        {
+          "comment": "ETL-German and most other implementations leave this as 0 placeholder",
+          "references": [
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/MedicationAdministrationMapper.java",
+              "notes": "Defaults to 0"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "dose_unit_source_value",
+      "fhir_path": "MedicationAdministration.dosage.dose.unit | MedicationAdministration.dosage.dose.code",
+      "fhir_type": "string",
+      "omop_type": "varchar(50)",
+      "notes": "Raw dose unit string from dosage.dose."
+    }
+  ],
+  "vocabularies": [
+    {
+      "name": "drug_type",
+      "entries": [
+        {
+          "source_code": "MedicationAdministration",
+          "source_display": "Physician administered drug",
+          "target_concept_id": 38000179,
+          "target_concept_name": "Physician administered drug (identified as procedure)"
+        },
+        {
+          "source_code": "MedicationAdministration (alt: fhir-to-omop-demo)",
+          "source_display": "EHR administration record",
+          "target_concept_id": 32818,
+          "target_concept_name": "EHR administration record"
+        },
+        {
+          "source_code": "MedicationAdministration (alt: FhirToCdm/ETL-German)",
+          "source_display": "EHR",
+          "target_concept_id": 32817,
+          "target_concept_name": "EHR"
+        }
+      ]
+    },
+    {
+      "name": "route",
+      "entries": [
+        {
+          "source_code": "26643006",
+          "source_display": "Oral route",
+          "target_concept_id": 4132161,
+          "target_concept_name": "Oral"
+        },
+        {
+          "source_code": "47625008",
+          "source_display": "Intravenous route",
+          "target_concept_id": 4171047,
+          "target_concept_name": "Intravenous"
+        },
+        {
+          "source_code": "78421000",
+          "source_display": "Intramuscular route",
+          "target_concept_id": 4302612,
+          "target_concept_name": "Intramuscular"
+        },
+        {
+          "source_code": "34206005",
+          "source_display": "Subcutaneous route",
+          "target_concept_id": 4142048,
+          "target_concept_name": "Subcutaneous"
+        },
+        {
+          "source_code": "46713006",
+          "source_display": "Nasal route",
+          "target_concept_id": 4262099,
+          "target_concept_name": "Nasal"
+        },
+        {
+          "source_code": "6064005",
+          "source_display": "Topical route",
+          "target_concept_id": 4263689,
+          "target_concept_name": "Topical"
+        },
+        {
+          "source_code": "37161004",
+          "source_display": "Rectal route",
+          "target_concept_id": 4115462,
+          "target_concept_name": "Rectal"
+        },
+        {
+          "source_code": "45890007",
+          "source_display": "Transdermal route",
+          "target_concept_id": 4262914,
+          "target_concept_name": "Transdermal"
+        }
+      ]
+    }
+  ],
+  "concept_maps": ["drug_type", "route"],
+  "references": [
+    {
+      "project": "ETL-German-FHIR-Core",
+      "kind": "java",
+      "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/MedicationAdministrationMapper.java",
+      "notes": "ATC vocabulary, dose form and route mapping, Range mean quantity, fan-out per dosage entry. Pre-indexes Medication resources via medication_id_map."
+    },
+    {
+      "project": "fhir-to-omop-demo",
+      "kind": "jq",
+      "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/MedicationAdministration.jq",
+      "notes": "59 lines. drug_type_concept_id = 32818 (EHR administration record)."
+    }
+  ],
+  "edge_cases": [
+    {
+      "case": "status = entered-in-error",
+      "handling": "Skip -- do not create drug_exposure row.",
+      "implementations": ["ETL-German", "fhir-to-omop-demo", "consensus"]
+    },
+    {
+      "case": "status = not-done",
+      "handling": "Skip -- medication was not administered."
+    },
+    {
+      "case": "status = stopped",
+      "handling": "Implementation-dependent. ETL-German maps; this project would skip."
+    },
+    {
+      "case": "effectiveDateTime (point in time)",
+      "handling": "Start and end date are the same. omoponfhir general rule: setDrugExposureStartDate(date); setDrugExposureEndDate(date).",
+      "implementations": ["omoponfhir", "ETL-German", "fhir-to-omop-demo"]
+    },
+    {
+      "case": "effectivePeriod with start but no end",
+      "handling": "End date = start date."
+    },
+    {
+      "case": "dosage absent",
+      "handling": "Leave quantity, route_concept_id, route_source_value, dose_unit_source_value, sig all null."
+    },
+    {
+      "case": "doseRange (Range instead of Quantity)",
+      "handling": "ETL-German computes the mean of low and high. Others leave quantity null.",
+      "implementations": ["ETL-German"]
+    },
+    {
+      "case": "Multiple codings in medication[x]",
+      "handling": "Best by vocabulary priority (RxNorm > ATC > NDC > first)."
+    },
+    {
+      "case": "No medication code found",
+      "handling": "Skip -- consensus across implementations.",
+      "implementations": ["ETL-German", "fhir-to-omop-demo", "consensus"]
+    }
+  ]
+}

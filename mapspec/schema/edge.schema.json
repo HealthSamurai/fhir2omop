@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "edge.schema.json",
+  "title": "FHIR-to-OMOP Edge",
+  "description": "One directional mapping edge: FHIR resource → OMOP table",
+  "type": "object",
+  "required": ["fhir_resource", "omop_table", "direction", "status", "fields"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "fhir_resource": {
+      "type": "string",
+      "description": "FHIR R4 resource type (e.g. Patient, Observation)"
+    },
+    "omop_table": {
+      "type": "string",
+      "description": "OMOP CDM v5.4 table name (e.g. person, measurement)"
+    },
+    "direction": {
+      "type": "string",
+      "enum": ["fhir-to-omop", "omop-to-fhir"],
+      "default": "fhir-to-omop"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["documented", "implemented", "stub", "planned"],
+      "description": "documented = spec written; implemented = code exists; stub = placeholder; planned = on roadmap"
+    },
+    "primary": {
+      "type": "boolean",
+      "description": "True if this is the main/expected mapping for this FHIR resource"
+    },
+    "required": {
+      "type": "boolean",
+      "description": "True if a valid FHIR resource always produces a row in this OMOP table"
+    },
+    "condition": {
+      "type": "string",
+      "description": "When this edge fires (e.g. 'category = laboratory or vital-signs')"
+    },
+    "narrative_md": {
+      "type": "string",
+      "description": "Short prose summary of the mapping"
+    },
+    "fields": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/FieldMapping" },
+      "description": "Column-level mappings"
+    },
+    "concept_maps": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Names of concept maps used by this edge"
+    },
+    "vocabularies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "entries": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "source_code": { "type": "string" },
+                "source_display": { "type": "string" },
+                "target_concept_id": { "type": ["integer", "null"] },
+                "target_concept_name": { "type": "string" },
+                "notes": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "description": "Inline vocabulary tables (small, static concept maps)"
+    },
+    "references": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Reference" },
+      "description": "Pointers to reference implementations"
+    },
+    "edge_cases": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/EdgeCase" }
+    },
+    "implementation_in_project": {
+      "type": ["string", "null"],
+      "description": "Path to this project's implementation file"
+    }
+  },
+  "$defs": {
+    "FieldMapping": {
+      "type": "object",
+      "required": ["omop_column", "omop_type"],
+      "properties": {
+        "fhir_path": {
+          "type": ["string", "null"],
+          "description": "FHIRPath or description (null if generated/constant)"
+        },
+        "omop_column": { "type": "string" },
+        "fhir_type": { "type": "string" },
+        "omop_type": { "type": "string" },
+        "required": { "type": "boolean" },
+        "pk": { "type": "boolean" },
+        "fk": { "type": "string", "description": "FK target table" },
+        "transform": { "type": "string", "description": "Transformation expression" },
+        "concept_map": { "type": "string", "description": "Name of concept map for this field" },
+        "constant": { "description": "Constant value for this field" },
+        "notes": { "type": "string" },
+        "sources": {
+          "type": "array",
+          "description": "How reference implementations handle this field. Each source groups one approach + its supporting refs.",
+          "items": { "$ref": "#/$defs/FieldSource" }
+        }
+      }
+    },
+    "FieldSource": {
+      "type": "object",
+      "required": ["comment", "references"],
+      "properties": {
+        "comment": {
+          "type": "string",
+          "description": "Short description of the approach (e.g. 'Direct concept_id lookup', 'Pass-through code without translation')"
+        },
+        "references": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Reference" },
+          "description": "Reference implementations that use this approach"
+        }
+      }
+    },
+    "Reference": {
+      "type": "object",
+      "required": ["project"],
+      "properties": {
+        "project": { "type": "string" },
+        "kind": { "type": "string" },
+        "path": { "type": "string" },
+        "lines": {
+          "type": "array",
+          "items": { "type": "integer" },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "notes": { "type": "string" }
+      }
+    },
+    "EdgeCase": {
+      "type": "object",
+      "required": ["case", "handling"],
+      "properties": {
+        "case": { "type": "string" },
+        "handling": { "type": "string" },
+        "implementations": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

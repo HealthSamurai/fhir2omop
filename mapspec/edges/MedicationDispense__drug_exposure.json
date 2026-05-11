@@ -1,0 +1,342 @@
+{
+  "$schema": "../schema/edge.schema.json",
+  "fhir_resource": "MedicationDispense",
+  "omop_table": "drug_exposure",
+  "direction": "fhir-to-omop",
+  "status": "documented",
+  "primary": true,
+  "required": true,
+  "condition": "status != 'entered-in-error' AND status != 'cancelled' AND status != 'declined' AND status != 'stopped'",
+  "narrative_md": "Pharmacy dispensing events. One FHIR MedicationDispense produces one OMOP drug_exposure row with drug_type_concept_id = 38000175 (Prescription dispensed in pharmacy). Date is taken from whenHandedOver (fallback whenPrepared). End date is computed from start + daysSupply, or defaults to start date. No reviewed reference implementation covers this mapping; the spec is reconstructed from OMOP drug_exposure schema and FHIR R4 MedicationDispense definition.",
+  "implementation_in_project": null,
+  "fields": [
+    {
+      "fhir_path": null,
+      "omop_column": "drug_exposure_id",
+      "fhir_type": "id",
+      "omop_type": "integer",
+      "required": true,
+      "pk": true,
+      "notes": "Surrogate key, generated deterministically from MedicationDispense.id"
+    },
+    {
+      "fhir_path": "MedicationDispense.subject",
+      "omop_column": "person_id",
+      "fhir_type": "Reference(Patient)",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "PERSON",
+      "notes": "Resolve Patient reference to person_id"
+    },
+    {
+      "fhir_path": "MedicationDispense.medication[x]",
+      "omop_column": "drug_concept_id",
+      "fhir_type": "CodeableConcept | Reference(Medication)",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "CONCEPT",
+      "concept_map": "drug",
+      "notes": "RxNorm / ATC / NDC -> OMOP standard concept. Resolve medicationCodeableConcept or medicationReference"
+    },
+    {
+      "fhir_path": "MedicationDispense.whenHandedOver",
+      "omop_column": "drug_exposure_start_date",
+      "fhir_type": "dateTime",
+      "omop_type": "date",
+      "required": true,
+      "transform": "date(whenHandedOver ?? whenPrepared)",
+      "notes": "The date medication was supplied. Fallback to whenPrepared if whenHandedOver absent"
+    },
+    {
+      "fhir_path": "MedicationDispense.whenHandedOver",
+      "omop_column": "drug_exposure_start_datetime",
+      "fhir_type": "dateTime",
+      "omop_type": "datetime",
+      "required": false,
+      "transform": "whenHandedOver ?? whenPrepared",
+      "notes": "Full ISO datetime"
+    },
+    {
+      "fhir_path": "MedicationDispense.daysSupply",
+      "omop_column": "drug_exposure_end_date",
+      "fhir_type": "Duration",
+      "omop_type": "date",
+      "required": true,
+      "transform": "date(start + daysSupply) ?? start_date",
+      "notes": "If daysSupply present: end = start + daysSupply. Otherwise fallback to start date"
+    },
+    {
+      "fhir_path": null,
+      "omop_column": "drug_exposure_end_datetime",
+      "fhir_type": "dateTime",
+      "omop_type": "datetime",
+      "required": false,
+      "notes": "Null if no daysSupply"
+    },
+    {
+      "fhir_path": null,
+      "omop_column": "verbatim_end_date",
+      "fhir_type": "date",
+      "omop_type": "date",
+      "required": false,
+      "notes": "Leave null. MedicationDispense does not carry a verbatim end date"
+    },
+    {
+      "fhir_path": null,
+      "omop_column": "drug_type_concept_id",
+      "fhir_type": "integer",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "CONCEPT",
+      "constant": 38000175,
+      "notes": "Prescription dispensed in pharmacy. Alternative: 32817 (EHR) used by FhirToCdm/ETL-German for other medication resources",
+      "sources": [
+        {
+          "comment": "This project and OMOP CDM guidance use 38000175 (Prescription dispensed in pharmacy) — the semantically precise type for a dispense event",
+          "references": []
+        },
+        {
+          "comment": "FhirToCdm and ETL-German use 32817 (EHR) universally across all medication resource types; neither implements MedicationDispense but their pattern would apply",
+          "references": [
+            {
+              "project": "FhirToCdm",
+              "kind": "csharp",
+              "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
+              "notes": "Type concept 32817 used for all medication resources (line 338)"
+            },
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/MedicationStatementMapper.java",
+              "notes": "CONCEPT_CLAIM (32817) used universally"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "fhir_path": null,
+      "omop_column": "stop_reason",
+      "fhir_type": "string",
+      "omop_type": "varchar(20)",
+      "required": false,
+      "notes": "Leave null. MedicationDispense does not carry a discontinuation reason"
+    },
+    {
+      "fhir_path": null,
+      "omop_column": "refills",
+      "fhir_type": "integer",
+      "omop_type": "integer",
+      "required": false,
+      "notes": "Leave null. Refills are tracked on the originating MedicationRequest, not the dispense"
+    },
+    {
+      "fhir_path": "MedicationDispense.quantity.value",
+      "omop_column": "quantity",
+      "fhir_type": "decimal",
+      "omop_type": "float",
+      "required": false,
+      "notes": "Dispensed quantity (the total handed over)"
+    },
+    {
+      "fhir_path": "MedicationDispense.daysSupply.value",
+      "omop_column": "days_supply",
+      "fhir_type": "integer",
+      "omop_type": "integer",
+      "required": false,
+      "notes": "Days of medication supplied. Direct FHIR field on MedicationDispense (unlike MedicationRequest where it must be computed)"
+    },
+    {
+      "fhir_path": "MedicationDispense.dosageInstruction[].text",
+      "omop_column": "sig",
+      "fhir_type": "string",
+      "omop_type": "varchar(MAX)",
+      "required": false,
+      "notes": "Free-text dosage instructions. Fallback to patientInstruction"
+    },
+    {
+      "fhir_path": "MedicationDispense.dosageInstruction[].route",
+      "omop_column": "route_concept_id",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "required": false,
+      "fk": "CONCEPT",
+      "concept_map": "route",
+      "notes": "SNOMED route codes -> OMOP Route domain"
+    },
+    {
+      "fhir_path": "MedicationDispense.dosageInstruction[].route.text",
+      "omop_column": "route_source_value",
+      "fhir_type": "string",
+      "omop_type": "varchar(50)",
+      "required": false,
+      "notes": "Raw route text or coding[0].display"
+    },
+    {
+      "fhir_path": null,
+      "omop_column": "lot_number",
+      "fhir_type": "string",
+      "omop_type": "varchar(50)",
+      "required": false,
+      "notes": "Not used for MedicationDispense"
+    },
+    {
+      "fhir_path": "MedicationDispense.performer[0].actor",
+      "omop_column": "provider_id",
+      "fhir_type": "Reference(Practitioner | PractitionerRole | Organization)",
+      "omop_type": "integer",
+      "required": false,
+      "fk": "PROVIDER",
+      "notes": "The dispensing pharmacist or actor"
+    },
+    {
+      "fhir_path": "MedicationDispense.context",
+      "omop_column": "visit_occurrence_id",
+      "fhir_type": "Reference(Encounter)",
+      "omop_type": "integer",
+      "required": false,
+      "fk": "VISIT_OCCURRENCE",
+      "notes": "Encounter reference. Resolve to visit_occurrence_id"
+    },
+    {
+      "fhir_path": null,
+      "omop_column": "visit_detail_id",
+      "fhir_type": "integer",
+      "omop_type": "integer",
+      "required": false,
+      "fk": "VISIT_DETAIL",
+      "notes": "Leave null"
+    },
+    {
+      "fhir_path": "MedicationDispense.medication[x].coding[best].code",
+      "omop_column": "drug_source_value",
+      "fhir_type": "code",
+      "omop_type": "varchar(50)",
+      "required": false,
+      "notes": "Best code by vocabulary priority (RxNorm > ATC > NDC > SNOMED)"
+    },
+    {
+      "fhir_path": "MedicationDispense.medication[x]",
+      "omop_column": "drug_source_concept_id",
+      "fhir_type": "integer",
+      "omop_type": "integer",
+      "required": false,
+      "fk": "CONCEPT",
+      "constant": 0,
+      "notes": "Source vocabulary concept. Placeholder: 0"
+    },
+    {
+      "fhir_path": "MedicationDispense.dosageInstruction[].doseAndRate[].doseQuantity.unit",
+      "omop_column": "dose_unit_source_value",
+      "fhir_type": "string",
+      "omop_type": "varchar(50)",
+      "required": false,
+      "notes": "Raw dose unit string from doseQuantity.unit or .code"
+    }
+  ],
+  "vocabularies": [
+    {
+      "name": "drug_type",
+      "entries": [
+        {
+          "source_code": "MedicationDispense",
+          "source_display": "Pharmacy dispense event",
+          "target_concept_id": 38000175,
+          "target_concept_name": "Prescription dispensed in pharmacy"
+        },
+        {
+          "source_code": "MedicationDispense (EHR variant)",
+          "source_display": "EHR-based type used by FhirToCdm/ETL-German",
+          "target_concept_id": 32817,
+          "target_concept_name": "EHR",
+          "notes": "Alternative type_concept_id used by some implementations universally"
+        }
+      ]
+    }
+  ],
+  "concept_maps": ["drug", "route"],
+  "references": [
+    {
+      "project": "omoponfhir",
+      "kind": "java",
+      "path": "refs/refs/omoponfhir-omopv5-r4-mapping/",
+      "notes": "Implements MedicationRequest + MedicationStatement only, NOT MedicationDispense"
+    },
+    {
+      "project": "FhirToCdm",
+      "kind": "csharp",
+      "path": "refs/refs/FhirToCdm/",
+      "notes": "Implements MedicationRequest + Immunization only, NOT MedicationDispense"
+    },
+    {
+      "project": "ETL-German-FHIR-Core",
+      "kind": "java",
+      "path": "refs/refs/ETL-German-FHIR-Core/",
+      "notes": "Implements MedicationStatement + MedicationAdministration only, NOT MedicationDispense"
+    },
+    {
+      "project": "fhir-to-omop-demo",
+      "kind": "jq",
+      "path": "refs/refs/fhir-to-omop-demo/",
+      "notes": "Implements MedicationRequest + MedicationAdministration only, NOT MedicationDispense"
+    },
+    {
+      "project": "NACHC-fhir-to-omop",
+      "kind": "java",
+      "path": "refs/refs/NACHC-fhir-to-omop/",
+      "notes": "MedicationRequest only, NOT MedicationDispense"
+    },
+    {
+      "project": "fhir-omop-ig",
+      "kind": "fml",
+      "path": "refs/refs/fhir-omop-ig/input/maps/medication.fml",
+      "notes": "MedicationStatement only, NOT MedicationDispense"
+    }
+  ],
+  "edge_cases": [
+    {
+      "case": "status = 'entered-in-error'",
+      "handling": "Skip -- do not create drug_exposure row. Consensus across implementations for all medication resources."
+    },
+    {
+      "case": "status = 'cancelled' / 'declined' / 'stopped'",
+      "handling": "Skip. No reference implementation precedent for MedicationDispense specifically. Recommended: skip non-completed dispenses."
+    },
+    {
+      "case": "whenHandedOver absent, whenPrepared present",
+      "handling": "Use whenPrepared as drug_exposure_start_date."
+    },
+    {
+      "case": "Both whenHandedOver and whenPrepared absent",
+      "handling": "Fallback to context (encounter) start date, or null. Consider dropping the record if no date can be resolved."
+    },
+    {
+      "case": "daysSupply absent",
+      "handling": "End date = start date. days_supply column left null."
+    },
+    {
+      "case": "quantity absent",
+      "handling": "Leave quantity column null."
+    },
+    {
+      "case": "Multiple dosageInstruction entries",
+      "handling": "Take first entry. Consistent with handling in other medication resources (MedicationRequest, MedicationStatement)."
+    },
+    {
+      "case": "Cross-reference to originating MedicationRequest via authorizingPrescription",
+      "handling": "Currently no implementation links these for OMOP. Could be used to inherit dosage/refill metadata in future."
+    },
+    {
+      "case": "Medication resolution: medicationReference to contained or external Medication",
+      "handling": "Resolve contained Medication inline. For external references, look up by reference. Most implementations handle inline medicationCodeableConcept only."
+    },
+    {
+      "case": "Multiple codings on medication[x]",
+      "handling": "Pick best by vocabulary priority: RxNorm > ATC > NDC > SNOMED."
+    },
+    {
+      "case": "drug_source_value truncation",
+      "handling": "OMOP varchar(50) limit. Truncate to 50 characters."
+    }
+  ]
+}

@@ -1,0 +1,362 @@
+{
+  "$schema": "../schema/edge.schema.json",
+  "fhir_resource": "DiagnosticReport",
+  "omop_table": "procedure_occurrence",
+  "direction": "fhir-to-omop",
+  "status": "documented",
+  "primary": false,
+  "required": false,
+  "condition": "DiagnosticReport.code (LOINC) resolves to OMOP concept with domain_id = Procedure",
+  "narrative_md": "When a DiagnosticReport's LOINC code resolves to an OMOP concept with domain_id = Procedure, the report produces one or more procedure_occurrence rows. This occurs primarily for imaging studies (radiology, nuclear medicine), pathology procedures, and certain clinical assessments whose LOINC codes are classified in the Procedure domain by the OMOP vocabulary. Each conclusionCode entry generates a separate row. This is independent of the Observation results referenced by DiagnosticReport.result[], which are mapped by the Observation mapper.",
+  "implementation_in_project": null,
+  "fields": [
+    {
+      "omop_column": "procedure_occurrence_id",
+      "fhir_path": null,
+      "fhir_type": "id",
+      "omop_type": "integer",
+      "required": true,
+      "pk": true,
+      "notes": "Surrogate key. Hash/sequence of DiagnosticReport.id + conclusionCode index. Must be unique across all procedure_occurrence sources."
+    },
+    {
+      "omop_column": "person_id",
+      "fhir_path": "DiagnosticReport.subject",
+      "fhir_type": "Reference(Patient)",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "PERSON",
+      "notes": "Resolve Patient/{id} reference to integer person_id. Skip row if unresolvable."
+    },
+    {
+      "omop_column": "procedure_concept_id",
+      "fhir_path": "DiagnosticReport.code",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "CONCEPT",
+      "notes": "LOINC code looked up in OMOP vocabulary. Must have domain_id = Procedure. Use first LOINC coding found. 0 if concept not found. ETL-German uses loincCodingConcept.getConceptId() (line 274)."
+    },
+    {
+      "omop_column": "procedure_date",
+      "fhir_path": "DiagnosticReport.effective[x]",
+      "fhir_type": "dateTime|Period",
+      "omop_type": "date",
+      "required": true,
+      "notes": "Date component of effectiveDateTime, or effectivePeriod.start. Skip row if absent (ETL-German behavior)."
+    },
+    {
+      "omop_column": "procedure_datetime",
+      "fhir_path": "DiagnosticReport.effective[x]",
+      "fhir_type": "dateTime|Period",
+      "omop_type": "datetime",
+      "notes": "Full timestamp from effectiveDateTime or effectivePeriod.start."
+    },
+    {
+      "omop_column": "procedure_end_date",
+      "fhir_path": "DiagnosticReport.effectivePeriod.end",
+      "fhir_type": "dateTime",
+      "omop_type": "date",
+      "notes": "End date from effectivePeriod.end. ETL-German does not set this field (only uses startDateTime). Leave null for effectiveDateTime."
+    },
+    {
+      "omop_column": "procedure_end_datetime",
+      "fhir_path": "DiagnosticReport.effectivePeriod.end",
+      "fhir_type": "dateTime",
+      "omop_type": "datetime",
+      "notes": "Full timestamp from effectivePeriod.end. ETL-German does not set this field."
+    },
+    {
+      "omop_column": "procedure_type_concept_id",
+      "fhir_path": "DiagnosticReport.category",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "CONCEPT",
+      "concept_map": "diagnostic_report_category",
+      "notes": "ETL-German maps category via SOURCE_VOCABULARY_ID_DIAGNOSTIC_REPORT_CATEGORY custom concept map (line 273). Common default: 32817 (EHR).",
+      "sources": [
+        {
+          "comment": "Custom source_to_concept_map keyed on 'Diag.Rep Category' (line 190); category required — resource skipped if absent (lines 125-131)",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/DiagnosticReportMapper.java", "lines": [269, 285] }
+          ]
+        },
+        {
+          "comment": "Conceptual: category maps to procedure type concept",
+          "references": [
+            { "project": "fhir2omop-cookbook", "kind": "guidance", "path": "refs/fhir2omop-cookbook.md", "lines": [528, 575] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "modifier_concept_id",
+      "fhir_path": "DiagnosticReport.conclusionCode",
+      "fhir_type": "Coding",
+      "omop_type": "integer",
+      "fk": "CONCEPT",
+      "notes": "ETL-German extracts interpretation codes from composite SNOMED expressions in conclusionCode (e.g. the value after = in 118247008:{363713009=373068000}) and resolves them to OMOP concepts (lines 286-297). Set only when conclusionCode contains a :{ composite expression. 0 if absent or unmapped.",
+      "sources": [
+        {
+          "comment": "Interpretation code from composite SNOMED expression resolved to OMOP concept (lines 286-297); only ETL-German implements this",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/DiagnosticReportMapper.java", "lines": [286, 297] }
+          ]
+        },
+        {
+          "comment": "Not specified — no other implementation addresses modifier_concept_id for DiagnosticReport",
+          "references": [
+            { "project": "fhir2omop-cookbook", "kind": "guidance", "path": "refs/fhir2omop-cookbook.md", "lines": [528, 575] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "quantity",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "integer",
+      "notes": "DiagnosticReport has no quantity field. Leave null."
+    },
+    {
+      "omop_column": "provider_id",
+      "fhir_path": "DiagnosticReport.performer[0]",
+      "fhir_type": "Reference(Practitioner)",
+      "omop_type": "integer",
+      "fk": "PROVIDER",
+      "notes": "First performer reference resolved to provider_id. Also consider resultsInterpreter[0]. ETL-German does not map this field for DiagnosticReport procedure_occurrence rows (gap in implementation)."
+    },
+    {
+      "omop_column": "visit_occurrence_id",
+      "fhir_path": "DiagnosticReport.encounter",
+      "fhir_type": "Reference(Encounter)",
+      "omop_type": "integer",
+      "fk": "VISIT_OCCURRENCE",
+      "notes": "Resolve Encounter/{id} to visit_occurrence_id. ETL-German sets this (line 272)."
+    },
+    {
+      "omop_column": "visit_detail_id",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "integer",
+      "fk": "VISIT_DETAIL",
+      "notes": "Leave null unless visit details are modeled."
+    },
+    {
+      "omop_column": "procedure_source_value",
+      "fhir_path": "DiagnosticReport.conclusionCode.coding[0].code",
+      "fhir_type": "code",
+      "omop_type": "varchar(50)",
+      "notes": "Verbatim SNOMED code from conclusionCode. ETL-German stores snomedCoding.getCode() (line 277).",
+      "sources": [
+        {
+          "comment": "SNOMED conclusionCode code string stored here (line 277); commented-out alternative would use loincCodingConcept.getConceptCode() (line 278)",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/DiagnosticReportMapper.java", "lines": [269, 285] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "procedure_source_concept_id",
+      "fhir_path": "DiagnosticReport.conclusionCode",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "fk": "CONCEPT",
+      "notes": "SNOMED conclusionCode resolved to OMOP concept ID. ETL-German stores snomedConcept.getConceptId() (line 276).",
+      "sources": [
+        {
+          "comment": "SNOMED conclusionCode concept stored here (line 276); commented-out alternative would use loincCodingConcept.getConceptId() (line 275)",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/DiagnosticReportMapper.java", "lines": [269, 285] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "modifier_source_value",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "varchar(50)",
+      "notes": "Verbatim interpretation code from composite SNOMED expression. ETL-German stores interpretationConcept.getConceptCode() (line 296). Only set when composite SNOMED expression is present."
+    }
+  ],
+  "vocabularies": [
+    {
+      "name": "report_code_loinc",
+      "entries": [
+        {
+          "source_code": "24725-4",
+          "source_display": "CT Head W contrast IV",
+          "target_concept_id": 3027018,
+          "target_concept_name": "CT Head W contrast IV",
+          "notes": "Procedure domain"
+        },
+        {
+          "source_code": "24566-1",
+          "source_display": "XR Chest 2 Views",
+          "target_concept_id": 3003961,
+          "target_concept_name": "XR Chest 2 Views",
+          "notes": "Procedure domain"
+        },
+        {
+          "source_code": "24532-3",
+          "source_display": "MRI Brain WO contrast",
+          "target_concept_id": 3048098,
+          "target_concept_name": "MRI Brain WO contrast",
+          "notes": "Procedure domain"
+        },
+        {
+          "source_code": "38269-7",
+          "source_display": "US Abdomen",
+          "target_concept_id": 3042955,
+          "target_concept_name": "US Abdomen",
+          "notes": "Procedure domain"
+        },
+        {
+          "source_code": "24627-1",
+          "source_display": "MR Heart",
+          "target_concept_id": 3044437,
+          "target_concept_name": "MR Heart",
+          "notes": "Procedure domain"
+        },
+        {
+          "source_code": "24610-7",
+          "source_display": "XR Spine Lumbar AP+Lateral",
+          "target_concept_id": 3018893,
+          "target_concept_name": "XR Spine Lumbar AP+Lateral",
+          "notes": "Procedure domain"
+        }
+      ]
+    },
+    {
+      "name": "diagnostic_report_category",
+      "entries": [
+        {
+          "source_code": "RAD",
+          "source_display": "Radiology",
+          "target_concept_id": 32817,
+          "target_concept_name": "EHR",
+          "notes": "http://terminology.hl7.org/CodeSystem/v2-0074. Most common category for Procedure-domain reports."
+        },
+        {
+          "source_code": "PAT",
+          "source_display": "Pathology",
+          "target_concept_id": 32817,
+          "target_concept_name": "EHR",
+          "notes": "http://terminology.hl7.org/CodeSystem/v2-0074"
+        },
+        {
+          "source_code": "LAB",
+          "source_display": "Laboratory",
+          "target_concept_id": 32856,
+          "target_concept_name": "Lab result",
+          "notes": "http://terminology.hl7.org/CodeSystem/v2-0074. Uncommon for Procedure domain."
+        },
+        {
+          "source_code": "MB",
+          "source_display": "Microbiology",
+          "target_concept_id": 32817,
+          "target_concept_name": "EHR",
+          "notes": "http://terminology.hl7.org/CodeSystem/v2-0074"
+        },
+        {
+          "source_code": "(absent)",
+          "source_display": "No category",
+          "target_concept_id": 32817,
+          "target_concept_name": "EHR",
+          "notes": "Default when no category"
+        }
+      ]
+    }
+  ],
+  "concept_maps": ["diagnostic_report_category"],
+  "references": [
+    {
+      "project": "ETL-German-FHIR-Core",
+      "kind": "java",
+      "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/DiagnosticReportMapper.java",
+      "lines": [239, 301],
+      "notes": "Primary reference. createDiagnosticReportProcedureOcc() with domain routing, LOINC lookup, SNOMED conclusionCode, composite SNOMED splitting, interpretation to modifier_concept_id."
+    },
+    {
+      "project": "fhir2omop-cookbook",
+      "kind": "guidance",
+      "path": "refs/fhir2omop-cookbook.md",
+      "lines": [160, 162],
+      "notes": "Mentions Procedure domain routing conceptually. No field-level mapping for DiagnosticReport-to-procedure_occurrence."
+    },
+    {
+      "project": "NACHC-fhir-to-omop",
+      "kind": "java",
+      "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/fhir/parser/r4/diagnosticreport/DiagnosticReportParser.java",
+      "lines": [1, 120],
+      "notes": "Parser only -- extracts code, status, effectivePeriod. No OMOP procedure_occurrence output."
+    }
+  ],
+  "edge_cases": [
+    {
+      "case": "No effectiveDateTime or effectivePeriod",
+      "handling": "ETL-German skips the resource entirely. procedure_date is required in OMOP. Alternative: fall back to issued timestamp.",
+      "implementations": ["ETL-German"]
+    },
+    {
+      "case": "Status is registered, preliminary, cancelled, entered-in-error, or unknown",
+      "handling": "Reject. Accept only final, amended, corrected, appended.",
+      "implementations": ["ETL-German"]
+    },
+    {
+      "case": "No conclusionCode",
+      "handling": "ETL-German skips the resource. Without a conclusion, there is no SNOMED finding to store in procedure_source_concept_id. Only the referenced Observations produce rows.",
+      "implementations": ["ETL-German"]
+    },
+    {
+      "case": "Multiple conclusionCode entries",
+      "handling": "Each code produces a separate procedure_occurrence row. The procedure_concept_id (report LOINC) is the same across all rows; only procedure_source_concept_id and procedure_source_value differ.",
+      "implementations": ["ETL-German"]
+    },
+    {
+      "case": "Composite SNOMED in conclusionCode (e.g. 118247008:{363713009=373068000})",
+      "handling": "ETL-German splits composite expressions: base code before : maps to procedure_source_concept_id; attributes after :{ are parsed, and the interpretation code (value after =) is resolved to modifier_concept_id.",
+      "implementations": ["ETL-German"]
+    },
+    {
+      "case": "SNOMED codes joined with + (conjunction)",
+      "handling": "ETL-German splits on + and creates one row per component code. Each component is processed independently.",
+      "implementations": ["ETL-German"]
+    },
+    {
+      "case": "No category",
+      "handling": "ETL-German skips the resource. Alternative: default to procedure_type_concept_id = 32817 (EHR).",
+      "implementations": ["ETL-German"]
+    },
+    {
+      "case": "LOINC code resolves to Measurement or Observation domain",
+      "handling": "Route to measurement or observation table instead."
+    },
+    {
+      "case": "effectivePeriod with both start and end",
+      "handling": "ETL-German only uses startDateTime for procedure date/datetime. procedure_end_date and procedure_end_datetime are not populated. A complete implementation should use effectivePeriod.end for the end date fields.",
+      "implementations": ["ETL-German"]
+    },
+    {
+      "case": "Report with result[] but no code or conclusionCode",
+      "handling": "No report-level row produced. The Observations in result[] are still mapped independently."
+    },
+    {
+      "case": "subject references Group (not Patient)",
+      "handling": "Not supported. OMOP requires a single person_id. Skip the resource."
+    },
+    {
+      "case": "Incremental updates (same DiagnosticReport reprocessed)",
+      "handling": "ETL-German deletes existing OMOP rows from procedure_occurrence, measurement, and observation tables by fhirLogicalId or fhirIdentifier before re-inserting.",
+      "implementations": ["ETL-German"]
+    },
+    {
+      "case": "provider_id not populated by ETL-German",
+      "handling": "The ETL-German procedure builder does not set provider_id. A complete implementation should resolve performer[0] or resultsInterpreter[0] to a provider.",
+      "implementations": ["ETL-German"]
+    }
+  ]
+}

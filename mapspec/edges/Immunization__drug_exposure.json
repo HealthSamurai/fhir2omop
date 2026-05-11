@@ -1,0 +1,623 @@
+{
+  "$schema": "../schema/edge.schema.json",
+  "fhir_resource": "Immunization",
+  "omop_table": "drug_exposure",
+  "direction": "fhir-to-omop",
+  "status": "documented",
+  "primary": true,
+  "required": true,
+  "condition": "status = completed (skip entered-in-error and not-done)",
+  "narrative_md": "One FHIR Immunization maps to one drug_exposure row. Immunizations are point-in-time events: start_date = end_date, no days_supply or refills. Records are distinguished from other drug exposures by drug_concept_id belonging to the CVX vocabulary. Only completed immunizations are mapped; entered-in-error and not-done are skipped.",
+  "implementation_in_project": null,
+  "fields": [
+    {
+      "omop_column": "drug_exposure_id",
+      "fhir_path": "Immunization.id",
+      "fhir_type": "id",
+      "omop_type": "integer",
+      "required": true,
+      "pk": true,
+      "notes": "Surrogate key. Hash/sequence/lookup of Immunization.id. HL7 IG FML comments this out as a TODO.",
+      "sources": [
+        {
+          "comment": "TODO/commented placeholder — no concrete ID strategy",
+          "references": [
+            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/ImmunizationMap.fml", "lines": [12, 12] }
+          ]
+        },
+        {
+          "comment": "Derived from FHIR resource ID (getReferenceElement().getIdPartAsLong())",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopImmunization.java", "lines": [458, 633] }
+          ]
+        },
+        {
+          "comment": "Auto-increment sequence",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ImmunizationMapper.java", "lines": [528, 578] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "person_id",
+      "fhir_path": "Immunization.patient",
+      "fhir_type": "Reference(Patient)",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "PERSON",
+      "notes": "Resolve Patient reference to integer. Skip the entire record if the referenced Patient does not exist."
+    },
+    {
+      "omop_column": "drug_concept_id",
+      "fhir_path": "Immunization.vaccineCode",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "CONCEPT",
+      "concept_map": "vaccine_code",
+      "notes": "Map vaccine code (CVX/SNOMED/ATC/RxNorm) to OMOP standard concept. When multiple vaccineCode.coding[] entries are present, pick the first recognized vocabulary. Default 0 when concept lookup unavailable.",
+      "sources": [
+        {
+          "comment": "CVX vocabulary lookup via OMOP concept table; takes first coding that resolves",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopImmunization.java", "lines": [525, 542] },
+            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [609, 611], "notes": "CVX, SNOMED, RxNorm via LookupCode" }
+          ]
+        },
+        {
+          "comment": "ATC preferred over SNOMED; date-aware lookup; supports compound SNOMED codes (+ separator)",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ImmunizationMapper.java", "lines": [675, 698] }
+          ]
+        },
+        {
+          "comment": "No vocabulary lookup specified; vaccineCode mapping is unspecified/draft",
+          "references": [
+            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/ImmunizationMap.fml", "lines": [13, 17] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "drug_exposure_start_date",
+      "fhir_path": "Immunization.occurrenceDateTime",
+      "fhir_type": "dateTime",
+      "omop_type": "date",
+      "required": true,
+      "transform": "date(Immunization.occurrenceDateTime)",
+      "notes": "Vaccination date (date portion). Skip record if occurrenceString is used instead of occurrenceDateTime."
+    },
+    {
+      "omop_column": "drug_exposure_start_datetime",
+      "fhir_path": "Immunization.occurrenceDateTime",
+      "fhir_type": "dateTime",
+      "omop_type": "datetime",
+      "notes": "Full ISO datetime if available."
+    },
+    {
+      "omop_column": "drug_exposure_end_date",
+      "fhir_path": "Immunization.occurrenceDateTime",
+      "fhir_type": "dateTime",
+      "omop_type": "date",
+      "required": true,
+      "transform": "date(Immunization.occurrenceDateTime)",
+      "notes": "Same as start date -- immunizations are single point-in-time events."
+    },
+    {
+      "omop_column": "drug_exposure_end_datetime",
+      "fhir_path": "Immunization.occurrenceDateTime",
+      "fhir_type": "dateTime",
+      "omop_type": "datetime",
+      "notes": "Same as start datetime."
+    },
+    {
+      "omop_column": "verbatim_end_date",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "date",
+      "notes": "null -- immunizations have no separate verbatim end date."
+    },
+    {
+      "omop_column": "drug_type_concept_id",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "integer",
+      "required": true,
+      "fk": "CONCEPT",
+      "constant": 32817,
+      "concept_map": "drug_type",
+      "notes": "32817 = 'EHR' (recommended default). Implementations diverge: 38000179 (omoponfhir), 32817 (ETL-German, FhirToCdm). When primarySource = false, consider 44787730 (Patient Self-Reported).",
+      "sources": [
+        {
+          "comment": "38000179 (Physician administered drug) — legacy concept; also conditionally uses 44787730 when primarySource=false",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopImmunization.java", "lines": [68, 69] }
+          ]
+        },
+        {
+          "comment": "32817 (EHR) — OMOP-recommended for CDM v5.4",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/Constants.java", "lines": [26, 26], "notes": "CONCEPT_EHR = 32817" },
+            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [389, 389] }
+          ]
+        },
+        {
+          "comment": "32818 (EHR administration record) — used in reverse direction",
+          "references": [
+            { "project": "mends-on-fhir", "kind": "whistle", "path": "refs/refs/mends-on-fhir/whistle-mappings/synthea/whistle-functions/Drug_Exposure.wstl", "lines": [13, 13] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "stop_reason",
+      "fhir_path": "Immunization.statusReason.text",
+      "fhir_type": "string",
+      "omop_type": "varchar(20)",
+      "notes": "Only when status = not-done. omoponfhir writes statusReason.text or coded system:code. Most implementations skip not-done records entirely."
+    },
+    {
+      "omop_column": "refills",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "integer",
+      "notes": "null -- not applicable to immunizations."
+    },
+    {
+      "omop_column": "quantity",
+      "fhir_path": "Immunization.doseQuantity.value",
+      "fhir_type": "decimal",
+      "omop_type": "float",
+      "notes": "Dose amount (e.g., 0.5 for 0.5 mL)."
+    },
+    {
+      "omop_column": "days_supply",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "integer",
+      "notes": "null -- single event, no supply duration."
+    },
+    {
+      "omop_column": "sig",
+      "fhir_path": "Immunization.note[*].text",
+      "fhir_type": "string",
+      "omop_type": "varchar(MAX)",
+      "notes": "omoponfhir concatenates note[].text into sig. Not standard practice -- sig is intended for prescriber instructions, not clinical notes. Most implementations leave null."
+    },
+    {
+      "omop_column": "route_concept_id",
+      "fhir_path": "Immunization.route",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "fk": "CONCEPT",
+      "concept_map": "route",
+      "notes": "Vaccine administration route mapped to OMOP concept. Common: IM->4302612, SC->4302357, PO->4132161, NASINHL->4262914.",
+      "sources": [
+        {
+          "comment": "Iterates route.coding[] until a matching OMOP concept is found",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopImmunization.java", "lines": [597, 613] }
+          ]
+        },
+        {
+          "comment": "Date-aware concept lookup via findOmopConcepts.getConcepts()",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ImmunizationMapper.java", "lines": [566, 575] }
+          ]
+        },
+        {
+          "comment": "Hardcoded mapping lines 30-34; uses route.text as fallback if no coding",
+          "references": [
+            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/ImmunizationMap.fml", "lines": [30, 35] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "route_source_value",
+      "fhir_path": "Immunization.route.coding[0].code",
+      "fhir_type": "code",
+      "omop_type": "varchar(50)",
+      "notes": "Raw route code. omoponfhir uses system:code:display format. HL7 IG FML uses route.text as fallback.",
+      "sources": [
+        {
+          "comment": "system:code:display composite string",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopImmunization.java", "lines": [597, 613] }
+          ]
+        },
+        {
+          "comment": "route.text used as fallback when coding absent",
+          "references": [
+            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/ImmunizationMap.fml", "lines": [31, 31] }
+          ]
+        },
+        {
+          "comment": "conceptCode from resolved OMOP concept (coding.code)",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ImmunizationMapper.java", "lines": [566, 575] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "lot_number",
+      "fhir_path": "Immunization.lotNumber",
+      "fhir_type": "string",
+      "omop_type": "varchar(50)",
+      "notes": "Vaccine lot tracking. One of the few FHIR resources that maps to lot_number. Truncate if exceeds 50 characters."
+    },
+    {
+      "omop_column": "provider_id",
+      "fhir_path": "Immunization.performer[0].actor",
+      "fhir_type": "Reference(Practitioner)",
+      "omop_type": "integer",
+      "fk": "PROVIDER",
+      "notes": "Administering practitioner. Take the first performer[].actor. Optional -- null if unresolvable. HL7 IG FML comments this out; ETL-German does not map it.",
+      "sources": [
+        {
+          "comment": "getPerformerFirstRep().getActor() — throws if referenced provider does not exist",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopImmunization.java", "lines": [564, 575] }
+          ]
+        },
+        {
+          "comment": "Commented out — not mapped",
+          "references": [
+            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/ImmunizationMap.fml", "lines": [47, 53] },
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ImmunizationMapper.java", "lines": [528, 578], "notes": "setUpDrugExposure() does not set provider_id" }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "visit_occurrence_id",
+      "fhir_path": "Immunization.encounter",
+      "fhir_type": "Reference(Encounter)",
+      "omop_type": "integer",
+      "fk": "VISIT_OCCURRENCE",
+      "notes": "Resolve Encounter reference. Optional -- null if Encounter does not exist.",
+      "sources": [
+        {
+          "comment": "Throws exception if referenced Encounter does not exist (strict)",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopImmunization.java", "lines": [579, 588] }
+          ]
+        },
+        {
+          "comment": "Null with debug warning if Encounter not found (fault-tolerant)",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ImmunizationMapper.java", "lines": [730, 743] },
+            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [396, 399] }
+          ]
+        },
+        {
+          "comment": "Commented out — not mapped",
+          "references": [
+            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/ImmunizationMap.fml", "lines": [39, 43] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "visit_detail_id",
+      "fhir_path": null,
+      "fhir_type": null,
+      "omop_type": "integer",
+      "fk": "VISIT_DETAIL",
+      "notes": "null -- no standard mapping from Immunization."
+    },
+    {
+      "omop_column": "drug_source_value",
+      "fhir_path": "Immunization.vaccineCode.coding[best].code",
+      "fhir_type": "code",
+      "omop_type": "varchar(50)",
+      "notes": "Original vaccine code string. omoponfhir uses system:code format. ETL-German uses just the code.",
+      "sources": [
+        {
+          "comment": "system:code composite format (e.g., 'http://hl7.org/fhir/sid/cvx:207')",
+          "references": [
+            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopImmunization.java", "lines": [543, 544] }
+          ]
+        },
+        {
+          "comment": "Bare vaccine code string (no system prefix)",
+          "references": [
+            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ImmunizationMapper.java", "lines": [675, 698] }
+          ]
+        }
+      ]
+    },
+    {
+      "omop_column": "drug_source_concept_id",
+      "fhir_path": "Immunization.vaccineCode",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "fk": "CONCEPT",
+      "notes": "Non-standard source concept ID from vocabulary lookup. ETL-German resolves via findOmopConcepts. Default 0."
+    },
+    {
+      "omop_column": "dose_unit_source_value",
+      "fhir_path": "Immunization.doseQuantity.unit | Immunization.doseQuantity.code",
+      "fhir_type": "string",
+      "omop_type": "varchar(50)",
+      "notes": "Dose unit (e.g., 'mL', 'dose'). HL7 IG FML uses doseQuantity.code. ETL-German uses dose.getUnit()."
+    }
+  ],
+  "vocabularies": [
+    {
+      "name": "drug_type",
+      "entries": [
+        {
+          "source_code": "EHR",
+          "source_display": "EHR (default)",
+          "target_concept_id": 32817,
+          "target_concept_name": "EHR",
+          "notes": "Recommended default. Used by ETL-German, FhirToCdm."
+        },
+        {
+          "source_code": "physician-administered",
+          "source_display": "Physician administered drug",
+          "target_concept_id": 38000179,
+          "target_concept_name": "Physician administered drug (identified from EHR problem list)",
+          "notes": "Used by omoponfhir. Legacy -- OMOP community migrating away from granular type concepts."
+        },
+        {
+          "source_code": "ehr-administration",
+          "source_display": "EHR administration record",
+          "target_concept_id": 32818,
+          "target_concept_name": "EHR administration record",
+          "notes": "Used by mends-on-fhir."
+        },
+        {
+          "source_code": "self-reported",
+          "source_display": "Patient Self-Reported (primarySource = false)",
+          "target_concept_id": 44787730,
+          "target_concept_name": "Patient Self-Reported",
+          "notes": "When Immunization.primarySource = false and reportOrigin is populated."
+        }
+      ]
+    },
+    {
+      "name": "route",
+      "entries": [
+        {
+          "source_code": "IM",
+          "source_display": "Intramuscular",
+          "target_concept_id": 4302612,
+          "target_concept_name": "Intramuscular route"
+        },
+        {
+          "source_code": "SC",
+          "source_display": "Subcutaneous",
+          "target_concept_id": 4302357,
+          "target_concept_name": "Subcutaneous route"
+        },
+        {
+          "source_code": "PO",
+          "source_display": "Oral / Per Oral",
+          "target_concept_id": 4132161,
+          "target_concept_name": "Oral"
+        },
+        {
+          "source_code": "NASINHL",
+          "source_display": "Nasal Inhalation",
+          "target_concept_id": 4262914,
+          "target_concept_name": "Nasal route"
+        },
+        {
+          "source_code": "IDINJ",
+          "source_display": "Intradermal",
+          "target_concept_id": 4156706,
+          "target_concept_name": "Intradermal route"
+        }
+      ]
+    },
+    {
+      "name": "vaccine_code",
+      "entries": [
+        {
+          "source_code": "CVX:08",
+          "source_display": "Hep B, adolescent or pediatric",
+          "target_concept_id": null,
+          "target_concept_name": "Lookup in OMOP concept table where vocabulary_id = 'CVX'"
+        },
+        {
+          "source_code": "CVX:10",
+          "source_display": "IPV",
+          "target_concept_id": null,
+          "target_concept_name": "Lookup in OMOP concept table where vocabulary_id = 'CVX'"
+        },
+        {
+          "source_code": "CVX:20",
+          "source_display": "DTaP",
+          "target_concept_id": null,
+          "target_concept_name": "Lookup in OMOP concept table where vocabulary_id = 'CVX'"
+        },
+        {
+          "source_code": "CVX:33",
+          "source_display": "Pneumococcal polysaccharide PPV23",
+          "target_concept_id": null,
+          "target_concept_name": "Lookup in OMOP concept table where vocabulary_id = 'CVX'"
+        },
+        {
+          "source_code": "CVX:88",
+          "source_display": "Influenza, unspecified formulation",
+          "target_concept_id": null,
+          "target_concept_name": "Lookup in OMOP concept table where vocabulary_id = 'CVX'"
+        },
+        {
+          "source_code": "CVX:115",
+          "source_display": "Tdap",
+          "target_concept_id": null,
+          "target_concept_name": "Lookup in OMOP concept table where vocabulary_id = 'CVX'"
+        },
+        {
+          "source_code": "CVX:141",
+          "source_display": "Influenza, seasonal, injectable",
+          "target_concept_id": null,
+          "target_concept_name": "Lookup in OMOP concept table where vocabulary_id = 'CVX'"
+        },
+        {
+          "source_code": "CVX:207",
+          "source_display": "COVID-19, mRNA, LNP-S, PF, 100 mcg/0.5mL (Moderna)",
+          "target_concept_id": null,
+          "target_concept_name": "Lookup in OMOP concept table where vocabulary_id = 'CVX'"
+        },
+        {
+          "source_code": "CVX:208",
+          "source_display": "COVID-19, mRNA, LNP-S, PF, 30 mcg/0.3mL (Pfizer-BioNTech)",
+          "target_concept_id": null,
+          "target_concept_name": "Lookup in OMOP concept table where vocabulary_id = 'CVX'"
+        },
+        {
+          "source_code": "CVX:212",
+          "source_display": "COVID-19, viral vector, non-replicating, Ad26 (Janssen)",
+          "target_concept_id": null,
+          "target_concept_name": "Lookup in OMOP concept table where vocabulary_id = 'CVX'"
+        }
+      ]
+    },
+    {
+      "name": "status_filter",
+      "entries": [
+        {
+          "source_code": "completed",
+          "source_display": "Completed",
+          "target_concept_id": null,
+          "target_concept_name": "Map -- vaccination was administered"
+        },
+        {
+          "source_code": "entered-in-error",
+          "source_display": "Entered in Error",
+          "target_concept_id": null,
+          "target_concept_name": "Skip -- data quality issue"
+        },
+        {
+          "source_code": "not-done",
+          "source_display": "Not Done",
+          "target_concept_id": null,
+          "target_concept_name": "Skip (most implementations). omoponfhir writes with stop_reason."
+        }
+      ]
+    }
+  ],
+  "concept_maps": ["vaccine_code", "drug_type", "route"],
+  "references": [
+    {
+      "project": "fhir-omop-ig",
+      "kind": "fml",
+      "path": "refs/refs/fhir-omop-ig/input/maps/ImmunizationMap.fml",
+      "notes": "54 lines. Normative/draft. Maps vaccineCode, occurrence, doseQuantity, route, lotNumber. Comments out person_id, encounter, performer."
+    },
+    {
+      "project": "omoponfhir",
+      "kind": "java",
+      "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopImmunization.java",
+      "lines": [1, 641],
+      "notes": "Bidirectional. Most complete field coverage: CVX vocabulary, lot number, route, dose, notes->sig, status/stop_reason, performer->provider_id. Type concept 38000179. Status: stale (2022)."
+    },
+    {
+      "project": "ETL-German-FHIR-Core",
+      "kind": "java",
+      "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ImmunizationMapper.java",
+      "lines": [1, 771],
+      "notes": "ATC/SNOMED vaccine codes. Domain routing (Drug vs Observation). Date-aware concept lookup. Compound SNOMED code splitting. No lot_number or performer. Type concept 32817."
+    },
+    {
+      "project": "FhirToCdm",
+      "kind": "csharp",
+      "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
+      "notes": "CreateDrugExposure() lines 376-404. Minimal: person_id, vaccine code, type=32817, encounter. No lot_number, route, dose, or performer."
+    },
+    {
+      "project": "mends-on-fhir",
+      "kind": "whistle",
+      "path": "refs/refs/mends-on-fhir/whistle-mappings/synthea/whistle-functions/Drug_Exposure.wstl",
+      "notes": "Reverse direction (OMOP->FHIR). Routes CVX drug_exposures to FHIR Immunization. Maps lot_number, route, dose, status from stop_reason."
+    },
+    {
+      "project": "fhir-x-omop",
+      "kind": "python",
+      "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_fhir/immunization.py",
+      "notes": "73 lines. Reverse direction (OMOP->FHIR). Hardcoded route code mapping. Maps lot_number, dose, provider. Early WIP."
+    }
+  ],
+  "edge_cases": [
+    {
+      "case": "occurrenceString instead of occurrenceDateTime",
+      "handling": "Cannot map -- drug_exposure_start_date is NOT NULL. Skip the record and log a warning.",
+      "implementations": ["omoponfhir"]
+    },
+    {
+      "case": "primarySource = false",
+      "handling": "Vaccine reported secondhand (patient self-report, school record). Consider using drug_type_concept_id = 44787730 (Patient Self-Reported) instead of the default.",
+      "implementations": ["omoponfhir"]
+    },
+    {
+      "case": "Multiple performer entries",
+      "handling": "Take the first performer[].actor for provider_id. Only one provider can be stored per drug_exposure row.",
+      "implementations": ["omoponfhir"]
+    },
+    {
+      "case": "Vaccine series tracking (protocolApplied)",
+      "handling": "Not mapped. protocolApplied.doseNumber, seriesDoses, targetDisease have no OMOP equivalent."
+    },
+    {
+      "case": "reaction present",
+      "handling": "Not mapped to drug_exposure. Could create a separate observation row for adverse reactions, but no implementation does this for Immunization."
+    },
+    {
+      "case": "Missing vaccineCode",
+      "handling": "Skip the record. All implementations require a vaccine code.",
+      "implementations": ["ETL-German", "omoponfhir"]
+    },
+    {
+      "case": "Multiple vaccineCode.coding[] entries",
+      "handling": "Iterate codings to find one in a recognized vocabulary. ETL-German prefers ATC over SNOMED. omoponfhir takes the first coding that resolves.",
+      "implementations": ["ETL-German", "omoponfhir"]
+    },
+    {
+      "case": "SNOMED compound codes (+ separator)",
+      "handling": "ETL-German splits compound SNOMED codes on '+' and processes each sub-code separately, potentially creating multiple drug_exposure rows.",
+      "implementations": ["ETL-German"]
+    },
+    {
+      "case": "lotNumber exceeds 50 characters",
+      "handling": "Truncate to varchar(50). Rare in practice but possible with extended lot identifiers."
+    },
+    {
+      "case": "site (body site) present",
+      "handling": "No standard mapping to drug_exposure. Could map to route_source_value but this conflates route and site. Best practice: discard."
+    },
+    {
+      "case": "manufacturer present",
+      "handling": "No standard mapping. Could store in drug_source_value alongside the code, but no implementation does this."
+    },
+    {
+      "case": "expirationDate present",
+      "handling": "No OMOP target. Lost in translation."
+    },
+    {
+      "case": "note[].text present",
+      "handling": "omoponfhir concatenates notes into sig field. Not standard practice -- sig is intended for prescriber instructions.",
+      "implementations": ["omoponfhir"]
+    },
+    {
+      "case": "Domain routing: concept maps to Observation domain",
+      "handling": "ETL-German checks concept.domain_id; if 'Observation' instead of 'Drug', routes to observation table instead of drug_exposure. Uncommon for CVX codes but possible with certain SNOMED vaccine concepts.",
+      "implementations": ["ETL-German"]
+    },
+    {
+      "case": "status = entered-in-error",
+      "handling": "Skip entirely. Data quality issue -- should not enter OMOP.",
+      "implementations": ["ETL-German", "omoponfhir", "FhirToCdm"]
+    },
+    {
+      "case": "status = not-done",
+      "handling": "Most implementations skip. omoponfhir writes the record with stop_reason from statusReason.",
+      "implementations": ["ETL-German", "omoponfhir"]
+    }
+  ]
+}
