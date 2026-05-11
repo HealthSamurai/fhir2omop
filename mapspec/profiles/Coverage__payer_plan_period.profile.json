@@ -1,0 +1,61 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "omop-coverage-payer-plan-period",
+  "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-coverage-payer-plan-period",
+  "version": "0.1.0",
+  "name": "OmopCoveragePayerPlanPeriod",
+  "title": "OMOP-Convertible Coverage → payer_plan_period",
+  "status": "draft",
+  "experimental": true,
+  "description": "FHIR Coverage that can be converted to OMOP `payer_plan_period`. status must be active; requires a beneficiary, a period.start, and at least one payor. No code/domain routing — payer_plan_period is purely administrative and carries no _type_concept_id.",
+  "fhirVersion": "4.0.1",
+  "kind": "resource",
+  "abstract": false,
+  "type": "Coverage",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Coverage",
+  "derivation": "constraint",
+  "extension": [
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table", "valueString": "payer_plan_period" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge", "valueString": "Coverage__payer_plan_period" }
+  ],
+  "differential": {
+    "element": [
+      {
+        "id": "Coverage.status",
+        "path": "Coverage.status",
+        "min": 1,
+        "fixedCode": "active",
+        "comment": "Only active coverage produces a payer_plan_period row."
+      },
+      {
+        "id": "Coverage.beneficiary",
+        "path": "Coverage.beneficiary",
+        "min": 1,
+        "type": [
+          { "code": "Reference", "targetProfile": ["http://hl7.org/fhir/StructureDefinition/Patient"] }
+        ],
+        "comment": "Required for payer_plan_period.person_id."
+      },
+      {
+        "id": "Coverage.period",
+        "path": "Coverage.period",
+        "min": 1,
+        "mustSupport": true
+      },
+      {
+        "id": "Coverage.period.start",
+        "path": "Coverage.period.start",
+        "min": 1,
+        "mustSupport": true,
+        "comment": "Required for payer_plan_period.payer_plan_period_start_date."
+      },
+      {
+        "id": "Coverage.payor",
+        "path": "Coverage.payor",
+        "min": 1,
+        "mustSupport": true,
+        "comment": "Required for payer_concept_id / payer_source_value."
+      }
+    ]
+  }
+}

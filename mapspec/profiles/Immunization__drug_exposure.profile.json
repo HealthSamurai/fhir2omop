@@ -1,0 +1,62 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "omop-immunization-drug-exposure",
+  "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-immunization-drug-exposure",
+  "version": "0.1.0",
+  "name": "OmopImmunizationDrugExposure",
+  "title": "OMOP-Convertible Immunization → drug_exposure",
+  "status": "draft",
+  "experimental": true,
+  "description": "A FHIR Immunization that can be converted to an OMOP `drug_exposure` row of type 32827 (EHR administration record) / equivalent. Routing key: `vaccineCode` must be in the OMOP Drug domain (CVX / RxNorm — CVX maps to RxNorm Extension and is classified Drug-domain in OMOP). Only completed immunizations produce rows.",
+  "fhirVersion": "4.0.1",
+  "kind": "resource",
+  "abstract": false,
+  "type": "Immunization",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Immunization",
+  "derivation": "constraint",
+  "extension": [
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table", "valueString": "drug_exposure" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge", "valueString": "Immunization__drug_exposure" }
+  ],
+  "differential": {
+    "element": [
+      {
+        "id": "Immunization.status",
+        "path": "Immunization.status",
+        "min": 1,
+        "mustSupport": true,
+        "fixedCode": "completed",
+        "comment": "Only completed immunizations are converted. entered-in-error and not-done are skipped."
+      },
+      {
+        "id": "Immunization.vaccineCode",
+        "path": "Immunization.vaccineCode",
+        "min": 1,
+        "mustSupport": true,
+        "binding": {
+          "strength": "required",
+          "valueSet": "https://fhir2omop.health-samurai.io/ValueSet/omop-drug-codes",
+          "description": "Routing key. CVX (http://hl7.org/fhir/sid/cvx) is preferred; RxNorm and SNOMED CT vaccine codes are also accepted. CVX maps via concept_relationship to RxNorm Extension and is Drug-domain in OMOP. Pending a dedicated Vaccine ValueSet, the broader Drug ValueSet is reused."
+        }
+      },
+      {
+        "id": "Immunization.patient",
+        "path": "Immunization.patient",
+        "min": 1,
+        "max": "1",
+        "type": [
+          { "code": "Reference", "targetProfile": ["http://hl7.org/fhir/StructureDefinition/Patient"] }
+        ],
+        "comment": "Required for drug_exposure.person_id."
+      },
+      {
+        "id": "Immunization.occurrence[x]",
+        "path": "Immunization.occurrence[x]",
+        "min": 1,
+        "max": "1",
+        "mustSupport": true,
+        "comment": "Required for drug_exposure.drug_exposure_start_date / _end_date. Immunizations are point-in-time events: start_date = end_date."
+      }
+    ]
+  }
+}

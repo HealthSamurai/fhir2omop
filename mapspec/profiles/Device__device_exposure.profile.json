@@ -1,0 +1,45 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "omop-device-device-exposure",
+  "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-device-device-exposure",
+  "version": "0.1.0",
+  "name": "OmopDeviceDeviceExposure",
+  "title": "OMOP-Convertible Device → device_exposure",
+  "status": "draft",
+  "experimental": true,
+  "description": "FHIR Device (joined with DeviceUseStatement) that can be converted to OMOP `device_exposure`. The Device.type provides the device kind; DeviceUseStatement records the clinical event (patient, timing). Device.type is required and is the routing key — it must resolve to the OMOP Device domain.",
+  "fhirVersion": "4.0.1",
+  "kind": "resource",
+  "abstract": false,
+  "type": "Device",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Device",
+  "derivation": "constraint",
+  "extension": [
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table", "valueString": "device_exposure" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge", "valueString": "Device__device_exposure" }
+  ],
+  "differential": {
+    "element": [
+      {
+        "id": "Device.type",
+        "path": "Device.type",
+        "min": 1,
+        "mustSupport": true,
+        "binding": {
+          "strength": "required",
+          "valueSet": "https://fhir2omop.health-samurai.io/ValueSet/omop-device-codes",
+          "description": "SNOMED device code. This binding is the routing key — if Device.type is not in this ValueSet, the resource is not a device_exposure."
+        }
+      },
+      {
+        "id": "Device.patient",
+        "path": "Device.patient",
+        "min": 1,
+        "type": [
+          { "code": "Reference", "targetProfile": ["http://hl7.org/fhir/StructureDefinition/Patient"] }
+        ],
+        "comment": "Required for device_exposure.person_id. May be resolved via DeviceUseStatement.subject when Device.patient is absent."
+      }
+    ]
+  }
+}

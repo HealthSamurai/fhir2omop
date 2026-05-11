@@ -1,0 +1,67 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "omop-location-location",
+  "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-location-location",
+  "version": "0.1.0",
+  "name": "OmopLocationLocation",
+  "title": "OMOP-Convertible Location → location",
+  "status": "draft",
+  "experimental": true,
+  "description": "FHIR Location that can be converted to OMOP `location`. Requires a name and a structured address. The location table is shared with Patient.address — both populate the same table, and rows should be deduplicated by address components.",
+  "fhirVersion": "4.0.1",
+  "kind": "resource",
+  "abstract": false,
+  "type": "Location",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Location",
+  "derivation": "constraint",
+  "extension": [
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table", "valueString": "location" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge", "valueString": "Location__location" }
+  ],
+  "differential": {
+    "element": [
+      {
+        "id": "Location.name",
+        "path": "Location.name",
+        "min": 1,
+        "max": "1",
+        "mustSupport": true,
+        "comment": "Required for downstream display; not stored directly in `location` but used for source_value composition."
+      },
+      {
+        "id": "Location.address",
+        "path": "Location.address",
+        "min": 1,
+        "max": "1",
+        "mustSupport": true,
+        "comment": "Required. Provides address_1/2, city, state, zip, county, country_source_value."
+      },
+      {
+        "id": "Location.address.line",
+        "path": "Location.address.line",
+        "mustSupport": true
+      },
+      {
+        "id": "Location.address.city",
+        "path": "Location.address.city",
+        "mustSupport": true
+      },
+      {
+        "id": "Location.address.state",
+        "path": "Location.address.state",
+        "mustSupport": true
+      },
+      {
+        "id": "Location.address.postalCode",
+        "path": "Location.address.postalCode",
+        "mustSupport": true
+      },
+      {
+        "id": "Location.position",
+        "path": "Location.position",
+        "mustSupport": true,
+        "comment": "Optional. Latitude/longitude pass through to location.latitude / location.longitude."
+      }
+    ]
+  }
+}

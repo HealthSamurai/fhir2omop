@@ -1,0 +1,55 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "omop-location-care-site",
+  "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-location-care-site",
+  "version": "0.1.0",
+  "name": "OmopLocationCareSite",
+  "title": "OMOP-Convertible Location → care_site",
+  "status": "draft",
+  "experimental": true,
+  "description": "Subset of FHIR Location that participates in the secondary Location → care_site pattern (used by fhir-to-omop-demo). Requires `physicalType` (the routing discriminator — distinguishes building/wing/ward/room/etc from a plain address) and at least one identifier. The care_site_id derived here shares the row with the Organization → care_site edge via managingOrganization.",
+  "fhirVersion": "4.0.1",
+  "kind": "resource",
+  "abstract": false,
+  "type": "Location",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Location",
+  "derivation": "constraint",
+  "extension": [
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table", "valueString": "care_site" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge", "valueString": "Location__care_site" }
+  ],
+  "differential": {
+    "element": [
+      {
+        "id": "Location.identifier",
+        "path": "Location.identifier",
+        "min": 1,
+        "mustSupport": true,
+        "comment": "At least one identifier — used as care_site.care_site_source_value when this row is the primary care_site source."
+      },
+      {
+        "id": "Location.physicalType",
+        "path": "Location.physicalType",
+        "min": 1,
+        "max": "1",
+        "mustSupport": true,
+        "binding": {
+          "strength": "required",
+          "valueSet": "http://hl7.org/fhir/ValueSet/location-physical-type",
+          "description": "Routing discriminator. Distinguishes a care-site-bearing Location (bu/wi/wa/ro/bd/...) from a plain address-only Location."
+        }
+      },
+      {
+        "id": "Location.managingOrganization",
+        "path": "Location.managingOrganization",
+        "min": 1,
+        "max": "1",
+        "mustSupport": true,
+        "type": [
+          { "code": "Reference", "targetProfile": ["http://hl7.org/fhir/StructureDefinition/Organization"] }
+        ],
+        "comment": "Resolves to the Organization-derived care_site_id; the Location-derived care_site row shares this ID."
+      }
+    ]
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "omop-specimen-specimen",
+  "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-specimen-specimen",
+  "version": "0.1.0",
+  "name": "OmopSpecimenSpecimen",
+  "title": "OMOP-Convertible Specimen → specimen",
+  "status": "draft",
+  "experimental": true,
+  "description": "FHIR Specimen that can be converted to OMOP `specimen`. Requires a subject, a type in the OMOP Specimen domain, and a collection time (collected[x] or receivedTime).",
+  "fhirVersion": "4.0.1",
+  "kind": "resource",
+  "abstract": false,
+  "type": "Specimen",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Specimen",
+  "derivation": "constraint",
+  "extension": [
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table", "valueString": "specimen" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge", "valueString": "Specimen__specimen" }
+  ],
+  "differential": {
+    "element": [
+      {
+        "id": "Specimen.type",
+        "path": "Specimen.type",
+        "min": 1,
+        "mustSupport": true,
+        "binding": {
+          "strength": "required",
+          "valueSet": "https://fhir2omop.health-samurai.io/ValueSet/omop-specimen-codes",
+          "description": "SNOMED specimen type. This binding is the routing key — if Specimen.type is not in this ValueSet, the resource is not an OMOP specimen."
+        }
+      },
+      {
+        "id": "Specimen.subject",
+        "path": "Specimen.subject",
+        "min": 1,
+        "type": [
+          { "code": "Reference", "targetProfile": ["http://hl7.org/fhir/StructureDefinition/Patient"] }
+        ],
+        "comment": "Required for specimen.person_id. Group/Device/Substance subjects are rejected."
+      }
+    ],
+    "constraint": []
+  },
+  "constraint": [
+    {
+      "key": "omop-specimen-1",
+      "severity": "error",
+      "human": "Either collection.collected[x] or receivedTime must be present (required for specimen.specimen_date).",
+      "expression": "collection.collected.exists() or receivedTime.exists()"
+    }
+  ]
+}

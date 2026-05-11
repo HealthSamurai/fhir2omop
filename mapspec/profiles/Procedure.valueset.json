@@ -1,0 +1,47 @@
+{
+  "resourceType": "ValueSet",
+  "id": "omop-procedure-codes",
+  "url": "https://fhir2omop.health-samurai.io/ValueSet/omop-procedure-codes",
+  "version": "0.1.0",
+  "name": "OmopProcedureCodes",
+  "title": "OMOP Procedure-domain codes (example subset)",
+  "status": "draft",
+  "experimental": true,
+  "description": "Codes that route a FHIR Procedure (or domain-routed Observation / DiagnosticReport / Condition) to the OMOP `procedure_occurrence` table. Authoritative expansion: vocab.concept WHERE domain_id = 'Procedure' AND standard_concept = 'S' (~85K standard concepts, almost entirely SNOMED). Non-standard source vocabularies (ICD10PCS, ICD9Proc, CPT4, HCPCS, OPS) map *to* SNOMED via concept_relationship 'Maps to' and become Procedures on the OMOP side.",
+  "extension": [
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-domain", "valueString": "Procedure" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-expansion-sql",
+      "valueString": "SELECT vocabulary_id, concept_code, concept_name FROM vocab.concept WHERE domain_id = 'Procedure' AND standard_concept = 'S'" }
+  ],
+  "compose": {
+    "include": [
+      {
+        "system": "http://snomed.info/sct",
+        "concept": [
+          { "code": "80146002",  "display": "Appendectomy" },
+          { "code": "232717009", "display": "Coronary artery bypass graft" },
+          { "code": "816077007", "display": "MRI of brain" },
+          { "code": "38102005",  "display": "Cholecystectomy" },
+          { "code": "73761001",  "display": "Colonoscopy" }
+        ]
+      },
+      {
+        "system": "http://www.ama-assn.org/go/cpt",
+        "concept": [
+          { "code": "44970",  "display": "Laparoscopy, surgical, appendectomy" },
+          { "code": "33533",  "display": "Coronary artery bypass, single arterial graft" },
+          { "code": "70551",  "display": "Magnetic resonance imaging, brain, without contrast" },
+          { "code": "45378",  "display": "Diagnostic colonoscopy" }
+        ]
+      },
+      {
+        "system": "http://hl7.org/fhir/sid/icd-10-pcs",
+        "concept": [
+          { "code": "0DTJ4ZZ", "display": "Resection of appendix, percutaneous endoscopic approach" },
+          { "code": "B030ZZZ", "display": "MRI of brain" },
+          { "code": "0FT44ZZ", "display": "Resection of gallbladder, percutaneous endoscopic approach" }
+        ]
+      }
+    ]
+  }
+}

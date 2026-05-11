@@ -1,0 +1,36 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "omop-patient-death",
+  "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-patient-death",
+  "version": "0.1.0",
+  "name": "OmopPatientDeath",
+  "title": "OMOP-Convertible Patient → death",
+  "status": "draft",
+  "experimental": true,
+  "description": "Subset of FHIR Patient where deceased[x] is present as a dateTime. The profile is on Patient (not a separate resource) — a Patient instance produces a death row only when deceasedDateTime is set. deceasedBoolean alone cannot produce a row because death.death_date is NOT NULL. The routing discriminator is `deceased[x] as dateTime`.",
+  "fhirVersion": "4.0.1",
+  "kind": "resource",
+  "abstract": false,
+  "type": "Patient",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Patient",
+  "derivation": "constraint",
+  "extension": [
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table", "valueString": "death" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge", "valueString": "Patient__death" }
+  ],
+  "differential": {
+    "element": [
+      {
+        "id": "Patient.deceased[x]",
+        "path": "Patient.deceased[x]",
+        "min": 1,
+        "max": "1",
+        "mustSupport": true,
+        "type": [
+          { "code": "dateTime" }
+        ],
+        "comment": "Must be dateTime — deceasedBoolean is excluded by this profile. This is the routing discriminator for Patient → death."
+      }
+    ]
+  }
+}

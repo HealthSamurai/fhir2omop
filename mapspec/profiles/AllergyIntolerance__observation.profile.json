@@ -1,0 +1,63 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "omop-allergyintolerance-observation",
+  "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-allergyintolerance-observation",
+  "version": "0.1.0",
+  "name": "OmopAllergyIntoleranceObservation",
+  "title": "OMOP-Convertible AllergyIntolerance → observation",
+  "status": "draft",
+  "experimental": true,
+  "description": "FHIR AllergyIntolerance that can be converted to OMOP `observation`. OMOP has no dedicated allergy table — allergies live in the observation table with allergy-specific SNOMED concepts. clinicalStatus must be active or resolved (or absent); verificationStatus must not be entered-in-error or refuted; code is required.",
+  "fhirVersion": "4.0.1",
+  "kind": "resource",
+  "abstract": false,
+  "type": "AllergyIntolerance",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/AllergyIntolerance",
+  "derivation": "constraint",
+  "extension": [
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table", "valueString": "observation" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge", "valueString": "AllergyIntolerance__observation" }
+  ],
+  "differential": {
+    "element": [
+      {
+        "id": "AllergyIntolerance.clinicalStatus",
+        "path": "AllergyIntolerance.clinicalStatus",
+        "binding": {
+          "strength": "required",
+          "valueSet": "http://hl7.org/fhir/ValueSet/allergyintolerance-clinical",
+          "description": "active | resolved (inactive is skipped). Absent is mapped permissively."
+        }
+      },
+      {
+        "id": "AllergyIntolerance.verificationStatus",
+        "path": "AllergyIntolerance.verificationStatus",
+        "binding": {
+          "strength": "required",
+          "valueSet": "http://hl7.org/fhir/ValueSet/allergyintolerance-verification",
+          "description": "Must not be entered-in-error or refuted."
+        }
+      },
+      {
+        "id": "AllergyIntolerance.code",
+        "path": "AllergyIntolerance.code",
+        "min": 1,
+        "mustSupport": true,
+        "binding": {
+          "strength": "required",
+          "valueSet": "https://fhir2omop.health-samurai.io/ValueSet/omop-observation-codes",
+          "description": "SNOMED allergy/substance code. AllergyIntolerance routes to the OMOP observation table regardless of substance domain; this binding is the routing key. The omop-observation-codes ValueSet (domain Observation) is reused here pending a dedicated Allergy ValueSet."
+        }
+      },
+      {
+        "id": "AllergyIntolerance.patient",
+        "path": "AllergyIntolerance.patient",
+        "min": 1,
+        "type": [
+          { "code": "Reference", "targetProfile": ["http://hl7.org/fhir/StructureDefinition/Patient"] }
+        ],
+        "comment": "Required for observation.person_id."
+      }
+    ]
+  }
+}

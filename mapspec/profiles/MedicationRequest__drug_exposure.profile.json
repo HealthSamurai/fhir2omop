@@ -1,0 +1,74 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "omop-medication-request-drug-exposure",
+  "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-medication-request-drug-exposure",
+  "version": "0.1.0",
+  "name": "OmopMedicationRequestDrugExposure",
+  "title": "OMOP-Convertible MedicationRequest → drug_exposure",
+  "status": "draft",
+  "experimental": true,
+  "description": "A FHIR MedicationRequest that can be converted to an OMOP `drug_exposure` row of type 38000177 (Prescription written). Routing key: `medicationCodeableConcept` must be in the OMOP Drug domain (RxNorm / NDC / SNOMED CT product). Skips status = entered-in-error / draft / unknown and any intent outside the order family.",
+  "fhirVersion": "4.0.1",
+  "kind": "resource",
+  "abstract": false,
+  "type": "MedicationRequest",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/MedicationRequest",
+  "derivation": "constraint",
+  "extension": [
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table", "valueString": "drug_exposure" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge", "valueString": "MedicationRequest__drug_exposure" }
+  ],
+  "differential": {
+    "element": [
+      {
+        "id": "MedicationRequest.status",
+        "path": "MedicationRequest.status",
+        "min": 1,
+        "mustSupport": true,
+        "binding": {
+          "strength": "required",
+          "valueSet": "http://hl7.org/fhir/ValueSet/medicationrequest-status",
+          "description": "Must be active | completed | stopped. Other statuses (draft, on-hold, cancelled, entered-in-error, unknown) do not produce a drug_exposure row."
+        }
+      },
+      {
+        "id": "MedicationRequest.intent",
+        "path": "MedicationRequest.intent",
+        "min": 1,
+        "mustSupport": true,
+        "comment": "Should be order | original-order | reflex-order | filler-order | instance-order. Proposals/plans do not produce drug_exposure rows."
+      },
+      {
+        "id": "MedicationRequest.medication[x]",
+        "path": "MedicationRequest.medication[x]",
+        "min": 1,
+        "mustSupport": true,
+        "type": [
+          { "code": "CodeableConcept" }
+        ],
+        "binding": {
+          "strength": "required",
+          "valueSet": "https://fhir2omop.health-samurai.io/ValueSet/omop-drug-codes",
+          "description": "Routing key. Code must be in the OMOP Drug domain (RxNorm / NDC / SNOMED CT product). Bare Reference(Medication) is not accepted at the routing layer — contain or inline the CodeableConcept."
+        }
+      },
+      {
+        "id": "MedicationRequest.subject",
+        "path": "MedicationRequest.subject",
+        "min": 1,
+        "type": [
+          { "code": "Reference", "targetProfile": ["http://hl7.org/fhir/StructureDefinition/Patient"] }
+        ],
+        "comment": "Required for drug_exposure.person_id."
+      },
+      {
+        "id": "MedicationRequest.authoredOn",
+        "path": "MedicationRequest.authoredOn",
+        "min": 1,
+        "max": "1",
+        "mustSupport": true,
+        "comment": "Required for drug_exposure.drug_exposure_start_date / _start_datetime."
+      }
+    ]
+  }
+}

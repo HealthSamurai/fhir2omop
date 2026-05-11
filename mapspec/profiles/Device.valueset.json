@@ -1,0 +1,31 @@
+{
+  "resourceType": "ValueSet",
+  "id": "omop-device-codes",
+  "url": "https://fhir2omop.health-samurai.io/ValueSet/omop-device-codes",
+  "version": "0.1.0",
+  "name": "OmopDeviceCodes",
+  "title": "OMOP Device-domain codes (example subset)",
+  "status": "draft",
+  "experimental": true,
+  "description": "Codes that route a FHIR Device (with DeviceUseStatement) or Procedure.usedCode to the OMOP `device_exposure` table. Authoritative expansion: vocab.concept WHERE domain_id = 'Device' AND standard_concept = 'S'. SNOMED is the dominant source vocabulary for device concepts.",
+  "extension": [
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-domain", "valueString": "Device" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-expansion-sql",
+      "valueString": "SELECT vocabulary_id, concept_code, concept_name FROM vocab.concept WHERE domain_id = 'Device' AND standard_concept = 'S'" }
+  ],
+  "compose": {
+    "include": [
+      {
+        "system": "http://snomed.info/sct",
+        "concept": [
+          { "code": "14106009",  "display": "Cardiac pacemaker" },
+          { "code": "706004007", "display": "Implantable cardiac pacemaker" },
+          { "code": "705643001", "display": "Coronary artery stent" },
+          { "code": "20568009",  "display": "Urinary catheter" },
+          { "code": "360099004", "display": "Tracheostomy tube" },
+          { "code": "69805005",  "display": "Insulin pump" }
+        ]
+      }
+    ]
+  }
+}

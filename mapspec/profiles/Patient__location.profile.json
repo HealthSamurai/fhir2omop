@@ -1,0 +1,60 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "omop-patient-location",
+  "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-patient-location",
+  "version": "0.1.0",
+  "name": "OmopPatientLocation",
+  "title": "OMOP-Convertible Patient → location",
+  "status": "draft",
+  "experimental": true,
+  "description": "Subset of FHIR Patient where at least one Patient.address is present with usable structured fields. The address is normalized into one OMOP `location` row whose location_id is linked back from person.location_id. The routing discriminator is presence of Patient.address.",
+  "fhirVersion": "4.0.1",
+  "kind": "resource",
+  "abstract": false,
+  "type": "Patient",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Patient",
+  "derivation": "constraint",
+  "extension": [
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table", "valueString": "location" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge", "valueString": "Patient__location" }
+  ],
+  "differential": {
+    "element": [
+      {
+        "id": "Patient.address",
+        "path": "Patient.address",
+        "min": 1,
+        "mustSupport": true,
+        "comment": "At least one address is required. If multiple are present, pick the most recent home address."
+      },
+      {
+        "id": "Patient.address.line",
+        "path": "Patient.address.line",
+        "mustSupport": true,
+        "comment": "First entry → location.address_1; second → address_2; remaining concatenated."
+      },
+      {
+        "id": "Patient.address.city",
+        "path": "Patient.address.city",
+        "mustSupport": true
+      },
+      {
+        "id": "Patient.address.state",
+        "path": "Patient.address.state",
+        "mustSupport": true,
+        "comment": "Truncated to 2 chars (US state code) for location.state."
+      },
+      {
+        "id": "Patient.address.postalCode",
+        "path": "Patient.address.postalCode",
+        "mustSupport": true,
+        "comment": "Up to 9 chars (ZIP+4) for location.zip."
+      },
+      {
+        "id": "Patient.address.country",
+        "path": "Patient.address.country",
+        "mustSupport": true
+      }
+    ]
+  }
+}

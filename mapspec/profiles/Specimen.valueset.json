@@ -1,0 +1,32 @@
+{
+  "resourceType": "ValueSet",
+  "id": "omop-specimen-codes",
+  "url": "https://fhir2omop.health-samurai.io/ValueSet/omop-specimen-codes",
+  "version": "0.1.0",
+  "name": "OmopSpecimenCodes",
+  "title": "OMOP Specimen-domain codes (example subset)",
+  "status": "draft",
+  "experimental": true,
+  "description": "Codes that route a FHIR Specimen.type to the OMOP `specimen` table. Authoritative expansion: vocab.concept WHERE domain_id = 'Specimen' AND standard_concept = 'S'. SNOMED is the source-of-truth vocabulary for specimen material kinds (blood, urine, swab, tissue, etc.).",
+  "extension": [
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-domain", "valueString": "Specimen" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-expansion-sql",
+      "valueString": "SELECT vocabulary_id, concept_code, concept_name FROM vocab.concept WHERE domain_id = 'Specimen' AND standard_concept = 'S'" }
+  ],
+  "compose": {
+    "include": [
+      {
+        "system": "http://snomed.info/sct",
+        "concept": [
+          { "code": "119297000", "display": "Blood specimen" },
+          { "code": "119364003", "display": "Serum specimen" },
+          { "code": "119361006", "display": "Plasma specimen" },
+          { "code": "122575003", "display": "Urine specimen" },
+          { "code": "119376003", "display": "Tissue specimen" },
+          { "code": "258500001", "display": "Nasopharyngeal swab" },
+          { "code": "119334006", "display": "Sputum specimen" }
+        ]
+      }
+    ]
+  }
+}

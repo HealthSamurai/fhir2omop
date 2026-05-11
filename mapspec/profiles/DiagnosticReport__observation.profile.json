@@ -1,0 +1,61 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "omop-diagnosticreport-observation",
+  "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-diagnosticreport-observation",
+  "version": "0.1.0",
+  "name": "OmopDiagnosticReportObservation",
+  "title": "OMOP-Convertible DiagnosticReport → observation",
+  "status": "draft",
+  "experimental": true,
+  "description": "A DiagnosticReport whose LOINC code routes to the OMOP `observation` table — primarily clinical document types (history and physical, discharge summary, consultation notes) where the LOINC code represents a document class rather than a quantitative panel. status must be finalized; code is required and is the routing key.",
+  "fhirVersion": "4.0.1",
+  "kind": "resource",
+  "abstract": false,
+  "type": "DiagnosticReport",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DiagnosticReport",
+  "derivation": "constraint",
+  "extension": [
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table", "valueString": "observation" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge", "valueString": "DiagnosticReport__observation" }
+  ],
+  "differential": {
+    "element": [
+      {
+        "id": "DiagnosticReport.status",
+        "path": "DiagnosticReport.status",
+        "binding": {
+          "strength": "required",
+          "valueSet": "http://hl7.org/fhir/ValueSet/diagnostic-report-status",
+          "description": "final | amended | corrected"
+        }
+      },
+      {
+        "id": "DiagnosticReport.code",
+        "path": "DiagnosticReport.code",
+        "min": 1,
+        "mustSupport": true,
+        "binding": {
+          "strength": "required",
+          "valueSet": "https://fhir2omop.health-samurai.io/ValueSet/omop-observation-codes",
+          "description": "LOINC code must be in the OMOP Observation domain. This binding is the routing key — if DiagnosticReport.code is not in this ValueSet, try OmopDiagnosticReportMeasurement or OmopDiagnosticReportProcedureOccurrence."
+        }
+      },
+      {
+        "id": "DiagnosticReport.subject",
+        "path": "DiagnosticReport.subject",
+        "min": 1,
+        "type": [
+          { "code": "Reference", "targetProfile": ["http://hl7.org/fhir/StructureDefinition/Patient"] }
+        ],
+        "comment": "Required for observation.person_id."
+      },
+      {
+        "id": "DiagnosticReport.effective[x]",
+        "path": "DiagnosticReport.effective[x]",
+        "min": 1,
+        "mustSupport": true,
+        "comment": "Required for observation.observation_date / observation_datetime."
+      }
+    ]
+  }
+}

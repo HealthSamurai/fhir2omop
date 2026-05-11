@@ -1,0 +1,62 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "omop-procedure-procedure-occurrence",
+  "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-procedure-procedure-occurrence",
+  "version": "0.1.0",
+  "name": "OmopProcedureProcedureOccurrence",
+  "title": "OMOP-Convertible Procedure → procedure_occurrence",
+  "status": "draft",
+  "experimental": true,
+  "description": "FHIR Procedure that can be converted to OMOP `procedure_occurrence`. Status must be completed or in-progress; requires a subject, a performed[x] date, and a code that resolves to the OMOP Procedure domain.",
+  "fhirVersion": "4.0.1",
+  "kind": "resource",
+  "abstract": false,
+  "type": "Procedure",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Procedure",
+  "derivation": "constraint",
+  "extension": [
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table", "valueString": "procedure_occurrence" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge", "valueString": "Procedure__procedure_occurrence" }
+  ],
+  "differential": {
+    "element": [
+      {
+        "id": "Procedure.status",
+        "path": "Procedure.status",
+        "comment": "Skip not-done, entered-in-error, stopped, preparation.",
+        "binding": {
+          "strength": "required",
+          "valueSet": "http://hl7.org/fhir/ValueSet/event-status",
+          "description": "completed | in-progress"
+        }
+      },
+      {
+        "id": "Procedure.code",
+        "path": "Procedure.code",
+        "min": 1,
+        "mustSupport": true,
+        "binding": {
+          "strength": "required",
+          "valueSet": "https://fhir2omop.health-samurai.io/ValueSet/omop-procedure-codes",
+          "description": "SNOMED Procedure or a source code (CPT4 / ICD10PCS / ICD9Proc / HCPCS / OPS) that maps to OMOP Procedure via concept_relationship 'Maps to'. This binding is the routing key — if Procedure.code is not in this ValueSet, the resource is not a procedure_occurrence and should be tried against another profile (e.g. domain may resolve to Drug, Device, Measurement, Observation, or Condition)."
+        }
+      },
+      {
+        "id": "Procedure.subject",
+        "path": "Procedure.subject",
+        "min": 1,
+        "type": [
+          { "code": "Reference", "targetProfile": ["http://hl7.org/fhir/StructureDefinition/Patient"] }
+        ],
+        "comment": "Required for procedure_occurrence.person_id."
+      },
+      {
+        "id": "Procedure.performed[x]",
+        "path": "Procedure.performed[x]",
+        "min": 1,
+        "mustSupport": true,
+        "comment": "Required for procedure_occurrence.procedure_date. Accepts dateTime, Period, string, Age, Range."
+      }
+    ]
+  }
+}

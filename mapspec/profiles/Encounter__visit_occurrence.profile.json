@@ -1,0 +1,92 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "omop-encounter-visit-occurrence",
+  "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-encounter-visit-occurrence",
+  "version": "0.1.0",
+  "name": "OmopEncounterVisitOccurrence",
+  "title": "OMOP-Convertible Encounter → visit_occurrence",
+  "status": "draft",
+  "experimental": true,
+  "description": "FHIR Encounter that can be converted to OMOP `visit_occurrence`. Requires a finalized or active encounter (finished | in-progress | onleave), a subject, a period.start, and a class coding that routes to the OMOP Visit domain. The routing discriminator is the `class` binding to OmopVisitCodes — planned, cancelled, and entered-in-error encounters are excluded.",
+  "fhirVersion": "4.0.1",
+  "kind": "resource",
+  "abstract": false,
+  "type": "Encounter",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Encounter",
+  "derivation": "constraint",
+  "extension": [
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table", "valueString": "visit_occurrence" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge", "valueString": "Encounter__visit_occurrence" }
+  ],
+  "differential": {
+    "element": [
+      {
+        "id": "Encounter.status",
+        "path": "Encounter.status",
+        "min": 1,
+        "mustSupport": true,
+        "binding": {
+          "strength": "required",
+          "valueSet": "http://hl7.org/fhir/ValueSet/encounter-status",
+          "description": "Must be finished | in-progress | onleave. Planned/cancelled/entered-in-error are excluded by convention."
+        },
+        "comment": "Allowed values restricted to finished, in-progress, onleave."
+      },
+      {
+        "id": "Encounter.class",
+        "path": "Encounter.class",
+        "min": 1,
+        "max": "1",
+        "mustSupport": true,
+        "binding": {
+          "strength": "required",
+          "valueSet": "https://fhir2omop.health-samurai.io/ValueSet/omop-visit-codes",
+          "description": "Class must be in the OMOP Visit domain (HL7 v3 ActCode IMP/AMB/EMER/OBSENC/SS/HH or CMS Place of Service). This binding is the routing key — if Encounter.class is not in this ValueSet, the resource does not convert to visit_occurrence."
+        }
+      },
+      {
+        "id": "Encounter.subject",
+        "path": "Encounter.subject",
+        "min": 1,
+        "max": "1",
+        "mustSupport": true,
+        "type": [
+          { "code": "Reference", "targetProfile": ["http://hl7.org/fhir/StructureDefinition/Patient"] }
+        ],
+        "comment": "Required for visit_occurrence.person_id."
+      },
+      {
+        "id": "Encounter.period",
+        "path": "Encounter.period",
+        "min": 1,
+        "mustSupport": true
+      },
+      {
+        "id": "Encounter.period.start",
+        "path": "Encounter.period.start",
+        "min": 1,
+        "max": "1",
+        "mustSupport": true,
+        "comment": "Required for visit_occurrence.visit_start_date / visit_start_datetime."
+      },
+      {
+        "id": "Encounter.period.end",
+        "path": "Encounter.period.end",
+        "mustSupport": true,
+        "comment": "Optional — falls back to visit_start_date when absent."
+      },
+      {
+        "id": "Encounter.participant",
+        "path": "Encounter.participant",
+        "mustSupport": true,
+        "comment": "First Practitioner-typed participant becomes visit_occurrence.provider_id."
+      },
+      {
+        "id": "Encounter.serviceProvider",
+        "path": "Encounter.serviceProvider",
+        "mustSupport": true,
+        "comment": "Maps to visit_occurrence.care_site_id."
+      }
+    ]
+  }
+}
