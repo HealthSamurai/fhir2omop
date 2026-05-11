@@ -37,6 +37,7 @@ export default function (
 <meta charset="utf-8">
 <title>${esc(title)}</title>
 <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+<script src="https://unpkg.com/htmx.org@2.0.4"></script>
 <style>
   body { font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; }
   .shiki { background: transparent !important; }
@@ -48,16 +49,31 @@ export default function (
   details summary { cursor: pointer; }
   details summary::-webkit-details-marker { display: none; }
   details summary::marker { display: none; content: ""; }
+  .htmx-request #main-content { opacity: 0.55; transition: opacity 120ms; }
 </style>
 ${opts.headExtra ?? ""}
 </head>
-<body class="bg-white text-gray-900 text-sm h-screen">
+<body class="bg-white text-gray-900 text-sm h-screen"
+  hx-boost="true"
+  hx-target="#main-content"
+  hx-select="#main-content"
+  hx-select-oob="#sidebar"
+  hx-swap="outerHTML show:window:top">
 <div class="flex h-screen">
   ${sidebar}
   <main class="flex-1 overflow-auto p-8">
-    <div class="prose prose-sm max-w-6xl">${opts.main}</div>
+    <div id="main-content" class="prose prose-sm max-w-6xl">
+      <span hidden data-page-title>${esc(title)}</span>
+      ${opts.main}
+    </div>
   </main>
 </div>
+<script>
+  document.addEventListener("htmx:afterSwap", function (e) {
+    var t = document.querySelector("[data-page-title]");
+    if (t) document.title = (t.textContent || "").trim();
+  });
+</script>
 </body>
 </html>`;
 }
@@ -110,7 +126,7 @@ function renderSidebar(
         })
         .join("");
 
-    return `<aside class="w-60 shrink-0 border-r border-gray-200 flex flex-col bg-gray-50 overflow-y-auto">
+    return `<aside id="sidebar" hx-swap-oob="outerHTML" class="w-60 shrink-0 border-r border-gray-200 flex flex-col bg-gray-50 overflow-y-auto">
   <a href="/" class="block px-4 py-3 border-b border-gray-200 font-semibold text-gray-900 hover:bg-gray-100">fhir2omop</a>
   <details open class="border-b border-gray-200">
     <summary class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:bg-gray-100 flex items-center justify-between">

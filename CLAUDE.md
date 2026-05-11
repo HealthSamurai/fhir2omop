@@ -302,6 +302,111 @@ db.all(`SELECT * FROM read_csv('data.csv',
 
 Note: Bun may crash on cleanup (exit code 133) due to a Bun/DuckDB bug. Output is still correct.
 
+## Mapping Data Model
+
+The FHIR→OMOP mappings live under `mapspec/`, split into machine and human layers:
+
+```
+mapspec/
+├── schema/edge.schema.json         # JSON Schema for edges
+├── edges/<Resource>__<table>.json  # source of truth — 28 mapping edges
+├── resources/<Resource>.md         # per-FHIR narrative (one file per resource)
+└── <Resource>/<table>.md           # legacy detail markdowns (still used as a
+                                     # rendering fallback when edges/*.json
+                                     # is missing or thin)
+```
+
+`edges/<R>__<T>.json` is the load-bearing unit. Each edge has:
+
+- `fhir_resource`, `omop_table`, `direction` (`fhir-to-omop` | `omop-to-fhir`),
+  `status` (`documented` | `implemented` | `stub` | `planned`), `primary`,
+  `required`, `condition` (e.g. when an Observation routes to `measurement`
+  vs `observation`), `narrative_md`
+- `fields[]` — column-level mapping. Each field has `omop_column`, `fhir_path`,
+  `omop_type`/`fhir_type`, `required`/`pk`/`fk`/`concept_map`/`constant`,
+  `notes`, and `sources[]`.
+- `sources[]` (per field) — how each reference implementation handles this
+  field. Each source has a `comment` (short differentiator) and
+  `references[]` (`project`, `kind`, `path`, optional `lines: [from, to]`,
+  optional `notes`). `path` points into `refs/refs/...`.
+- `vocabularies[]` — inline static concept maps (e.g. gender → 8507/8532/…).
+- `edge_cases[]` — per-edge gotchas with per-impl handling.
+- `references[]` — edge-level reference implementations (with the same
+  Reference shape used per-field).
+
+Status (May 2026): 28 edges across 20 FHIR resources → 16 OMOP tables.
+`bun -e '...'` over the JSONs shows **136 / 439 fields** carry per-field
+`sources[]`, totalling **327 source-groups** with concrete file/line refs.
+The rest are trivial mappings (constants, single-impl, source-value direct
+copies) — no fabrication, no sources beyond what the markdowns supported.
+
+Adding/editing a mapping: edit `mapspec/edges/<R>__<T>.json` (validate against
+`mapspec/schema/edge.schema.json`). The renderer picks up changes after a
+server restart (edge list is cached in process; see `src/mapspec/list.ts`).
+
+## Viewer App (Bun + htmx)
+
+`bun src/$main.ts` boots the dev server on `:3000` (override with `$PORT`).
+Bootstrap: `loadFns` registers every `src/**/<fn>.ts` into `ctx.fns.<dir>.<fn>`,
+`genTypes` writes `src/ctx_ns.d.ts` so TS knows the registry shape,
+`http.loadRoutes` registers everything matching `$route_*_<METHOD>.ts`,
+`http.start` binds the server. Hot iteration: kill the process, restart.
+Edits to `src/$layout.ts` / `src/mapspec/render.ts` need a restart.
+
+URL map (registered automatically — see startup log):
+
+| URL | Source | Purpose |
+|---|---|---|
+| `GET /` | `src/$route_GET.ts` | Home: stats, Sankey graph, edge matrix |
+| `GET /mapspec/:resource` | `src/mapspec/$route_$resource_GET.ts` | Resource page: destinations panel + narrative MD |
+| `GET /mapspec/:resource/:table` | `src/mapspec/$route_$resource_$table_GET.ts` | Edge detail: field list with per-field sources (collapsible) |
+| `GET /table/:name` | `src/$route_table_$name_GET.ts` | OMOP table page: list of FHIR sources for the table |
+| `GET /source?path=&from=&to=` | `src/$route_source_GET.ts` | File viewer with line-range highlight (used by reference links) |
+| `POST /repl` | `src/repl/$route__POST.ts` | Server-side REPL for poking at `ctx` |
+
+Layout (`src/$layout.ts`) wraps every response in a sidebar + main pane.
+Sidebar groups FHIR Resources and OMOP Tables; OMOP table headers link to
+`/table/<name>`.
+
+**htmx**: `<body hx-boost="true" hx-target="#main-content"
+hx-select="#main-content" hx-select-oob="#sidebar" hx-swap="outerHTML">`.
+Sidebar clicks only swap the central pane + OOB-update the sidebar so the
+active highlight follows. `document.title` is refreshed from a hidden
+`<span data-page-title>` marker on every swap. The source viewer's `<pre>`
+opts out with `hx-boost="false"` so `#L123` line anchors do native jumps.
+
+Render path for the edge detail page (the only nontrivial one):
+`render.ts` resolves the edge JSON from `loadEdges()`, then `renderEdge()`
+emits a header, the field list (one card per `fields[]` entry with badges,
+notes, and a `<details>` per-field-sources disclosure), the vocabularies,
+edge cases, and edge-level references. Every reference with a `path` is
+linked through `renderReference()` to `/source?path=...&from=...&to=...`.
+
+## File-Based Routing & Module Convention
+
+`src/project/classify.ts` is the canonical reference. Stem-based rules:
+
+- `$route_<seg>_<seg>_<METHOD>.ts` — route. Underscores split into URL
+  segments; segments starting with `$` become `:params`. Module path
+  prefixes the URL. So `src/mapspec/$route_$resource_$table_GET.ts` →
+  `GET /mapspec/:resource/:table`.
+- `<name>.ts` (no `$` prefix) → registered as `ctx.fns.<dir>.<name>`.
+- `$<name>.ts` (e.g. `$layout.ts`, `$start.ts`) → top-level "root fn" or
+  module-private (strips the `$`).
+- `$type_<Name>.ts` → contributes a `type` to `ctx_ns.d.ts`.
+- `$setting_<key>.ts` → settings (must live under a module folder).
+- `$script_<name>.js|css` → static asset bundled by Bun on demand.
+
+Match function (`src/http/match.ts`) is a simple segment-by-segment Express
+clone. **Caveat**: there is no specificity ordering — literal segments do
+not beat `:params` if registered later. Avoid ambiguous paths (e.g. don't
+add `/mapspec/tables/:name` because it collides with `/mapspec/:resource/:table`).
+That is why the table page lives at `/table/:name`, not under `/mapspec/`.
+
+Route handlers return either a `Response` (used verbatim) or a plain object
+`{ title, current, main }` which is run through `ctx.layout()` to apply the
+sidebar/HTML chrome.
+
 ## Key External Resources
 - OMOP CDM docs: https://ohdsi.github.io/CommonDataModel/
 - Athena vocabularies: https://athena.ohdsi.org/

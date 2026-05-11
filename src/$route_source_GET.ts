@@ -43,7 +43,7 @@ export default async function (ctx: Context, _session: any, req: Request) {
     ${from && to ? `<span class="text-xs text-gray-500">lines ${from}–${to}</span>` : ""}
     <span class="text-xs text-gray-400">${total} lines · ${lang}</span>
   </div>
-  <pre class="text-xs bg-gray-50 border border-gray-200 rounded p-2 overflow-x-auto leading-5"><code>${lineHtml}</code></pre>
+  <pre hx-boost="false" class="text-xs bg-gray-50 border border-gray-200 rounded p-2 overflow-x-auto leading-5"><code>${lineHtml}</code></pre>
   ${from ? `<script>document.getElementById("L${from}")?.scrollIntoView({block:"center"});</script>` : ""}
 </div>`;
 
