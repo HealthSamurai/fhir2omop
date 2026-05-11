@@ -69,10 +69,27 @@ ${opts.headExtra ?? ""}
   </main>
 </div>
 <script>
-  document.addEventListener("htmx:afterSwap", function (e) {
+  function __readNavState() { try { return JSON.parse(localStorage.getItem("fhir2omop:nav") || "{}"); } catch (_) { return {}; } }
+  function __writeNavState(s) { try { localStorage.setItem("fhir2omop:nav", JSON.stringify(s)); } catch (_) {} }
+  function __applyNavState() {
+    var s = __readNavState();
+    document.querySelectorAll("[data-k]").forEach(function (d) {
+      if (s[d.dataset.k] !== undefined) d.open = !!s[d.dataset.k];
+    });
+  }
+  document.addEventListener("DOMContentLoaded", __applyNavState);
+  document.addEventListener("htmx:afterSwap", function () {
     var t = document.querySelector("[data-page-title]");
     if (t) document.title = (t.textContent || "").trim();
+    __applyNavState();
   });
+  document.addEventListener("toggle", function (e) {
+    if (e.target && e.target.tagName === "DETAILS" && e.target.dataset && e.target.dataset.k) {
+      var s = __readNavState();
+      s[e.target.dataset.k] = e.target.open;
+      __writeNavState(s);
+    }
+  }, true);
 </script>
 </body>
 </html>`;
@@ -128,14 +145,15 @@ function renderSidebar(
 
     return `<aside id="sidebar" hx-swap-oob="outerHTML" class="w-60 shrink-0 border-r border-gray-200 flex flex-col bg-gray-50 overflow-y-auto">
   <a href="/" class="block px-4 py-3 border-b border-gray-200 font-semibold text-gray-900 hover:bg-gray-100">fhir2omop</a>
-  <details open class="border-b border-gray-200">
+  <a href="/profiles" class="block px-4 py-2 border-b border-gray-200 text-xs font-semibold uppercase tracking-wider text-purple-700 hover:bg-purple-50 ${current === "profiles" ? "bg-purple-50" : ""}">Profiles &amp; ValueSets</a>
+  <details open data-k="nav-resources" class="border-b border-gray-200">
     <summary class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:bg-gray-100 flex items-center justify-between">
       FHIR Resources
       <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
     </summary>
     <ul class="pb-2">${resItems}</ul>
   </details>
-  <details class="border-b border-gray-200">
+  <details open data-k="nav-tables" class="border-b border-gray-200">
     <summary class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:bg-gray-100 flex items-center justify-between">
       OMOP Tables
       <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>

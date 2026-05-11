@@ -1,0 +1,86 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "omop-observation-measurement",
+  "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-observation-measurement",
+  "version": "0.1.0",
+  "name": "OmopObservationMeasurement",
+  "title": "OMOP-Convertible Observation → measurement",
+  "status": "draft",
+  "experimental": true,
+  "description": "An Observation whose code routes to the OMOP `measurement` table. Validate against this profile first; if it passes, write to measurement. Routing is enforced by the `code` binding to OmopMeasurementCodes (vocab.concept.domain_id = 'Measurement').",
+  "fhirVersion": "4.0.1",
+  "kind": "resource",
+  "abstract": false,
+  "type": "Observation",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Observation",
+  "derivation": "constraint",
+  "extension": [
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table", "valueString": "measurement" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge", "valueString": "Observation__measurement" }
+  ],
+  "differential": {
+    "element": [
+      {
+        "id": "Observation.status",
+        "path": "Observation.status",
+        "comment": "OMOP measurement requires a finalized value.",
+        "binding": {
+          "strength": "required",
+          "valueSet": "http://hl7.org/fhir/ValueSet/observation-status",
+          "description": "final | amended | corrected"
+        },
+        "fixedCode": null
+      },
+      {
+        "id": "Observation.code",
+        "path": "Observation.code",
+        "min": 1,
+        "mustSupport": true,
+        "binding": {
+          "strength": "required",
+          "valueSet": "https://fhir2omop.health-samurai.io/ValueSet/omop-measurement-codes",
+          "description": "Code must be in the OMOP Measurement domain (LOINC/SNOMED-CT measurements). This binding is the routing key — if Observation.code is not in this ValueSet, the resource is not a measurement and should be tried against OmopObservationObservation instead."
+        }
+      },
+      {
+        "id": "Observation.subject",
+        "path": "Observation.subject",
+        "min": 1,
+        "type": [
+          { "code": "Reference", "targetProfile": ["http://hl7.org/fhir/StructureDefinition/Patient"] }
+        ],
+        "comment": "Required for measurement.person_id."
+      },
+      {
+        "id": "Observation.effective[x]",
+        "path": "Observation.effective[x]",
+        "min": 1,
+        "mustSupport": true,
+        "comment": "Required for measurement.measurement_date / measurement_datetime."
+      },
+      {
+        "id": "Observation.value[x]",
+        "path": "Observation.value[x]",
+        "min": 1,
+        "type": [
+          { "code": "Quantity" },
+          { "code": "CodeableConcept" },
+          { "code": "string" },
+          { "code": "boolean" },
+          { "code": "integer" }
+        ],
+        "comment": "Required for measurement.value_as_number / value_as_concept_id / value_source_value."
+      },
+      {
+        "id": "Observation.valueQuantity.unit",
+        "path": "Observation.valueQuantity.unit"
+      },
+      {
+        "id": "Observation.valueQuantity.system",
+        "path": "Observation.valueQuantity.system",
+        "fixedUri": "http://unitsofmeasure.org",
+        "comment": "Units must be UCUM for measurement.unit_concept_id resolution."
+      }
+    ]
+  }
+}

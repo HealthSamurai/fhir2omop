@@ -1,0 +1,60 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "omop-condition",
+  "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-condition",
+  "version": "0.1.0",
+  "name": "OmopCondition",
+  "title": "OMOP-Convertible Condition → condition_occurrence",
+  "status": "draft",
+  "experimental": true,
+  "description": "FHIR Condition that can be converted to OMOP `condition_occurrence`. Excludes entered-in-error; requires a subject, onset, and a code in the OMOP Condition domain.",
+  "fhirVersion": "4.0.1",
+  "kind": "resource",
+  "abstract": false,
+  "type": "Condition",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Condition",
+  "derivation": "constraint",
+  "extension": [
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table", "valueString": "condition_occurrence" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge", "valueString": "Condition__condition_occurrence" }
+  ],
+  "differential": {
+    "element": [
+      {
+        "id": "Condition.verificationStatus",
+        "path": "Condition.verificationStatus",
+        "binding": {
+          "strength": "required",
+          "valueSet": "http://hl7.org/fhir/ValueSet/condition-ver-status",
+          "description": "Must not be entered-in-error."
+        }
+      },
+      {
+        "id": "Condition.code",
+        "path": "Condition.code",
+        "min": 1,
+        "mustSupport": true,
+        "binding": {
+          "strength": "required",
+          "valueSet": "https://fhir2omop.health-samurai.io/ValueSet/omop-condition-codes",
+          "description": "SNOMED Condition or a source code (ICD10CM/ICD9CM) that maps to OMOP Condition via concept_relationship 'Maps to'."
+        }
+      },
+      {
+        "id": "Condition.subject",
+        "path": "Condition.subject",
+        "min": 1,
+        "type": [
+          { "code": "Reference", "targetProfile": ["http://hl7.org/fhir/StructureDefinition/Patient"] }
+        ]
+      },
+      {
+        "id": "Condition.onset[x]",
+        "path": "Condition.onset[x]",
+        "min": 1,
+        "mustSupport": true,
+        "comment": "Required for condition_occurrence.condition_start_date."
+      }
+    ]
+  }
+}

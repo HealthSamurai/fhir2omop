@@ -1,0 +1,36 @@
+{
+  "resourceType": "ValueSet",
+  "id": "omop-observation-codes",
+  "url": "https://fhir2omop.health-samurai.io/ValueSet/omop-observation-codes",
+  "version": "0.1.0",
+  "name": "OmopObservationCodes",
+  "title": "OMOP Observation-domain codes (example subset)",
+  "status": "draft",
+  "experimental": true,
+  "description": "Codes that route a FHIR Observation to the OMOP `observation` table (qualitative findings, social history, etc.). Authoritative expansion: vocab.concept WHERE domain_id = 'Observation' AND standard_concept = 'S' (~132,486 standard concepts).",
+  "extension": [
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-domain", "valueString": "Observation" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-expansion-sql",
+      "valueString": "SELECT vocabulary_id, concept_code, concept_name FROM vocab.concept WHERE domain_id = 'Observation' AND standard_concept = 'S'" }
+  ],
+  "compose": {
+    "include": [
+      {
+        "system": "http://snomed.info/sct",
+        "concept": [
+          { "code": "365981007", "display": "Tobacco smoking behavior - finding" },
+          { "code": "133899007", "display": "Postoperative care" },
+          { "code": "160573003", "display": "Alcohol intake" }
+        ]
+      },
+      {
+        "system": "http://loinc.org",
+        "concept": [
+          { "code": "72166-2", "display": "Tobacco smoking status" },
+          { "code": "30525-0", "display": "Age" },
+          { "code": "46098-0", "display": "Sex" }
+        ]
+      }
+    ]
+  }
+}

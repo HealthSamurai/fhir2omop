@@ -1,0 +1,38 @@
+{
+  "resourceType": "ValueSet",
+  "id": "omop-condition-codes",
+  "url": "https://fhir2omop.health-samurai.io/ValueSet/omop-condition-codes",
+  "version": "0.1.0",
+  "name": "OmopConditionCodes",
+  "title": "OMOP Condition-domain codes (example subset)",
+  "status": "draft",
+  "experimental": true,
+  "description": "Codes that route a FHIR Condition (or domain-routed Procedure/Observation) to the OMOP `condition_occurrence` table. Authoritative expansion: vocab.concept WHERE domain_id = 'Condition' AND standard_concept = 'S' (~105,666 standard concepts, almost entirely SNOMED). Source vocabularies like ICD10CM are non-standard; they map *to* SNOMED via concept_relationship 'Maps to' and become Conditions on the OMOP side.",
+  "extension": [
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-domain", "valueString": "Condition" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-expansion-sql",
+      "valueString": "SELECT vocabulary_id, concept_code, concept_name FROM vocab.concept WHERE domain_id = 'Condition' AND standard_concept = 'S'" }
+  ],
+  "compose": {
+    "include": [
+      {
+        "system": "http://snomed.info/sct",
+        "concept": [
+          { "code": "73211009",  "display": "Diabetes mellitus" },
+          { "code": "59621000",  "display": "Essential hypertension" },
+          { "code": "55822004",  "display": "Hyperlipidemia" },
+          { "code": "267432004", "display": "Pure hypercholesterolemia" },
+          { "code": "195967001", "display": "Asthma" }
+        ]
+      },
+      {
+        "system": "http://hl7.org/fhir/sid/icd-10-cm",
+        "concept": [
+          { "code": "E11.9",  "display": "Type 2 diabetes mellitus without complications" },
+          { "code": "I10",    "display": "Essential (primary) hypertension" },
+          { "code": "J45.909","display": "Unspecified asthma, uncomplicated" }
+        ]
+      }
+    ]
+  }
+}

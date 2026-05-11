@@ -1,0 +1,41 @@
+{
+  "resourceType": "ValueSet",
+  "id": "omop-drug-codes",
+  "url": "https://fhir2omop.health-samurai.io/ValueSet/omop-drug-codes",
+  "version": "0.1.0",
+  "name": "OmopDrugCodes",
+  "title": "OMOP Drug-domain codes (example subset)",
+  "status": "draft",
+  "experimental": true,
+  "description": "Codes that route a FHIR Medication / MedicationRequest / MedicationStatement / MedicationAdministration / MedicationDispense / Immunization to the OMOP `drug_exposure` table. Authoritative expansion: vocab.concept WHERE domain_id = 'Drug' AND standard_concept = 'S' (~2.0M standard concepts, mostly RxNorm + RxNorm Extension).",
+  "extension": [
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-domain", "valueString": "Drug" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-expansion-sql",
+      "valueString": "SELECT vocabulary_id, concept_code, concept_name FROM vocab.concept WHERE domain_id = 'Drug' AND standard_concept = 'S'" }
+  ],
+  "compose": {
+    "include": [
+      {
+        "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+        "concept": [
+          { "code": "1191",   "display": "aspirin" },
+          { "code": "6809",   "display": "metformin" },
+          { "code": "316256", "display": "metformin 500 MG" },
+          { "code": "310965", "display": "ibuprofen 200 MG Oral Tablet" }
+        ]
+      },
+      {
+        "system": "http://hl7.org/fhir/sid/ndc",
+        "concept": [
+          { "code": "0093-1052-01", "display": "Metformin HCl 500 mg tablet" }
+        ]
+      },
+      {
+        "system": "http://hl7.org/fhir/sid/cvx",
+        "concept": [
+          { "code": "207", "display": "COVID-19, mRNA, LNP-S, PF, 100 mcg/0.5mL dose (Moderna)" }
+        ]
+      }
+    ]
+  }
+}

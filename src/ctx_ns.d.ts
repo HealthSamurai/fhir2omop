@@ -20,6 +20,9 @@ declare global {
         mermaid: typeof import("./markdown/mermaid").default;
         render: typeof import("./markdown/render").default;
         };
+        profiles: {
+        list: typeof import("./profiles/list").default;
+        };
         project: {
         classify: typeof import("./project/classify").default;
         roots: typeof import("./project/roots").default;

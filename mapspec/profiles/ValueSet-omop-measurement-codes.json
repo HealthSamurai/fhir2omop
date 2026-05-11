@@ -1,0 +1,42 @@
+{
+  "resourceType": "ValueSet",
+  "id": "omop-measurement-codes",
+  "url": "https://fhir2omop.health-samurai.io/ValueSet/omop-measurement-codes",
+  "version": "0.1.0",
+  "name": "OmopMeasurementCodes",
+  "title": "OMOP Measurement-domain codes (example subset)",
+  "status": "draft",
+  "experimental": true,
+  "description": "Codes that route a FHIR Observation to the OMOP `measurement` table. Authoritative expansion: vocab.concept WHERE domain_id = 'Measurement' AND standard_concept = 'S'. The compose below lists illustrative examples only — the real expansion comes from the loaded Athena vocabularies (~94,791 standard concepts).",
+  "extension": [
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-domain",
+      "valueString": "Measurement"
+    },
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-expansion-sql",
+      "valueString": "SELECT vocabulary_id, concept_code, concept_name FROM vocab.concept WHERE domain_id = 'Measurement' AND standard_concept = 'S'"
+    }
+  ],
+  "compose": {
+    "include": [
+      {
+        "system": "http://loinc.org",
+        "concept": [
+          { "code": "4548-4",  "display": "Hemoglobin A1c/Hemoglobin.total in Blood" },
+          { "code": "8867-4",  "display": "Heart rate" },
+          { "code": "8480-6",  "display": "Systolic blood pressure" },
+          { "code": "8462-4",  "display": "Diastolic blood pressure" },
+          { "code": "718-7",   "display": "Hemoglobin [Mass/volume] in Blood" }
+        ]
+      },
+      {
+        "system": "http://snomed.info/sct",
+        "concept": [
+          { "code": "271649006", "display": "Systolic blood pressure" },
+          { "code": "271650006", "display": "Diastolic blood pressure" }
+        ]
+      }
+    ]
+  }
+}
