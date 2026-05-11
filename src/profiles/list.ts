@@ -76,3 +76,8 @@ export function byId(id: string): Profile | ValueSet | undefined {
 export function valueSetByUrl(url: string): ValueSet | undefined {
     return loadAll().valuesets.find((v) => v.url === url);
 }
+
+export function profileForEdge(resource: string, table: string): Profile | undefined {
+    const key = `${resource}__${table}`;
+    return loadAll().profiles.find((p) => p.edgeKey === key);
+}

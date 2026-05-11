@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 import { loadEdges, byResource, byTable, type Edge } from "./list";
+import { profileForEdge, valueSetByUrl, type Profile } from "../profiles/list";
 
 export default async function (
     ctx: Context,
@@ -246,6 +247,12 @@ function renderEdge(edge: Edge): string {
         parts.push(`<p class="text-gray-600 mb-4 text-sm">${esc(edge.narrative_md)}</p>`);
     }
 
+    // Conversion profile (gate for this edge)
+    const profile = profileForEdge(edge.fhir_resource, edge.omop_table);
+    if (profile) {
+        parts.push(renderProfileCard(profile));
+    }
+
     // Condition
     if (edge.condition) {
         parts.push(`<div class="mb-4 px-3 py-2 bg-amber-50 border border-amber-200 rounded text-xs"><strong>Condition:</strong> ${esc(edge.condition)}</div>`);
@@ -359,4 +366,63 @@ function renderEdge(edge: Edge): string {
 
     parts.push(`</div>`);
     return parts.join("\n");
+}
+
+function renderProfileCard(p: Profile): string {
+    const elements = p.differential?.element ?? [];
+    const codeEl = elements.find((e: any) => e.path?.endsWith(".code") && e.binding?.valueSet);
+    const codeVs = codeEl?.binding?.valueSet ? valueSetByUrl(codeEl.binding.valueSet) : undefined;
+
+    const rows = elements.map((el: any) => {
+        const card = (el.min ?? "") !== "" || el.max
+            ? `<span class="font-mono text-[11px] text-gray-700">${el.min ?? ""}..${el.max || "*"}</span>`
+            : "";
+        const ms = el.mustSupport ? `<span class="ml-1 px-1 py-0.5 rounded bg-blue-50 text-blue-700 text-[10px] font-medium">MS</span>` : "";
+        const types = (el.type ?? []).map((t: any) => t.code).join("|");
+        const bindingHtml = el.binding
+            ? `<a href="${el.binding.valueSet.startsWith("https://fhir2omop") ? `/profiles/${enc(el.binding.valueSet.split("/").pop()!)}` : el.binding.valueSet}" class="text-purple-700 hover:underline">${esc(shortVsUrl(el.binding.valueSet))}</a><span class="text-[10px] uppercase ml-1 text-gray-500">${esc(el.binding.strength)}</span>`
+            : (el.fixedCode || el.fixedUri ? `<span class="text-[11px] font-mono text-amber-700">fixed: ${esc(el.fixedCode || el.fixedUri)}</span>` : "");
+        return `<tr class="border-t border-gray-100 align-top">
+  <td class="px-2 py-1 font-mono text-[11px] text-gray-800">${esc(el.path)}</td>
+  <td class="px-2 py-1 text-[11px]">${card}${ms}</td>
+  <td class="px-2 py-1 font-mono text-[11px] text-gray-600">${esc(types)}</td>
+  <td class="px-2 py-1 text-[11px]">${bindingHtml}</td>
+  <td class="px-2 py-1 text-[11px] text-gray-500 leading-snug">${esc(el.comment ?? el.short ?? "")}</td>
+</tr>`;
+    }).join("");
+
+    return `
+<div class="mb-6 border border-purple-200 rounded-lg overflow-hidden">
+  <div class="flex items-center justify-between px-4 py-2 bg-purple-50 border-b border-purple-200">
+    <div class="flex items-center gap-2 text-xs">
+      <span class="text-[10px] uppercase tracking-wider text-purple-800 font-semibold">Conversion profile</span>
+      <a href="/profiles/${enc(p.id)}" class="font-mono text-sm text-purple-900 hover:underline">${esc(p.id)}</a>
+    </div>
+    <span class="text-[11px] text-purple-700">A FHIR instance converts to <strong>${esc(p.targetTable ?? "")}</strong> iff it validates against this profile.</span>
+  </div>
+  ${codeVs ? `
+  <div class="px-4 py-2 bg-purple-25 border-b border-purple-100 text-[12px]">
+    <span class="text-[10px] uppercase tracking-wider text-purple-700 font-medium mr-2">Routing key</span>
+    <code class="bg-white px-1.5 py-0.5 rounded font-mono text-purple-900">${esc(p.type)}.code ∈ <a href="/profiles/${enc(codeVs.id)}" class="underline">${esc(codeVs.id)}</a></code>
+    ${(codeVs as any).domain ? `<span class="ml-2 text-[11px] text-gray-600">(OMOP domain <strong>${esc((codeVs as any).domain)}</strong>)</span>` : ""}
+  </div>` : ""}
+  <table class="w-full bg-white text-[11px]">
+    <thead class="bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500 border-b border-gray-200">
+      <tr>
+        <th class="px-2 py-1.5 text-left font-medium">Path</th>
+        <th class="px-2 py-1.5 text-left font-medium">Card</th>
+        <th class="px-2 py-1.5 text-left font-medium">Type</th>
+        <th class="px-2 py-1.5 text-left font-medium">Binding / Fixed</th>
+        <th class="px-2 py-1.5 text-left font-medium">Comment</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+</div>`;
+}
+
+function shortVsUrl(u: string): string {
+    if (u.startsWith("http://hl7.org/fhir/ValueSet/")) return "fhir/" + u.split("/").pop();
+    if (u.startsWith("https://fhir2omop.health-samurai.io/ValueSet/")) return u.split("/").pop()!;
+    return u;
 }
