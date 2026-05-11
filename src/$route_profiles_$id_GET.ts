@@ -1,27 +1,22 @@
-import { byId, valueSetByUrl } from "./profiles/list";
-
-export default async function (_ctx: Context, _session: any, req: Request) {
+export default async function (ctx: Context, _session: any, req: Request) {
     const url = new URL(req.url);
     const id = decodeURIComponent(url.pathname.split("/").filter(Boolean)[1] ?? "");
-    const resource = byId(id);
+    const resource = await ctx.fns.profiles.byId(ctx, { id });
     if (!resource) {
         return { title: id, main: `<div class="text-red-600">Not found: ${esc(id)}</div>`, status: 404 };
     }
-
     if (resource.resourceType === "StructureDefinition") {
-        return { title: resource.id, main: renderProfile(resource) };
+        return { title: resource.id, main: await renderProfile(ctx, resource) };
     }
-    return { title: resource.id, main: renderValueSet(resource as any) };
+    return { title: resource.id, main: renderValueSet(resource) };
 }
 
-function renderProfile(p: any): string {
+async function renderProfile(ctx: Context, p: types.profiles.Profile): Promise<string> {
     const elements = p.differential?.element ?? [];
-    const bindingVS = (path: string) => {
-        const el = elements.find((e: any) => e.path === path && e.binding?.valueSet);
-        return el?.binding?.valueSet;
-    };
-    const codeVsUrl = bindingVS(`${p.type}.code`) ?? bindingVS(`${p.type}.medication[x]`);
-    const codeVs = codeVsUrl ? valueSetByUrl(codeVsUrl) : undefined;
+    const codeEl = elements.find((e: any) =>
+        (e.path === `${p.type}.code` || e.path === `${p.type}.medication[x]`) && e.binding?.valueSet);
+    const codeVsUrl = codeEl?.binding?.valueSet;
+    const codeVs = codeVsUrl ? await ctx.fns.profiles.valueSetByUrl(ctx, { url: codeVsUrl }) : undefined;
 
     const rows = elements.map((el: any) => {
         const card = formatCardinality(el);
@@ -60,7 +55,7 @@ function renderProfile(p: any): string {
   <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
     <div class="text-xs text-purple-800 font-medium uppercase tracking-wider mb-1">Routing key — code binding</div>
     <a href="/profiles/${enc(codeVs.id)}" class="font-mono text-sm text-purple-900 hover:underline">${esc(codeVs.id)}</a>
-    ${(codeVs as any).domain ? `<span class="ml-2 text-xs text-purple-700">OMOP domain: <strong>${esc((codeVs as any).domain)}</strong></span>` : ""}
+    ${codeVs.domain ? `<span class="ml-2 text-xs text-purple-700">OMOP domain: <strong>${esc(codeVs.domain)}</strong></span>` : ""}
     <p class="text-xs text-purple-700 mt-1 leading-snug">If <code class="bg-white px-1 rounded">${esc(p.type)}.code</code> resolves to a concept in this ValueSet, the resource converts to <strong>${esc(p.targetTable ?? "")}</strong>.</p>
   </div>` : ""}
 
@@ -86,18 +81,17 @@ function renderProfile(p: any): string {
 </div>`;
 }
 
-function renderValueSet(v: any): string {
+function renderValueSet(v: types.profiles.ValueSet): string {
     const includes = v.compose?.include ?? [];
-    const rows = includes.flatMap((inc: any) =>
-        (inc.concept ?? []).map((c: any) => `
+    const rows = includes.flatMap((inc) =>
+        (inc.concept ?? []).map((c) => `
 <tr class="border-t border-gray-100">
   <td class="px-3 py-1.5 text-xs font-mono text-gray-700">${esc(shortSystem(inc.system))}</td>
   <td class="px-3 py-1.5 text-xs font-mono text-purple-700">${esc(c.code)}</td>
   <td class="px-3 py-1.5 text-xs text-gray-700">${esc(c.display ?? "")}</td>
 </tr>`)
     ).join("");
-
-    const sourceSystems = [...new Set(includes.map((i: any) => i.system))];
+    const sourceSystems = [...new Set(includes.map((i) => i.system))];
 
     return `
 <div class="not-prose">
@@ -120,12 +114,12 @@ function renderValueSet(v: any): string {
   <div class="bg-white border border-gray-200 rounded-lg p-4 mb-4">
     <div class="text-xs text-gray-500 mb-2">Source code systems</div>
     <ul class="text-sm font-mono text-gray-700 space-y-1">
-      ${sourceSystems.map((s: any) => `<li>${esc(s)}</li>`).join("")}
+      ${sourceSystems.map((s) => `<li>${esc(s)}</li>`).join("")}
     </ul>
   </div>
 
   <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
-    <div class="px-4 py-2 bg-gray-50 border-b border-gray-200 text-xs font-medium text-gray-700">Example concepts (${rows.split("<tr").length - 1})</div>
+    <div class="px-4 py-2 bg-gray-50 border-b border-gray-200 text-xs font-medium text-gray-700">Example concepts</div>
     <table class="w-full">
       <thead class="text-[10px] uppercase tracking-wider text-gray-500 border-b border-gray-200">
         <tr>
@@ -151,17 +145,12 @@ function formatCardinality(el: any): string {
     if (min === "" && max === "") return "";
     return `<span class="font-mono text-xs">${min}..${max || "*"}</span>`;
 }
-
 function shortUrl(u: string): string {
     if (u.startsWith("http://hl7.org/fhir/ValueSet/")) return "fhir/" + u.split("/").pop();
     if (u.startsWith("https://fhir2omop.health-samurai.io/ValueSet/")) return u.split("/").pop()!;
     return u;
 }
-
-function valueSetIdFromUrl(u: string): string {
-    return u.split("/").pop() ?? u;
-}
-
+function valueSetIdFromUrl(u: string): string { return u.split("/").pop() ?? u; }
 function shortSystem(s: string): string {
     return ({
         "http://snomed.info/sct": "SNOMED",
@@ -173,6 +162,5 @@ function shortSystem(s: string): string {
         "http://unitsofmeasure.org": "UCUM",
     } as Record<string, string>)[s] ?? s;
 }
-
 function esc(s: string) { return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!)); }
 function enc(s: string) { return encodeURIComponent(s); }

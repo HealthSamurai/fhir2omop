@@ -1,9 +1,6 @@
-import { loadAll } from "./profiles/list";
+export default async function (ctx: Context, _session: any, _req: Request) {
+    const { profiles, valuesets } = await ctx.fns.profiles.load(ctx);
 
-export default async function (_ctx: Context, _session: any, _req: Request) {
-    const { profiles, valuesets } = loadAll();
-
-    // Group profiles by base FHIR resource type
     const byType = new Map<string, typeof profiles>();
     for (const p of profiles) {
         const arr = byType.get(p.type) ?? [];
@@ -14,8 +11,10 @@ export default async function (_ctx: Context, _session: any, _req: Request) {
     const profileCards = [...byType.entries()].sort().map(([type, ps]) => {
         const branchSplit = ps.length > 1;
         const branches = ps.map((p) => {
-            const codeBindingVS = findCodeBindingVS(p);
-            const vs = codeBindingVS ? valuesets.find((v) => v.url === codeBindingVS) : undefined;
+            const codeEl = p.differential?.element?.find((e: any) =>
+                e.path?.endsWith(".code") && e.binding?.valueSet);
+            const codeVsUrl = codeEl?.binding?.valueSet;
+            const vs = codeVsUrl ? valuesets.find((v) => v.url === codeVsUrl) : undefined;
             return `
 <div class="border border-gray-200 rounded-md p-3 bg-white">
   <div class="flex items-center gap-2 mb-1">
@@ -96,11 +95,6 @@ export default async function (_ctx: Context, _session: any, _req: Request) {
   </div>
 </div>`;
     return { title: "Profiles", main };
-}
-
-function findCodeBindingVS(p: any): string | undefined {
-    const codeEl = p.differential?.element?.find((e: any) => e.path?.endsWith(".code") && e.binding?.valueSet);
-    return codeEl?.binding?.valueSet;
 }
 
 function esc(s: string) { return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!)); }

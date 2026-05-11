@@ -21,7 +21,10 @@ declare global {
         render: typeof import("./markdown/render").default;
         };
         profiles: {
-        list: typeof import("./profiles/list").default;
+        byId: typeof import("./profiles/byId").default;
+        load: typeof import("./profiles/load").default;
+        profileForEdge: typeof import("./profiles/profileForEdge").default;
+        valueSetByUrl: typeof import("./profiles/valueSetByUrl").default;
         };
         project: {
         classify: typeof import("./project/classify").default;
@@ -39,6 +42,13 @@ declare global {
     genTypes: typeof import("./genTypes").default;
     layout: typeof import("./$layout").default;
     loadFns: typeof import("./loadFns").default;
+    }
+
+    namespace types {
+        namespace profiles {
+            type Profile = import("./profiles/$type_Profile").Profile;
+            type ValueSet = import("./profiles/$type_ValueSet").ValueSet;
+        }
     }
 }
 export {};

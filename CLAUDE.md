@@ -187,6 +187,85 @@ or any other body content.
 
 Reload FHIR core: `bun src/load-fhir-core.ts` (rewrites both directories)
 
+## Architecture: procedural ctx.fns (adapted from hyper-code2)
+
+**One function per file. Folder = namespace.** Files in `src/` are scanned by
+`loadFns` and registered as `ctx.fns.<module>.<fn>` (see `src/loadFns.ts` and
+`src/project/classify.ts`).
+
+```
+src/
+  $main.ts                 entry: loadFns → genTypes → loadRoutes → server.start
+  $type_Context.ts         global `Context` type
+  ctx_ns.d.ts              AUTO-GEN — FnsRegistry, types.* — written by ctx.genTypes
+  loadFns.ts               first-sweep loader (handles bootstrap before ctx.fns exists)
+  genTypes.ts              ctx.genTypes — rescans src/ and writes ctx_ns.d.ts
+
+  http/                    ctx.fns.http.* — Bun.serve + dynamic route table
+  project/                 ctx.fns.project.* — scan / classify / roots
+  repl/                    ctx.fns.repl.* — eval, load (hot-reload), POST /repl
+  markdown/                ctx.fns.markdown.* — render, highlight, mermaid
+  mapspec/                 ctx.fns.mapspec.* — list (edges loader), render (per-edge UI)
+  profiles/                ctx.fns.profiles.* — load, byId, valueSetByUrl, profileForEdge
+
+  $route_GET.ts            GET /
+  $route_profiles_GET.ts   GET /profiles
+  $route_profiles_$id_GET.ts  GET /profiles/:id
+  …
+```
+
+### Calling convention
+
+- `export default async function (ctx: Context, opts: {...})` — **anonymous**, no function name. Every fn takes `ctx` first, then a single options-object.
+- **Universal calling convention**: `ctx.fns.<ns>.<fn>(ctx, { ...opts })`. Single rule, no per-fn argument-order recall.
+- Single-arg fns still take an opts wrapper: `profiles.byId(ctx, { id })`, not `profiles.byId(ctx, id)`.
+- Zero-arg fns take `(ctx)` only (no opts wrapper): `profiles.load(ctx)`.
+- Routes: `export default async function (ctx, _session, req)` — return `{ title, main, current? }` or a raw `Response`.
+
+### No cross-imports between project files
+
+- Call other modules through `ctx.fns.<ns>.<fn>(ctx, { ... })`, not `import`.
+- Only `import` from `bun`, `node:*`, or third-party packages.
+- (Historical exception: `src/mapspec/list.ts` is a typed catalog with named exports re-used by `render.ts`. Don't follow that pattern in new code.)
+
+### Special filenames (`$` prefix stripped when registering in `ctx.fns`)
+
+- `$main.ts` — entry point. NOT loaded into `ctx.fns`.
+- `$route_<path>_<METHOD>.ts` — HTTP route. `_` in path = `/`, `$foo` = `:foo` param. See `src/http/loadRoutes.ts` and `src/project/classify.ts`.
+- `$type_<Name>.ts` — type declaration only. Picked up by `ctx.genTypes` as `types.<mod>.<Name>` globally. Never `import type` from project files — use `types.<mod>.<Name>` directly.
+- Other `$<name>.ts` (e.g. `$start.ts`) — regular function, loaded as `ctx.fns.<mod>.<name>`.
+
+## REPL workflow (use this, don't restart!)
+
+The server is long-running. Hot-reload everything from the REPL — restart only if something is genuinely broken.
+
+```bash
+# Start once
+bun src/$main.ts &                    # writes port to .hyper/_runtime/port
+
+# Send code to the running process (`return` not allowed; use console.log)
+bun script/repl.ts '1 + 1'
+bun script/repl.ts 'console.log(Object.keys(ctx.fns))'
+bun script/repl.ts -f /tmp/play.js                     # from file
+echo '...' | bun script/repl.ts                        # from stdin
+
+# Hot-reload after editing a file
+bun script/repl.ts 'await ctx.fns.repl.load(ctx, { name: "profiles" })'   # whole folder
+bun script/repl.ts 'await ctx.fns.repl.load(ctx, { name: "mapspec.render" })'  # single fn
+bun script/repl.ts 'await ctx.fns.http.loadRoutes(ctx)'                  # rescan $route_*.ts
+bun script/repl.ts 'await ctx.genTypes(ctx)'                             # regen ctx_ns.d.ts
+
+# Clear cached state (e.g. profile cache on ctx.state.profiles)
+bun script/repl.ts 'delete ctx.state.profiles; console.log("cleared")'
+```
+
+After editing `src/<module>/<fn>.ts`:
+1. `repl.load` the module (or just the fn).
+2. `genTypes(ctx)` if you added/removed files or `$type_*.ts`.
+3. `http.loadRoutes(ctx)` if you added/renamed a `$route_*.ts`.
+
+The route module cache uses `?t=${Date.now()}` so route files reload on each `loadRoutes`. Non-route fn modules need an explicit `repl.load`.
+
 ## Scripts
 
 ### `scripts/fhir-structuredef.ts` - Search FHIR StructureDefinitions

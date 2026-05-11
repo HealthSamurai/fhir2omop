@@ -1,6 +1,5 @@
 import { resolve } from "node:path";
 import { loadEdges, byResource, byTable, type Edge } from "./list";
-import { profileForEdge, valueSetByUrl, type Profile } from "../profiles/list";
 
 export default async function (
     ctx: Context,
@@ -33,7 +32,7 @@ export default async function (
         );
         if (edge) {
             return {
-                html: renderEdge(edge),
+                html: await renderEdge(ctx, edge),
                 title: `${safeRes} → ${safeTable}`,
             };
         }
@@ -222,7 +221,7 @@ function renderTablePage(table: string, sources: Edge[]): string {
 </div>`;
 }
 
-function renderEdge(edge: Edge): string {
+async function renderEdge(ctx: Context, edge: Edge): Promise<string> {
     const parts: string[] = [];
 
     // Header
@@ -248,9 +247,12 @@ function renderEdge(edge: Edge): string {
     }
 
     // Conversion profile (gate for this edge)
-    const profile = profileForEdge(edge.fhir_resource, edge.omop_table);
+    const profile = await ctx.fns.profiles.profileForEdge(ctx, {
+        resource: edge.fhir_resource,
+        table: edge.omop_table,
+    });
     if (profile) {
-        parts.push(renderProfileCard(profile));
+        parts.push(await renderProfileCard(ctx, profile));
     }
 
     // Condition
@@ -368,10 +370,12 @@ function renderEdge(edge: Edge): string {
     return parts.join("\n");
 }
 
-function renderProfileCard(p: Profile): string {
+async function renderProfileCard(ctx: Context, p: types.profiles.Profile): Promise<string> {
     const elements = p.differential?.element ?? [];
     const codeEl = elements.find((e: any) => e.path?.endsWith(".code") && e.binding?.valueSet);
-    const codeVs = codeEl?.binding?.valueSet ? valueSetByUrl(codeEl.binding.valueSet) : undefined;
+    const codeVs = codeEl?.binding?.valueSet
+        ? await ctx.fns.profiles.valueSetByUrl(ctx, { url: codeEl.binding.valueSet })
+        : undefined;
 
     const rows = elements.map((el: any) => {
         const card = (el.min ?? "") !== "" || el.max
