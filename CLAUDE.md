@@ -28,6 +28,10 @@ bun src/load-fhir-core.ts
 bun scripts/fhir-structuredef.ts --kind resource --list   # 146 base FHIR resource types
 bun scripts/omop-table.ts --list                          # 39 OMOP CDM v5.4 tables
 ls mapspec/                                               # Per-resource mapping docs
+
+# 5. Bring up Postgres + load Athena vocabularies (~6.4M concepts, ~75M ancestor rows)
+docker compose up -d                                      # Postgres 17 (ParadeDB) on :54392
+bun script/init-athena.ts                                 # Pulls bundle ZIP from GCS, loads vocab.*
 ```
 
 What gets pulled by submodules:
@@ -43,6 +47,90 @@ What gets generated locally and is gitignored:
 ### Documentation
 - `sources.md` - OMOP/OHDSI information sources (official docs, tools, community)
 - `cdm.md` - Index of OMOP CDM tables, fields, and repository structure
+
+### PostgreSQL — Athena vocabularies
+
+Local Postgres holds the OMOP standardized vocabularies (Athena bundle: SNOMED,
+ICD9/10CM, CPT4, HCPCS, LOINC, RxNorm, NDC, ATC, …). Used for code lookups,
+hierarchy walks (`concept_ancestor`), and `source_to_concept_map` joins during
+FHIR→OMOP ETL.
+
+```
+docker-compose.yml               # paradedb/paradedb:latest-pg17 on host port 54392
+script/athena-schema.sql         # DDL for the 9 vocab.* tables
+script/load-athena.ts            # CSV bundle → vocab.* loader (psql \copy + staging)
+script/init-athena.ts            # gcloud cp from GCS + unzip + load (one-shot bootstrap)
+athena/downloads/                # ZIP cache (gitignored)
+athena/bundle/                   # Extracted CSVs (gitignored)
+```
+
+**Connection**
+- DSN: `postgresql://athena:athena@localhost:54392/athena`
+- Override via `ATHENA_DSN` env var.
+- Connect: `PGPASSWORD=athena psql -h localhost -p 54392 -U athena -d athena`
+
+**Bundle source (GCS)**
+- Project: `atomic-ehr`
+- Bucket: `gs://atomic-ehr-athena-vocab/bundles/`
+- Current: `athena-bundle-20260511-v20260227.zip` (928 MB, v20260227 vocabularies)
+- Fresh bundles come from https://athena.ohdsi.org/vocabulary/download-history
+  — log in, pick vocabs, wait for the email, download, then upload with
+  `gcloud storage cp <zip> gs://atomic-ehr-athena-vocab/bundles/`.
+
+**Schemas**
+- `vocab.*` — typed target tables (the standard OMOP CDM v5.4 vocabulary schema)
+- `vocab_staging.*` — text-column staging tables; created per file by the
+  loader and dropped on success (date columns arrive as `YYYYMMDD` strings and
+  get converted via `to_date(..., 'YYYYMMDD')`).
+
+**Tables in `vocab` schema** (row counts from the May 2026 bundle):
+
+| Table | Rows | Purpose |
+|---|---:|---|
+| `vocab.vocabulary` | 59 | Vocabulary registry (id, name, version, reference) |
+| `vocab.domain` | 50 | Domain dictionary (Condition, Drug, Measurement, …) |
+| `vocab.concept_class` | 433 | Concept class dictionary (Clinical Finding, Ingredient, …) |
+| `vocab.relationship` | 722 | Relationship type registry + reverses |
+| `vocab.concept` | 6,396,107 | All standardized + source concepts, one row per `concept_id` |
+| `vocab.concept_synonym` | 2,700,416 | Alternative names per concept |
+| `vocab.concept_relationship` | 39,381,422 | Pairwise relationships (Maps to, Is a, RxNorm has ing, …) |
+| `vocab.concept_ancestor` | 75,530,956 | Pre-computed transitive closure of hierarchical "Is a" relationships |
+| `vocab.drug_strength` | 2,966,827 | Drug ingredient strengths (amount, numerator/denominator + units) |
+
+**Common queries**
+
+```sql
+-- Look up a SNOMED code
+SELECT concept_id, concept_name, standard_concept, domain_id
+FROM vocab.concept
+WHERE vocabulary_id = 'SNOMED' AND concept_code = '44054006';
+
+-- ICD10CM → SNOMED via "Maps to"
+SELECT c2.concept_id, c2.concept_name
+FROM vocab.concept c1
+JOIN vocab.concept_relationship cr
+  ON cr.concept_id_1 = c1.concept_id AND cr.relationship_id = 'Maps to'
+  AND cr.invalid_reason IS NULL
+JOIN vocab.concept c2 ON c2.concept_id = cr.concept_id_2
+WHERE c1.vocabulary_id = 'ICD10CM' AND c1.concept_code = 'E11.9';
+
+-- All descendants of "Diabetes mellitus" (SNOMED 73211009 → concept_id 201820)
+SELECT descendant_concept_id, c.concept_name
+FROM vocab.concept_ancestor a
+JOIN vocab.concept c ON c.concept_id = a.descendant_concept_id
+WHERE a.ancestor_concept_id = 201820;
+```
+
+**Re-loading**
+Re-running `bun script/load-athena.ts <dir>` is destructive — it drops and
+recreates the `vocab.*` tables (see top of `script/athena-schema.sql`). Pull a
+newer ZIP from GCS, point `bun script/init-athena.ts gs://…/newer.zip` at it.
+
+**CPT4 post-processing (optional)**
+The bundle ships `cpt4.jar` + `CONCEPT_CPT4.csv`. CPT4 concept names are
+licensed and not included in `CONCEPT.csv` — run `sh cpt.sh` inside
+`athena/bundle/` with a UMLS API key to hydrate them in place before loading,
+if you need them.
 
 ### OMOP CDM (git submodule)
 ```

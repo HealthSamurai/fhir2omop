@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: paradedb/paradedb:latest-pg17
+    container_name: fhir2omop-athena-db
+    environment:
+      POSTGRES_USER: athena
+      POSTGRES_PASSWORD: athena
+      POSTGRES_DB: athena
+    ports:
+      - "54392:5432"
+    volumes:
+      - pgdata_athena:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U athena"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata_athena:

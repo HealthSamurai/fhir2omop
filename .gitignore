@@ -40,3 +40,8 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .hyper/tmp_*
 .kimi-results
 .claude/
+
+# Generated FHIR/OMOP data
+fhir-core/
+data/
+athena/
