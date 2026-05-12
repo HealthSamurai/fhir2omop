@@ -126,7 +126,7 @@ export default function (_ctx: Context): Array<{ resource: string; tables: strin
         const names = readdirSync(dir);
         for (const name of names.sort()) {
             if (name.startsWith(".") || name.startsWith("_")) continue;
-            if (["TODO.md", "edges", "resources", "tables", "schema"].includes(name)) continue;
+            if (["TODO.md", "edges", "resources", "tables", "schema", "profiles", "views"].includes(name)) continue;
             const sub = resolve(dir, name);
             let st;
             try { st = require("fs").statSync(sub); } catch { continue; }
