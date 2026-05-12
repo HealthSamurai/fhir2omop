@@ -25,13 +25,18 @@ bun install
 bun src/load-fhir-core.ts
 
 # 4. Sanity checks
-bun scripts/fhir-structuredef.ts --kind resource --list   # 146 base FHIR resource types
-bun scripts/omop-table.ts --list                          # 39 OMOP CDM v5.4 tables
-ls mapspec/                                               # Per-resource mapping docs
+ls mapspec/edges/    | wc -l    # 28 FHIR→OMOP edge maps
+ls mapspec/profiles/ | wc -l    # 28 profiles + 8 valuesets + system-aliases.json
+ls mapspec/views/    | wc -l    # 28 ViewDefinitions (Stage-1 flatteners)
 
 # 5. Bring up Postgres + load Athena vocabularies (~6.4M concepts, ~75M ancestor rows)
 docker compose up -d                                      # Postgres 17 (ParadeDB) on :54392
 bun script/init-athena.ts                                 # Pulls bundle ZIP from GCS, loads vocab.*
+
+# 6. Start the UI/dev server (writes its port to .hyper/_runtime/port, default 3000)
+bun src/\$main.ts                                          # http://localhost:3000
+# In a second terminal you can hot-reload via the REPL — see "REPL workflow" below
+#   bun script/repl.ts 'console.log(Object.keys(ctx.fns))'
 ```
 
 What gets pulled by submodules:
