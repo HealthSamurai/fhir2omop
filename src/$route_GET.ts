@@ -80,11 +80,12 @@ export default async function (ctx: Context, _session: any, _req: Request) {
   </div>
 
   <!-- Graph -->
-  <div class="bg-white border border-gray-200 rounded-lg p-6 mb-8">
-    <h2 class="text-sm font-semibold text-gray-700 mb-4">Resource → Table Mapping Graph</h2>
-    <div id="graph-container" class="overflow-x-auto">
-      ${renderGraph(resources, tables, connections)}
+  <div class="bg-white border border-gray-200 rounded-lg p-4 mb-8">
+    <div class="flex items-baseline justify-between mb-2">
+      <h2 class="text-sm font-semibold text-gray-700">Resource → Table Mapping Graph</h2>
+      <span class="text-[11px] text-gray-400">click a node to highlight links · double-click to open · click empty space to reset</span>
     </div>
+    ${renderD3Graph(resources, tables, connections)}
   </div>
 
   <!-- Matrix -->
@@ -115,7 +116,199 @@ function enc(s: string) {
     return encodeURIComponent(s);
 }
 
-function renderGraph(
+function renderD3Graph(
+    resources: string[],
+    tables: string[],
+    connections: Array<{ resource: string; table: string; status: string; primary: boolean }>,
+): string {
+    const payload = JSON.stringify({ resources, tables, connections });
+    return `
+<div id="d3-graph-wrap" class="relative">
+  <script type="application/json" id="d3-graph-data">${payload.replace(/</g, "\\u003c")}</script>
+  <svg id="d3-graph" class="block w-full" style="font-family: ui-sans-serif, system-ui, sans-serif;"></svg>
+</div>
+<script>
+(function () {
+  function load(cb) {
+    if (window.d3) return cb();
+    var existing = document.querySelector('script[data-d3]');
+    if (existing) { existing.addEventListener('load', cb); return; }
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js';
+    s.setAttribute('data-d3', '1');
+    s.onload = cb;
+    document.head.appendChild(s);
+  }
+  function render() {
+    var dataEl = document.getElementById('d3-graph-data');
+    var svgEl = document.getElementById('d3-graph');
+    if (!dataEl || !svgEl || svgEl.dataset.rendered) return;
+    svgEl.dataset.rendered = '1';
+    var data = JSON.parse(dataEl.textContent);
+
+    var rowH = 22;
+    var pad = 24;
+    var leftW = 200;
+    var rightW = 200;
+    var gap = 360;
+    var svgW = leftW + gap + rightW;
+    var resCount = data.resources.length;
+    var tblCount = data.tables.length;
+    var contentH = Math.max(resCount, tblCount) * rowH + pad * 2;
+    var svgH = contentH;
+
+    var svg = d3.select(svgEl)
+      .attr('viewBox', '0 0 ' + svgW + ' ' + svgH)
+      .attr('preserveAspectRatio', 'xMidYMin meet');
+
+    svg.selectAll('*').remove();
+
+    var defs = svg.append('defs');
+    defs.append('style').text(\`
+      .link { fill: none; stroke-width: 1.1; opacity: 0.28; pointer-events: stroke; transition: opacity .15s, stroke-width .15s; }
+      .link.primary { stroke-width: 1.8; opacity: 0.5; }
+      .link.implemented { stroke: #22c55e; }
+      .link.documented { stroke: #eab308; }
+      .link.planned, .link.stub { stroke: #9ca3af; }
+      .link.hl { opacity: 0.95; stroke-width: 2.6; }
+      .link.dim { opacity: 0.05; }
+      .node { cursor: pointer; }
+      .node rect { transition: stroke .15s, stroke-width .15s, fill .15s, opacity .15s; }
+      .node text { pointer-events: none; transition: opacity .15s; user-select: none; }
+      .node-resource rect { fill: #eff6ff; stroke: #bfdbfe; }
+      .node-resource text { fill: #1e40af; font-weight: 500; }
+      .node-table rect { fill: #f0fdf4; stroke: #bbf7d0; }
+      .node-table text { fill: #166534; font-weight: 500; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .node.sel rect { stroke: #2563eb; stroke-width: 2; fill: #dbeafe; }
+      .node.hl rect { stroke: #2563eb; stroke-width: 1.5; }
+      .node.dim rect { opacity: 0.25; }
+      .node.dim text { opacity: 0.35; }
+      .col-label { fill: #6b7280; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+    \`);
+
+    svg.append('text').attr('class', 'col-label').attr('x', leftW / 2).attr('y', 12).attr('text-anchor', 'middle').text('FHIR Resources');
+    svg.append('text').attr('class', 'col-label').attr('x', leftW + gap + rightW / 2).attr('y', 12).attr('text-anchor', 'middle').text('OMOP Tables');
+
+    // background click clears
+    svg.append('rect')
+      .attr('x', 0).attr('y', 0).attr('width', svgW).attr('height', svgH)
+      .attr('fill', 'transparent')
+      .on('click', function () { clearSelection(); });
+
+    var resY = function (i) { return pad + i * rowH + rowH / 2; };
+    var tblY = function (i) { return pad + i * rowH + rowH / 2; };
+
+    var resIdx = new Map();
+    data.resources.forEach(function (r, i) { resIdx.set(r, i); });
+    var tblIdx = new Map();
+    data.tables.forEach(function (t, i) { tblIdx.set(t, i); });
+
+    // Build links
+    var links = data.connections
+      .filter(function (c) { return resIdx.has(c.resource) && tblIdx.has(c.table); })
+      .map(function (c) {
+        var x1 = leftW - 4;
+        var y1 = resY(resIdx.get(c.resource));
+        var x2 = leftW + gap + 4;
+        var y2 = tblY(tblIdx.get(c.table));
+        var cx1 = x1 + (x2 - x1) * 0.5;
+        var cx2 = x2 - (x2 - x1) * 0.5;
+        var d = 'M' + x1 + ',' + y1 + ' C' + cx1 + ',' + y1 + ' ' + cx2 + ',' + y2 + ' ' + x2 + ',' + y2;
+        return Object.assign({}, c, { d: d });
+      });
+
+    var linksG = svg.append('g').attr('class', 'links');
+    var linkSel = linksG.selectAll('path')
+      .data(links)
+      .enter().append('path')
+      .attr('d', function (l) { return l.d; })
+      .attr('class', function (l) {
+        return 'link ' + l.status + (l.primary ? ' primary' : '');
+      })
+      .attr('data-r', function (l) { return l.resource; })
+      .attr('data-t', function (l) { return l.table; });
+
+    // Resource nodes
+    var resG = svg.append('g').attr('class', 'resources');
+    var resSel = resG.selectAll('g')
+      .data(data.resources)
+      .enter().append('g')
+      .attr('class', 'node node-resource')
+      .attr('data-id', function (d) { return d; })
+      .attr('data-href', function (d) { return '/mapspec/' + encodeURIComponent(d); })
+      .attr('transform', function (d, i) { return 'translate(0,' + (resY(i) - rowH / 2 + 2) + ')'; });
+    resSel.append('rect').attr('x', 8).attr('y', 0).attr('width', leftW - 16).attr('height', rowH - 4).attr('rx', 3);
+    resSel.append('text').attr('x', leftW / 2).attr('y', (rowH - 4) / 2 + 4).attr('text-anchor', 'middle').attr('font-size', 11).text(function (d) { return d; });
+
+    // Table nodes
+    var tblG = svg.append('g').attr('class', 'tables');
+    var tblSel = tblG.selectAll('g')
+      .data(data.tables)
+      .enter().append('g')
+      .attr('class', 'node node-table')
+      .attr('data-id', function (d) { return d; })
+      .attr('data-href', function (d) { return '/table/' + encodeURIComponent(d); })
+      .attr('transform', function (d, i) { return 'translate(0,' + (tblY(i) - rowH / 2 + 2) + ')'; });
+    tblSel.append('rect').attr('x', leftW + gap + 8).attr('y', 0).attr('width', rightW - 16).attr('height', rowH - 4).attr('rx', 3);
+    tblSel.append('text').attr('x', leftW + gap + rightW / 2).attr('y', (rowH - 4) / 2 + 4).attr('text-anchor', 'middle').attr('font-size', 11).text(function (d) { return d; });
+
+    var selected = null; // {kind: 'r'|'t', id}
+
+    function clearSelection() {
+      selected = null;
+      linkSel.classed('hl', false).classed('dim', false);
+      resSel.classed('hl', false).classed('sel', false).classed('dim', false);
+      tblSel.classed('hl', false).classed('sel', false).classed('dim', false);
+    }
+
+    function selectNode(kind, id) {
+      if (selected && selected.kind === kind && selected.id === id) {
+        clearSelection();
+        return;
+      }
+      selected = { kind: kind, id: id };
+      var keyAttr = kind === 'r' ? 'data-r' : 'data-t';
+      var neighborAttr = kind === 'r' ? 'data-t' : 'data-r';
+      var neighbors = new Set();
+      var touchedLinks = new Set();
+      linkSel.each(function (l, i) {
+        var match = (kind === 'r' ? l.resource === id : l.table === id);
+        if (match) {
+          touchedLinks.add(i);
+          neighbors.add(kind === 'r' ? l.table : l.resource);
+        }
+      });
+      linkSel
+        .classed('hl', function (l, i) { return touchedLinks.has(i); })
+        .classed('dim', function (l, i) { return !touchedLinks.has(i); });
+      var nodeSelf = kind === 'r' ? resSel : tblSel;
+      var nodeOther = kind === 'r' ? tblSel : resSel;
+      nodeSelf
+        .classed('sel', function (d) { return d === id; })
+        .classed('hl', false)
+        .classed('dim', function (d) { return d !== id; });
+      nodeOther
+        .classed('sel', false)
+        .classed('hl', function (d) { return neighbors.has(d); })
+        .classed('dim', function (d) { return !neighbors.has(d); });
+    }
+
+    resSel.on('click', function (event, d) { event.stopPropagation(); selectNode('r', d); })
+      .on('dblclick', function (event, d) { event.stopPropagation(); window.location.href = '/mapspec/' + encodeURIComponent(d); });
+    tblSel.on('click', function (event, d) { event.stopPropagation(); selectNode('t', d); })
+      .on('dblclick', function (event, d) { event.stopPropagation(); window.location.href = '/table/' + encodeURIComponent(d); });
+    linkSel.on('click', function (event, l) {
+      event.stopPropagation();
+      window.location.href = '/mapspec/' + encodeURIComponent(l.resource) + '/' + encodeURIComponent(l.table);
+    });
+  }
+
+  load(render);
+})();
+</script>`;
+}
+
+function _unused_renderGraph(
     resources: string[],
     tables: string[],
     connections: Array<{ resource: string; table: string; status: string; primary: boolean }>,
