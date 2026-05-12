@@ -1,0 +1,49 @@
+{
+  "$comment": "Structured registry of FHIR fields that carry clinical signal with no OMOP CDM v5.4 target, plus legacy/deprecated concept usage that should migrate to Type Concept vocab. Used by the UI to flag gaps on edge pages and by the runtime to log warnings where data is dropped.",
+  "version": "0.1.0",
+  "categories": {
+    "legacy_to_type_concept": {
+      "$comment": "Edges currently hardcode legacy *_Type vocab IDs (Drug Type, Visit Type, etc.). CDM v5.4 unifies these under Type Concept (vocabulary_id='Type Concept', standard=Y). Migrate.",
+      "entries": [
+        { "edge": "MedicationRequest__drug_exposure", "column": "drug_type_concept_id", "current": { "concept_id": 38000177, "vocab": "Drug Type", "name": "Prescription written", "standard": false }, "target": { "concept_id": 32838, "vocab": "Type Concept", "name": "EHR prescription record" } },
+        { "edge": "MedicationDispense__drug_exposure", "column": "drug_type_concept_id", "current": { "concept_id": 38000175, "vocab": "Drug Type", "name": "Prescription dispensed in pharmacy", "standard": false }, "target": { "concept_id": 32839, "vocab": "Type Concept", "name": "EHR dispensing record" } },
+        { "edge": "MedicationAdministration__drug_exposure", "column": "drug_type_concept_id", "current": { "concept_id": 38000179, "vocab": "Drug Type", "name": "Physician administered drug", "standard": false }, "target": { "concept_id": 32833, "vocab": "Type Concept", "name": "EHR administration record" } },
+        { "edge": "MedicationStatement__drug_exposure", "column": "drug_type_concept_id", "current": { "concept_id": 44787730, "vocab": "Drug Type", "name": "Patient Self-Reported Medication", "standard": false }, "target": { "concept_id": 32865, "vocab": "Type Concept", "name": "Patient self-report" } }
+      ]
+    },
+    "fhir_data_with_no_omop_target": {
+      "$comment": "FHIR fields carrying clinical signal that has no native OMOP column. Proposed routing: either spawn an OMOP observation row (qualifier_concept_id) or drop with warning.",
+      "entries": [
+        { "fhir_path": "AllergyIntolerance.criticality", "fhir_values": ["low", "high", "unable-to-assess"], "loss": "Risk severity of allergic reaction if exposed", "proposal": "Spawn observation row with observation_concept_id=SNOMED 'Risk of allergic reaction' (255621006) and qualifier_concept_id=severity SNOMED" },
+        { "fhir_path": "AllergyIntolerance.reaction[].severity", "fhir_values": ["mild", "moderate", "severe"], "loss": "Reaction severity grading", "proposal": "Same observation-spawn approach with qualifier_concept_id (24484000 Severe / 6736007 Moderate / 255604002 Mild)" },
+        { "fhir_path": "AllergyIntolerance.reaction[].manifestation", "fhir_values": "SNOMED clinical findings (open)", "loss": "Specific symptoms experienced during reaction", "proposal": "Fan-out: one extra observation row per manifestation, linked via fact_relationship to the parent observation_concept_id" },
+        { "fhir_path": "Condition.severity", "fhir_values": "SNOMED severity qualifiers (24484000 Severe / 6736007 Moderate / 255604002 Mild)", "loss": "Disease severity grading", "proposal": "Either (a) custom column on condition_occurrence (requires OMOP CDM extension), (b) spawn observation row with method/qualifier, or (c) suffix into condition_source_value" },
+        { "fhir_path": "Procedure.outcome", "fhir_values": "SNOMED procedure outcomes", "loss": "Whether procedure succeeded/failed/partial", "proposal": "Drop today; propose new procedure_outcome_concept_id column to OHDSI" },
+        { "fhir_path": "Procedure.complication[]", "fhir_values": "SNOMED conditions arising from procedure", "loss": "Adverse outcomes", "proposal": "Spawn condition_occurrence rows linked via visit_occurrence_id and condition_status_concept_id flagging as procedure-related" },
+        { "fhir_path": "Patient.maritalStatus", "fhir_values": "v3 MaritalStatus codes (M D W S L P T U)", "loss": "Demographic marital status", "proposal": "Spawn observation row with observation_concept_id=SNOMED 224125008 'Marital status' (or LOINC 45404-7), value_as_concept_id from a small hand-curated map" },
+        { "fhir_path": "Patient.communication.language", "fhir_values": "BCP-47 language codes", "loss": "Patient preferred language", "proposal": "person table has no language_concept_id (only note does). Spawn observation row with concept_id=SNOMED 161139007 'Spoken language' and value_as_concept_id from Language vocab" },
+        { "fhir_path": "Encounter.priority", "fhir_values": "v3 ActPriority", "loss": "Triage priority", "proposal": "Drop today (no OMOP target). Propose CDM extension if needed" },
+        { "fhir_path": "Observation.method", "fhir_values": "SNOMED method codes", "loss": "How the observation was performed", "proposal": "measurement table has no method_concept_id; observation table has no method either. Drop or spawn qualifier observation" },
+        { "fhir_path": "Specimen.collection.method", "fhir_values": "SNOMED collection method", "loss": "How specimen was collected (venipuncture, capillary, etc.)", "proposal": "Drop or stash in specimen_source_value as a structured suffix" },
+        { "fhir_path": "Coverage.relationship", "fhir_values": "v3 SubscriberRelationship", "loss": "Subscriber vs dependent vs spouse on plan", "proposal": "payer_plan_period has no relationship column. Drop or propose CDM extension" },
+        { "fhir_path": "Encounter.priority", "fhir_values": "v3 ActPriority", "loss": "Encounter priority", "proposal": "Drop" }
+      ]
+    },
+    "valuesets_with_no_clean_omop_concept": {
+      "$comment": "FHIR ValueSets where some member codes have no direct OMOP equivalent. Code-by-code analysis needed; pick-one or drop policy.",
+      "entries": [
+        { "valueset": "http://hl7.org/fhir/ValueSet/v3-ActEncounterCode", "fhir_codes": ["OBSENC", "SS", "ACUTE", "NONAC", "PRENC"], "omop_gap": "no direct Visit concepts; usually folded into 9202 OP or 32037 ICU lossily" },
+        { "valueset": "http://hl7.org/fhir/ValueSet/encounter-admit-source", "fhir_codes_unmapped": ["born", "outp"], "omop_target_column": "admitted_from_concept_id" },
+        { "valueset": "http://hl7.org/fhir/ValueSet/encounter-discharge-disposition", "fhir_codes_unmapped": ["home-hosp", "aadvice"], "omop_target_column": "discharged_to_concept_id" }
+      ]
+    }
+  },
+  "loaded_vocab_gaps": {
+    "$comment": "Vocabularies referenced by our profiles/edges that aren't loaded in the current Athena bundle. Re-pick from https://athena.ohdsi.org/vocabulary/list.",
+    "missing": [
+      { "vocabulary_id": "CVX", "blocks": "Immunization.vaccineCode → drug_concept_id", "fhir_system": "http://hl7.org/fhir/sid/cvx" },
+      { "vocabulary_id": "ICD10PCS", "blocks": "Procedure source codes via Maps to", "fhir_system": "http://hl7.org/fhir/sid/icd-10-pcs" },
+      { "vocabulary_id": "CPT4", "blocks": "Procedure source codes — also requires running cpt.sh post-processor with UMLS API key", "fhir_system": "http://www.ama-assn.org/go/cpt" }
+    ]
+  }
+}
