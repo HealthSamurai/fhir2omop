@@ -24,8 +24,8 @@ export default async function (ctx: Context, _session: any, _req: Request) {
         }
     }
 
-    const resources = [...resMap.keys()].sort();
-    const tables = [...tblMap.keys()].sort();
+    const resourcesAlpha = [...resMap.keys()].sort();
+    const tablesAlpha = [...tblMap.keys()].sort();
 
     // Build a connection set for the SVG
     const connections: Array<{ resource: string; table: string; status: string; primary: boolean }> = [];
@@ -45,6 +45,8 @@ export default async function (ctx: Context, _session: any, _req: Request) {
             }
         }
     }
+
+    const { resources, tables } = barycenterOrder(resourcesAlpha, tablesAlpha, connections);
 
     // Stats
     const totalEdges = connections.length;
@@ -107,6 +109,52 @@ export default async function (ctx: Context, _session: any, _req: Request) {
 </div>`;
 
     return { title: "Index", main };
+}
+
+function barycenterOrder(
+    resources: string[],
+    tables: string[],
+    conns: Array<{ resource: string; table: string }>,
+): { resources: string[]; tables: string[] } {
+    const rAdj = new Map<string, string[]>();
+    const tAdj = new Map<string, string[]>();
+    for (const c of conns) {
+        if (!rAdj.has(c.resource)) rAdj.set(c.resource, []);
+        rAdj.get(c.resource)!.push(c.table);
+        if (!tAdj.has(c.table)) tAdj.set(c.table, []);
+        tAdj.get(c.table)!.push(c.resource);
+    }
+    const bary = (node: string, adj: Map<string, string[]>, pos: Map<string, number>): number => {
+        const nbrs = adj.get(node) ?? [];
+        if (!nbrs.length) return Number.POSITIVE_INFINITY;
+        let s = 0, n = 0;
+        for (const v of nbrs) {
+            const p = pos.get(v);
+            if (p !== undefined) { s += p; n++; }
+        }
+        return n ? s / n : Number.POSITIVE_INFINITY;
+    };
+    const eq = (a: string[], b: string[]) => a.length === b.length && a.every((x, i) => x === b[i]);
+
+    let r = [...resources];
+    let t = [...tables];
+    for (let iter = 0; iter < 32; iter++) {
+        const tPos = new Map(t.map((x, i) => [x, i] as [string, number]));
+        const newR = [...r].sort((a, b) => {
+            const ba = bary(a, rAdj, tPos);
+            const bb = bary(b, rAdj, tPos);
+            return ba - bb || a.localeCompare(b);
+        });
+        const rPos = new Map(newR.map((x, i) => [x, i] as [string, number]));
+        const newT = [...t].sort((a, b) => {
+            const ba = bary(a, tAdj, rPos);
+            const bb = bary(b, tAdj, rPos);
+            return ba - bb || a.localeCompare(b);
+        });
+        if (eq(newR, r) && eq(newT, t)) { r = newR; t = newT; break; }
+        r = newR; t = newT;
+    }
+    return { resources: r, tables: t };
 }
 
 function esc(s: string) {
