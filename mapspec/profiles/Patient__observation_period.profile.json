@@ -1,0 +1,37 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "omop-patient-observation-period",
+  "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-patient-observation-period",
+  "version": "0.1.0",
+  "name": "OmopPatientObservationPeriod",
+  "title": "OMOP-Convertible Patient → observation_period",
+  "status": "draft",
+  "experimental": true,
+  "description": "Patient that contributes an `observation_period` row. The window itself is **derived from event data** — earliest/latest event_date across all OMOP clinical tables for the person — not from any single Patient field. So this profile is intentionally lax: any conformant Patient produces a row at ETL time. The implementer can also opt to emit a single fixed-window placeholder (e.g. registration date → today) per person; that's an ETL choice, not a profile constraint.",
+  "fhirVersion": "4.0.1",
+  "kind": "resource",
+  "abstract": false,
+  "type": "Patient",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Patient",
+  "derivation": "constraint",
+  "extension": [
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table", "valueString": "observation_period" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge", "valueString": "Patient__observation_period" }
+  ],
+  "differential": {
+    "element": [
+      {
+        "id": "Patient.id",
+        "path": "Patient.id",
+        "min": 1,
+        "comment": "Required to derive person_id (FK observation_period.person_id)."
+      },
+      {
+        "id": "Patient.active",
+        "path": "Patient.active",
+        "mustSupport": true,
+        "comment": "Inactive patients may still have historical observation_period rows; not a hard gate."
+      }
+    ]
+  }
+}
