@@ -7,11 +7,11 @@
   "title": "OMOP Condition-domain codes (example subset)",
   "status": "draft",
   "experimental": true,
-  "description": "Codes that route a FHIR Condition (or domain-routed Procedure/Observation) to the OMOP `condition_occurrence` table. Authoritative expansion: vocab.concept WHERE domain_id = 'Condition' AND standard_concept = 'S' (~105,666 standard concepts, almost entirely SNOMED). Source vocabularies like ICD10CM are non-standard; they map *to* SNOMED via concept_relationship 'Maps to' and become Conditions on the OMOP side.",
+  "description": "Codes that route a FHIR Condition to the OMOP `condition_occurrence` table. Includes BOTH (a) standard SNOMED Condition concepts (~105K) AND (b) non-standard source codes that resolve to a standard Condition via concept_relationship 'Maps to' — ICD10CM (88K codes), ICD9CM (15K codes). Athena bundle gaps: ICD10 (WHO), MedDRA, Read, CIEL are not loaded.",
   "extension": [
     { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-domain", "valueString": "Condition" },
     { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-expansion-sql",
-      "valueString": "SELECT vocabulary_id, concept_code, concept_name FROM vocab.concept WHERE domain_id = 'Condition' AND standard_concept = 'S'" }
+      "valueString": "-- standard Condition concepts\nSELECT vocabulary_id, concept_code, concept_name FROM vocab.concept WHERE domain_id = 'Condition' AND standard_concept = 'S'\nUNION ALL\n-- non-standard source codes that Maps to a standard Condition\nSELECT c1.vocabulary_id, c1.concept_code, c1.concept_name FROM vocab.concept c1 JOIN vocab.concept_relationship cr ON cr.concept_id_1 = c1.concept_id AND cr.relationship_id = 'Maps to' AND cr.invalid_reason IS NULL JOIN vocab.concept c2 ON c2.concept_id = cr.concept_id_2 WHERE c2.domain_id = 'Condition' AND c2.standard_concept = 'S' AND c1.standard_concept IS DISTINCT FROM 'S'" }
   ],
   "compose": {
     "include": [
@@ -28,9 +28,19 @@
       {
         "system": "http://hl7.org/fhir/sid/icd-10-cm",
         "concept": [
-          { "code": "E11.9",  "display": "Type 2 diabetes mellitus without complications" },
-          { "code": "I10",    "display": "Essential (primary) hypertension" },
-          { "code": "J45.909","display": "Unspecified asthma, uncomplicated" }
+          { "code": "E11.9",   "display": "Type 2 diabetes mellitus without complications" },
+          { "code": "I10",     "display": "Essential (primary) hypertension" },
+          { "code": "J45.909", "display": "Unspecified asthma, uncomplicated" }
+        ]
+      },
+      {
+        "system": "http://hl7.org/fhir/sid/icd-9-cm",
+        "concept": [
+          { "code": "250.00",  "display": "Diabetes mellitus type II, not stated as uncontrolled" },
+          { "code": "401.9",   "display": "Unspecified essential hypertension" },
+          { "code": "493.90",  "display": "Asthma, unspecified" },
+          { "code": "272.0",   "display": "Pure hypercholesterolemia" },
+          { "code": "414.01",  "display": "Coronary atherosclerosis of native coronary artery" }
         ]
       }
     ]
