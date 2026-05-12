@@ -1,0 +1,76 @@
+{
+  "$comment": "FHIR CodeSystem URL → OMOP vocabulary_id map. Categories A (canonical) + B (URL alias) from mapspec/codesystem-mappings.md. Used by the runtime concept resolver: vocab.concept WHERE vocabulary_id = aliases[system] AND concept_code = ?",
+  "aliases": {
+    "http://snomed.info/sct": "SNOMED",
+    "http://loinc.org": "LOINC",
+    "http://www.nlm.nih.gov/research/umls/rxnorm": "RxNorm",
+    "http://hl7.org/fhir/sid/icd-10-cm": "ICD10CM",
+    "http://hl7.org/fhir/sid/icd-10-pcs": "ICD10PCS",
+    "http://hl7.org/fhir/sid/ndc": "NDC",
+    "http://hl7.org/fhir/sid/cvx": "CVX",
+    "http://www.ama-assn.org/go/cpt": "CPT4",
+    "https://www.cms.gov/Medicare/Coding/place-of-service-codes": "CMS Place of Service",
+    "http://unitsofmeasure.org": "UCUM"
+  },
+  "loaded": {
+    "SNOMED": true,
+    "LOINC": true,
+    "RxNorm": true,
+    "RxNorm Extension": true,
+    "ICD10CM": true,
+    "NDC": true,
+    "HCPCS": true,
+    "CMS Place of Service": true,
+    "UCUM": true,
+    "ICD10PCS": false,
+    "CPT4": false,
+    "CVX": false
+  },
+  "non_standard": {
+    "$comment": "These vocabularies hold *source* codes that resolve to standard concepts via concept_relationship 'Maps to'. Always follow the Maps-to edge before writing a *_concept_id.",
+    "ICD10CM": "SNOMED (Condition)",
+    "ICD9CM": "SNOMED (Condition)",
+    "ICD10PCS": "SNOMED (Procedure)",
+    "ICD9Proc": "SNOMED (Procedure)",
+    "CPT4": "SNOMED (Procedure) — sometimes Measurement",
+    "HCPCS": "SNOMED (Procedure / Device)",
+    "NDC": "RxNorm (Drug)",
+    "CVX": "RxNorm (Drug)"
+  },
+  "enum_maps": {
+    "$comment": "Category C — hand-curated FHIR enum → concept_id. Use this instead of concept_code lookup. Each is documented inline in the relevant edge's vocabularies[].",
+    "http://hl7.org/fhir/ValueSet/administrative-gender": {
+      "edge": "Patient__person",
+      "vocabulary": "gender"
+    },
+    "http://hl7.org/fhir/us/core/ValueSet/omb-race-category": {
+      "edge": "Patient__person",
+      "vocabulary": "race"
+    },
+    "http://hl7.org/fhir/us/core/ValueSet/omb-ethnicity-category": {
+      "edge": "Patient__person",
+      "vocabulary": "ethnicity"
+    },
+    "http://terminology.hl7.org/CodeSystem/v3-ActCode": {
+      "edge": "Encounter__visit_occurrence",
+      "vocabulary": "visit_class"
+    }
+  },
+  "status_filters": {
+    "$comment": "Category D — these ValueSets filter which instances qualify for conversion. NOT mapped to concept_id. Profile binding handles them.",
+    "ValueSets": [
+      "http://hl7.org/fhir/ValueSet/observation-status",
+      "http://hl7.org/fhir/ValueSet/condition-ver-status",
+      "http://hl7.org/fhir/ValueSet/encounter-status",
+      "http://hl7.org/fhir/ValueSet/event-status",
+      "http://hl7.org/fhir/ValueSet/diagnostic-report-status",
+      "http://hl7.org/fhir/ValueSet/medicationrequest-status",
+      "http://hl7.org/fhir/ValueSet/medication-statement-status",
+      "http://hl7.org/fhir/ValueSet/medication-admin-status",
+      "http://hl7.org/fhir/ValueSet/medicationdispense-status",
+      "http://hl7.org/fhir/ValueSet/allergyintolerance-clinical",
+      "http://hl7.org/fhir/ValueSet/allergyintolerance-verification",
+      "http://hl7.org/fhir/ValueSet/location-physical-type"
+    ]
+  }
+}
