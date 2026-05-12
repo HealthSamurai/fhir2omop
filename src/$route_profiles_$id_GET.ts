@@ -16,13 +16,20 @@ export default async function (ctx: Context, _session: any, req: Request) {
 
 function renderView(v: types.profiles.ViewDefinition): string {
     const cols = v.select?.[0]?.column ?? [];
-    const rows = cols.map((c) => `
+    const rows = cols.map((c: any) => {
+        const target = readOmopTarget(c);
+        const targetCell = target
+            ? `<div class="text-xs font-mono text-green-800">${esc(target.column)}</div>${target.transform ? `<div class="text-[10px] text-gray-500 leading-snug mt-0.5">${esc(target.transform)}</div>` : ""}`
+            : `<span class="text-[10px] text-gray-300">—</span>`;
+        return `
 <tr class="border-t border-gray-100 align-top">
   <td class="px-3 py-1.5 text-xs font-mono font-semibold text-gray-900 whitespace-nowrap">${esc(c.name)}</td>
-  <td class="px-3 py-1.5 text-xs font-mono text-blue-700">${esc(c.path)}</td>
-  <td class="px-3 py-1.5 text-[10px] uppercase tracking-wider text-gray-500">${esc(c.type ?? "")}</td>
+  <td class="px-3 py-1.5 text-xs font-mono text-blue-700 break-all">${esc(c.path)}</td>
+  <td class="px-3 py-1.5 text-[10px] uppercase tracking-wider text-gray-500 whitespace-nowrap">${esc(c.type ?? "")}</td>
+  <td class="px-3 py-1.5 whitespace-nowrap">${targetCell}</td>
   <td class="px-3 py-1.5 text-xs text-gray-500 leading-snug">${esc(c.description ?? "")}</td>
-</tr>`).join("");
+</tr>`;
+    }).join("");
 
     const whereHtml = (v.where ?? []).map((w) => `
 <li class="font-mono text-xs text-amber-800">${esc(w.path)}${w.description ? ` <span class="text-gray-500 font-sans">— ${esc(w.description)}</span>` : ""}</li>`).join("");
@@ -55,6 +62,7 @@ function renderView(v: types.profiles.ViewDefinition): string {
           <th class="px-3 py-2 text-left font-medium">column name</th>
           <th class="px-3 py-2 text-left font-medium">FHIRPath</th>
           <th class="px-3 py-2 text-left font-medium">type</th>
+          <th class="px-3 py-2 text-left font-medium">→ OMOP column · stage-2 transform</th>
           <th class="px-3 py-2 text-left font-medium">description</th>
         </tr>
       </thead>
@@ -274,5 +282,15 @@ function shortSystem(s: string): string {
         "https://www.cms.gov/Medicare/Coding/place-of-service-codes": "CMS POS",
     } as Record<string, string>)[s] ?? s;
 }
+function readOmopTarget(c: any): { column: string; transform?: string } | null {
+    const ext = (c.extension ?? []).find((e: any) =>
+        typeof e.url === "string" && e.url.endsWith("/omop-column-target"));
+    if (!ext?.extension) return null;
+    const col = ext.extension.find((x: any) => x.url === "column")?.valueString;
+    if (!col) return null;
+    const transform = ext.extension.find((x: any) => x.url === "transform")?.valueString;
+    return { column: col, transform };
+}
+
 function esc(s: string) { return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!)); }
 function enc(s: string) { return encodeURIComponent(s); }

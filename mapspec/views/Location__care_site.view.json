@@ -2,12 +2,12 @@
   "resourceType": "ViewDefinition",
   "id": "omop-location-care-site",
   "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-location-care-site",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "name": "OmopLocationCareSiteView",
-  "title": "Location → care_site (flat)",
+  "title": "Location → care_site (FHIR-flat, stage 1)",
   "status": "draft",
   "experimental": true,
-  "description": "Secondary pattern: some implementations (notably fhir-to-omop-demo) create a care_site row from each FHIR Location resource, in addition to the primary care_site row from Organization. The Location-derived care_site row carries the location_id (linking to the location row from the same Location resource) while the Organization-derived row carries the name and place_of_service. The two rows share the same care_site_id and must be merged downstream. This pattern is NOT used by omoponfhir-v54, ETL-German, or NACHC.",
+  "description": "Secondary pattern: some implementations (notably fhir-to-omop-demo) create a care_site row from each FHIR Location resource, in addition to the primary care_site row from Organization. The Location-derived care_site row carries the location_id (linking to the location row from the same Location resource) while the Organization-derived row carries the name and place_of_service. The two rows share the same care_site_id and must be merged downstream. This pattern is NOT used by omoponfhir-v54, ETL-German, or NACHC.\n\nStage 1 of FHIR→OMOP: produce a flat row keeping source codes per vocabulary. Stage 2 joins vocab.concept to resolve concept_ids.",
   "extension": [
     {
       "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
@@ -23,24 +23,48 @@
     {
       "column": [
         {
-          "name": "care_site_id",
-          "path": "Location.managingOrganization.reference",
-          "type": "Reference(Organization)",
-          "description": "Resolves to the Organization's care_site_id. Same care_site_id as the row produced by Organization -> care_site. The two rows describe the same care site."
-        },
-        {
-          "name": "location_id",
+          "name": "id",
           "path": "Location.id",
           "type": "id",
-          "description": "Points to the location row produced from this same Location resource (see Location__location edge)."
+          "description": "FHIR Location.id; surrogate OMOP key derived (hash/sequence) downstream.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "care_site_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "surrogate key from hash/sequence/lookup of FHIR id"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "address_id",
+          "path": "Location.id",
+          "type": "id",
+          "description": "Points to the location row produced from this same Location resource (see Location__location edge).",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "location_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "resolve LOCATION reference; downstream maps to location_id"
+                }
+              ]
+            }
+          ]
         }
       ]
-    }
-  ],
-  "where": [
-    {
-      "path": "true",
-      "description": "Location.managingOrganization is present"
     }
   ]
 }

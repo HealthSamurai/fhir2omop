@@ -2,12 +2,12 @@
   "resourceType": "ViewDefinition",
   "id": "omop-location-location",
   "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-location-location",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "name": "OmopLocationLocationView",
-  "title": "Location → location (flat)",
+  "title": "Location → location (FHIR-flat, stage 1)",
   "status": "draft",
   "experimental": true,
-  "description": "Each FHIR Location maps to one OMOP location row representing a physical address. Location.address fields map to address_1, address_2, city, state, zip, county, and country. Location.position maps to latitude/longitude. The location table is shared with Patient.address -- both populate the same table and rows should be deduplicated by address components to avoid duplicates.",
+  "description": "Each FHIR Location maps to one OMOP location row representing a physical address. Location.address fields map to address_1, address_2, city, state, zip, county, and country. Location.position maps to latitude/longitude. The location table is shared with Patient.address -- both populate the same table and rows should be deduplicated by address components to avoid duplicates.\n\nStage 1 of FHIR→OMOP: produce a flat row keeping source codes per vocabulary. Stage 2 joins vocab.concept to resolve concept_ids.",
   "extension": [
     {
       "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
@@ -23,76 +23,216 @@
     {
       "column": [
         {
-          "name": "location_id",
-          "path": "(generated)",
+          "name": "id",
+          "path": "Location.id",
           "type": "id",
-          "description": "Surrogate key. Each unique address should be assigned a unique key. fhir-to-omop-demo uses Location.id directly."
+          "description": "FHIR Location.id; surrogate OMOP key derived (hash/sequence) downstream.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "location_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "surrogate key from hash/sequence/lookup of FHIR id"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "address_1",
           "path": "Location.address.line[0]",
           "type": "string",
-          "description": "First line of street address."
+          "description": "First line of street address.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "address_1"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "address_2",
           "path": "Location.address.line[1]",
           "type": "string",
-          "description": "Second line of street address. If more than 2 address lines, concatenate third+ into address_2 or drop them."
+          "description": "Second line of street address. If more than 2 address lines, concatenate third+ into address_2 or drop them.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "address_2"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "city",
           "path": "Location.address.city",
           "type": "string",
-          "description": "City."
+          "description": "City.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "city"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "state",
           "path": "Location.address.state",
           "type": "string",
-          "description": "State. May need normalization (e.g., 'California' -> 'CA'). varchar(2) may force lossy mapping for international locations."
+          "description": "State. May need normalization (e.g., 'California' -> 'CA'). varchar(2) may force lossy mapping for international locations.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "state"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "zip",
           "path": "Location.address.postalCode",
           "type": "string",
-          "description": "3-, 5-, or 9-digit US zip; international codes also allowed. Truncate if >9 chars."
+          "description": "3-, 5-, or 9-digit US zip; international codes also allowed. Truncate if >9 chars.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "zip"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "county",
           "path": "Location.address.district",
           "type": "string",
-          "description": "FHIR district is the closest analog to OMOP county."
+          "description": "FHIR district is the closest analog to OMOP county.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "county"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "location_source_value",
+          "name": "location_text",
           "path": "Location.id",
           "type": "string",
-          "description": "Verbatim source identifier or full address text (Location.address.text) for traceability."
+          "description": "Verbatim source identifier or full address text (Location.address.text) for traceability.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "location_source_value"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "country_concept_id",
+          "name": "country",
           "path": "Location.address.country",
           "type": "string",
-          "description": "Mapped to OMOP Geography domain concept. 0 if unmapped. — transform: map(Location.address.country, Geography domain)"
+          "description": "Mapped to OMOP Geography domain concept. 0 if unmapped.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "country_concept_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "map(Location.address.country, Geography domain)"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "country_source_value",
+          "name": "country_text",
           "path": "Location.address.country",
           "type": "string",
-          "description": "Country name verbatim."
+          "description": "Country name verbatim.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "country_source_value"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "latitude",
           "path": "Location.position.latitude",
           "type": "decimal",
-          "description": "Must be between -90 and 90."
+          "description": "Must be between -90 and 90.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "latitude"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "longitude",
           "path": "Location.position.longitude",
           "type": "decimal",
-          "description": "Must be between -180 and 180."
+          "description": "Must be between -180 and 180.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "longitude"
+                }
+              ]
+            }
+          ]
         }
       ]
     }

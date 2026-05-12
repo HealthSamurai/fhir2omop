@@ -2,12 +2,12 @@
   "resourceType": "ViewDefinition",
   "id": "omop-medicationdispense-drug-exposure",
   "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-medicationdispense-drug-exposure",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "name": "OmopMedicationDispenseDrugExposureView",
-  "title": "MedicationDispense → drug_exposure (flat)",
+  "title": "MedicationDispense → drug_exposure (FHIR-flat, stage 1)",
   "status": "draft",
   "experimental": true,
-  "description": "Pharmacy dispensing events. One FHIR MedicationDispense produces one OMOP drug_exposure row with drug_type_concept_id = 38000175 (Prescription dispensed in pharmacy). Date is taken from whenHandedOver (fallback whenPrepared). End date is computed from start + daysSupply, or defaults to start date. No reviewed reference implementation covers this mapping; the spec is reconstructed from OMOP drug_exposure schema and FHIR R4 MedicationDispense definition.",
+  "description": "Pharmacy dispensing events. One FHIR MedicationDispense produces one OMOP drug_exposure row with drug_type_concept_id = 38000175 (Prescription dispensed in pharmacy). Date is taken from whenHandedOver (fallback whenPrepared). End date is computed from start + daysSupply, or defaults to start date. No reviewed reference implementation covers this mapping; the spec is reconstructed from OMOP drug_exposure schema and FHIR R4 MedicationDispense definition.\n\nStage 1 of FHIR→OMOP: produce a flat row keeping source codes per vocabulary. Stage 2 joins vocab.concept to resolve concept_ids.",
   "extension": [
     {
       "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
@@ -23,96 +23,364 @@
     {
       "column": [
         {
-          "name": "person_id",
-          "path": "MedicationDispense.subject",
-          "type": "Reference(Patient)",
-          "description": "Resolve Patient reference to person_id"
+          "name": "id",
+          "path": "MedicationDispense.id",
+          "type": "id",
+          "description": "FHIR MedicationDispense.id; surrogate OMOP key derived (hash/sequence) downstream.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "drug_exposure_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "surrogate key from hash/sequence/lookup of FHIR id"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "drug_concept_id",
-          "path": "MedicationDispense.medication[x]",
-          "type": "CodeableConcept | Reference(Medication)",
-          "description": "RxNorm / ATC / NDC -> OMOP standard concept. Resolve medicationCodeableConcept or medicationReference"
+          "name": "drug_rxnorm",
+          "path": "MedicationDispense.medicationCodeableConcept.coding.where(system='http://www.nlm.nih.gov/research/umls/rxnorm').first().code",
+          "type": "code",
+          "description": "Medication code — RxNorm",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "drug_concept_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "lookup vocab.concept WHERE vocabulary_id='RxNorm' AND concept_code = (this column); standard_concept='S' preferred"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "drug_ndc",
+          "path": "MedicationDispense.medicationCodeableConcept.coding.where(system='http://hl7.org/fhir/sid/ndc').first().code",
+          "type": "code",
+          "description": "Medication code — NDC",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "drug_concept_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "lookup vocab.concept WHERE vocabulary_id='NDC' AND concept_code = (this column); standard_concept='S' preferred"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "drug_atc",
+          "path": "MedicationDispense.medicationCodeableConcept.coding.where(system='http://www.whocc.no/atc').first().code",
+          "type": "code",
+          "description": "Medication code — ATC",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "drug_concept_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "lookup vocab.concept WHERE vocabulary_id='ATC' AND concept_code = (this column); standard_concept='S' preferred"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "drug_snomed",
+          "path": "MedicationDispense.medicationCodeableConcept.coding.where(system='http://snomed.info/sct').first().code",
+          "type": "code",
+          "description": "Medication code — SNOMED",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "drug_concept_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "lookup vocab.concept WHERE vocabulary_id='SNOMED' AND concept_code = (this column); standard_concept='S' preferred"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "drug_text",
+          "path": "MedicationDispense.medicationCodeableConcept.text",
+          "type": "string",
+          "description": "Free text label from MedicationDispense.medicationCodeableConcept",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "drug_source_value"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "copy text verbatim into OMOP source_value column"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "subject_id",
+          "path": "MedicationDispense.subject",
+          "type": "Reference(Patient)",
+          "description": "Resolve Patient reference to person_id",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "person_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "resolve PERSON reference; downstream maps to person_id"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "drug_exposure_start_date",
           "path": "MedicationDispense.whenHandedOver",
           "type": "dateTime",
-          "description": "The date medication was supplied. Fallback to whenPrepared if whenHandedOver absent — transform: date(whenHandedOver ?? whenPrepared)"
+          "description": "The date medication was supplied. Fallback to whenPrepared if whenHandedOver absent",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "drug_exposure_start_date"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "date(whenHandedOver ?? whenPrepared)"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "drug_exposure_start_datetime",
           "path": "MedicationDispense.whenHandedOver",
           "type": "dateTime",
-          "description": "Full ISO datetime — transform: whenHandedOver ?? whenPrepared"
+          "description": "Full ISO datetime",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "drug_exposure_start_datetime"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "whenHandedOver ?? whenPrepared"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "drug_exposure_end_date",
           "path": "MedicationDispense.daysSupply",
           "type": "Duration",
-          "description": "If daysSupply present: end = start + daysSupply. Otherwise fallback to start date — transform: date(start + daysSupply) ?? start_date"
+          "description": "If daysSupply present: end = start + daysSupply. Otherwise fallback to start date",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "drug_exposure_end_date"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "date(start + daysSupply) ?? start_date"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "quantity",
           "path": "MedicationDispense.quantity.value",
           "type": "decimal",
-          "description": "Dispensed quantity (the total handed over)"
+          "description": "Dispensed quantity (the total handed over)",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "quantity"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "days_supply",
           "path": "MedicationDispense.daysSupply.value",
           "type": "integer",
-          "description": "Days of medication supplied. Direct FHIR field on MedicationDispense (unlike MedicationRequest where it must be computed)"
+          "description": "Days of medication supplied. Direct FHIR field on MedicationDispense (unlike MedicationRequest where it must be computed)",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "days_supply"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "sig",
           "path": "MedicationDispense.dosageInstruction[].text",
           "type": "string",
-          "description": "Free-text dosage instructions. Fallback to patientInstruction"
+          "description": "Free-text dosage instructions. Fallback to patientInstruction",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "sig"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "route_concept_id",
+          "name": "route",
           "path": "MedicationDispense.dosageInstruction[].route",
           "type": "CodeableConcept",
-          "description": "SNOMED route codes -> OMOP Route domain"
+          "description": "SNOMED route codes -> OMOP Route domain",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "route_concept_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "resolve CONCEPT reference; downstream maps to route_concept_id"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "route_source_value",
+          "name": "route_text",
           "path": "MedicationDispense.dosageInstruction[].route.text",
           "type": "string",
-          "description": "Raw route text or coding[0].display"
+          "description": "Raw route text or coding[0].display",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "route_source_value"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "provider_id",
+          "name": "performer_id",
           "path": "MedicationDispense.performer[0].actor",
           "type": "Reference(Practitioner | PractitionerRole | Organization)",
-          "description": "The dispensing pharmacist or actor"
+          "description": "The dispensing pharmacist or actor",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "provider_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "resolve PROVIDER reference; downstream maps to provider_id"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "visit_occurrence_id",
+          "name": "encounter_id",
           "path": "MedicationDispense.context",
           "type": "Reference(Encounter)",
-          "description": "Encounter reference. Resolve to visit_occurrence_id"
+          "description": "Encounter reference. Resolve to visit_occurrence_id",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "visit_occurrence_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "resolve VISIT_OCCURRENCE reference; downstream maps to visit_occurrence_id"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "drug_source_value",
-          "path": "MedicationDispense.medication[x].coding[best].code",
-          "type": "code",
-          "description": "Best code by vocabulary priority (RxNorm > ATC > NDC > SNOMED)"
-        },
-        {
-          "name": "dose_unit_source_value",
+          "name": "dose_unit_text",
           "path": "MedicationDispense.dosageInstruction[].doseAndRate[].doseQuantity.unit",
           "type": "string",
-          "description": "Raw dose unit string from doseQuantity.unit or .code"
+          "description": "Raw dose unit string from doseQuantity.unit or .code",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "dose_unit_source_value"
+                }
+              ]
+            }
+          ]
         }
       ]
-    }
-  ],
-  "where": [
-    {
-      "path": "true",
-      "description": "status != 'entered-in-error' AND status != 'cancelled' AND status != 'declined' AND status != 'stopped'"
     }
   ]
 }

@@ -2,12 +2,12 @@
   "resourceType": "ViewDefinition",
   "id": "omop-observation-observation",
   "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-observation-observation",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "name": "OmopObservationObservationView",
-  "title": "Observation → observation (flat)",
+  "title": "Observation → observation (FHIR-flat, stage 1)",
   "status": "draft",
   "experimental": true,
-  "description": "Qualitative clinical findings: social history, lifestyle factors, survey responses, activity data. One FHIR Observation (or one component) maps to one OMOP observation row. Also receives data from AllergyIntolerance and FamilyMemberHistory.",
+  "description": "Qualitative clinical findings: social history, lifestyle factors, survey responses, activity data. One FHIR Observation (or one component) maps to one OMOP observation row. Also receives data from AllergyIntolerance and FamilyMemberHistory.\n\nStage 1 of FHIR→OMOP: produce a flat row keeping source codes per vocabulary. Stage 2 joins vocab.concept to resolve concept_ids.",
   "extension": [
     {
       "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
@@ -23,102 +23,385 @@
     {
       "column": [
         {
-          "name": "observation_id",
+          "name": "id",
           "path": "Observation.id",
           "type": "id",
-          "description": "Generated deterministically from Observation.id + -comp-N suffix for component rows"
+          "description": "FHIR Observation.id; surrogate OMOP key derived (hash/sequence) downstream.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "observation_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "surrogate key from hash/sequence/lookup of FHIR id"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "person_id",
+          "name": "code_loinc",
+          "path": "Observation.code.coding.where(system='http://loinc.org').first().code",
+          "type": "code",
+          "description": "Observation code — LOINC",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "observation_concept_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "lookup vocab.concept WHERE vocabulary_id='LOINC' AND concept_code = (this column); standard_concept='S' preferred"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "code_snomed",
+          "path": "Observation.code.coding.where(system='http://snomed.info/sct').first().code",
+          "type": "code",
+          "description": "Observation code — SNOMED",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "observation_concept_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "lookup vocab.concept WHERE vocabulary_id='SNOMED' AND concept_code = (this column); standard_concept='S' preferred"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "code_text",
+          "path": "Observation.code.text",
+          "type": "string",
+          "description": "Free text label from Observation.code",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "observation_source_value"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "copy text verbatim into OMOP source_value column"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "value_code_snomed",
+          "path": "Observation.valueCodeableConcept.coding.where(system='http://snomed.info/sct').first().code",
+          "type": "code",
+          "description": "Coded value (when value[x] is CodeableConcept) — SNOMED",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "value_as_concept_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "lookup vocab.concept WHERE vocabulary_id='SNOMED' AND concept_code = (this column); standard_concept='S' preferred"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "value_code_loinc",
+          "path": "Observation.valueCodeableConcept.coding.where(system='http://loinc.org').first().code",
+          "type": "code",
+          "description": "Coded value (when value[x] is CodeableConcept) — LOINC",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "value_as_concept_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "lookup vocab.concept WHERE vocabulary_id='LOINC' AND concept_code = (this column); standard_concept='S' preferred"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "value_code_text",
+          "path": "Observation.valueCodeableConcept.text",
+          "type": "string",
+          "description": "Free text label from Observation.valueCodeableConcept",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "value_as_source_value"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "copy text verbatim into OMOP source_value column"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "subject_id",
           "path": "Observation.subject",
-          "type": "Reference(Patient)"
-        },
-        {
-          "name": "observation_concept_id",
-          "path": "Observation.code | Observation.component.code",
-          "type": "CodeableConcept",
-          "description": "LOINC/SNOMED mapped to OMOP standard concept. Placeholder: 0."
+          "type": "Reference(Patient)",
+          "description": "",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "person_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "resolve PERSON reference; downstream maps to person_id"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "observation_date",
-          "path": "Observation.effectiveDateTime | Observation.effectivePeriod.start",
+          "path": "Observation.effectiveDateTime",
           "type": "dateTime",
-          "description": "transform: dateTime -> date"
+          "description": "",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "observation_date"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "dateTime -> date"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "observation_datetime",
-          "path": "Observation.effectiveDateTime | Observation.effectivePeriod.start",
-          "type": "dateTime"
+          "path": "Observation.effectiveDateTime",
+          "type": "dateTime",
+          "description": "",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "observation_datetime"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "value_as_number",
           "path": "Observation.valueQuantity.value",
           "type": "decimal",
-          "description": "Uncommon for qualitative observations"
+          "description": "Uncommon for qualitative observations",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "value_as_number"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "value_as_string",
-          "path": "Observation.valueString | Observation.valueCodeableConcept.text",
+          "path": "Observation.valueString",
           "type": "string",
-          "description": "valueString first; fall back to CodeableConcept source text"
+          "description": "valueString first; fall back to CodeableConcept source text",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "value_as_string"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "value_as_concept_id",
-          "path": "Observation.valueCodeableConcept",
-          "type": "CodeableConcept",
-          "description": "Requires vocab lookup. Placeholder: null."
-        },
-        {
-          "name": "qualifier_source_value",
+          "name": "qualifier_text",
           "path": "Observation.interpretation[0].coding[0].code",
           "type": "code",
-          "description": "E.g. H for High, L for Low. Falls back to interpretation[0].text"
+          "description": "E.g. H for High, L for Low. Falls back to interpretation[0].text",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "qualifier_source_value"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "qualifier_concept_id",
+          "name": "qualifier",
           "path": "Observation.interpretation",
           "type": "CodeableConcept",
-          "description": "Requires vocab lookup. Placeholder: null."
+          "description": "Requires vocab lookup. Placeholder: null.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "qualifier_concept_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "resolve CONCEPT reference; downstream maps to qualifier_concept_id"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "unit_source_value",
+          "name": "unit_text",
           "path": "Observation.valueQuantity.unit",
-          "type": "string"
+          "type": "string",
+          "description": "",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "unit_source_value"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "unit_concept_id",
+          "name": "unit",
           "path": "Observation.valueQuantity.code",
           "type": "code",
-          "description": "UCUM code mapped to OMOP unit concept. Placeholder: null."
+          "description": "UCUM code mapped to OMOP unit concept. Placeholder: null.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "unit_concept_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "resolve CONCEPT reference; downstream maps to unit_concept_id"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "provider_id",
+          "name": "performer_id",
           "path": "Observation.performer[0]",
-          "type": "Reference(Practitioner)"
+          "type": "Reference(Practitioner)",
+          "description": "",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "provider_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "resolve PROVIDER reference; downstream maps to provider_id"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "visit_occurrence_id",
+          "name": "encounter_id",
           "path": "Observation.encounter",
-          "type": "Reference(Encounter)"
+          "type": "Reference(Encounter)",
+          "description": "",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "visit_occurrence_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "resolve VISIT_OCCURRENCE reference; downstream maps to visit_occurrence_id"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "observation_source_value",
-          "path": "Observation.code.coding[best].code",
-          "type": "code"
-        },
-        {
-          "name": "value_source_value",
+          "name": "value_text",
           "path": "computed",
           "type": "string",
-          "description": "Composite of comparator, numeric value, and unit; or valueString; or CodeableConcept text — transform: comparator+value+unit | valueString | valueCodeableConcept.text"
+          "description": "Composite of comparator, numeric value, and unit; or valueString; or CodeableConcept text",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "value_source_value"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "comparator+value+unit | valueString | valueCodeableConcept.text"
+                }
+              ]
+            }
+          ]
         }
       ]
-    }
-  ],
-  "where": [
-    {
-      "path": "true",
-      "description": "category is social-history, survey, or activity"
     }
   ]
 }

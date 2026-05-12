@@ -2,12 +2,12 @@
   "resourceType": "ViewDefinition",
   "id": "omop-practitioner-provider",
   "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-practitioner-provider",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "name": "OmopPractitionerProviderView",
-  "title": "Practitioner → provider (flat)",
+  "title": "Practitioner → provider (FHIR-flat, stage 1)",
   "status": "draft",
   "experimental": true,
-  "description": "Individual healthcare provider. One FHIR Practitioner maps to one OMOP provider row. The provider table stores identity (name, NPI, gender, year_of_birth) from Practitioner; specialty and care_site are enriched by PractitionerRole. Clinical event tables carry provider_id FK back to this row.",
+  "description": "Individual healthcare provider. One FHIR Practitioner maps to one OMOP provider row. The provider table stores identity (name, NPI, gender, year_of_birth) from Practitioner; specialty and care_site are enriched by PractitionerRole. Clinical event tables carry provider_id FK back to this row.\n\nStage 1 of FHIR→OMOP: produce a flat row keeping source codes per vocabulary. Stage 2 joins vocab.concept to resolve concept_ids.",
   "extension": [
     {
       "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
@@ -23,64 +23,198 @@
     {
       "column": [
         {
-          "name": "provider_id",
+          "name": "id",
           "path": "Practitioner.id",
           "type": "id",
-          "description": "Surrogate key. Hash/sequence/lookup of Practitioner.id. Every provider with a different unique identifier is a different person."
+          "description": "FHIR Practitioner.id; surrogate OMOP key derived (hash/sequence) downstream.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "provider_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "surrogate key from hash/sequence/lookup of FHIR id"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "provider_name",
           "path": "Practitioner.name[0]",
           "type": "HumanName",
-          "description": "omoponfhir uses \"family, given\" (lines 337-354). fhir-x-omop uses \"{given} {family}\" (line 13). Pick one convention and document. — transform: format(\"{family}, {given}\")"
+          "description": "omoponfhir uses \"family, given\" (lines 337-354). fhir-x-omop uses \"{given} {family}\" (line 13). Pick one convention and document.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "provider_name"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "format(\"{family}, {given}\")"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "npi",
           "path": "Practitioner.identifier.where(system='http://hl7.org/fhir/sid/us-npi').value",
           "type": "string",
-          "description": "National Provider Identifier issued by CMS. fhir-x-omop filters identifiers by NPI system (lines 15-21)."
+          "description": "National Provider Identifier issued by CMS. fhir-x-omop filters identifiers by NPI system (lines 15-21).",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "npi"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "specialty_concept_id",
+          "name": "specialty",
           "path": "Practitioner.qualification[0].code",
           "type": "CodeableConcept",
-          "description": "Fallback only. Primary source is PractitionerRole.specialty[0] (see PractitionerRole__provider edge). fhir-x-omop falls back to qualification[0].code.coding[0].code (line 31). Default 0 when no PractitionerRole exists."
+          "description": "Fallback only. Primary source is PractitionerRole.specialty[0] (see PractitionerRole__provider edge). fhir-x-omop falls back to qualification[0].code.coding[0].code (line 31). Default 0 when no PractitionerRole exists.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "specialty_concept_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "resolve CONCEPT reference; downstream maps to specialty_concept_id"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "care_site_id",
+          "name": "managing_organization_id",
           "path": "Practitioner.address[0]",
           "type": "Address",
-          "description": "Fallback only when no PractitionerRole.organization link exists. omoponfhir creates a care_site from Practitioner.address (lines 358-375). Primary source is PractitionerRole.organization (see PractitionerRole__provider edge)."
+          "description": "Fallback only when no PractitionerRole.organization link exists. omoponfhir creates a care_site from Practitioner.address (lines 358-375). Primary source is PractitionerRole.organization (see PractitionerRole__provider edge).",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "care_site_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "resolve CARE_SITE reference; downstream maps to care_site_id"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "year_of_birth",
           "path": "Practitioner.birthDate",
           "type": "date",
-          "description": "Year component only. fhir-x-omop extracts via int(x.split('-')[0]) (line 30). — transform: year(Practitioner.birthDate)"
+          "description": "Year component only. fhir-x-omop extracts via int(x.split('-')[0]) (line 30).",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "year_of_birth"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "year(Practitioner.birthDate)"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "gender_concept_id",
+          "name": "gender",
           "path": "Practitioner.gender",
           "type": "code",
-          "description": "Same mapping as Patient: male->8507, female->8532, other->8521, unknown->8551, absent->0."
+          "description": "Same mapping as Patient: male->8507, female->8532, other->8521, unknown->8551, absent->0.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "gender_concept_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "resolve CONCEPT reference; downstream maps to gender_concept_id"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "gender_source_value",
+          "name": "gender_code",
           "path": "Practitioner.gender",
           "type": "code",
-          "description": "Verbatim gender code as it appears in source data. fhir-x-omop uppercases the value (line 29)."
+          "description": "Verbatim gender code as it appears in source data. fhir-x-omop uppercases the value (line 29).",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "gender_source_value"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "specialty_source_value",
+          "name": "specialty_text",
           "path": "Practitioner.qualification[0].code.coding[0].code",
           "type": "string",
-          "description": "Fallback only when no PractitionerRole exists. Primary source is PractitionerRole.specialty[0] (see PractitionerRole__provider edge). fhir-x-omop falls back to qualification[0].code (line 31)."
+          "description": "Fallback only when no PractitionerRole exists. Primary source is PractitionerRole.specialty[0] (see PractitionerRole__provider edge). fhir-x-omop falls back to qualification[0].code (line 31).",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "specialty_source_value"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "provider_source_value",
+          "name": "performer_identifier",
           "path": "Practitioner.identifier (best: NPI > first)",
           "type": "string",
-          "description": "NPI or first identifier value. Use this field to link back to providers in the source data for ETL error checking. omoponfhir uses identifierFirstRep.value (lines 388-392). fhir-x-omop uses Practitioner.id (line 26)."
+          "description": "NPI or first identifier value. Use this field to link back to providers in the source data for ETL error checking. omoponfhir uses identifierFirstRep.value (lines 388-392). fhir-x-omop uses Practitioner.id (line 26).",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "provider_source_value"
+                }
+              ]
+            }
+          ]
         }
       ]
     }

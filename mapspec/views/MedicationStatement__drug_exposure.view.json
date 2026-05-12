@@ -2,12 +2,12 @@
   "resourceType": "ViewDefinition",
   "id": "omop-medicationstatement-drug-exposure",
   "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-medicationstatement-drug-exposure",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "name": "OmopMedicationStatementDrugExposureView",
-  "title": "MedicationStatement → drug_exposure (flat)",
+  "title": "MedicationStatement → drug_exposure (FHIR-flat, stage 1)",
   "status": "draft",
   "experimental": true,
-  "description": "Patient self-reported medication events. Each MedicationStatement produces one drug_exposure row with drug_type_concept_id defaulting to 44787730 (Patient Self-Reported Medication). This is the only FHIR medication resource with a normative HL7 IG FML mapping. Dynamic type concept adjustment is possible based on basedOn/partOf references (omoponfhir behavior).",
+  "description": "Patient self-reported medication events. Each MedicationStatement produces one drug_exposure row with drug_type_concept_id defaulting to 44787730 (Patient Self-Reported Medication). This is the only FHIR medication resource with a normative HL7 IG FML mapping. Dynamic type concept adjustment is possible based on basedOn/partOf references (omoponfhir behavior).\n\nStage 1 of FHIR→OMOP: produce a flat row keeping source codes per vocabulary. Stage 2 joins vocab.concept to resolve concept_ids.",
   "extension": [
     {
       "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
@@ -23,100 +23,392 @@
     {
       "column": [
         {
-          "name": "person_id",
-          "path": "MedicationStatement.subject",
-          "type": "Reference(Patient)",
-          "description": "Resolve Patient reference. HL7 IG FML leaves this as a commented-out TODO."
+          "name": "id",
+          "path": "MedicationStatement.id",
+          "type": "id",
+          "description": "FHIR MedicationStatement.id; surrogate OMOP key derived (hash/sequence) downstream.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "drug_exposure_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "surrogate key from hash/sequence/lookup of FHIR id"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "drug_concept_id",
-          "path": "MedicationStatement.medication[x]",
-          "type": "CodeableConcept/Reference",
-          "description": "RxNorm / ATC / NDC mapped to OMOP standard concept. HL7 IG FML maps from medication.concept.coding.code. Placeholder: 0 when concept lookup unavailable."
+          "name": "drug_rxnorm",
+          "path": "MedicationStatement.medicationCodeableConcept.coding.where(system='http://www.nlm.nih.gov/research/umls/rxnorm').first().code",
+          "type": "code",
+          "description": "Medication code — RxNorm",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "drug_concept_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "lookup vocab.concept WHERE vocabulary_id='RxNorm' AND concept_code = (this column); standard_concept='S' preferred"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "drug_ndc",
+          "path": "MedicationStatement.medicationCodeableConcept.coding.where(system='http://hl7.org/fhir/sid/ndc').first().code",
+          "type": "code",
+          "description": "Medication code — NDC",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "drug_concept_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "lookup vocab.concept WHERE vocabulary_id='NDC' AND concept_code = (this column); standard_concept='S' preferred"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "drug_atc",
+          "path": "MedicationStatement.medicationCodeableConcept.coding.where(system='http://www.whocc.no/atc').first().code",
+          "type": "code",
+          "description": "Medication code — ATC",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "drug_concept_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "lookup vocab.concept WHERE vocabulary_id='ATC' AND concept_code = (this column); standard_concept='S' preferred"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "drug_snomed",
+          "path": "MedicationStatement.medicationCodeableConcept.coding.where(system='http://snomed.info/sct').first().code",
+          "type": "code",
+          "description": "Medication code — SNOMED",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "drug_concept_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "lookup vocab.concept WHERE vocabulary_id='SNOMED' AND concept_code = (this column); standard_concept='S' preferred"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "drug_text",
+          "path": "MedicationStatement.medicationCodeableConcept.text",
+          "type": "string",
+          "description": "Free text label from MedicationStatement.medicationCodeableConcept",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "drug_source_value"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "copy text verbatim into OMOP source_value column"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "subject_id",
+          "path": "MedicationStatement.subject",
+          "type": "Reference(Patient)",
+          "description": "Resolve Patient reference. HL7 IG FML leaves this as a commented-out TODO.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "person_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "resolve PERSON reference; downstream maps to person_id"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "drug_exposure_start_date",
-          "path": "MedicationStatement.effectiveDateTime | MedicationStatement.effectivePeriod.start | MedicationStatement.dateAsserted",
+          "path": "MedicationStatement.effectiveDateTime",
           "type": "dateTime",
-          "description": "Tertiary fallback chain unique to MedicationStatement. omoponfhir falls back to new Date() instead of dateAsserted. — transform: effectiveDateTime -> effectivePeriod.start -> dateAsserted (tertiary fallback)"
+          "description": "Tertiary fallback chain unique to MedicationStatement. omoponfhir falls back to new Date() instead of dateAsserted.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "drug_exposure_start_date"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "effectiveDateTime -> effectivePeriod.start -> dateAsserted (tertiary fallback)"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "drug_exposure_start_datetime",
-          "path": "MedicationStatement.effectiveDateTime | MedicationStatement.effectivePeriod.start | MedicationStatement.dateAsserted",
+          "path": "MedicationStatement.effectiveDateTime",
           "type": "dateTime",
-          "description": "Full ISO datetime."
+          "description": "Full ISO datetime.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "drug_exposure_start_datetime"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "drug_exposure_end_date",
           "path": "MedicationStatement.effectivePeriod.end",
           "type": "dateTime",
-          "description": "When effectiveDateTime is used, end = start. When effectivePeriod has start but no end, end = start. — transform: effectivePeriod.end; fallback to start_date when effectiveDateTime is used (point in time) or period.end is absent"
+          "description": "When effectiveDateTime is used, end = start. When effectivePeriod has start but no end, end = start.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "drug_exposure_end_date"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "effectivePeriod.end; fallback to start_date when effectiveDateTime is used (point in time) or period.end is absent"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "drug_exposure_end_datetime",
           "path": "MedicationStatement.effectivePeriod.end",
           "type": "dateTime",
-          "description": "Full ISO datetime. Null if no period end."
+          "description": "Full ISO datetime. Null if no period end.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "drug_exposure_end_datetime"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "verbatim_end_date",
           "path": "MedicationStatement.effectivePeriod.end",
           "type": "dateTime",
-          "description": "Raw end date from source before any inference. HL7 IG FML maps effectivePeriod.end here. Most other implementations leave null."
+          "description": "Raw end date from source before any inference. HL7 IG FML maps effectivePeriod.end here. Most other implementations leave null.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "verbatim_end_date"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "stop_reason",
           "path": "MedicationStatement.statusReason",
           "type": "CodeableConcept",
-          "description": "Reason for discontinuation. omoponfhir truncates to 20 chars and only populates when status=stopped. HL7 IG FML maps from reason.concept.coding.code."
+          "description": "Reason for discontinuation. omoponfhir truncates to 20 chars and only populates when status=stopped. HL7 IG FML maps from reason.concept.coding.code.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "stop_reason"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "quantity",
           "path": "MedicationStatement.dosage[].doseAndRate[].doseQuantity.value",
           "type": "decimal",
-          "description": "Dose amount per administration. ETL-German computes mean of Range when doseRange is used."
+          "description": "Dose amount per administration. ETL-German computes mean of Range when doseRange is used.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "quantity"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "sig",
-          "path": "MedicationStatement.dosage[].text | MedicationStatement.dosage[].patientInstruction",
+          "path": "MedicationStatement.dosage[].text",
           "type": "string",
-          "description": "Free-text dosage instructions."
+          "description": "Free-text dosage instructions.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "sig"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "route_concept_id",
+          "name": "route",
           "path": "MedicationStatement.dosage[].route",
           "type": "CodeableConcept",
-          "description": "SNOMED route code mapped to OMOP Route domain concept. omoponfhir performs full vocabulary lookup. ETL-German uses date-aware concept lookup. This project hardcodes null."
+          "description": "SNOMED route code mapped to OMOP Route domain concept. omoponfhir performs full vocabulary lookup. ETL-German uses date-aware concept lookup. This project hardcodes null.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "route_concept_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "resolve CONCEPT reference; downstream maps to route_concept_id"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "route_source_value",
-          "path": "MedicationStatement.dosage[].route.text | MedicationStatement.dosage[].route.coding[0].display",
+          "name": "route_text",
+          "path": "MedicationStatement.dosage[].route.text",
           "type": "string",
-          "description": "Raw route text. omoponfhir prefers route.text, falls back to coding[0].display."
+          "description": "Raw route text. omoponfhir prefers route.text, falls back to coding[0].display.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "route_source_value"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "provider_id",
+          "name": "performer_id",
           "path": "MedicationStatement.informationSource",
           "type": "Reference(Practitioner)",
-          "description": "Reporter of the medication statement. omoponfhir filters to Practitioner-typed references only. ETL-German does not map provider for MedicationStatement."
+          "description": "Reporter of the medication statement. omoponfhir filters to Practitioner-typed references only. ETL-German does not map provider for MedicationStatement.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "provider_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "resolve PROVIDER reference; downstream maps to provider_id"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "visit_occurrence_id",
+          "name": "encounter_id",
           "path": "MedicationStatement.context",
           "type": "Reference(Encounter)",
-          "description": "Encounter reference. R4 uses 'context'; renamed to 'encounter' in R5."
+          "description": "Encounter reference. R4 uses 'context'; renamed to 'encounter' in R5.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "visit_occurrence_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "resolve VISIT_OCCURRENCE reference; downstream maps to visit_occurrence_id"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "drug_source_value",
-          "path": "MedicationStatement.medication[x].coding[best].code",
-          "type": "code",
-          "description": "Best code by vocabulary priority. omoponfhir uses identifier.value as source value. ETL-German uses ATC code."
-        },
-        {
-          "name": "dose_unit_source_value",
-          "path": "MedicationStatement.dosage[].doseAndRate[].doseQuantity.unit | MedicationStatement.dosage[].doseAndRate[].doseQuantity.code",
+          "name": "dose_unit_text",
+          "path": "MedicationStatement.dosage[].doseAndRate[].doseQuantity.unit",
           "type": "string",
-          "description": "Raw dose unit string. omoponfhir prefers .code, falls back to .unit."
+          "description": "Raw dose unit string. omoponfhir prefers .code, falls back to .unit.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "dose_unit_source_value"
+                }
+              ]
+            }
+          ]
         }
       ]
     }

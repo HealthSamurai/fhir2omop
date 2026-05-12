@@ -2,12 +2,12 @@
   "resourceType": "ViewDefinition",
   "id": "omop-diagnosticreport-note",
   "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-diagnosticreport-note",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "name": "OmopDiagnosticReportNoteView",
-  "title": "DiagnosticReport → note (flat)",
+  "title": "DiagnosticReport → note (FHIR-flat, stage 1)",
   "status": "draft",
   "experimental": true,
-  "description": "When a DiagnosticReport carries free-text content -- either a conclusion string or one or more presentedForm attachments -- a note row is created to preserve the unstructured clinical narrative. This is independent of the domain-routed rows (measurement, observation, procedure_occurrence) that are produced from the report's LOINC code and conclusionCode. A single DiagnosticReport may produce both a domain-routed row and a note row. No reference implementation currently maps DiagnosticReport.conclusion/presentedForm to the OMOP note table; omoponfhir's DocumentReference mapper is the closest reference.",
+  "description": "When a DiagnosticReport carries free-text content -- either a conclusion string or one or more presentedForm attachments -- a note row is created to preserve the unstructured clinical narrative. This is independent of the domain-routed rows (measurement, observation, procedure_occurrence) that are produced from the report's LOINC code and conclusionCode. A single DiagnosticReport may produce both a domain-routed row and a note row. No reference implementation currently maps DiagnosticReport.conclusion/presentedForm to the OMOP note table; omoponfhir's DocumentReference mapper is the closest reference.\n\nStage 1 of FHIR→OMOP: produce a flat row keeping source codes per vocabulary. Stage 2 joins vocab.concept to resolve concept_ids.",
   "extension": [
     {
       "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
@@ -23,78 +23,263 @@
     {
       "column": [
         {
-          "name": "person_id",
+          "name": "id",
+          "path": "DiagnosticReport.id",
+          "type": "id",
+          "description": "FHIR DiagnosticReport.id; surrogate OMOP key derived (hash/sequence) downstream.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "note_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "surrogate key from hash/sequence/lookup of FHIR id"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "code_loinc",
+          "path": "DiagnosticReport.code.coding.where(system='http://loinc.org').first().code",
+          "type": "code",
+          "description": "Report type / note code — LOINC",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "note_type_concept_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "lookup vocab.concept WHERE vocabulary_id='LOINC' AND concept_code = (this column); standard_concept='S' preferred"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "code_text",
+          "path": "DiagnosticReport.code.text",
+          "type": "string",
+          "description": "Free text label from DiagnosticReport.code",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "note_type_source_value"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "copy text verbatim into OMOP source_value column"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "subject_id",
           "path": "DiagnosticReport.subject",
           "type": "Reference(Patient)",
-          "description": "Resolve Patient/{id} reference to integer person_id. Skip row if unresolvable."
+          "description": "Resolve Patient/{id} reference to integer person_id. Skip row if unresolvable.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "person_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "resolve PERSON reference; downstream maps to person_id"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "note_date",
           "path": "DiagnosticReport.effective[x]",
           "type": "dateTime|Period",
-          "description": "Date component of effectiveDateTime, or effectivePeriod.start. If absent, fall back to DiagnosticReport.issued (instant). Skip resource if no date available."
+          "description": "Date component of effectiveDateTime, or effectivePeriod.start. If absent, fall back to DiagnosticReport.issued (instant). Skip resource if no date available.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "note_date"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "note_datetime",
           "path": "DiagnosticReport.effective[x]",
           "type": "dateTime|Period",
-          "description": "Full timestamp from effectiveDateTime, effectivePeriod.start, or issued. Set time to midnight if not given."
+          "description": "Full timestamp from effectiveDateTime, effectivePeriod.start, or issued. Set time to midnight if not given.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "note_datetime"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "note_type_concept_id",
+          "name": "note_class",
           "path": "DiagnosticReport.category",
           "type": "CodeableConcept",
-          "description": "Maps the report's provenance/origin. Use 32817 (EHR) as the default. This field captures where the note came from (the source system), not what kind of note it is (that is note_class_concept_id)."
-        },
-        {
-          "name": "note_class_concept_id",
-          "path": "DiagnosticReport.category",
-          "type": "CodeableConcept",
-          "description": "Maps the report category to a LOINC Document Type concept per OMOP CDM specification. Map LAB -> 44814645 (Note), RAD -> 44814641 (Radiology report), PAT -> 44814642 (Pathology report). 0 if unmappable."
+          "description": "Maps the report category to a LOINC Document Type concept per OMOP CDM specification. Map LAB -> 44814645 (Note), RAD -> 44814641 (Radiology report), PAT -> 44814642 (Pathology report). 0 if unmappable.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "note_class_concept_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "resolve CONCEPT reference; downstream maps to note_class_concept_id"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "note_title",
           "path": "DiagnosticReport.code.coding[0].display",
           "type": "string",
-          "description": "Display text of the report's primary code (typically LOINC). E.g. 'History and physical note'. Truncate to 250 characters. Fall back to DiagnosticReport.code.text or the LOINC code itself."
+          "description": "Display text of the report's primary code (typically LOINC). E.g. 'History and physical note'. Truncate to 250 characters. Fall back to DiagnosticReport.code.text or the LOINC code itself.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "note_title"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "note_text",
-          "path": "DiagnosticReport.conclusion | DiagnosticReport.presentedForm[].data",
+          "path": "DiagnosticReport.conclusion",
           "type": "string|base64Binary",
-          "description": "For conclusion: use the string directly. For presentedForm: base64-decode the data field. Only text/plain content types stored directly; other types require extraction or conversion. If both exist, create separate note rows or concatenate."
+          "description": "For conclusion: use the string directly. For presentedForm: base64-decode the data field. Only text/plain content types stored directly; other types require extraction or conversion. If both exist, create separate note rows or concatenate.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "note_text"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "language_concept_id",
-          "path": "DiagnosticReport.presentedForm[].language | DiagnosticReport.language",
+          "name": "encoding",
+          "path": "DiagnosticReport.presentedForm[].contentType",
           "type": "code",
-          "description": "Map BCP-47/ISO 639 language codes to OMOP concepts descended from 4182347 (World Languages). en/en-US -> 4180186, de -> 4182948, fr -> 4181536, es -> 4182511. Fall back to DiagnosticReport.language. 0 if absent."
+          "description": "32678 = UTF-8. FHIR strings are always UTF-8. For presentedForm, check contentType and encoding; default to 32678 for text/plain.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "encoding_concept_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "resolve CONCEPT reference; downstream maps to encoding_concept_id"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "provider_id",
+          "name": "language",
+          "path": "DiagnosticReport.presentedForm[].language",
+          "type": "code",
+          "description": "Map BCP-47/ISO 639 language codes to OMOP concepts descended from 4182347 (World Languages). en/en-US -> 4180186, de -> 4182948, fr -> 4181536, es -> 4182511. Fall back to DiagnosticReport.language. 0 if absent.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "language_concept_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "resolve CONCEPT reference; downstream maps to language_concept_id"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "performer_id",
           "path": "DiagnosticReport.performer[0]",
           "type": "Reference(Practitioner)",
-          "description": "First performer reference resolved to provider_id. Filter to Practitioner-typed references. resultsInterpreter[0] is an alternative source."
+          "description": "First performer reference resolved to provider_id. Filter to Practitioner-typed references. resultsInterpreter[0] is an alternative source.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "provider_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "resolve PROVIDER reference; downstream maps to provider_id"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "visit_occurrence_id",
+          "name": "encounter_id",
           "path": "DiagnosticReport.encounter",
           "type": "Reference(Encounter)",
-          "description": "Resolve Encounter/{id} to visit_occurrence_id. If unresolvable, log warning but still create the note row with null."
-        },
-        {
-          "name": "note_source_value",
-          "path": "DiagnosticReport.category.coding[0].code",
-          "type": "code",
-          "description": "The source value mapped to note_class_concept_id. Store the raw category code (e.g. 'LAB', 'RAD', 'PAT')."
+          "description": "Resolve Encounter/{id} to visit_occurrence_id. If unresolvable, log warning but still create the note row with null.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "visit_occurrence_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "resolve VISIT_OCCURRENCE reference; downstream maps to visit_occurrence_id"
+                }
+              ]
+            }
+          ]
         }
       ]
-    }
-  ],
-  "where": [
-    {
-      "path": "true",
-      "description": "DiagnosticReport.conclusion is non-empty or DiagnosticReport.presentedForm contains text-extractable attachments"
     }
   ]
 }

@@ -423,6 +423,30 @@ Adding/editing a mapping: edit `mapspec/edges/<R>__<T>.json` (validate against
 `mapspec/schema/edge.schema.json`). The renderer picks up changes after a
 server restart (edge list is cached in process; see `src/mapspec/list.ts`).
 
+### Two-stage transformation pipeline
+
+ETL is split into **stage 1** (FHIR-flat) and **stage 2** (OMOP-mapped):
+
+```
+FHIR resource ── stage 1 ──▶ FHIR-flat row ── stage 2 ──▶ OMOP row
+   (nested)     ViewDefinition    (one column per       vocab.concept join
+                FHIRPath/SQL-on-FHIR  source code system)
+```
+
+Stage-1 ViewDefinitions live in `mapspec/views/<R>__<T>.view.json`. Each
+`select.column[]` entry is FHIR-native: for a CodeableConcept field it fans
+out into one column per allowed code system (e.g. `code_snomed`,
+`code_icd10cm`, `code_icd9cm`, `code_text`). Every column carries an
+`extension` named `omop-column-target` that declares the stage-2 OMOP target
+column plus a one-line transform note (`vocab.concept WHERE vocabulary_id='…'`,
+or `copy verbatim`, or `resolve reference`). Stage 2 reads those extensions to
+build the vocab join — no OMOP knowledge is baked into stage 1.
+
+ViewDefinitions are regenerated from the edge JSONs by `script/regen-views.ts`.
+The fan-out table (which code systems each FHIR CodeableConcept produces) is
+hardcoded at the top of that script and is the only place to extend coverage
+for new vocabularies.
+
 ## Viewer App (Bun + htmx)
 
 `bun src/$main.ts` boots the dev server on `:3000` (override with `$PORT`).

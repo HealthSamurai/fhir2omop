@@ -2,12 +2,12 @@
   "resourceType": "ViewDefinition",
   "id": "omop-patient-location",
   "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-patient-location",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "name": "OmopPatientLocationView",
-  "title": "Patient → location (flat)",
+  "title": "Patient → location (FHIR-flat, stage 1)",
   "status": "draft",
   "experimental": true,
-  "description": "Address normalization. One Patient produces at most one location row (most recent home address). The location_id is then set as person.location_id FK.",
+  "description": "Address normalization. One Patient produces at most one location row (most recent home address). The location_id is then set as person.location_id FK.\n\nStage 1 of FHIR→OMOP: produce a flat row keeping source codes per vocabulary. Stage 2 joins vocab.concept to resolve concept_ids.",
   "extension": [
     {
       "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
@@ -23,63 +23,180 @@
     {
       "column": [
         {
+          "name": "id",
+          "path": "Patient.id",
+          "type": "id",
+          "description": "FHIR Patient.id; surrogate OMOP key derived (hash/sequence) downstream.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "location_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "surrogate key from hash/sequence/lookup of FHIR id"
+                }
+              ]
+            }
+          ]
+        },
+        {
           "name": "address_1",
           "path": "Patient.address.line[0]",
           "type": "string",
-          "description": "Truncate at 50 chars"
+          "description": "Truncate at 50 chars",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "address_1"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "address_2",
           "path": "Patient.address.line[1]",
           "type": "string",
-          "description": "Null if line has only one entry. Concatenate beyond 2 lines."
+          "description": "Null if line has only one entry. Concatenate beyond 2 lines.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "address_2"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "city",
           "path": "Patient.address.city",
-          "type": "string"
+          "type": "string",
+          "description": "",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "city"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "state",
           "path": "Patient.address.state",
           "type": "string",
-          "description": "Truncate to 2 chars (US state code)"
+          "description": "Truncate to 2 chars (US state code)",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "state"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "zip",
           "path": "Patient.address.postalCode",
           "type": "string",
-          "description": "Up to 9 chars (ZIP+4)"
+          "description": "Up to 9 chars (ZIP+4)",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "zip"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "county",
           "path": "Patient.address.district",
-          "type": "string"
+          "type": "string",
+          "description": "",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "county"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "country_source_value",
+          "name": "country_text",
           "path": "Patient.address.country",
-          "type": "string"
+          "type": "string",
+          "description": "",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "country_source_value"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "latitude",
           "path": "Patient.address.extension.where(url='http://hl7.org/fhir/StructureDefinition/geolocation').extension.where(url='latitude').valueDecimal",
           "type": "decimal",
-          "description": "Range -90..90"
+          "description": "Range -90..90",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "latitude"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "longitude",
           "path": "Patient.address.extension.where(url='http://hl7.org/fhir/StructureDefinition/geolocation').extension.where(url='longitude').valueDecimal",
           "type": "decimal",
-          "description": "Range -180..180"
+          "description": "Range -180..180",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "longitude"
+                }
+              ]
+            }
+          ]
         }
       ]
-    }
-  ],
-  "where": [
-    {
-      "path": "true",
-      "description": "Patient.address is present with usable fields"
     }
   ]
 }

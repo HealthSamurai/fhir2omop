@@ -2,12 +2,12 @@
   "resourceType": "ViewDefinition",
   "id": "omop-patient-observation-period",
   "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-patient-observation-period",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "name": "OmopPatientObservationPeriodView",
-  "title": "Patient → observation_period (flat)",
+  "title": "Patient → observation_period (FHIR-flat, stage 1)",
   "status": "draft",
   "experimental": true,
-  "description": "Observation period defines spans during which a person is observable. Not a direct field-level mapping from Patient — derived from event data availability. Most implementations either skip this table or emit a placeholder row at person-creation time.",
+  "description": "Observation period defines spans during which a person is observable. Not a direct field-level mapping from Patient — derived from event data availability. Most implementations either skip this table or emit a placeholder row at person-creation time.\n\nStage 1 of FHIR→OMOP: produce a flat row keeping source codes per vocabulary. Stage 2 joins vocab.concept to resolve concept_ids.",
   "extension": [
     {
       "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
@@ -23,18 +23,48 @@
     {
       "column": [
         {
-          "name": "person_id",
+          "name": "id",
           "path": "Patient.id",
           "type": "id",
-          "description": "Foreign key to person table, derived from Patient.id"
+          "description": "FHIR Patient.id; surrogate OMOP key derived (hash/sequence) downstream.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "observation_period_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "surrogate key from hash/sequence/lookup of FHIR id"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "subject_id",
+          "path": "Patient.id",
+          "type": "id",
+          "description": "Foreign key to person table, derived from Patient.id",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "person_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "resolve PERSON reference; downstream maps to person_id"
+                }
+              ]
+            }
+          ]
         }
       ]
-    }
-  ],
-  "where": [
-    {
-      "path": "true",
-      "description": "Derived per-person from data availability, not directly from Patient fields"
     }
   ]
 }

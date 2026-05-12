@@ -2,12 +2,12 @@
   "resourceType": "ViewDefinition",
   "id": "omop-immunization-drug-exposure",
   "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-immunization-drug-exposure",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "name": "OmopImmunizationDrugExposureView",
-  "title": "Immunization → drug_exposure (flat)",
+  "title": "Immunization → drug_exposure (FHIR-flat, stage 1)",
   "status": "draft",
   "experimental": true,
-  "description": "One FHIR Immunization maps to one drug_exposure row. Immunizations are point-in-time events: start_date = end_date, no days_supply or refills. Records are distinguished from other drug exposures by drug_concept_id belonging to the CVX vocabulary. Only completed immunizations are mapped; entered-in-error and not-done are skipped.",
+  "description": "One FHIR Immunization maps to one drug_exposure row. Immunizations are point-in-time events: start_date = end_date, no days_supply or refills. Records are distinguished from other drug exposures by drug_concept_id belonging to the CVX vocabulary. Only completed immunizations are mapped; entered-in-error and not-done are skipped.\n\nStage 1 of FHIR→OMOP: produce a flat row keeping source codes per vocabulary. Stage 2 joins vocab.concept to resolve concept_ids.",
   "extension": [
     {
       "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
@@ -23,120 +23,373 @@
     {
       "column": [
         {
-          "name": "drug_exposure_id",
+          "name": "id",
           "path": "Immunization.id",
           "type": "id",
-          "description": "Surrogate key. Hash/sequence/lookup of Immunization.id. HL7 IG FML comments this out as a TODO."
+          "description": "FHIR Immunization.id; surrogate OMOP key derived (hash/sequence) downstream.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "drug_exposure_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "surrogate key from hash/sequence/lookup of FHIR id"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "person_id",
+          "name": "vaccine_cvx",
+          "path": "Immunization.vaccineCode.coding.where(system='http://hl7.org/fhir/sid/cvx').first().code",
+          "type": "code",
+          "description": "Vaccine code — CVX",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "drug_concept_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "lookup vocab.concept WHERE vocabulary_id='CVX' AND concept_code = (this column); standard_concept='S' preferred"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "vaccine_ndc",
+          "path": "Immunization.vaccineCode.coding.where(system='http://hl7.org/fhir/sid/ndc').first().code",
+          "type": "code",
+          "description": "Vaccine code — NDC",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "drug_concept_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "lookup vocab.concept WHERE vocabulary_id='NDC' AND concept_code = (this column); standard_concept='S' preferred"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "vaccine_rxnorm",
+          "path": "Immunization.vaccineCode.coding.where(system='http://www.nlm.nih.gov/research/umls/rxnorm').first().code",
+          "type": "code",
+          "description": "Vaccine code — RxNorm",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "drug_concept_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "lookup vocab.concept WHERE vocabulary_id='RxNorm' AND concept_code = (this column); standard_concept='S' preferred"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "vaccine_text",
+          "path": "Immunization.vaccineCode.text",
+          "type": "string",
+          "description": "Free text label from Immunization.vaccineCode",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "drug_source_value"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "copy text verbatim into OMOP source_value column"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "subject_id",
           "path": "Immunization.patient",
           "type": "Reference(Patient)",
-          "description": "Resolve Patient reference to integer. Skip the entire record if the referenced Patient does not exist."
-        },
-        {
-          "name": "drug_concept_id",
-          "path": "Immunization.vaccineCode",
-          "type": "CodeableConcept",
-          "description": "Map vaccine code (CVX/SNOMED/ATC/RxNorm) to OMOP standard concept. When multiple vaccineCode.coding[] entries are present, pick the first recognized vocabulary. Default 0 when concept lookup unavailable."
+          "description": "Resolve Patient reference to integer. Skip the entire record if the referenced Patient does not exist.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "person_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "resolve PERSON reference; downstream maps to person_id"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "drug_exposure_start_date",
           "path": "Immunization.occurrenceDateTime",
           "type": "dateTime",
-          "description": "Vaccination date (date portion). Skip record if occurrenceString is used instead of occurrenceDateTime. — transform: date(Immunization.occurrenceDateTime)"
+          "description": "Vaccination date (date portion). Skip record if occurrenceString is used instead of occurrenceDateTime.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "drug_exposure_start_date"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "date(Immunization.occurrenceDateTime)"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "drug_exposure_start_datetime",
           "path": "Immunization.occurrenceDateTime",
           "type": "dateTime",
-          "description": "Full ISO datetime if available."
+          "description": "Full ISO datetime if available.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "drug_exposure_start_datetime"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "drug_exposure_end_date",
           "path": "Immunization.occurrenceDateTime",
           "type": "dateTime",
-          "description": "Same as start date -- immunizations are single point-in-time events. — transform: date(Immunization.occurrenceDateTime)"
+          "description": "Same as start date -- immunizations are single point-in-time events.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "drug_exposure_end_date"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "date(Immunization.occurrenceDateTime)"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "drug_exposure_end_datetime",
           "path": "Immunization.occurrenceDateTime",
           "type": "dateTime",
-          "description": "Same as start datetime."
+          "description": "Same as start datetime.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "drug_exposure_end_datetime"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "stop_reason",
           "path": "Immunization.statusReason.text",
           "type": "string",
-          "description": "Only when status = not-done. omoponfhir writes statusReason.text or coded system:code. Most implementations skip not-done records entirely."
+          "description": "Only when status = not-done. omoponfhir writes statusReason.text or coded system:code. Most implementations skip not-done records entirely.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "stop_reason"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "quantity",
           "path": "Immunization.doseQuantity.value",
           "type": "decimal",
-          "description": "Dose amount (e.g., 0.5 for 0.5 mL)."
+          "description": "Dose amount (e.g., 0.5 for 0.5 mL).",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "quantity"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "sig",
           "path": "Immunization.note[*].text",
           "type": "string",
-          "description": "omoponfhir concatenates note[].text into sig. Not standard practice -- sig is intended for prescriber instructions, not clinical notes. Most implementations leave null."
+          "description": "omoponfhir concatenates note[].text into sig. Not standard practice -- sig is intended for prescriber instructions, not clinical notes. Most implementations leave null.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "sig"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "route_concept_id",
+          "name": "route",
           "path": "Immunization.route",
           "type": "CodeableConcept",
-          "description": "Vaccine administration route mapped to OMOP concept. Common: IM->4302612, SC->4302357, PO->4132161, NASINHL->4262914."
+          "description": "Vaccine administration route mapped to OMOP concept. Common: IM->4302612, SC->4302357, PO->4132161, NASINHL->4262914.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "route_concept_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "resolve CONCEPT reference; downstream maps to route_concept_id"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "route_source_value",
+          "name": "route_text",
           "path": "Immunization.route.coding[0].code",
           "type": "code",
-          "description": "Raw route code. omoponfhir uses system:code:display format. HL7 IG FML uses route.text as fallback."
+          "description": "Raw route code. omoponfhir uses system:code:display format. HL7 IG FML uses route.text as fallback.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "route_source_value"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "lot_number",
           "path": "Immunization.lotNumber",
           "type": "string",
-          "description": "Vaccine lot tracking. One of the few FHIR resources that maps to lot_number. Truncate if exceeds 50 characters."
+          "description": "Vaccine lot tracking. One of the few FHIR resources that maps to lot_number. Truncate if exceeds 50 characters.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "lot_number"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "provider_id",
+          "name": "performer_id",
           "path": "Immunization.performer[0].actor",
           "type": "Reference(Practitioner)",
-          "description": "Administering practitioner. Take the first performer[].actor. Optional -- null if unresolvable. HL7 IG FML comments this out; ETL-German does not map it."
+          "description": "Administering practitioner. Take the first performer[].actor. Optional -- null if unresolvable. HL7 IG FML comments this out; ETL-German does not map it.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "provider_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "resolve PROVIDER reference; downstream maps to provider_id"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "visit_occurrence_id",
+          "name": "encounter_id",
           "path": "Immunization.encounter",
           "type": "Reference(Encounter)",
-          "description": "Resolve Encounter reference. Optional -- null if Encounter does not exist."
+          "description": "Resolve Encounter reference. Optional -- null if Encounter does not exist.",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "visit_occurrence_id"
+                },
+                {
+                  "url": "transform",
+                  "valueString": "resolve VISIT_OCCURRENCE reference; downstream maps to visit_occurrence_id"
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "drug_source_value",
-          "path": "Immunization.vaccineCode.coding[best].code",
-          "type": "code",
-          "description": "Original vaccine code string. omoponfhir uses system:code format. ETL-German uses just the code."
-        },
-        {
-          "name": "drug_source_concept_id",
-          "path": "Immunization.vaccineCode",
-          "type": "CodeableConcept",
-          "description": "Non-standard source concept ID from vocabulary lookup. ETL-German resolves via findOmopConcepts. Default 0."
-        },
-        {
-          "name": "dose_unit_source_value",
-          "path": "Immunization.doseQuantity.unit | Immunization.doseQuantity.code",
+          "name": "dose_unit_text",
+          "path": "Immunization.doseQuantity.unit",
           "type": "string",
-          "description": "Dose unit (e.g., 'mL', 'dose'). HL7 IG FML uses doseQuantity.code. ETL-German uses dose.getUnit()."
+          "description": "Dose unit (e.g., 'mL', 'dose'). HL7 IG FML uses doseQuantity.code. ETL-German uses dose.getUnit().",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
+              "extension": [
+                {
+                  "url": "column",
+                  "valueString": "dose_unit_source_value"
+                }
+              ]
+            }
+          ]
         }
       ]
-    }
-  ],
-  "where": [
-    {
-      "path": "true",
-      "description": "status = completed (skip entered-in-error and not-done)"
     }
   ]
 }
