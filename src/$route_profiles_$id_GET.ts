@@ -8,7 +8,7 @@ export default async function (ctx: Context, _session: any, req: Request) {
     if (resource.resourceType === "StructureDefinition") {
         return { title: resource.id, main: await renderProfile(ctx, resource) };
     }
-    return { title: resource.id, main: renderValueSet(resource) };
+    return { title: resource.id, main: await renderValueSet(resource) };
 }
 
 async function renderProfile(ctx: Context, p: types.profiles.Profile): Promise<string> {
@@ -81,17 +81,71 @@ async function renderProfile(ctx: Context, p: types.profiles.Profile): Promise<s
 </div>`;
 }
 
-function renderValueSet(v: types.profiles.ValueSet): string {
+async function renderValueSet(v: types.profiles.ValueSet): Promise<string> {
     const includes = v.compose?.include ?? [];
-    const rows = includes.flatMap((inc) =>
-        (inc.concept ?? []).map((c) => `
+    const aliases = await loadAliases();
+
+    const includeCards = includes.map((inc) => {
+        const short = shortSystem(inc.system);
+        const vocabId = aliases.aliases?.[inc.system];
+        const loaded = vocabId ? aliases.loaded?.[vocabId] : undefined;
+        const n = inc.concept?.length ?? 0;
+        const filters = (inc as any).filter as Array<{ property: string; op: string; value: string }> | undefined;
+
+        const loadedBadge = loaded === true
+            ? `<span class="px-1.5 py-0.5 rounded bg-green-50 text-green-700 text-[10px] font-medium">loaded ✓</span>`
+            : loaded === false
+                ? `<span class="px-1.5 py-0.5 rounded bg-red-50 text-red-700 text-[10px] font-medium">not loaded</span>`
+                : "";
+        const vocabBadge = vocabId
+            ? `<span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 text-[10px] font-medium font-mono">vocab: ${esc(vocabId)}</span>`
+            : `<span class="px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 text-[10px] font-medium">no OMOP alias</span>`;
+
+        const conceptRows = (inc.concept ?? []).map((c) => `
 <tr class="border-t border-gray-100">
-  <td class="px-3 py-1.5 text-xs font-mono text-gray-700">${esc(shortSystem(inc.system))}</td>
-  <td class="px-3 py-1.5 text-xs font-mono text-purple-700">${esc(c.code)}</td>
-  <td class="px-3 py-1.5 text-xs text-gray-700">${esc(c.display ?? "")}</td>
-</tr>`)
-    ).join("");
-    const sourceSystems = [...new Set(includes.map((i) => i.system))];
+  <td class="px-3 py-1 text-xs font-mono text-purple-700 whitespace-nowrap">${esc(c.code)}</td>
+  <td class="px-3 py-1 text-xs text-gray-700">${esc(c.display ?? "")}</td>
+</tr>`).join("");
+
+        const filtersHtml = filters?.length
+            ? `<div class="px-4 py-2 bg-amber-50 border-b border-amber-200 text-xs">
+                <span class="text-[10px] uppercase tracking-wider text-amber-800 font-medium mr-2">filters</span>
+                ${filters.map((f) => `<code class="font-mono text-amber-900">${esc(f.property)} ${esc(f.op)} ${esc(f.value)}</code>`).join(" · ")}
+              </div>`
+            : "";
+
+        const conceptTable = n > 0
+            ? `<table class="w-full">
+                 <thead class="bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500 border-b border-gray-200">
+                   <tr>
+                     <th class="px-3 py-1.5 text-left font-medium w-32">Code</th>
+                     <th class="px-3 py-1.5 text-left font-medium">Display</th>
+                   </tr>
+                 </thead>
+                 <tbody>${conceptRows}</tbody>
+               </table>`
+            : `<div class="px-4 py-3 text-xs text-gray-500 italic">No enumerated concepts in this include (intensional / open subset — see expansion SQL).</div>`;
+
+        return `
+<div class="mb-5 border border-gray-200 rounded-lg overflow-hidden">
+  <div class="px-4 py-2 bg-white border-b border-gray-200">
+    <div class="flex items-baseline justify-between gap-3 flex-wrap">
+      <div>
+        <span class="text-sm font-semibold text-gray-900">include</span>
+        <span class="mx-2 text-gray-400">·</span>
+        <span class="text-sm font-mono font-medium text-blue-800">${esc(short)}</span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        ${vocabBadge}${loadedBadge}
+        ${n > 0 ? `<span class="px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 text-[10px] font-mono">${n} code${n === 1 ? "" : "s"}</span>` : ""}
+      </div>
+    </div>
+    <div class="text-[11px] font-mono text-gray-500 mt-0.5 break-all">${esc(inc.system)}</div>
+  </div>
+  ${filtersHtml}
+  ${conceptTable}
+</div>`;
+    }).join("");
 
     return `
 <div class="not-prose">
@@ -101,9 +155,13 @@ function renderValueSet(v: types.profiles.ValueSet): string {
     <div class="mt-1 flex items-center gap-2 text-sm">
       <span class="font-mono text-purple-700">${esc(v.id)}</span>
       ${v.domain ? `<span class="ml-1 px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 text-xs font-medium">OMOP domain: ${esc(v.domain)}</span>` : ""}
+      <span class="ml-1 px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 text-[10px] font-mono">${includes.length} include${includes.length === 1 ? "" : "s"}</span>
     </div>
     ${v.description ? `<p class="mt-3 text-sm text-gray-600 leading-relaxed">${esc(v.description)}</p>` : ""}
   </div>
+
+  <h2 class="text-sm font-semibold text-gray-700 mb-2">compose.include</h2>
+  ${includeCards}
 
   ${v.expansionSql ? `
   <div class="bg-gray-900 text-green-300 rounded-lg p-4 mb-6 overflow-x-auto">
@@ -111,32 +169,23 @@ function renderValueSet(v: types.profiles.ValueSet): string {
     <pre class="text-xs font-mono leading-relaxed">${esc(v.expansionSql)}</pre>
   </div>` : ""}
 
-  <div class="bg-white border border-gray-200 rounded-lg p-4 mb-4">
-    <div class="text-xs text-gray-500 mb-2">Source code systems</div>
-    <ul class="text-sm font-mono text-gray-700 space-y-1">
-      ${sourceSystems.map((s) => `<li>${esc(s)}</li>`).join("")}
-    </ul>
-  </div>
-
-  <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
-    <div class="px-4 py-2 bg-gray-50 border-b border-gray-200 text-xs font-medium text-gray-700">Example concepts</div>
-    <table class="w-full">
-      <thead class="text-[10px] uppercase tracking-wider text-gray-500 border-b border-gray-200">
-        <tr>
-          <th class="px-3 py-2 text-left font-medium">System</th>
-          <th class="px-3 py-2 text-left font-medium">Code</th>
-          <th class="px-3 py-2 text-left font-medium">Display</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
-  </div>
-
   <details class="mt-6 border border-gray-200 rounded-lg overflow-hidden">
     <summary class="px-4 py-2 bg-gray-50 text-xs font-medium text-gray-700 hover:bg-gray-100">Raw JSON</summary>
     <pre class="px-4 py-3 text-[11px] font-mono overflow-x-auto bg-white">${esc(JSON.stringify(v, null, 2))}</pre>
   </details>
 </div>`;
+}
+
+let _aliasesCache: any = null;
+async function loadAliases(): Promise<any> {
+    if (_aliasesCache) return _aliasesCache;
+    try {
+        const path = new URL("../mapspec/profiles/system-aliases.json", import.meta.url).pathname;
+        _aliasesCache = JSON.parse(await Bun.file(path).text());
+    } catch {
+        _aliasesCache = {};
+    }
+    return _aliasesCache;
 }
 
 function formatCardinality(el: any): string {
@@ -153,13 +202,18 @@ function shortUrl(u: string): string {
 function valueSetIdFromUrl(u: string): string { return u.split("/").pop() ?? u; }
 function shortSystem(s: string): string {
     return ({
-        "http://snomed.info/sct": "SNOMED",
+        "http://snomed.info/sct": "SNOMED CT",
         "http://loinc.org": "LOINC",
         "http://www.nlm.nih.gov/research/umls/rxnorm": "RxNorm",
         "http://hl7.org/fhir/sid/icd-10-cm": "ICD-10-CM",
+        "http://hl7.org/fhir/sid/icd-9-cm": "ICD-9-CM",
+        "http://hl7.org/fhir/sid/icd-10-pcs": "ICD-10-PCS",
         "http://hl7.org/fhir/sid/ndc": "NDC",
         "http://hl7.org/fhir/sid/cvx": "CVX",
+        "http://www.ama-assn.org/go/cpt": "CPT-4",
         "http://unitsofmeasure.org": "UCUM",
+        "http://terminology.hl7.org/CodeSystem/v3-ActCode": "v3 ActCode",
+        "https://www.cms.gov/Medicare/Coding/place-of-service-codes": "CMS POS",
     } as Record<string, string>)[s] ?? s;
 }
 function esc(s: string) { return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!)); }
