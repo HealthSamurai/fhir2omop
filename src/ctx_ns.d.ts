@@ -25,6 +25,7 @@ declare global {
         load: typeof import("./profiles/load").default;
         profileForEdge: typeof import("./profiles/profileForEdge").default;
         valueSetByUrl: typeof import("./profiles/valueSetByUrl").default;
+        viewForEdge: typeof import("./profiles/viewForEdge").default;
         };
         project: {
         classify: typeof import("./project/classify").default;
@@ -48,6 +49,7 @@ declare global {
         namespace profiles {
             type Profile = import("./profiles/$type_Profile").Profile;
             type ValueSet = import("./profiles/$type_ValueSet").ValueSet;
+            type ViewDefinition = import("./profiles/$type_ViewDefinition").ViewDefinition;
         }
     }
 }

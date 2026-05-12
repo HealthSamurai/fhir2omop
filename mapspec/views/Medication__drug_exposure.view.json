@@ -1,0 +1,52 @@
+{
+  "resourceType": "ViewDefinition",
+  "id": "omop-medication-drug-exposure",
+  "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-medication-drug-exposure",
+  "version": "0.1.0",
+  "name": "OmopMedicationDrugExposureView",
+  "title": "Medication → drug_exposure (flat)",
+  "status": "draft",
+  "experimental": true,
+  "description": "The FHIR Medication resource is a vocabulary/codeable-concept resource, not a medication event. It does NOT directly produce a drug_exposure row. Instead, its code and ingredient data are resolved into drug_concept_id and drug_source_value on drug_exposure rows produced by the four event resources (MedicationRequest, MedicationDispense, MedicationAdministration, MedicationStatement). This edge documents how Medication fields contribute to drug_exposure columns when referenced.",
+  "extension": [
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
+      "valueString": "drug_exposure"
+    },
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
+      "valueString": "Medication__drug_exposure"
+    }
+  ],
+  "resource": "Medication",
+  "select": [
+    {
+      "column": [
+        {
+          "name": "drug_concept_id",
+          "path": "Medication.code.coding[best]",
+          "type": "Coding",
+          "description": "Set by the event mapper after resolving medicationReference. The 'best' coding is selected by vocabulary priority. — transform: Vocabulary lookup: resolve best coding (RxNorm > NDC > ATC > SNOMED) to OMOP standard concept via CONCEPT table"
+        },
+        {
+          "name": "drug_source_value",
+          "path": "Medication.code.coding[best].code",
+          "type": "code",
+          "description": "Raw source code from the highest-priority coding in Medication.code"
+        },
+        {
+          "name": "drug_source_concept_id",
+          "path": "Medication.code.coding[best]",
+          "type": "Coding",
+          "description": "The source concept before mapping to standard vocabulary — transform: Look up source vocabulary concept_id for the raw code (non-standard concept)"
+        }
+      ]
+    }
+  ],
+  "where": [
+    {
+      "path": "true",
+      "description": "Medication does not directly produce drug_exposure rows. Its code/ingredient data flows into drug_exposure via event resources (MedicationRequest, MedicationDispense, MedicationAdministration, MedicationStatement) when they carry a medicationReference pointing to a Medication resource."
+    }
+  ]
+}

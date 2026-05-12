@@ -1,0 +1,124 @@
+{
+  "resourceType": "ViewDefinition",
+  "id": "omop-observation-observation",
+  "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-observation-observation",
+  "version": "0.1.0",
+  "name": "OmopObservationObservationView",
+  "title": "Observation → observation (flat)",
+  "status": "draft",
+  "experimental": true,
+  "description": "Qualitative clinical findings: social history, lifestyle factors, survey responses, activity data. One FHIR Observation (or one component) maps to one OMOP observation row. Also receives data from AllergyIntolerance and FamilyMemberHistory.",
+  "extension": [
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
+      "valueString": "observation"
+    },
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
+      "valueString": "Observation__observation"
+    }
+  ],
+  "resource": "Observation",
+  "select": [
+    {
+      "column": [
+        {
+          "name": "observation_id",
+          "path": "Observation.id",
+          "type": "id",
+          "description": "Generated deterministically from Observation.id + -comp-N suffix for component rows"
+        },
+        {
+          "name": "person_id",
+          "path": "Observation.subject",
+          "type": "Reference(Patient)"
+        },
+        {
+          "name": "observation_concept_id",
+          "path": "Observation.code | Observation.component.code",
+          "type": "CodeableConcept",
+          "description": "LOINC/SNOMED mapped to OMOP standard concept. Placeholder: 0."
+        },
+        {
+          "name": "observation_date",
+          "path": "Observation.effectiveDateTime | Observation.effectivePeriod.start",
+          "type": "dateTime",
+          "description": "transform: dateTime -> date"
+        },
+        {
+          "name": "observation_datetime",
+          "path": "Observation.effectiveDateTime | Observation.effectivePeriod.start",
+          "type": "dateTime"
+        },
+        {
+          "name": "value_as_number",
+          "path": "Observation.valueQuantity.value",
+          "type": "decimal",
+          "description": "Uncommon for qualitative observations"
+        },
+        {
+          "name": "value_as_string",
+          "path": "Observation.valueString | Observation.valueCodeableConcept.text",
+          "type": "string",
+          "description": "valueString first; fall back to CodeableConcept source text"
+        },
+        {
+          "name": "value_as_concept_id",
+          "path": "Observation.valueCodeableConcept",
+          "type": "CodeableConcept",
+          "description": "Requires vocab lookup. Placeholder: null."
+        },
+        {
+          "name": "qualifier_source_value",
+          "path": "Observation.interpretation[0].coding[0].code",
+          "type": "code",
+          "description": "E.g. H for High, L for Low. Falls back to interpretation[0].text"
+        },
+        {
+          "name": "qualifier_concept_id",
+          "path": "Observation.interpretation",
+          "type": "CodeableConcept",
+          "description": "Requires vocab lookup. Placeholder: null."
+        },
+        {
+          "name": "unit_source_value",
+          "path": "Observation.valueQuantity.unit",
+          "type": "string"
+        },
+        {
+          "name": "unit_concept_id",
+          "path": "Observation.valueQuantity.code",
+          "type": "code",
+          "description": "UCUM code mapped to OMOP unit concept. Placeholder: null."
+        },
+        {
+          "name": "provider_id",
+          "path": "Observation.performer[0]",
+          "type": "Reference(Practitioner)"
+        },
+        {
+          "name": "visit_occurrence_id",
+          "path": "Observation.encounter",
+          "type": "Reference(Encounter)"
+        },
+        {
+          "name": "observation_source_value",
+          "path": "Observation.code.coding[best].code",
+          "type": "code"
+        },
+        {
+          "name": "value_source_value",
+          "path": "computed",
+          "type": "string",
+          "description": "Composite of comparator, numeric value, and unit; or valueString; or CodeableConcept text — transform: comparator+value+unit | valueString | valueCodeableConcept.text"
+        }
+      ]
+    }
+  ],
+  "where": [
+    {
+      "path": "true",
+      "description": "category is social-history, survey, or activity"
+    }
+  ]
+}

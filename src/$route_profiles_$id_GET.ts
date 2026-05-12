@@ -8,7 +8,65 @@ export default async function (ctx: Context, _session: any, req: Request) {
     if (resource.resourceType === "StructureDefinition") {
         return { title: resource.id, main: await renderProfile(ctx, resource) };
     }
+    if (resource.resourceType === "ViewDefinition") {
+        return { title: resource.id, main: renderView(resource) };
+    }
     return { title: resource.id, main: await renderValueSet(resource) };
+}
+
+function renderView(v: types.profiles.ViewDefinition): string {
+    const cols = v.select?.[0]?.column ?? [];
+    const rows = cols.map((c) => `
+<tr class="border-t border-gray-100 align-top">
+  <td class="px-3 py-1.5 text-xs font-mono font-semibold text-gray-900 whitespace-nowrap">${esc(c.name)}</td>
+  <td class="px-3 py-1.5 text-xs font-mono text-blue-700">${esc(c.path)}</td>
+  <td class="px-3 py-1.5 text-[10px] uppercase tracking-wider text-gray-500">${esc(c.type ?? "")}</td>
+  <td class="px-3 py-1.5 text-xs text-gray-500 leading-snug">${esc(c.description ?? "")}</td>
+</tr>`).join("");
+
+    const whereHtml = (v.where ?? []).map((w) => `
+<li class="font-mono text-xs text-amber-800">${esc(w.path)}${w.description ? ` <span class="text-gray-500 font-sans">— ${esc(w.description)}</span>` : ""}</li>`).join("");
+
+    return `
+<div class="not-prose">
+  <div class="mb-6">
+    <div class="text-xs text-gray-500 mb-1"><a href="/profiles" class="hover:underline">profiles</a> / ViewDefinition</div>
+    <h1 class="text-2xl font-bold text-gray-900">${esc(v.title ?? v.name ?? v.id)}</h1>
+    <div class="mt-1 flex items-center gap-2 text-sm">
+      <span class="font-mono text-orange-700">${esc(v.resource)}</span>
+      ${v.targetTable ? `<span class="text-gray-400">→ flat:</span><a href="/table/${enc(v.targetTable)}" class="font-mono text-green-700 hover:underline">${esc(v.targetTable)}</a>` : ""}
+      ${v.edgeKey ? `<a href="/mapspec/${enc(v.edgeKey.replace("__", "/"))}" class="text-[10px] uppercase tracking-wider text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded hover:bg-gray-200">edge mapspec</a>` : ""}
+      <span class="px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 text-[10px] font-mono">${cols.length} columns</span>
+    </div>
+    ${v.description ? `<p class="mt-3 text-sm text-gray-600 leading-relaxed">${esc(v.description)}</p>` : ""}
+  </div>
+
+  ${whereHtml ? `
+  <div class="mb-4 px-4 py-2 bg-amber-50 border border-amber-200 rounded text-xs">
+    <div class="text-[10px] uppercase tracking-wider text-amber-800 font-medium mb-1">where</div>
+    <ul class="space-y-1">${whereHtml}</ul>
+  </div>` : ""}
+
+  <h2 class="text-sm font-semibold text-gray-700 mb-2">select.column (${cols.length})</h2>
+  <div class="bg-white border border-gray-200 rounded-lg overflow-hidden mb-6">
+    <table class="w-full">
+      <thead class="bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500 border-b border-gray-200">
+        <tr>
+          <th class="px-3 py-2 text-left font-medium">column name</th>
+          <th class="px-3 py-2 text-left font-medium">FHIRPath</th>
+          <th class="px-3 py-2 text-left font-medium">type</th>
+          <th class="px-3 py-2 text-left font-medium">description</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>
+
+  <details class="mt-6 border border-gray-200 rounded-lg overflow-hidden">
+    <summary class="px-4 py-2 bg-gray-50 text-xs font-medium text-gray-700 hover:bg-gray-100">Raw JSON</summary>
+    <pre class="px-4 py-3 text-[11px] font-mono overflow-x-auto bg-white">${esc(JSON.stringify(v, null, 2))}</pre>
+  </details>
+</div>`;
 }
 
 async function renderProfile(ctx: Context, p: types.profiles.Profile): Promise<string> {

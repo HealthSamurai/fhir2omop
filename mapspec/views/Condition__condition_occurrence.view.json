@@ -1,0 +1,118 @@
+{
+  "resourceType": "ViewDefinition",
+  "id": "omop-condition-condition-occurrence",
+  "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-condition-condition-occurrence",
+  "version": "0.1.0",
+  "name": "OmopConditionConditionOccurrenceView",
+  "title": "Condition → condition_occurrence (flat)",
+  "status": "draft",
+  "experimental": true,
+  "description": "One FHIR Condition maps to one condition_occurrence row. Status filtering drops entered-in-error, refuted, and inactive/resolved conditions. Onset is resolved via a priority chain (onsetDateTime > onsetPeriod.start > recordedDate); conditions with no resolvable start date are skipped. Category drives type_concept_id (problem-list-item vs encounter-diagnosis). Domain routing is not implemented -- all conditions go to condition_occurrence regardless of OMOP vocabulary domain_id.",
+  "extension": [
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
+      "valueString": "condition_occurrence"
+    },
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
+      "valueString": "Condition__condition_occurrence"
+    }
+  ],
+  "resource": "Condition",
+  "select": [
+    {
+      "column": [
+        {
+          "name": "condition_occurrence_id",
+          "path": "Condition.id",
+          "type": "id",
+          "description": "Surrogate key generated from Condition.id. Hash/sequence/lookup. HL7 IG FML has this commented out (line 11)."
+        },
+        {
+          "name": "person_id",
+          "path": "Condition.subject",
+          "type": "Reference(Patient)",
+          "description": "Resolve Patient reference to integer. Defaults to 0 if unresolved; omoponfhir throws FHIRException."
+        },
+        {
+          "name": "condition_concept_id",
+          "path": "Condition.code",
+          "type": "CodeableConcept",
+          "description": "Vocabulary lookup (SNOMED/ICD-10 -> OMOP standard concept). Placeholder: 0. Production requires Athena vocabulary tables. — transform: vocabularyLookup(selectBestCoding(code, [SNOMED, ICD10CM, ICD10, CPT4]))"
+        },
+        {
+          "name": "condition_start_date",
+          "path": "Condition.onset[x]",
+          "type": "dateTime | Period | Age | Range | string",
+          "description": "Falls back through onsetDateTime > onsetPeriod.start > recordedDate. Condition skipped if none resolvable. — transform: coalesce(onsetDateTime, onsetPeriod.start, recordedDate)"
+        },
+        {
+          "name": "condition_start_datetime",
+          "path": "Condition.onset[x]",
+          "type": "dateTime | Period",
+          "description": "Full ISO datetime when available. omoponfhir uses 9999-12-31 when missing (line 542). — transform: coalesce(onsetDateTime, onsetPeriod.start, recordedDate)"
+        },
+        {
+          "name": "condition_end_date",
+          "path": "Condition.abatement[x]",
+          "type": "dateTime | Period",
+          "description": "FhirToCdm falls back to visit end date when absent (line 301-302). No other implementation does this. — transform: coalesce(abatementDateTime, abatementPeriod.end)"
+        },
+        {
+          "name": "condition_end_datetime",
+          "path": "Condition.abatement[x]",
+          "type": "dateTime | Period",
+          "description": "transform: coalesce(abatementDateTime, abatementPeriod.end)"
+        },
+        {
+          "name": "condition_type_concept_id",
+          "path": "Condition.category",
+          "type": "CodeableConcept",
+          "description": "problem-list-item->32840, encounter-diagnosis->32817, default->32817. Implementations vary widely."
+        },
+        {
+          "name": "condition_status_concept_id",
+          "path": "Condition.clinicalStatus",
+          "type": "CodeableConcept",
+          "description": "active/recurrence/relapse->32902, absent->0. ETL-German uses diagnostic confidence instead."
+        },
+        {
+          "name": "condition_status_source_value",
+          "path": "Condition.clinicalStatus.coding[0].code",
+          "type": "code",
+          "description": "Verbatim clinical status code. ETL-German stores diagnostic confidence code here."
+        },
+        {
+          "name": "stop_reason",
+          "path": "Condition.abatementString",
+          "type": "string",
+          "description": "Free-text reason for resolution. Truncated to 20 chars. fhir-x-omop uses note[0].text instead. — transform: substring(abatementString, 0, 20)"
+        },
+        {
+          "name": "provider_id",
+          "path": "Condition.asserter | Condition.recorder",
+          "type": "Reference(Practitioner)",
+          "description": "Asserter preferred; recorder fallback. omoponfhir uses asserter only. fhir-x-omop uses recorder only. — transform: coalesce(resolveRef(asserter), resolveRef(recorder))"
+        },
+        {
+          "name": "visit_occurrence_id",
+          "path": "Condition.encounter",
+          "type": "Reference(Encounter)",
+          "description": "Resolve Encounter reference. FhirToCdm also sets visit_detail_id from encounter."
+        },
+        {
+          "name": "condition_source_value",
+          "path": "Condition.code",
+          "type": "CodeableConcept",
+          "description": "Best code by vocabulary priority. ETL-German stores raw ICD code. — transform: selectBestCoding(code, [SNOMED, ICD10CM, ICD10, CPT4]).code"
+        }
+      ]
+    }
+  ],
+  "where": [
+    {
+      "path": "true",
+      "description": "clinicalStatus in (active, recurrence, relapse, absent) AND verificationStatus not in (entered-in-error, refuted) AND onset or recordedDate resolvable"
+    }
+  ]
+}

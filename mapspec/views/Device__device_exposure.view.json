@@ -1,0 +1,94 @@
+{
+  "resourceType": "ViewDefinition",
+  "id": "omop-device-device-exposure",
+  "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-device-device-exposure",
+  "version": "0.1.0",
+  "name": "OmopDeviceDeviceExposureView",
+  "title": "Device → device_exposure (flat)",
+  "status": "draft",
+  "experimental": true,
+  "description": "FHIR Device and DeviceUseStatement together map to one OMOP device_exposure row. Device carries identity (type, UDI, manufacturer, lot/serial); DeviceUseStatement records the clinical event (who, when, why). Alternatively, Procedure.usedCode can be a source. The mapper must resolve the two-resource join: DeviceUseStatement.device references a Device resource from which type, UDI, and production identifiers are extracted.",
+  "extension": [
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
+      "valueString": "device_exposure"
+    },
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
+      "valueString": "Device__device_exposure"
+    }
+  ],
+  "resource": "Device",
+  "select": [
+    {
+      "column": [
+        {
+          "name": "person_id",
+          "path": "DeviceUseStatement.subject",
+          "type": "Reference(Patient)",
+          "description": "Resolve Patient reference to integer person_id. DeviceUseStatement.subject is 1..1 and restricted to Patient."
+        },
+        {
+          "name": "device_concept_id",
+          "path": "DeviceUseStatement.device -> Device.type",
+          "type": "CodeableConcept",
+          "description": "Resolve Device.type.coding to a Standard Concept in the Device domain via vocabulary lookup. SNOMED device codes preferred. If no standard concept found, use 0."
+        },
+        {
+          "name": "device_exposure_start_date",
+          "path": "DeviceUseStatement.timing[x] (start)",
+          "type": "dateTime | Period",
+          "description": "Required NOT NULL. If no date can be determined, the record cannot be created. — transform: If timingPeriod: use Period.start. If timingDateTime: use that value. If timingTiming: use bounds start or first event. Fallback to recordedOn if timing absent."
+        },
+        {
+          "name": "device_exposure_start_datetime",
+          "path": "DeviceUseStatement.timing[x] (start)",
+          "type": "dateTime | Period",
+          "description": "Full datetime precision of the start."
+        },
+        {
+          "name": "device_exposure_end_date",
+          "path": "DeviceUseStatement.timing[x] (end)",
+          "type": "Period",
+          "description": "If timingPeriod: use Period.end. If timingDateTime: null (point-in-time). If timing absent: null."
+        },
+        {
+          "name": "device_exposure_end_datetime",
+          "path": "DeviceUseStatement.timing[x] (end)",
+          "type": "Period",
+          "description": "Full datetime precision of the end."
+        },
+        {
+          "name": "unique_device_id",
+          "path": "Device.udiCarrier[0].deviceIdentifier",
+          "type": "string",
+          "description": "The UDI Device Identifier (UDI-DI). Take from the first udiCarrier entry. This is the fixed portion identifying the device model."
+        },
+        {
+          "name": "production_id",
+          "path": "Device.lotNumber | Device.serialNumber",
+          "type": "string",
+          "description": "The UDI Production Identifier (UDI-PI). OMOP v5.4 field. Combine lot number and/or serial number. If both present, prefer lotNumber. Some implementations concatenate: lot:{lotNumber};serial:{serialNumber}."
+        },
+        {
+          "name": "provider_id",
+          "path": "DeviceUseStatement.source",
+          "type": "Reference(Practitioner | PractitionerRole | RelatedPerson)",
+          "description": "Resolve Practitioner/PractitionerRole reference to integer provider_id. Only Practitioner maps cleanly to OMOP provider. Patient/RelatedPerson references are skipped."
+        },
+        {
+          "name": "device_source_value",
+          "path": "DeviceUseStatement.device -> Device.type.coding[0]",
+          "type": "string",
+          "description": "Verbatim source code. omoponfhir encodes as system:code when concept lookup fails. ETL-German uses the raw code value. Truncate if exceeds 50 chars."
+        },
+        {
+          "name": "device_source_concept_id",
+          "path": "DeviceUseStatement.device -> Device.type",
+          "type": "CodeableConcept",
+          "description": "The source concept_id before standardization. If a non-standard concept matches the source coding, use it; otherwise 0. ETL-German sets this equal to device_concept_id."
+        }
+      ]
+    }
+  ]
+}

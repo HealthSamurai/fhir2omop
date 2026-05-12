@@ -1,0 +1,100 @@
+{
+  "resourceType": "ViewDefinition",
+  "id": "omop-location-location",
+  "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-location-location",
+  "version": "0.1.0",
+  "name": "OmopLocationLocationView",
+  "title": "Location → location (flat)",
+  "status": "draft",
+  "experimental": true,
+  "description": "Each FHIR Location maps to one OMOP location row representing a physical address. Location.address fields map to address_1, address_2, city, state, zip, county, and country. Location.position maps to latitude/longitude. The location table is shared with Patient.address -- both populate the same table and rows should be deduplicated by address components to avoid duplicates.",
+  "extension": [
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
+      "valueString": "location"
+    },
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
+      "valueString": "Location__location"
+    }
+  ],
+  "resource": "Location",
+  "select": [
+    {
+      "column": [
+        {
+          "name": "location_id",
+          "path": "(generated)",
+          "type": "id",
+          "description": "Surrogate key. Each unique address should be assigned a unique key. fhir-to-omop-demo uses Location.id directly."
+        },
+        {
+          "name": "address_1",
+          "path": "Location.address.line[0]",
+          "type": "string",
+          "description": "First line of street address."
+        },
+        {
+          "name": "address_2",
+          "path": "Location.address.line[1]",
+          "type": "string",
+          "description": "Second line of street address. If more than 2 address lines, concatenate third+ into address_2 or drop them."
+        },
+        {
+          "name": "city",
+          "path": "Location.address.city",
+          "type": "string",
+          "description": "City."
+        },
+        {
+          "name": "state",
+          "path": "Location.address.state",
+          "type": "string",
+          "description": "State. May need normalization (e.g., 'California' -> 'CA'). varchar(2) may force lossy mapping for international locations."
+        },
+        {
+          "name": "zip",
+          "path": "Location.address.postalCode",
+          "type": "string",
+          "description": "3-, 5-, or 9-digit US zip; international codes also allowed. Truncate if >9 chars."
+        },
+        {
+          "name": "county",
+          "path": "Location.address.district",
+          "type": "string",
+          "description": "FHIR district is the closest analog to OMOP county."
+        },
+        {
+          "name": "location_source_value",
+          "path": "Location.id",
+          "type": "string",
+          "description": "Verbatim source identifier or full address text (Location.address.text) for traceability."
+        },
+        {
+          "name": "country_concept_id",
+          "path": "Location.address.country",
+          "type": "string",
+          "description": "Mapped to OMOP Geography domain concept. 0 if unmapped. — transform: map(Location.address.country, Geography domain)"
+        },
+        {
+          "name": "country_source_value",
+          "path": "Location.address.country",
+          "type": "string",
+          "description": "Country name verbatim."
+        },
+        {
+          "name": "latitude",
+          "path": "Location.position.latitude",
+          "type": "decimal",
+          "description": "Must be between -90 and 90."
+        },
+        {
+          "name": "longitude",
+          "path": "Location.position.longitude",
+          "type": "decimal",
+          "description": "Must be between -180 and 180."
+        }
+      ]
+    }
+  ]
+}

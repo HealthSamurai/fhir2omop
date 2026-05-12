@@ -1,0 +1,124 @@
+{
+  "resourceType": "ViewDefinition",
+  "id": "omop-medicationstatement-drug-exposure",
+  "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-medicationstatement-drug-exposure",
+  "version": "0.1.0",
+  "name": "OmopMedicationStatementDrugExposureView",
+  "title": "MedicationStatement → drug_exposure (flat)",
+  "status": "draft",
+  "experimental": true,
+  "description": "Patient self-reported medication events. Each MedicationStatement produces one drug_exposure row with drug_type_concept_id defaulting to 44787730 (Patient Self-Reported Medication). This is the only FHIR medication resource with a normative HL7 IG FML mapping. Dynamic type concept adjustment is possible based on basedOn/partOf references (omoponfhir behavior).",
+  "extension": [
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
+      "valueString": "drug_exposure"
+    },
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
+      "valueString": "MedicationStatement__drug_exposure"
+    }
+  ],
+  "resource": "MedicationStatement",
+  "select": [
+    {
+      "column": [
+        {
+          "name": "person_id",
+          "path": "MedicationStatement.subject",
+          "type": "Reference(Patient)",
+          "description": "Resolve Patient reference. HL7 IG FML leaves this as a commented-out TODO."
+        },
+        {
+          "name": "drug_concept_id",
+          "path": "MedicationStatement.medication[x]",
+          "type": "CodeableConcept/Reference",
+          "description": "RxNorm / ATC / NDC mapped to OMOP standard concept. HL7 IG FML maps from medication.concept.coding.code. Placeholder: 0 when concept lookup unavailable."
+        },
+        {
+          "name": "drug_exposure_start_date",
+          "path": "MedicationStatement.effectiveDateTime | MedicationStatement.effectivePeriod.start | MedicationStatement.dateAsserted",
+          "type": "dateTime",
+          "description": "Tertiary fallback chain unique to MedicationStatement. omoponfhir falls back to new Date() instead of dateAsserted. — transform: effectiveDateTime -> effectivePeriod.start -> dateAsserted (tertiary fallback)"
+        },
+        {
+          "name": "drug_exposure_start_datetime",
+          "path": "MedicationStatement.effectiveDateTime | MedicationStatement.effectivePeriod.start | MedicationStatement.dateAsserted",
+          "type": "dateTime",
+          "description": "Full ISO datetime."
+        },
+        {
+          "name": "drug_exposure_end_date",
+          "path": "MedicationStatement.effectivePeriod.end",
+          "type": "dateTime",
+          "description": "When effectiveDateTime is used, end = start. When effectivePeriod has start but no end, end = start. — transform: effectivePeriod.end; fallback to start_date when effectiveDateTime is used (point in time) or period.end is absent"
+        },
+        {
+          "name": "drug_exposure_end_datetime",
+          "path": "MedicationStatement.effectivePeriod.end",
+          "type": "dateTime",
+          "description": "Full ISO datetime. Null if no period end."
+        },
+        {
+          "name": "verbatim_end_date",
+          "path": "MedicationStatement.effectivePeriod.end",
+          "type": "dateTime",
+          "description": "Raw end date from source before any inference. HL7 IG FML maps effectivePeriod.end here. Most other implementations leave null."
+        },
+        {
+          "name": "stop_reason",
+          "path": "MedicationStatement.statusReason",
+          "type": "CodeableConcept",
+          "description": "Reason for discontinuation. omoponfhir truncates to 20 chars and only populates when status=stopped. HL7 IG FML maps from reason.concept.coding.code."
+        },
+        {
+          "name": "quantity",
+          "path": "MedicationStatement.dosage[].doseAndRate[].doseQuantity.value",
+          "type": "decimal",
+          "description": "Dose amount per administration. ETL-German computes mean of Range when doseRange is used."
+        },
+        {
+          "name": "sig",
+          "path": "MedicationStatement.dosage[].text | MedicationStatement.dosage[].patientInstruction",
+          "type": "string",
+          "description": "Free-text dosage instructions."
+        },
+        {
+          "name": "route_concept_id",
+          "path": "MedicationStatement.dosage[].route",
+          "type": "CodeableConcept",
+          "description": "SNOMED route code mapped to OMOP Route domain concept. omoponfhir performs full vocabulary lookup. ETL-German uses date-aware concept lookup. This project hardcodes null."
+        },
+        {
+          "name": "route_source_value",
+          "path": "MedicationStatement.dosage[].route.text | MedicationStatement.dosage[].route.coding[0].display",
+          "type": "string",
+          "description": "Raw route text. omoponfhir prefers route.text, falls back to coding[0].display."
+        },
+        {
+          "name": "provider_id",
+          "path": "MedicationStatement.informationSource",
+          "type": "Reference(Practitioner)",
+          "description": "Reporter of the medication statement. omoponfhir filters to Practitioner-typed references only. ETL-German does not map provider for MedicationStatement."
+        },
+        {
+          "name": "visit_occurrence_id",
+          "path": "MedicationStatement.context",
+          "type": "Reference(Encounter)",
+          "description": "Encounter reference. R4 uses 'context'; renamed to 'encounter' in R5."
+        },
+        {
+          "name": "drug_source_value",
+          "path": "MedicationStatement.medication[x].coding[best].code",
+          "type": "code",
+          "description": "Best code by vocabulary priority. omoponfhir uses identifier.value as source value. ETL-German uses ATC code."
+        },
+        {
+          "name": "dose_unit_source_value",
+          "path": "MedicationStatement.dosage[].doseAndRate[].doseQuantity.unit | MedicationStatement.dosage[].doseAndRate[].doseQuantity.code",
+          "type": "string",
+          "description": "Raw dose unit string. omoponfhir prefers .code, falls back to .unit."
+        }
+      ]
+    }
+  ]
+}

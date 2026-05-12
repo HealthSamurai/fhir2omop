@@ -1,0 +1,118 @@
+{
+  "resourceType": "ViewDefinition",
+  "id": "omop-medicationdispense-drug-exposure",
+  "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-medicationdispense-drug-exposure",
+  "version": "0.1.0",
+  "name": "OmopMedicationDispenseDrugExposureView",
+  "title": "MedicationDispense → drug_exposure (flat)",
+  "status": "draft",
+  "experimental": true,
+  "description": "Pharmacy dispensing events. One FHIR MedicationDispense produces one OMOP drug_exposure row with drug_type_concept_id = 38000175 (Prescription dispensed in pharmacy). Date is taken from whenHandedOver (fallback whenPrepared). End date is computed from start + daysSupply, or defaults to start date. No reviewed reference implementation covers this mapping; the spec is reconstructed from OMOP drug_exposure schema and FHIR R4 MedicationDispense definition.",
+  "extension": [
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
+      "valueString": "drug_exposure"
+    },
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
+      "valueString": "MedicationDispense__drug_exposure"
+    }
+  ],
+  "resource": "MedicationDispense",
+  "select": [
+    {
+      "column": [
+        {
+          "name": "person_id",
+          "path": "MedicationDispense.subject",
+          "type": "Reference(Patient)",
+          "description": "Resolve Patient reference to person_id"
+        },
+        {
+          "name": "drug_concept_id",
+          "path": "MedicationDispense.medication[x]",
+          "type": "CodeableConcept | Reference(Medication)",
+          "description": "RxNorm / ATC / NDC -> OMOP standard concept. Resolve medicationCodeableConcept or medicationReference"
+        },
+        {
+          "name": "drug_exposure_start_date",
+          "path": "MedicationDispense.whenHandedOver",
+          "type": "dateTime",
+          "description": "The date medication was supplied. Fallback to whenPrepared if whenHandedOver absent — transform: date(whenHandedOver ?? whenPrepared)"
+        },
+        {
+          "name": "drug_exposure_start_datetime",
+          "path": "MedicationDispense.whenHandedOver",
+          "type": "dateTime",
+          "description": "Full ISO datetime — transform: whenHandedOver ?? whenPrepared"
+        },
+        {
+          "name": "drug_exposure_end_date",
+          "path": "MedicationDispense.daysSupply",
+          "type": "Duration",
+          "description": "If daysSupply present: end = start + daysSupply. Otherwise fallback to start date — transform: date(start + daysSupply) ?? start_date"
+        },
+        {
+          "name": "quantity",
+          "path": "MedicationDispense.quantity.value",
+          "type": "decimal",
+          "description": "Dispensed quantity (the total handed over)"
+        },
+        {
+          "name": "days_supply",
+          "path": "MedicationDispense.daysSupply.value",
+          "type": "integer",
+          "description": "Days of medication supplied. Direct FHIR field on MedicationDispense (unlike MedicationRequest where it must be computed)"
+        },
+        {
+          "name": "sig",
+          "path": "MedicationDispense.dosageInstruction[].text",
+          "type": "string",
+          "description": "Free-text dosage instructions. Fallback to patientInstruction"
+        },
+        {
+          "name": "route_concept_id",
+          "path": "MedicationDispense.dosageInstruction[].route",
+          "type": "CodeableConcept",
+          "description": "SNOMED route codes -> OMOP Route domain"
+        },
+        {
+          "name": "route_source_value",
+          "path": "MedicationDispense.dosageInstruction[].route.text",
+          "type": "string",
+          "description": "Raw route text or coding[0].display"
+        },
+        {
+          "name": "provider_id",
+          "path": "MedicationDispense.performer[0].actor",
+          "type": "Reference(Practitioner | PractitionerRole | Organization)",
+          "description": "The dispensing pharmacist or actor"
+        },
+        {
+          "name": "visit_occurrence_id",
+          "path": "MedicationDispense.context",
+          "type": "Reference(Encounter)",
+          "description": "Encounter reference. Resolve to visit_occurrence_id"
+        },
+        {
+          "name": "drug_source_value",
+          "path": "MedicationDispense.medication[x].coding[best].code",
+          "type": "code",
+          "description": "Best code by vocabulary priority (RxNorm > ATC > NDC > SNOMED)"
+        },
+        {
+          "name": "dose_unit_source_value",
+          "path": "MedicationDispense.dosageInstruction[].doseAndRate[].doseQuantity.unit",
+          "type": "string",
+          "description": "Raw dose unit string from doseQuantity.unit or .code"
+        }
+      ]
+    }
+  ],
+  "where": [
+    {
+      "path": "true",
+      "description": "status != 'entered-in-error' AND status != 'cancelled' AND status != 'declined' AND status != 'stopped'"
+    }
+  ]
+}

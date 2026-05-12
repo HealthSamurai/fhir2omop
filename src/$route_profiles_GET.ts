@@ -1,5 +1,5 @@
 export default async function (ctx: Context, _session: any, _req: Request) {
-    const { profiles, valuesets } = await ctx.fns.profiles.load(ctx);
+    const { profiles, valuesets, views } = await ctx.fns.profiles.load(ctx);
 
     const byType = new Map<string, typeof profiles>();
     for (const p of profiles) {
@@ -61,24 +61,47 @@ export default async function (ctx: Context, _session: any, _req: Request) {
     <p class="text-gray-500 text-sm">FHIR StructureDefinitions and ValueSets that gate conversion into OMOP tables. Domain routing: a FHIR resource maps to an OMOP table iff it validates against the corresponding profile — and the profile's <code class="text-xs bg-gray-100 px-1 rounded">code</code> binding is the discriminator.</p>
   </div>
 
-  <div class="grid grid-cols-3 gap-4 mb-8">
+  <div class="grid grid-cols-4 gap-4 mb-8">
     <div class="bg-white border border-gray-200 rounded-lg p-4">
       <div class="text-2xl font-bold text-gray-900">${profiles.length}</div>
       <div class="text-xs text-gray-500 mt-1">Profiles (StructureDefinition)</div>
     </div>
     <div class="bg-white border border-gray-200 rounded-lg p-4">
-      <div class="text-2xl font-bold text-gray-900">${valuesets.length}</div>
+      <div class="text-2xl font-bold text-orange-700">${views.length}</div>
+      <div class="text-xs text-gray-500 mt-1">ViewDefinitions (Stage 1 flatteners)</div>
+    </div>
+    <div class="bg-white border border-gray-200 rounded-lg p-4">
+      <div class="text-2xl font-bold text-purple-700">${valuesets.length}</div>
       <div class="text-xs text-gray-500 mt-1">ValueSets (routing keys)</div>
     </div>
     <div class="bg-white border border-gray-200 rounded-lg p-4">
       <div class="text-2xl font-bold text-amber-700">${[...byType.values()].filter((v) => v.length > 1).length}</div>
-      <div class="text-xs text-gray-500 mt-1">Routing pairs (1 resource → N tables)</div>
+      <div class="text-xs text-gray-500 mt-1">Routing pairs (1 → N tables)</div>
     </div>
   </div>
 
   <div class="bg-white border border-gray-200 rounded-lg p-5 mb-8">
     <h2 class="text-sm font-semibold text-gray-700 mb-4">Profiles by FHIR resource → OMOP table</h2>
     ${profileCards}
+  </div>
+
+  <div class="bg-white border border-gray-200 rounded-lg p-5 mb-8">
+    <h2 class="text-sm font-semibold text-gray-700 mb-3">ViewDefinitions <span class="text-xs text-gray-500 font-normal">— Stage 1 of ELT pipeline (SQL on FHIR)</span></h2>
+    <table class="w-full text-sm">
+      <thead><tr class="border-b border-gray-200 text-xs text-gray-500 uppercase">
+        <th class="px-3 py-1.5 text-left font-medium">ID</th>
+        <th class="px-3 py-1.5 text-left font-medium">Resource</th>
+        <th class="px-3 py-1.5 text-left font-medium">Flat target</th>
+        <th class="px-3 py-1.5 text-right font-medium">Columns</th>
+      </tr></thead>
+      <tbody>${views.map((v) => `
+<tr class="border-t border-gray-100">
+  <td class="px-3 py-2"><a href="/profiles/${enc(v.id)}" class="font-mono text-sm text-orange-700 hover:underline">${esc(v.id)}</a></td>
+  <td class="px-3 py-2 text-xs font-mono text-blue-700">${esc(v.resource)}</td>
+  <td class="px-3 py-2 text-xs font-mono text-green-700">${esc(v.targetTable ?? "")}</td>
+  <td class="px-3 py-2 text-xs text-gray-500 text-right">${v.select?.[0]?.column?.length ?? 0}</td>
+</tr>`).join("")}</tbody>
+    </table>
   </div>
 
   <div class="bg-white border border-gray-200 rounded-lg p-5">

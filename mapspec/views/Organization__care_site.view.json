@@ -1,0 +1,64 @@
+{
+  "resourceType": "ViewDefinition",
+  "id": "omop-organization-care-site",
+  "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-organization-care-site",
+  "version": "0.1.0",
+  "name": "OmopOrganizationCareSiteView",
+  "title": "Organization → care_site (flat)",
+  "status": "draft",
+  "experimental": true,
+  "description": "Each FHIR Organization maps to one OMOP care_site row representing a healthcare facility or department. Organization.name becomes care_site_name, Organization.type maps to place_of_service_concept_id via OrganizationType vocabulary, and Organization.address resolves to a location row linked via location_id. FHIR Location can also contribute care_site rows in some implementations (see Location__care_site edge). FHIR Organization.partOf hierarchy is flattened -- each level becomes a separate care_site row with no parent linkage.",
+  "extension": [
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
+      "valueString": "care_site"
+    },
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
+      "valueString": "Organization__care_site"
+    }
+  ],
+  "resource": "Organization",
+  "select": [
+    {
+      "column": [
+        {
+          "name": "care_site_id",
+          "path": "(generated)",
+          "type": "id",
+          "description": "Surrogate key. omoponfhir uses IdMapping (FHIR ID <-> OMOP ID). fhir-to-omop-demo uses Organization.id directly. ETL-German pre-loads sequential IDs from CSV."
+        },
+        {
+          "name": "care_site_name",
+          "path": "Organization.name",
+          "type": "string",
+          "description": "The name of the care site. Truncate to 255 characters if needed."
+        },
+        {
+          "name": "place_of_service_concept_id",
+          "path": "Organization.type[0].coding[0]",
+          "type": "CodeableConcept",
+          "description": "High-level characterization of the care site. Should be a concept from the Visit domain. omoponfhir maps via OmopConceptMapping enum (12 codes). 0 if unmapped."
+        },
+        {
+          "name": "location_id",
+          "path": "Organization.address",
+          "type": "Address",
+          "description": "Resolved from Organization.address[0] via address lookup-or-create pattern (omoponfhir AddressUtil). fhir-to-omop-demo sets null from Organization; relies on Location resource to populate via a second care_site row. OMOP supports one location per care_site."
+        },
+        {
+          "name": "care_site_source_value",
+          "path": "Organization.identifier[0].value",
+          "type": "string",
+          "description": "Identifier for traceability and deduplication. Falls back to Organization.name or Organization.id if no identifier present."
+        },
+        {
+          "name": "place_of_service_source_value",
+          "path": "Organization.type[0]",
+          "type": "string",
+          "description": "Raw organization type code or text before vocabulary mapping."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,129 @@
+{
+  "resourceType": "ViewDefinition",
+  "id": "omop-observation-measurement",
+  "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-observation-measurement",
+  "version": "0.1.0",
+  "name": "OmopObservationMeasurementView",
+  "title": "Observation → measurement (flat)",
+  "status": "draft",
+  "experimental": true,
+  "description": "Labs and vitals with numeric/coded results. Domain routing based on Observation.category: laboratory and vital-signs route here. Observations with components (e.g. blood pressure) are expanded -- each component produces its own measurement row.",
+  "extension": [
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
+      "valueString": "measurement"
+    },
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
+      "valueString": "Observation__measurement"
+    }
+  ],
+  "resource": "Observation",
+  "select": [
+    {
+      "column": [
+        {
+          "name": "measurement_id",
+          "path": "Observation.id",
+          "type": "id",
+          "description": "Generated deterministically from Observation.id. For component rows, suffixed with -comp-N (e.g. Observation.id + '-comp-0')."
+        },
+        {
+          "name": "person_id",
+          "path": "Observation.subject",
+          "type": "Reference(Patient)",
+          "description": "Resolved from Observation.subject reference to Patient."
+        },
+        {
+          "name": "measurement_concept_id",
+          "path": "Observation.code | Observation.component.code",
+          "type": "CodeableConcept",
+          "description": "LOINC/SNOMED mapped to OMOP standard concept. For component rows, uses component.code instead of top-level code. Placeholder: 0 when concept lookup unavailable."
+        },
+        {
+          "name": "measurement_date",
+          "path": "Observation.effectiveDateTime | Observation.effectivePeriod.start",
+          "type": "dateTime",
+          "description": "Falls back to effectivePeriod.start when effectiveDateTime is absent. Observation is skipped if neither is available."
+        },
+        {
+          "name": "measurement_datetime",
+          "path": "Observation.effectiveDateTime | Observation.effectivePeriod.start",
+          "type": "dateTime"
+        },
+        {
+          "name": "operator_concept_id",
+          "path": "Observation.valueQuantity.comparator | Observation.component.valueQuantity.comparator",
+          "type": "code",
+          "description": "< -> 4171756, <= -> 4171754, >= -> 4171755, > -> 4172703. Null when comparator is absent."
+        },
+        {
+          "name": "value_as_number",
+          "path": "Observation.valueQuantity.value | Observation.component.valueQuantity.value",
+          "type": "decimal",
+          "description": "Numeric result value from valueQuantity. For component rows, uses component.valueQuantity.value."
+        },
+        {
+          "name": "value_as_concept_id",
+          "path": "Observation.valueCodeableConcept | Observation.component.valueCodeableConcept",
+          "type": "CodeableConcept",
+          "description": "Requires vocabulary lookup to map coded result to OMOP concept. Placeholder: null when lookup unavailable."
+        },
+        {
+          "name": "unit_source_value",
+          "path": "Observation.valueQuantity.unit | Observation.component.valueQuantity.unit",
+          "type": "string",
+          "description": "Human-readable unit string from the FHIR Quantity."
+        },
+        {
+          "name": "unit_concept_id",
+          "path": "Observation.valueQuantity.code | Observation.component.valueQuantity.code",
+          "type": "code",
+          "description": "UCUM unit code mapped to OMOP unit concept. Placeholder: null when lookup unavailable."
+        },
+        {
+          "name": "range_low",
+          "path": "Observation.referenceRange[0].low.value",
+          "type": "decimal",
+          "description": "Lower bound of the first reference range. Only the first referenceRange entry is used."
+        },
+        {
+          "name": "range_high",
+          "path": "Observation.referenceRange[0].high.value",
+          "type": "decimal",
+          "description": "Upper bound of the first reference range. Only the first referenceRange entry is used."
+        },
+        {
+          "name": "provider_id",
+          "path": "Observation.performer[0]",
+          "type": "Reference(Practitioner)",
+          "description": "First performer reference resolved to provider_id."
+        },
+        {
+          "name": "visit_occurrence_id",
+          "path": "Observation.encounter",
+          "type": "Reference(Encounter)",
+          "description": "Resolved from Observation.encounter reference."
+        },
+        {
+          "name": "measurement_source_value",
+          "path": "Observation.code.coding[best].code | Observation.component.code.coding[best].code",
+          "type": "code",
+          "description": "Best code by vocabulary priority: LOINC > SNOMED > first available coding."
+        },
+        {
+          "name": "value_source_value",
+          "path": "Observation.valueQuantity | Observation.valueString | Observation.valueCodeableConcept.text",
+          "type": "string",
+          "description": "Computed: for valueQuantity concatenates comparator+value+unit; for valueString uses the string directly; for valueCodeableConcept uses .text. For component rows, derived from component values. — transform: concat(comparator, value, ' ', unit) | valueString | valueCodeableConcept.text"
+        }
+      ]
+    }
+  ],
+  "where": [
+    {
+      "path": "true",
+      "description": "category is laboratory or vital-signs (or absent/unknown -- default)"
+    }
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "resourceType": "ViewDefinition",
+  "id": "omop-diagnosticreport-observation",
+  "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-diagnosticreport-observation",
+  "version": "0.1.0",
+  "name": "OmopDiagnosticReportObservationView",
+  "title": "DiagnosticReport → observation (flat)",
+  "status": "draft",
+  "experimental": true,
+  "description": "When a DiagnosticReport's LOINC code resolves to an OMOP concept with domain_id = Observation, the report produces one or more observation rows. This applies primarily to clinical document types -- history and physical notes, discharge summaries, evaluation and plan notes, consultation notes -- where the LOINC code represents a document class rather than a quantitative measurement or procedure. Each conclusionCode entry generates a separate row. This is the most frequently hit domain for DiagnosticReport resources in real-world EHR data (clinical notes are far more common than lab panel-level reports).",
+  "extension": [
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
+      "valueString": "observation"
+    },
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
+      "valueString": "DiagnosticReport__observation"
+    }
+  ],
+  "resource": "DiagnosticReport",
+  "select": [
+    {
+      "column": [
+        {
+          "name": "person_id",
+          "path": "DiagnosticReport.subject",
+          "type": "Reference(Patient)",
+          "description": "Resolve Patient/{id} reference to integer person_id. Skip row if unresolvable."
+        },
+        {
+          "name": "observation_concept_id",
+          "path": "DiagnosticReport.code",
+          "type": "CodeableConcept",
+          "description": "LOINC code looked up in OMOP vocabulary. Must have domain_id = Observation. Use first LOINC coding found. 0 if concept not found."
+        },
+        {
+          "name": "observation_date",
+          "path": "DiagnosticReport.effective[x]",
+          "type": "dateTime|Period",
+          "description": "Date component of effectiveDateTime, or effectivePeriod.start. Skip row if absent (ETL-German behavior)."
+        },
+        {
+          "name": "observation_datetime",
+          "path": "DiagnosticReport.effective[x]",
+          "type": "dateTime|Period",
+          "description": "Full timestamp from effectiveDateTime or effectivePeriod.start."
+        },
+        {
+          "name": "observation_type_concept_id",
+          "path": "DiagnosticReport.category",
+          "type": "CodeableConcept",
+          "description": "ETL-German maps category via SOURCE_VOCABULARY_ID_DIAGNOSTIC_REPORT_CATEGORY custom concept map. Common defaults: 32817 (EHR) or 32856 (Lab result)."
+        },
+        {
+          "name": "value_as_string",
+          "path": "DiagnosticReport.conclusionCode.coding[0].display",
+          "type": "string",
+          "description": "ETL-German stores the SNOMED code string here (line 409). Recommended: use conclusionCode display text, or fall back to conclusion free text (truncated to 60 chars)."
+        },
+        {
+          "name": "value_as_concept_id",
+          "path": "DiagnosticReport.conclusionCode",
+          "type": "CodeableConcept",
+          "description": "SNOMED conclusion code resolved to OMOP concept. ETL-German currently stores this in observation_source_concept_id instead. Recommended: store the resolved SNOMED concept here as the clinical value of the report."
+        },
+        {
+          "name": "provider_id",
+          "path": "DiagnosticReport.performer[0]",
+          "type": "Reference(Practitioner)",
+          "description": "First performer reference resolved to provider_id. Also consider resultsInterpreter[0]."
+        },
+        {
+          "name": "visit_occurrence_id",
+          "path": "DiagnosticReport.encounter",
+          "type": "Reference(Encounter)",
+          "description": "Resolve Encounter/{id} to visit_occurrence_id."
+        },
+        {
+          "name": "observation_source_value",
+          "path": "DiagnosticReport.conclusionCode.coding[0].code",
+          "type": "code",
+          "description": "Verbatim SNOMED code from conclusionCode. ETL-German stores this (line 405)."
+        },
+        {
+          "name": "observation_source_concept_id",
+          "path": "DiagnosticReport.conclusionCode",
+          "type": "CodeableConcept",
+          "description": "SNOMED conclusionCode resolved to OMOP concept ID. ETL-German stores the SNOMED concept here (line 404)."
+        },
+        {
+          "name": "value_source_value",
+          "path": "DiagnosticReport.conclusionCode.coding[0].code",
+          "type": "code",
+          "description": "Verbatim SNOMED code. ETL-German does not explicitly set this field. Recommended: store the raw conclusionCode string."
+        }
+      ]
+    }
+  ],
+  "where": [
+    {
+      "path": "true",
+      "description": "DiagnosticReport.code (LOINC) resolves to OMOP concept with domain_id = Observation"
+    }
+  ]
+}

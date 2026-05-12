@@ -1,0 +1,106 @@
+{
+  "resourceType": "ViewDefinition",
+  "id": "omop-allergyintolerance-observation",
+  "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-allergyintolerance-observation",
+  "version": "0.1.0",
+  "name": "OmopAllergyIntoleranceObservationView",
+  "title": "AllergyIntolerance → observation (flat)",
+  "status": "draft",
+  "experimental": true,
+  "description": "FHIR AllergyIntolerance records patient allergies and intolerances. OMOP has no dedicated allergy table, so allergies are stored in the observation table with allergy-specific SNOMED concepts. One AllergyIntolerance maps to one observation row. Status filtering excludes inactive/resolved allergies and entered-in-error/refuted records.",
+  "extension": [
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
+      "valueString": "observation"
+    },
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
+      "valueString": "AllergyIntolerance__observation"
+    }
+  ],
+  "resource": "AllergyIntolerance",
+  "select": [
+    {
+      "column": [
+        {
+          "name": "observation_id",
+          "path": "AllergyIntolerance.id",
+          "type": "id",
+          "description": "Surrogate key from AllergyIntolerance.id. Hash or sequence via ctx.ids.getId()."
+        },
+        {
+          "name": "person_id",
+          "path": "AllergyIntolerance.patient",
+          "type": "Reference(Patient)",
+          "description": "Resolve Patient reference via ctx.ids.resolveRef()."
+        },
+        {
+          "name": "observation_concept_id",
+          "path": "AllergyIntolerance.code",
+          "type": "CodeableConcept",
+          "description": "SNOMED allergy/substance concept. Requires vocabulary lookup. This project: 0 (placeholder). omoponfhir: category-driven (food->4188027, medication->439224, default->40772948). FhirToCdm: direct vocab lookup on code."
+        },
+        {
+          "name": "observation_date",
+          "path": "AllergyIntolerance.onsetDateTime | AllergyIntolerance.onsetPeriod.start | AllergyIntolerance.recordedDate",
+          "type": "dateTime",
+          "description": "If all absent, the record is skipped. — transform: dateTime -> date; fallback chain: onsetDateTime -> onsetPeriod.start -> recordedDate"
+        },
+        {
+          "name": "observation_datetime",
+          "path": "AllergyIntolerance.onsetDateTime",
+          "type": "dateTime",
+          "description": "Full ISO datetime when available. Null if source is date-only or from fallback."
+        },
+        {
+          "name": "value_as_string",
+          "path": "AllergyIntolerance.reaction[*].manifestation[*].text",
+          "type": "string",
+          "description": "All reactions and manifestations are included. — transform: Concatenate all reaction manifestation display names, semicolon-separated."
+        },
+        {
+          "name": "value_as_concept_id",
+          "path": "AllergyIntolerance.reaction[0].manifestation[0]",
+          "type": "CodeableConcept",
+          "description": "First reaction manifestation concept. Requires vocab lookup. This project: null (placeholder). HL7 IG FML maps manifestation code here. omoponfhir places the substance here instead."
+        },
+        {
+          "name": "qualifier_source_value",
+          "path": "AllergyIntolerance.type",
+          "type": "code",
+          "description": "\"allergy\" or \"intolerance\". Preserves the type distinction."
+        },
+        {
+          "name": "provider_id",
+          "path": "AllergyIntolerance.asserter | AllergyIntolerance.recorder",
+          "type": "Reference(Practitioner | PractitionerRole)",
+          "description": "omoponfhir uses recorder only. — transform: Prefer asserter, fall back to recorder. Only Practitioner/PractitionerRole references are valid for provider_id."
+        },
+        {
+          "name": "visit_occurrence_id",
+          "path": "AllergyIntolerance.encounter",
+          "type": "Reference(Encounter)",
+          "description": "Resolve Encounter reference. Null if absent."
+        },
+        {
+          "name": "observation_source_value",
+          "path": "AllergyIntolerance.code.coding[best].code",
+          "type": "code",
+          "description": "Source allergy code (verbatim). Best coding selected by system priority (SNOMED > RxNorm > first)."
+        },
+        {
+          "name": "value_source_value",
+          "path": "AllergyIntolerance.criticality",
+          "type": "code",
+          "description": "\"low\", \"high\", or \"unable-to-assess\". Preserves criticality."
+        }
+      ]
+    }
+  ],
+  "where": [
+    {
+      "path": "true",
+      "description": "clinicalStatus is active or absent; verificationStatus is not entered-in-error or refuted"
+    }
+  ]
+}

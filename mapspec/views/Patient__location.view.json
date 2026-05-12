@@ -1,0 +1,85 @@
+{
+  "resourceType": "ViewDefinition",
+  "id": "omop-patient-location",
+  "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-patient-location",
+  "version": "0.1.0",
+  "name": "OmopPatientLocationView",
+  "title": "Patient → location (flat)",
+  "status": "draft",
+  "experimental": true,
+  "description": "Address normalization. One Patient produces at most one location row (most recent home address). The location_id is then set as person.location_id FK.",
+  "extension": [
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
+      "valueString": "location"
+    },
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
+      "valueString": "Patient__location"
+    }
+  ],
+  "resource": "Patient",
+  "select": [
+    {
+      "column": [
+        {
+          "name": "address_1",
+          "path": "Patient.address.line[0]",
+          "type": "string",
+          "description": "Truncate at 50 chars"
+        },
+        {
+          "name": "address_2",
+          "path": "Patient.address.line[1]",
+          "type": "string",
+          "description": "Null if line has only one entry. Concatenate beyond 2 lines."
+        },
+        {
+          "name": "city",
+          "path": "Patient.address.city",
+          "type": "string"
+        },
+        {
+          "name": "state",
+          "path": "Patient.address.state",
+          "type": "string",
+          "description": "Truncate to 2 chars (US state code)"
+        },
+        {
+          "name": "zip",
+          "path": "Patient.address.postalCode",
+          "type": "string",
+          "description": "Up to 9 chars (ZIP+4)"
+        },
+        {
+          "name": "county",
+          "path": "Patient.address.district",
+          "type": "string"
+        },
+        {
+          "name": "country_source_value",
+          "path": "Patient.address.country",
+          "type": "string"
+        },
+        {
+          "name": "latitude",
+          "path": "Patient.address.extension.where(url='http://hl7.org/fhir/StructureDefinition/geolocation').extension.where(url='latitude').valueDecimal",
+          "type": "decimal",
+          "description": "Range -90..90"
+        },
+        {
+          "name": "longitude",
+          "path": "Patient.address.extension.where(url='http://hl7.org/fhir/StructureDefinition/geolocation').extension.where(url='longitude').valueDecimal",
+          "type": "decimal",
+          "description": "Range -180..180"
+        }
+      ]
+    }
+  ],
+  "where": [
+    {
+      "path": "true",
+      "description": "Patient.address is present with usable fields"
+    }
+  ]
+}

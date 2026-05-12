@@ -1,0 +1,40 @@
+{
+  "resourceType": "ViewDefinition",
+  "id": "omop-patient-observation-period",
+  "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-patient-observation-period",
+  "version": "0.1.0",
+  "name": "OmopPatientObservationPeriodView",
+  "title": "Patient → observation_period (flat)",
+  "status": "draft",
+  "experimental": true,
+  "description": "Observation period defines spans during which a person is observable. Not a direct field-level mapping from Patient — derived from event data availability. Most implementations either skip this table or emit a placeholder row at person-creation time.",
+  "extension": [
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
+      "valueString": "observation_period"
+    },
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
+      "valueString": "Patient__observation_period"
+    }
+  ],
+  "resource": "Patient",
+  "select": [
+    {
+      "column": [
+        {
+          "name": "person_id",
+          "path": "Patient.id",
+          "type": "id",
+          "description": "Foreign key to person table, derived from Patient.id"
+        }
+      ]
+    }
+  ],
+  "where": [
+    {
+      "path": "true",
+      "description": "Derived per-person from data availability, not directly from Patient fields"
+    }
+  ]
+}

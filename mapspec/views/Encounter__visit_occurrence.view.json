@@ -1,0 +1,124 @@
+{
+  "resourceType": "ViewDefinition",
+  "id": "omop-encounter-visit-occurrence",
+  "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-encounter-visit-occurrence",
+  "version": "0.1.0",
+  "name": "OmopEncounterVisitOccurrenceView",
+  "title": "Encounter → visit_occurrence (flat)",
+  "status": "draft",
+  "experimental": true,
+  "description": "One FHIR Encounter maps to one visit_occurrence row. The visit_occurrence table is the OMOP anchor for linking clinical events to a care context -- every event table (condition_occurrence, measurement, drug_exposure, etc.) carries a visit_occurrence_id FK. Encounter.class maps to visit_concept_id via a small lookup table; period maps to start/end dates; participant maps to provider_id; serviceProvider maps to care_site_id. Planned and cancelled encounters are dropped.",
+  "extension": [
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
+      "valueString": "visit_occurrence"
+    },
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
+      "valueString": "Encounter__visit_occurrence"
+    }
+  ],
+  "resource": "Encounter",
+  "select": [
+    {
+      "column": [
+        {
+          "name": "visit_occurrence_id",
+          "path": "Encounter.id",
+          "type": "id",
+          "description": "Surrogate key generated from Encounter.id. HL7 IG FML has this as TODO. NACHC uses auto-increment; omoponfhir uses IdMapping; our project hashes Encounter.id."
+        },
+        {
+          "name": "person_id",
+          "path": "Encounter.subject",
+          "type": "Reference(Patient)",
+          "description": "Resolve Patient reference. omoponfhir throws FHIRException if absent. ETL-German looks up by identifier or logical ID. Our project uses ctx.ids.resolveRef(), defaults to 0 if unresolved."
+        },
+        {
+          "name": "visit_concept_id",
+          "path": "Encounter.class.code",
+          "type": "code",
+          "description": "See visit type vocabulary mapping. Small lookup table; 3-9 entries depending on implementation. Core consensus: IMP->9201, AMB->9202, EMER->9203."
+        },
+        {
+          "name": "visit_start_date",
+          "path": "Encounter.period.start",
+          "type": "dateTime",
+          "description": "Date portion (YYYY-MM-DD). Skip encounter if absent (our project, ETL-German). omoponfhir writes epoch 0 if absent. — transform: date(Encounter.period.start)"
+        },
+        {
+          "name": "visit_start_datetime",
+          "path": "Encounter.period.start",
+          "type": "dateTime",
+          "description": "Full ISO datetime. omoponfhir copies the start Date object directly."
+        },
+        {
+          "name": "visit_end_date",
+          "path": "Encounter.period.end",
+          "type": "dateTime",
+          "description": "If absent, use visit_start_date (our project, NACHC, FhirToCdm). ETL-German uses LocalDate.now() for still-admitted patients. — transform: date(Encounter.period.end) ?? visit_start_date"
+        },
+        {
+          "name": "visit_end_datetime",
+          "path": "Encounter.period.end",
+          "type": "dateTime",
+          "description": "Full ISO datetime; null if absent. ETL-German uses LocalDateTime.now() for CONCEPT_STILL_PATIENT cases."
+        },
+        {
+          "name": "provider_id",
+          "path": "Encounter.participant[0].individual",
+          "type": "Reference(Practitioner)",
+          "description": "First Practitioner-typed participant (our project). omoponfhir uses getParticipantFirstRep(). fhir-to-omop-demo filters for PPRF (primary performer). fhir-x-omop filters for ATND (attending). NACHC defaults to 1."
+        },
+        {
+          "name": "care_site_id",
+          "path": "Encounter.serviceProvider",
+          "type": "Reference(Organization)",
+          "description": "Organization reference. Our project resolves via ctx.ids.resolveRef(). omoponfhir resolves via IdMapping. FhirToCdm creates a Provider from serviceProvider.display. NACHC defaults to 1."
+        },
+        {
+          "name": "visit_source_value",
+          "path": "Encounter.class.code",
+          "type": "code",
+          "description": "Verbatim FHIR class code (our project, FhirToCdm). omoponfhir stores Encounter.id. NACHC stores encounter ID."
+        },
+        {
+          "name": "admitted_from_concept_id",
+          "path": "Encounter.hospitalization.admitSource",
+          "type": "CodeableConcept",
+          "description": "Requires vocabulary lookup. 0 if unmapped (our project, FhirToCdm). ETL-German stores in post_process_map for deferred resolution. No implementation in the reference set performs a complete vocabulary lookup."
+        },
+        {
+          "name": "admitted_from_source_value",
+          "path": "Encounter.hospitalization.admitSource",
+          "type": "CodeableConcept",
+          "description": "Raw admit source code. Our project extracts via getSourceValue() and truncates to 50 chars. NACHC stores 'Not Available'. — transform: getSourceValue(admitSource).truncate(50)"
+        },
+        {
+          "name": "discharged_to_concept_id",
+          "path": "Encounter.hospitalization.dischargeDisposition",
+          "type": "CodeableConcept",
+          "description": "Requires vocabulary lookup. 0 if unmapped (our project). fhir-x-omop maps home->8536, snf->8676, rehab->8615, exp->4216643. Most implementations default to 0."
+        },
+        {
+          "name": "discharged_to_source_value",
+          "path": "Encounter.hospitalization.dischargeDisposition",
+          "type": "CodeableConcept",
+          "description": "Raw discharge code. Our project extracts via getSourceValue(). fhir-x-omop uses the display. — transform: getSourceValue(dischargeDisposition).truncate(50)"
+        },
+        {
+          "name": "preceding_visit_occurrence_id",
+          "path": "Encounter.partOf",
+          "type": "Reference(Encounter)",
+          "description": "Previous encounter in a chain. Not widely used for this field; most implementations use partOf to link child encounters via visit_detail instead."
+        }
+      ]
+    }
+  ],
+  "where": [
+    {
+      "path": "true",
+      "description": "status in ('finished', 'in-progress')"
+    }
+  ]
+}

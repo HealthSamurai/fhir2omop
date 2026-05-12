@@ -1,0 +1,106 @@
+{
+  "resourceType": "ViewDefinition",
+  "id": "omop-specimen-specimen",
+  "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-specimen-specimen",
+  "version": "0.1.0",
+  "name": "OmopSpecimenSpecimenView",
+  "title": "Specimen → specimen (flat)",
+  "status": "draft",
+  "experimental": true,
+  "description": "One FHIR Specimen maps to exactly one OMOP specimen row. The specimen table captures biological samples collected from a person, including specimen type, collection date, quantity, anatomic site, and disease status. Specimen type (kind of material) maps to specimen_concept_id via SNOMED, while specimen_type_concept_id is a provenance metadata field (EHR = 32817). Collection date is required in OMOP but optional in FHIR.",
+  "extension": [
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
+      "valueString": "specimen"
+    },
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
+      "valueString": "Specimen__specimen"
+    }
+  ],
+  "resource": "Specimen",
+  "select": [
+    {
+      "column": [
+        {
+          "name": "specimen_id",
+          "path": "Specimen.id",
+          "type": "id",
+          "description": "Surrogate key. Hash/sequence/lookup of Specimen.id. Store FHIR ID or first identifier in specimen_source_id for traceability. — transform: hash_or_sequence(Specimen.id)"
+        },
+        {
+          "name": "person_id",
+          "path": "Specimen.subject",
+          "type": "Reference(Patient)",
+          "description": "Resolve Patient reference to integer person_id. Subject must be a Patient -- reject Device, Group, Location, Substance subjects. — transform: resolve_patient_reference(Specimen.subject)"
+        },
+        {
+          "name": "specimen_concept_id",
+          "path": "Specimen.type",
+          "type": "CodeableConcept",
+          "description": "Map to OMOP concept in Specimen domain. Prefer SNOMED coding if multiple codings present. Fall back to 0 if no mapping found."
+        },
+        {
+          "name": "specimen_date",
+          "path": "Specimen.collection.collected[x]",
+          "type": "dateTime | Period",
+          "description": "OMOP requires this field (NOT NULL). If collected[x] is a Period, use Period.start. If absent, try Specimen.receivedTime as fallback. — transform: date_component(collected[x]); if Period use Period.start; fallback to Specimen.receivedTime"
+        },
+        {
+          "name": "specimen_datetime",
+          "path": "Specimen.collection.collected[x]",
+          "type": "dateTime | Period",
+          "description": "Full datetime of collection. Same source as specimen_date but preserves time component. — transform: full_datetime(collected[x]); if date-only append T00:00:00"
+        },
+        {
+          "name": "quantity",
+          "path": "Specimen.collection.quantity.value",
+          "type": "decimal",
+          "description": "Amount of specimen collected. Direct numeric copy from collection.quantity.value."
+        },
+        {
+          "name": "unit_concept_id",
+          "path": "Specimen.collection.quantity",
+          "type": "Quantity",
+          "description": "Look up UCUM code in CONCEPT table (vocabulary_id = 'UCUM'). Default 0 if lookup fails. — transform: lookup_ucum(quantity.code where quantity.system = 'http://unitsofmeasure.org')"
+        },
+        {
+          "name": "unit_source_value",
+          "path": "Specimen.collection.quantity.unit",
+          "type": "string",
+          "description": "Raw unit string. Prefer quantity.unit (human-readable); fall back to quantity.code (UCUM code)."
+        },
+        {
+          "name": "anatomic_site_concept_id",
+          "path": "Specimen.collection.bodySite",
+          "type": "CodeableConcept",
+          "description": "SNOMED body site code mapped to OMOP concept. Use first coding from bodySite.coding[]. Default 0 if unmapped."
+        },
+        {
+          "name": "anatomic_site_source_value",
+          "path": "Specimen.collection.bodySite.text",
+          "type": "string",
+          "description": "Source text for anatomic site. Prefer bodySite.text, then coding[0].display, then coding[0].code."
+        },
+        {
+          "name": "disease_status_source_value",
+          "path": "Specimen.condition.text",
+          "type": "string",
+          "description": "Source text for disease/condition status. Prefer condition.text, then coding[0].display, then coding[0].code."
+        },
+        {
+          "name": "specimen_source_id",
+          "path": "Specimen.identifier[0].value",
+          "type": "string",
+          "description": "Source system identifier. omoponfhir uses first identifier value. Can also use Specimen.accessionIdentifier.value."
+        },
+        {
+          "name": "specimen_source_value",
+          "path": "Specimen.type.text",
+          "type": "string",
+          "description": "Verbatim source code/text for the specimen type. Populated when specimen_concept_id is 0 (unmapped). Use type.text if available, otherwise system|code or display of first coding, truncated to 50 chars."
+        }
+      ]
+    }
+  ]
+}

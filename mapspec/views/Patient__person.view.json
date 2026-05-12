@@ -1,0 +1,108 @@
+{
+  "resourceType": "ViewDefinition",
+  "id": "omop-patient-person",
+  "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-patient-person",
+  "version": "0.1.0",
+  "name": "OmopPatientPersonView",
+  "title": "Patient → person (flat)",
+  "status": "draft",
+  "experimental": true,
+  "description": "Core demographics record. One FHIR Patient maps to exactly one OMOP person row. The person table is the central identity record — every OMOP event table carries a person_id FK.",
+  "extension": [
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
+      "valueString": "person"
+    },
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
+      "valueString": "Patient__person"
+    }
+  ],
+  "resource": "Patient",
+  "select": [
+    {
+      "column": [
+        {
+          "name": "person_id",
+          "path": "Patient.id",
+          "type": "id",
+          "description": "Surrogate key. Hash/sequence/lookup of Patient.id. HL7 IG FML leaves this as a TODO."
+        },
+        {
+          "name": "gender_concept_id",
+          "path": "Patient.gender",
+          "type": "code",
+          "description": "male→8507, female→8532, other→8521, unknown→8551, absent→0"
+        },
+        {
+          "name": "gender_source_value",
+          "path": "Patient.gender",
+          "type": "code"
+        },
+        {
+          "name": "year_of_birth",
+          "path": "Patient.birthDate",
+          "type": "date",
+          "description": "transform: year(Patient.birthDate)"
+        },
+        {
+          "name": "month_of_birth",
+          "path": "Patient.birthDate",
+          "type": "date",
+          "description": "transform: month(Patient.birthDate)"
+        },
+        {
+          "name": "day_of_birth",
+          "path": "Patient.birthDate",
+          "type": "date",
+          "description": "transform: day(Patient.birthDate)"
+        },
+        {
+          "name": "birth_datetime",
+          "path": "Patient.birthDate + patient-birthTime extension",
+          "type": "dateTime"
+        },
+        {
+          "name": "race_concept_id",
+          "path": "Patient.extension[us-core-race].ombCategory",
+          "type": "code"
+        },
+        {
+          "name": "race_source_value",
+          "path": "Patient.extension[us-core-race].ombCategory.display",
+          "type": "code"
+        },
+        {
+          "name": "ethnicity_concept_id",
+          "path": "Patient.extension[us-core-ethnicity].ombCategory",
+          "type": "code"
+        },
+        {
+          "name": "ethnicity_source_value",
+          "path": "Patient.extension[us-core-ethnicity].ombCategory.display",
+          "type": "code"
+        },
+        {
+          "name": "location_id",
+          "path": "Patient.address",
+          "type": "Address"
+        },
+        {
+          "name": "provider_id",
+          "path": "Patient.generalPractitioner[0] (Practitioner)",
+          "type": "Reference(Practitioner)"
+        },
+        {
+          "name": "care_site_id",
+          "path": "Patient.managingOrganization",
+          "type": "Reference(Organization)"
+        },
+        {
+          "name": "person_source_value",
+          "path": "Patient.identifier (best: SSN > MR > first)",
+          "type": "string"
+        }
+      ]
+    }
+  ]
+}

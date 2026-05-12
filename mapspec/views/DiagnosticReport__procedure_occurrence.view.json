@@ -1,0 +1,106 @@
+{
+  "resourceType": "ViewDefinition",
+  "id": "omop-diagnosticreport-procedure-occurrence",
+  "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-diagnosticreport-procedure-occurrence",
+  "version": "0.1.0",
+  "name": "OmopDiagnosticReportProcedureOccurrenceView",
+  "title": "DiagnosticReport → procedure_occurrence (flat)",
+  "status": "draft",
+  "experimental": true,
+  "description": "When a DiagnosticReport's LOINC code resolves to an OMOP concept with domain_id = Procedure, the report produces one or more procedure_occurrence rows. This occurs primarily for imaging studies (radiology, nuclear medicine), pathology procedures, and certain clinical assessments whose LOINC codes are classified in the Procedure domain by the OMOP vocabulary. Each conclusionCode entry generates a separate row. This is independent of the Observation results referenced by DiagnosticReport.result[], which are mapped by the Observation mapper.",
+  "extension": [
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
+      "valueString": "procedure_occurrence"
+    },
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
+      "valueString": "DiagnosticReport__procedure_occurrence"
+    }
+  ],
+  "resource": "DiagnosticReport",
+  "select": [
+    {
+      "column": [
+        {
+          "name": "person_id",
+          "path": "DiagnosticReport.subject",
+          "type": "Reference(Patient)",
+          "description": "Resolve Patient/{id} reference to integer person_id. Skip row if unresolvable."
+        },
+        {
+          "name": "procedure_concept_id",
+          "path": "DiagnosticReport.code",
+          "type": "CodeableConcept",
+          "description": "LOINC code looked up in OMOP vocabulary. Must have domain_id = Procedure. Use first LOINC coding found. 0 if concept not found. ETL-German uses loincCodingConcept.getConceptId() (line 274)."
+        },
+        {
+          "name": "procedure_date",
+          "path": "DiagnosticReport.effective[x]",
+          "type": "dateTime|Period",
+          "description": "Date component of effectiveDateTime, or effectivePeriod.start. Skip row if absent (ETL-German behavior)."
+        },
+        {
+          "name": "procedure_datetime",
+          "path": "DiagnosticReport.effective[x]",
+          "type": "dateTime|Period",
+          "description": "Full timestamp from effectiveDateTime or effectivePeriod.start."
+        },
+        {
+          "name": "procedure_end_date",
+          "path": "DiagnosticReport.effectivePeriod.end",
+          "type": "dateTime",
+          "description": "End date from effectivePeriod.end. ETL-German does not set this field (only uses startDateTime). Leave null for effectiveDateTime."
+        },
+        {
+          "name": "procedure_end_datetime",
+          "path": "DiagnosticReport.effectivePeriod.end",
+          "type": "dateTime",
+          "description": "Full timestamp from effectivePeriod.end. ETL-German does not set this field."
+        },
+        {
+          "name": "procedure_type_concept_id",
+          "path": "DiagnosticReport.category",
+          "type": "CodeableConcept",
+          "description": "ETL-German maps category via SOURCE_VOCABULARY_ID_DIAGNOSTIC_REPORT_CATEGORY custom concept map (line 273). Common default: 32817 (EHR)."
+        },
+        {
+          "name": "modifier_concept_id",
+          "path": "DiagnosticReport.conclusionCode",
+          "type": "Coding",
+          "description": "ETL-German extracts interpretation codes from composite SNOMED expressions in conclusionCode (e.g. the value after = in 118247008:{363713009=373068000}) and resolves them to OMOP concepts (lines 286-297). Set only when conclusionCode contains a :{ composite expression. 0 if absent or unmapped."
+        },
+        {
+          "name": "provider_id",
+          "path": "DiagnosticReport.performer[0]",
+          "type": "Reference(Practitioner)",
+          "description": "First performer reference resolved to provider_id. Also consider resultsInterpreter[0]. ETL-German does not map this field for DiagnosticReport procedure_occurrence rows (gap in implementation)."
+        },
+        {
+          "name": "visit_occurrence_id",
+          "path": "DiagnosticReport.encounter",
+          "type": "Reference(Encounter)",
+          "description": "Resolve Encounter/{id} to visit_occurrence_id. ETL-German sets this (line 272)."
+        },
+        {
+          "name": "procedure_source_value",
+          "path": "DiagnosticReport.conclusionCode.coding[0].code",
+          "type": "code",
+          "description": "Verbatim SNOMED code from conclusionCode. ETL-German stores snomedCoding.getCode() (line 277)."
+        },
+        {
+          "name": "procedure_source_concept_id",
+          "path": "DiagnosticReport.conclusionCode",
+          "type": "CodeableConcept",
+          "description": "SNOMED conclusionCode resolved to OMOP concept ID. ETL-German stores snomedConcept.getConceptId() (line 276)."
+        }
+      ]
+    }
+  ],
+  "where": [
+    {
+      "path": "true",
+      "description": "DiagnosticReport.code (LOINC) resolves to OMOP concept with domain_id = Procedure"
+    }
+  ]
+}

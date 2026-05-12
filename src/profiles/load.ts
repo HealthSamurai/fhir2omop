@@ -1,4 +1,4 @@
-import { readdirSync } from "node:fs";
+import { readdirSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 
 const EXT_TABLE = "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table";
@@ -12,17 +12,24 @@ function readExt(arr: any[] | undefined, url: string): string | undefined {
 
 export default async function (
     ctx: Context,
-): Promise<{ profiles: types.profiles.Profile[]; valuesets: types.profiles.ValueSet[] }> {
+): Promise<{
+    profiles: types.profiles.Profile[];
+    valuesets: types.profiles.ValueSet[];
+    views: types.profiles.ViewDefinition[];
+}> {
     const cached = (ctx.state as any).profiles;
     if (cached) return cached;
 
-    const dir = resolve(import.meta.dir, "..", "..", "mapspec", "profiles");
+    const profilesDir = resolve(import.meta.dir, "..", "..", "mapspec", "profiles");
+    const viewsDir = resolve(import.meta.dir, "..", "..", "mapspec", "views");
+
     const profiles: types.profiles.Profile[] = [];
     const valuesets: types.profiles.ValueSet[] = [];
+    const views: types.profiles.ViewDefinition[] = [];
 
-    for (const name of readdirSync(dir)) {
+    for (const name of readdirSync(profilesDir)) {
         if (!name.endsWith(".json")) continue;
-        const raw = JSON.parse(await Bun.file(resolve(dir, name)).text());
+        const raw = JSON.parse(await Bun.file(resolve(profilesDir, name)).text());
         if (raw.resourceType === "StructureDefinition") {
             profiles.push({
                 ...raw,
@@ -37,9 +44,26 @@ export default async function (
             });
         }
     }
+
+    if (existsSync(viewsDir)) {
+        for (const name of readdirSync(viewsDir)) {
+            if (!name.endsWith(".json")) continue;
+            const raw = JSON.parse(await Bun.file(resolve(viewsDir, name)).text());
+            if (raw.resourceType === "ViewDefinition") {
+                views.push({
+                    ...raw,
+                    targetTable: readExt(raw.extension, EXT_TABLE),
+                    edgeKey: readExt(raw.extension, EXT_EDGE),
+                });
+            }
+        }
+    }
+
     profiles.sort((a, b) => a.id.localeCompare(b.id));
     valuesets.sort((a, b) => a.id.localeCompare(b.id));
-    const result = { profiles, valuesets };
+    views.sort((a, b) => a.id.localeCompare(b.id));
+
+    const result = { profiles, valuesets, views };
     (ctx.state as any).profiles = result;
     return result;
 }

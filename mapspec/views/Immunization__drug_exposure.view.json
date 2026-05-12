@@ -1,0 +1,142 @@
+{
+  "resourceType": "ViewDefinition",
+  "id": "omop-immunization-drug-exposure",
+  "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-immunization-drug-exposure",
+  "version": "0.1.0",
+  "name": "OmopImmunizationDrugExposureView",
+  "title": "Immunization → drug_exposure (flat)",
+  "status": "draft",
+  "experimental": true,
+  "description": "One FHIR Immunization maps to one drug_exposure row. Immunizations are point-in-time events: start_date = end_date, no days_supply or refills. Records are distinguished from other drug exposures by drug_concept_id belonging to the CVX vocabulary. Only completed immunizations are mapped; entered-in-error and not-done are skipped.",
+  "extension": [
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
+      "valueString": "drug_exposure"
+    },
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
+      "valueString": "Immunization__drug_exposure"
+    }
+  ],
+  "resource": "Immunization",
+  "select": [
+    {
+      "column": [
+        {
+          "name": "drug_exposure_id",
+          "path": "Immunization.id",
+          "type": "id",
+          "description": "Surrogate key. Hash/sequence/lookup of Immunization.id. HL7 IG FML comments this out as a TODO."
+        },
+        {
+          "name": "person_id",
+          "path": "Immunization.patient",
+          "type": "Reference(Patient)",
+          "description": "Resolve Patient reference to integer. Skip the entire record if the referenced Patient does not exist."
+        },
+        {
+          "name": "drug_concept_id",
+          "path": "Immunization.vaccineCode",
+          "type": "CodeableConcept",
+          "description": "Map vaccine code (CVX/SNOMED/ATC/RxNorm) to OMOP standard concept. When multiple vaccineCode.coding[] entries are present, pick the first recognized vocabulary. Default 0 when concept lookup unavailable."
+        },
+        {
+          "name": "drug_exposure_start_date",
+          "path": "Immunization.occurrenceDateTime",
+          "type": "dateTime",
+          "description": "Vaccination date (date portion). Skip record if occurrenceString is used instead of occurrenceDateTime. — transform: date(Immunization.occurrenceDateTime)"
+        },
+        {
+          "name": "drug_exposure_start_datetime",
+          "path": "Immunization.occurrenceDateTime",
+          "type": "dateTime",
+          "description": "Full ISO datetime if available."
+        },
+        {
+          "name": "drug_exposure_end_date",
+          "path": "Immunization.occurrenceDateTime",
+          "type": "dateTime",
+          "description": "Same as start date -- immunizations are single point-in-time events. — transform: date(Immunization.occurrenceDateTime)"
+        },
+        {
+          "name": "drug_exposure_end_datetime",
+          "path": "Immunization.occurrenceDateTime",
+          "type": "dateTime",
+          "description": "Same as start datetime."
+        },
+        {
+          "name": "stop_reason",
+          "path": "Immunization.statusReason.text",
+          "type": "string",
+          "description": "Only when status = not-done. omoponfhir writes statusReason.text or coded system:code. Most implementations skip not-done records entirely."
+        },
+        {
+          "name": "quantity",
+          "path": "Immunization.doseQuantity.value",
+          "type": "decimal",
+          "description": "Dose amount (e.g., 0.5 for 0.5 mL)."
+        },
+        {
+          "name": "sig",
+          "path": "Immunization.note[*].text",
+          "type": "string",
+          "description": "omoponfhir concatenates note[].text into sig. Not standard practice -- sig is intended for prescriber instructions, not clinical notes. Most implementations leave null."
+        },
+        {
+          "name": "route_concept_id",
+          "path": "Immunization.route",
+          "type": "CodeableConcept",
+          "description": "Vaccine administration route mapped to OMOP concept. Common: IM->4302612, SC->4302357, PO->4132161, NASINHL->4262914."
+        },
+        {
+          "name": "route_source_value",
+          "path": "Immunization.route.coding[0].code",
+          "type": "code",
+          "description": "Raw route code. omoponfhir uses system:code:display format. HL7 IG FML uses route.text as fallback."
+        },
+        {
+          "name": "lot_number",
+          "path": "Immunization.lotNumber",
+          "type": "string",
+          "description": "Vaccine lot tracking. One of the few FHIR resources that maps to lot_number. Truncate if exceeds 50 characters."
+        },
+        {
+          "name": "provider_id",
+          "path": "Immunization.performer[0].actor",
+          "type": "Reference(Practitioner)",
+          "description": "Administering practitioner. Take the first performer[].actor. Optional -- null if unresolvable. HL7 IG FML comments this out; ETL-German does not map it."
+        },
+        {
+          "name": "visit_occurrence_id",
+          "path": "Immunization.encounter",
+          "type": "Reference(Encounter)",
+          "description": "Resolve Encounter reference. Optional -- null if Encounter does not exist."
+        },
+        {
+          "name": "drug_source_value",
+          "path": "Immunization.vaccineCode.coding[best].code",
+          "type": "code",
+          "description": "Original vaccine code string. omoponfhir uses system:code format. ETL-German uses just the code."
+        },
+        {
+          "name": "drug_source_concept_id",
+          "path": "Immunization.vaccineCode",
+          "type": "CodeableConcept",
+          "description": "Non-standard source concept ID from vocabulary lookup. ETL-German resolves via findOmopConcepts. Default 0."
+        },
+        {
+          "name": "dose_unit_source_value",
+          "path": "Immunization.doseQuantity.unit | Immunization.doseQuantity.code",
+          "type": "string",
+          "description": "Dose unit (e.g., 'mL', 'dose'). HL7 IG FML uses doseQuantity.code. ETL-German uses dose.getUnit()."
+        }
+      ]
+    }
+  ],
+  "where": [
+    {
+      "path": "true",
+      "description": "status = completed (skip entered-in-error and not-done)"
+    }
+  ]
+}

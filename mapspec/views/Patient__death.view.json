@@ -1,0 +1,50 @@
+{
+  "resourceType": "ViewDefinition",
+  "id": "omop-patient-death",
+  "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-patient-death",
+  "version": "0.1.0",
+  "name": "OmopPatientDeathView",
+  "title": "Patient → death (flat)",
+  "status": "draft",
+  "experimental": true,
+  "description": "Mortality record. At most one death row per person. Only created when Patient.deceasedDateTime is present — deceasedBoolean=true without a date cannot produce a row because death_date is NOT NULL.",
+  "extension": [
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
+      "valueString": "death"
+    },
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
+      "valueString": "Patient__death"
+    }
+  ],
+  "resource": "Patient",
+  "select": [
+    {
+      "column": [
+        {
+          "name": "person_id",
+          "path": "Patient.person_id",
+          "type": "integer"
+        },
+        {
+          "name": "death_date",
+          "path": "Patient.deceasedDateTime",
+          "type": "dateTime",
+          "description": "NOT NULL — this is why deceasedBoolean=true cannot produce a row — transform: dateTime → date"
+        },
+        {
+          "name": "death_datetime",
+          "path": "Patient.deceasedDateTime",
+          "type": "dateTime"
+        }
+      ]
+    }
+  ],
+  "where": [
+    {
+      "path": "true",
+      "description": "Patient.deceasedDateTime is present"
+    }
+  ]
+}

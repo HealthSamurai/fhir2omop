@@ -255,6 +255,15 @@ async function renderEdge(ctx: Context, edge: Edge): Promise<string> {
         parts.push(await renderProfileCard(ctx, profile));
     }
 
+    // ViewDefinition (stage-1 flattener for this edge)
+    const view = await ctx.fns.profiles.viewForEdge(ctx, {
+        resource: edge.fhir_resource,
+        table: edge.omop_table,
+    });
+    if (view) {
+        parts.push(renderViewCard(view));
+    }
+
     // Condition
     if (edge.condition) {
         parts.push(`<div class="mb-4 px-3 py-2 bg-amber-50 border border-amber-200 rounded text-xs"><strong>Condition:</strong> ${esc(edge.condition)}</div>`);
@@ -421,6 +430,37 @@ async function renderProfileCard(ctx: Context, p: types.profiles.Profile): Promi
       </tr>
     </thead>
     <tbody>${rows}</tbody>
+  </table>
+</div>`;
+}
+
+function renderViewCard(v: types.profiles.ViewDefinition): string {
+    const cols = v.select?.[0]?.column ?? [];
+    const rows = cols.slice(0, 30).map((c) => `<tr class="border-t border-gray-100">
+  <td class="px-2 py-1 font-mono text-[11px] font-semibold text-gray-900 whitespace-nowrap">${esc(c.name)}</td>
+  <td class="px-2 py-1 font-mono text-[11px] text-blue-700">${esc(c.path)}</td>
+  <td class="px-2 py-1 text-[10px] uppercase text-gray-500">${esc(c.type ?? "")}</td>
+</tr>`).join("");
+    const more = cols.length > 30 ? `<tr><td colspan="3" class="px-2 py-1 text-[11px] text-gray-500 italic">… ${cols.length - 30} more — see full ViewDefinition</td></tr>` : "";
+
+    return `
+<div class="mb-6 border border-orange-200 rounded-lg overflow-hidden">
+  <div class="flex items-center justify-between px-4 py-2 bg-orange-50 border-b border-orange-200">
+    <div class="flex items-center gap-2 text-xs">
+      <span class="text-[10px] uppercase tracking-wider text-orange-800 font-semibold">ViewDefinition (Stage 1 flattener)</span>
+      <a href="/profiles/${enc(v.id)}" class="font-mono text-sm text-orange-900 hover:underline">${esc(v.id)}</a>
+    </div>
+    <span class="text-[11px] text-orange-700">${cols.length} columns · resource <code class="bg-white px-1 rounded">${esc(v.resource)}</code></span>
+  </div>
+  <table class="w-full bg-white text-[11px]">
+    <thead class="bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500 border-b border-gray-200">
+      <tr>
+        <th class="px-2 py-1.5 text-left font-medium w-64">column name</th>
+        <th class="px-2 py-1.5 text-left font-medium">FHIRPath</th>
+        <th class="px-2 py-1.5 text-left font-medium w-24">type</th>
+      </tr>
+    </thead>
+    <tbody>${rows}${more}</tbody>
   </table>
 </div>`;
 }

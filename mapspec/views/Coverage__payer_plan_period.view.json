@@ -1,0 +1,100 @@
+{
+  "resourceType": "ViewDefinition",
+  "id": "omop-coverage-payer-plan-period",
+  "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-coverage-payer-plan-period",
+  "version": "0.1.0",
+  "name": "OmopCoveragePayerPlanPeriodView",
+  "title": "Coverage → payer_plan_period (flat)",
+  "status": "draft",
+  "experimental": true,
+  "description": "FHIR Coverage captures a patient's insurance enrollment (payer, plan, coverage period, subscriber relationship). It maps to OMOP payer_plan_period, which records continuous enrollment under a specific health benefit plan from a given payer. Unlike clinical event tables, payer_plan_period carries no _type_concept_id; it is purely administrative. One active Coverage resource produces one payer_plan_period row. Overlapping or adjacent periods for the same person/payer may be collapsed.",
+  "extension": [
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
+      "valueString": "payer_plan_period"
+    },
+    {
+      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
+      "valueString": "Coverage__payer_plan_period"
+    }
+  ],
+  "resource": "Coverage",
+  "select": [
+    {
+      "column": [
+        {
+          "name": "payer_plan_period_id",
+          "path": "Coverage.id",
+          "type": "id",
+          "description": "Surrogate key. Generated via hash/sequence/lookup of Coverage.id."
+        },
+        {
+          "name": "person_id",
+          "path": "Coverage.beneficiary",
+          "type": "Reference(Patient)",
+          "description": "Resolve Patient reference to integer person_id via the same ID mapping used by the Patient mapper."
+        },
+        {
+          "name": "payer_plan_period_start_date",
+          "path": "Coverage.period.start",
+          "type": "dateTime",
+          "description": "Coverage start date. If absent, use ETL epoch or earliest known date. NOT NULL in OMOP."
+        },
+        {
+          "name": "payer_plan_period_end_date",
+          "path": "Coverage.period.end",
+          "type": "dateTime",
+          "description": "Coverage end date. If absent or open-ended, use 9999-12-31 or ETL end date. NOT NULL in OMOP."
+        },
+        {
+          "name": "payer_concept_id",
+          "path": "Coverage.payor[0]",
+          "type": "Reference(Organization|Patient|RelatedPerson)",
+          "description": "OMOP Payer vocabulary concept (vocabulary_id='Payer', domain_id='Payer'). Resolve Organization reference, map name to payer concept. Default: 0. If payor references Patient (self-pay), use concept_id 436. — transform: resolve payor[0] -> Organization.name -> OMOP Payer vocabulary lookup"
+        },
+        {
+          "name": "payer_source_value",
+          "path": "Coverage.payor[0]",
+          "type": "Reference(Organization|Patient|RelatedPerson)",
+          "description": "Verbatim payer name or identifier. Resolve Organization reference and extract Organization.name. Fallback to Reference.display. Truncate to 50 chars. — transform: resolve payor[0] -> Organization.name or Reference.display"
+        },
+        {
+          "name": "plan_concept_id",
+          "path": "Coverage.type.coding[0].code",
+          "type": "code",
+          "description": "Map Coverage.type to OMOP Plan vocabulary. No standard OMOP vocabulary maps directly to Coverage.type. Default: 0. — transform: map Coverage.type (v3-ActCode) to OMOP Plan vocabulary"
+        },
+        {
+          "name": "plan_source_value",
+          "path": "Coverage.type.text | Coverage.class.where(type.coding.code='plan').name | Coverage.class.where(type.coding.code='plan').value",
+          "type": "string",
+          "description": "Plan name as it appears in source. Truncate to 50 chars. — transform: Use Coverage.type.text, or class entry where type.coding.code='plan'. Concatenate group+plan if both present."
+        },
+        {
+          "name": "sponsor_concept_id",
+          "path": "Coverage.policyHolder",
+          "type": "Reference(Organization|Patient|RelatedPerson)",
+          "description": "OMOP Sponsor vocabulary concept. The policyHolder (often the employer) is the sponsor. Default: 0. — transform: resolve policyHolder -> Organization.name -> OMOP Sponsor vocabulary lookup"
+        },
+        {
+          "name": "sponsor_source_value",
+          "path": "Coverage.policyHolder",
+          "type": "Reference(Organization|Patient|RelatedPerson)",
+          "description": "Sponsor name from policyHolder reference. Truncate to 50 chars. — transform: resolve policyHolder -> Organization.name or identifier"
+        },
+        {
+          "name": "family_source_value",
+          "path": "Coverage.subscriberId",
+          "type": "string",
+          "description": "The subscriber ID links all family members under the same policy. Truncate to 50 chars."
+        }
+      ]
+    }
+  ],
+  "where": [
+    {
+      "path": "true",
+      "description": "Coverage.status = 'active'"
+    }
+  ]
+}
