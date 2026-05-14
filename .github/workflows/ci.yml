@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false  # heavy refs/ submodules not needed for type-check
+
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install
+        run: bun install
+
+      - name: Type-check
+        run: bunx tsc --noEmit
+
+      - name: Validate edge JSONs
+        run: |
+          bun -e '
+          import { readdirSync, readFileSync } from "node:fs";
+          let bad = 0;
+          for (const f of readdirSync("mapspec/edges")) {
+            if (!f.endsWith(".json")) continue;
+            try { JSON.parse(readFileSync(`mapspec/edges/${f}`, "utf-8")); }
+            catch (e) { console.error(f, e.message); bad++; }
+          }
+          process.exit(bad ? 1 : 0);'
+
+      - name: Validate profile + view + valueset JSONs
+        run: |
+          bun -e '
+          import { readdirSync, readFileSync } from "node:fs";
+          let bad = 0;
+          for (const dir of ["mapspec/profiles", "mapspec/views"]) {
+            for (const f of readdirSync(dir)) {
+              if (!f.endsWith(".json")) continue;
+              try { JSON.parse(readFileSync(`${dir}/${f}`, "utf-8")); }
+              catch (e) { console.error(`${dir}/${f}`, e.message); bad++; }
+            }
+          }
+          process.exit(bad ? 1 : 0);'
+
+      - name: Tests
+        run: bun test --if-present
+        continue-on-error: true   # remove once tests land

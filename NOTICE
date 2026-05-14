@@ -1,0 +1,15 @@
+fhir2omop
+Copyright 2026 Health Samurai
+
+This product includes software developed at Health Samurai
+(https://www.health-samurai.io/).
+
+It includes data and references to:
+- OMOP Common Data Model © OHDSI, Apache License 2.0
+  (https://github.com/OHDSI/CommonDataModel)
+- Athena Standardized Vocabularies © OHDSI
+  (https://athena.ohdsi.org/)
+- HL7 FHIR® specification (FHIR® is the registered trademark of HL7
+  and is used with the permission of HL7).
+- Multiple OHDSI / Health-IT reference implementations included as
+  git submodules under refs/, each retaining its original license.
