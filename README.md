@@ -7,6 +7,8 @@
 [![FHIR R4](https://img.shields.io/badge/FHIR-R4-red.svg)](https://hl7.org/fhir/R4/)
 [![OMOP CDM v5.4](https://img.shields.io/badge/OMOP_CDM-v5.4-green.svg)](https://ohdsi.github.io/CommonDataModel/cdm54.html)
 
+**Live demo:** [fhir2omop.apki.dev](https://fhir2omop.apki.dev) — `/profiles`, `/mapspec/<R>/<table>`, edge matrix on `/`.
+
 A working specification — and the tooling to render and (in progress) execute
 it — for converting FHIR R4 data into OMOP CDM v5.4. Unlike most existing
 FHIR→OMOP projects, this one is:
