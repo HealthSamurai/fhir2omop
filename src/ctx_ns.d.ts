@@ -9,6 +9,7 @@ declare global {
         };
         diff: {
         compareTables: typeof import("./diff/compareTables").default;
+        createIndices: typeof import("./diff/createIndices").default;
         report: typeof import("./diff/report").default;
         };
         etl_fhir: {
@@ -43,6 +44,7 @@ declare global {
         list: typeof import("./mapspec/list").default;
         loadEdges: typeof import("./mapspec/loadEdges").default;
         render: typeof import("./mapspec/render").default;
+        renderDiffCard: typeof import("./mapspec/renderDiffCard").default;
         };
         markdown: {
         highlight: typeof import("./markdown/highlight").default;

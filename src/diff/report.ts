@@ -2,14 +2,14 @@
 //
 //   ctx.fns.diff.report(ctx, { ref, ours, key }) → string (markdown)
 //
-// Convenience wrapper: runs compareTables and formats.
-import compareTables from "./compareTables";
+// Convenience wrapper: runs compareTables and formats. Uses ctx.fns.diff to
+// avoid transitive-import staleness during REPL hot-reload (see CLAUDE.md).
 
 export default async function (
     ctx: Context,
-    opts: { ref: string; ours: string; key: string; columns?: string[] },
+    opts: { ref: string; ours: string; key: string | string[]; columns?: string[] },
 ): Promise<string> {
-    const r = await compareTables(ctx, opts);
+    const r = await ctx.fns.diff.compareTables(ctx, opts);
 
     const lines: string[] = [];
     lines.push(`# Diff: \`${r.ref}\` vs \`${r.ours}\``);

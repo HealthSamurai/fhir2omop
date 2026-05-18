@@ -2,23 +2,17 @@
   "resourceType": "ViewDefinition",
   "id": "omop-condition-condition-occurrence",
   "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-condition-condition-occurrence",
-  "version": "0.2.0",
   "name": "OmopConditionConditionOccurrenceView",
   "title": "Condition → condition_occurrence (FHIR-flat, stage 1)",
+  "version": "0.3.0",
   "status": "draft",
   "experimental": true,
-  "description": "One FHIR Condition maps to one condition_occurrence row. Status filtering drops entered-in-error, refuted, and inactive/resolved conditions. Onset is resolved via a priority chain (onsetDateTime > onsetPeriod.start > recordedDate); conditions with no resolvable start date are skipped. Category drives type_concept_id (problem-list-item vs encounter-diagnosis). Domain routing is not implemented -- all conditions go to condition_occurrence regardless of OMOP vocabulary domain_id.\n\nStage 1 of FHIR→OMOP: produce a flat row keeping source codes per vocabulary. Stage 2 joins vocab.concept to resolve concept_ids.",
   "extension": [
-    {
-      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
-      "valueString": "condition_occurrence"
-    },
-    {
-      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
-      "valueString": "Condition__condition_occurrence"
-    }
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table", "valueString": "condition_occurrence" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",        "valueString": "Condition__condition_occurrence" }
   ],
   "resource": "Condition",
+  "description": "Stage 1 of FHIR→OMOP: one flat row per Condition, preserving raw FHIR values. Stage 2 SQL resolves person_id / visit_occurrence_id (via reference resolution), condition_concept_id (via vocab Maps-to with domain='Condition').\n\nOne (code_system, code_value) pair instead of per-vocabulary columns — same pattern as Observation v0.3. Adding ICD10CM/ICD9CM/other vocabs requires no schema change, only system_aliases mapping in stage 2.",
   "select": [
     {
       "column": [
@@ -26,333 +20,79 @@
           "name": "id",
           "path": "Condition.id",
           "type": "id",
-          "description": "FHIR Condition.id; surrogate OMOP key derived (hash/sequence) downstream.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "condition_occurrence_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "surrogate key from hash/sequence/lookup of FHIR id"
-                }
-              ]
-            }
-          ]
+          "description": "FHIR Condition.id (Synthea UUID). → condition_source_value + surrogate condition_occurrence_id."
         },
         {
-          "name": "code_snomed",
-          "path": "Condition.code.coding.where(system='http://snomed.info/sct').first().code",
-          "type": "code",
-          "description": "Condition code — SNOMED",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "condition_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "lookup vocab.concept WHERE vocabulary_id='SNOMED' AND concept_code = (this column); standard_concept='S' preferred"
-                }
-              ]
-            }
-          ]
+          "name": "subject_ref",
+          "path": "Condition.subject.reference",
+          "type": "string",
+          "description": "Reference to the Patient. Stage 2 takes trailing UUID via regexp_replace. → person_id."
         },
         {
-          "name": "code_icd10cm",
-          "path": "Condition.code.coding.where(system='http://hl7.org/fhir/sid/icd-10-cm').first().code",
-          "type": "code",
-          "description": "Condition code — ICD10CM",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "condition_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "lookup vocab.concept WHERE vocabulary_id='ICD10CM' AND concept_code = (this column); standard_concept='S' preferred"
-                }
-              ]
-            }
-          ]
+          "name": "encounter_ref",
+          "path": "Condition.encounter.reference",
+          "type": "string",
+          "description": "Reference to the encounter where this condition was diagnosed/recorded. → visit_occurrence_id."
         },
         {
-          "name": "code_icd9cm",
-          "path": "Condition.code.coding.where(system='http://hl7.org/fhir/sid/icd-9-cm').first().code",
-          "type": "code",
-          "description": "Condition code — ICD9CM",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "condition_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "lookup vocab.concept WHERE vocabulary_id='ICD9CM' AND concept_code = (this column); standard_concept='S' preferred"
-                }
-              ]
-            }
-          ]
+          "name": "code_system",
+          "path": "Condition.code.coding.first().system",
+          "type": "uri",
+          "description": "Coding system URL (typically http://snomed.info/sct for Synthea, possibly http://hl7.org/fhir/sid/icd-10-cm for real data). → vocabulary_id via system_aliases in stage 2."
         },
         {
-          "name": "code_icd10",
-          "path": "Condition.code.coding.where(system='http://hl7.org/fhir/sid/icd-10').first().code",
+          "name": "code_value",
+          "path": "Condition.code.coding.first().code",
           "type": "code",
-          "description": "Condition code — ICD10",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "condition_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "lookup vocab.concept WHERE vocabulary_id='ICD10' AND concept_code = (this column); standard_concept='S' preferred"
-                }
-              ]
-            }
-          ]
+          "description": "Source code → condition_concept_id (after Maps-to + domain='Condition' filter). Also kept verbatim in condition_source_value."
         },
         {
           "name": "code_text",
           "path": "Condition.code.text",
           "type": "string",
-          "description": "Free text label from Condition.code",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "condition_source_value"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "copy text verbatim into OMOP source_value column"
-                }
-              ]
-            }
-          ]
+          "description": "Human-readable label, fallback when code_value is missing."
         },
         {
-          "name": "subject_id",
-          "path": "Condition.subject",
-          "type": "Reference(Patient)",
-          "description": "Resolve Patient reference to integer. Defaults to 0 if unresolved; omoponfhir throws FHIRException.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "person_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "resolve PERSON reference; downstream maps to person_id"
-                }
-              ]
-            }
-          ]
+          "name": "onset_dt",
+          "path": "Condition.onset.ofType(dateTime)",
+          "type": "dateTime",
+          "description": "onsetDateTime branch of onset[x]. → condition_start_date / _datetime."
         },
         {
-          "name": "condition_start_date",
-          "path": "Condition.onset[x]",
-          "type": "dateTime | Period | Age | Range | string",
-          "description": "Falls back through onsetDateTime > onsetPeriod.start > recordedDate. Condition skipped if none resolvable.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "condition_start_date"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "coalesce(onsetDateTime, onsetPeriod.start, recordedDate)"
-                }
-              ]
-            }
-          ]
+          "name": "onset_period_start",
+          "path": "Condition.onset.ofType(Period).start",
+          "type": "dateTime",
+          "description": "onsetPeriod.start branch. Used if onset_dt is absent."
         },
         {
-          "name": "condition_start_datetime",
-          "path": "Condition.onset[x]",
-          "type": "dateTime | Period",
-          "description": "Full ISO datetime when available. omoponfhir uses 9999-12-31 when missing (line 542).",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "condition_start_datetime"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "coalesce(onsetDateTime, onsetPeriod.start, recordedDate)"
-                }
-              ]
-            }
-          ]
+          "name": "abatement_dt",
+          "path": "Condition.abatement.ofType(dateTime)",
+          "type": "dateTime",
+          "description": "abatementDateTime branch. → condition_end_date / _datetime."
         },
         {
-          "name": "condition_end_date",
-          "path": "Condition.abatement[x]",
-          "type": "dateTime | Period",
-          "description": "FhirToCdm falls back to visit end date when absent (line 301-302). No other implementation does this.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "condition_end_date"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "coalesce(abatementDateTime, abatementPeriod.end)"
-                }
-              ]
-            }
-          ]
+          "name": "abatement_period_end",
+          "path": "Condition.abatement.ofType(Period).end",
+          "type": "dateTime",
+          "description": "abatementPeriod.end branch. Fallback when abatement_dt absent."
         },
         {
-          "name": "condition_end_datetime",
-          "path": "Condition.abatement[x]",
-          "type": "dateTime | Period",
-          "description": "",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "condition_end_datetime"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "coalesce(abatementDateTime, abatementPeriod.end)"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "condition_status",
-          "path": "Condition.clinicalStatus",
-          "type": "CodeableConcept",
-          "description": "active/recurrence/relapse->32902, absent->0. ETL-German uses diagnostic confidence instead.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "condition_status_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "resolve CONCEPT reference; downstream maps to condition_status_concept_id"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "condition_status_text",
-          "path": "Condition.clinicalStatus.coding[0].code",
-          "type": "code",
-          "description": "Verbatim clinical status code. ETL-German stores diagnostic confidence code here.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "condition_status_source_value"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "stop_reason",
-          "path": "Condition.abatementString",
+          "name": "abatement_string",
+          "path": "Condition.abatement.ofType(string)",
           "type": "string",
-          "description": "Free-text reason for resolution. Truncated to 20 chars. fhir-x-omop uses note[0].text instead.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "stop_reason"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "substring(abatementString, 0, 20)"
-                }
-              ]
-            }
-          ]
+          "description": "Free-text abatement note (e.g. 'recovered'). → stop_reason."
         },
         {
-          "name": "performer_id",
-          "path": "Condition.asserter",
-          "type": "Reference(Practitioner)",
-          "description": "Asserter preferred; recorder fallback. omoponfhir uses asserter only. fhir-x-omop uses recorder only.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "provider_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "coalesce(resolveRef(asserter), resolveRef(recorder))"
-                }
-              ]
-            }
-          ]
+          "name": "clinical_status_code",
+          "path": "Condition.clinicalStatus.coding.first().code",
+          "type": "code",
+          "description": "active/recurrence/relapse/inactive/remission/resolved (from condition-clinical CodeSystem). → condition_status_source_value (+ optional concept lookup)."
         },
         {
-          "name": "encounter_id",
-          "path": "Condition.encounter",
-          "type": "Reference(Encounter)",
-          "description": "Resolve Encounter reference. FhirToCdm also sets visit_detail_id from encounter.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "visit_occurrence_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "resolve VISIT_OCCURRENCE reference; downstream maps to visit_occurrence_id"
-                }
-              ]
-            }
-          ]
+          "name": "recorded_date",
+          "path": "Condition.recordedDate",
+          "type": "dateTime",
+          "description": "When the condition was recorded. Useful fallback for condition_start_date."
         }
       ]
     }

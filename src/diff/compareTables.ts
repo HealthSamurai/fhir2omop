@@ -3,29 +3,43 @@
 //   ctx.fns.diff.compareTables(ctx, {
 //     ref:  "cdm.person",                    // schema.table
 //     ours: "cdm_ours_fhir.person",
-//     key:  "person_source_value",           // column to JOIN on (Synthea UUID)
+//     key:  "person_source_value",           // column to JOIN on (or array)
 //     columns: ["gender_concept_id", ...]    // optional — defaults: all shared cols
+//     ttl: 60000,                            // cache TTL in ms (default 60s, 0 = no cache)
 //   })
 //
-// Returns:
-//   {
-//     ref_rows, ours_rows,
-//     in_both, ref_only, ours_only,
-//     fields: [{ column, match, mismatch, ref_null, ours_null, both_null }, ...]
-//   }
+// Results include `ms` (computation time, set even on cache hit to the
+// last fresh value). Cache lives in ctx.state.diff_cache keyed by
+// (ref, ours, key, columns).
+const CACHE_DEFAULT_TTL_MS = 60_000;
+
 export default async function (
     ctx: Context,
-    opts: { ref: string; ours: string; key: string; columns?: string[] },
+    opts: { ref: string; ours: string; key: string | string[]; columns?: string[]; ttl?: number },
 ): Promise<any> {
+    const ttl = opts.ttl ?? CACHE_DEFAULT_TTL_MS;
+    const cacheKey = JSON.stringify([opts.ref, opts.ours, opts.key, opts.columns]);
+    const cache = ((ctx.state as any).diff_cache ??= new Map<string, { t: number; value: any }>());
+    if (ttl > 0) {
+        const hit = cache.get(cacheKey);
+        if (hit && Date.now() - hit.t < ttl) return { ...hit.value, cached: true };
+    }
+    const t0 = Date.now();
     const [refSchema, refTable]   = opts.ref.split(".");
     const [oursSchema, oursTable] = opts.ours.split(".");
     if (!refSchema || !refTable || !oursSchema || !oursTable) {
         throw new Error(`bad schema.table: ref=${opts.ref}, ours=${opts.ours}`);
     }
 
-    // 1. Discover shared columns (excluding the join key).
+    // Normalize key to array. Build a JOIN-on clause and a NULL-check for it.
+    const keys = Array.isArray(opts.key) ? opts.key : [opts.key];
+    const joinOn   = keys.map((k) => `o."${k}" IS NOT DISTINCT FROM r."${k}"`).join(" AND ");
+    const refNull  = keys.map((k) => `r."${k}" IS NULL`).join(" AND ");
+    const oursNull = keys.map((k) => `o."${k}" IS NULL`).join(" AND ");
+
+    // 1. Discover shared columns (excluding the join key(s)).
     const cols = opts.columns ?? await discoverSharedColumns(ctx, opts.ref, opts.ours);
-    const compareCols = cols.filter((c) => c !== opts.key);
+    const compareCols = cols.filter((c) => !keys.includes(c));
 
     // 2. Row-level totals.
     const totals = await ctx.fns.db.query(ctx, {
@@ -33,9 +47,9 @@ export default async function (
             SELECT
                 (SELECT count(*) FROM ${opts.ref})  AS ref_rows,
                 (SELECT count(*) FROM ${opts.ours}) AS ours_rows,
-                (SELECT count(*) FROM ${opts.ref}  r JOIN ${opts.ours} o ON o.${opts.key} = r.${opts.key}) AS in_both,
-                (SELECT count(*) FROM ${opts.ref}  r LEFT JOIN ${opts.ours} o ON o.${opts.key} = r.${opts.key} WHERE o.${opts.key} IS NULL) AS ref_only,
-                (SELECT count(*) FROM ${opts.ours} o LEFT JOIN ${opts.ref}  r ON o.${opts.key} = r.${opts.key} WHERE r.${opts.key} IS NULL) AS ours_only
+                (SELECT count(*) FROM ${opts.ref}  r JOIN ${opts.ours} o ON ${joinOn}) AS in_both,
+                (SELECT count(*) FROM ${opts.ref}  r LEFT JOIN ${opts.ours} o ON ${joinOn} WHERE ${oursNull}) AS ref_only,
+                (SELECT count(*) FROM ${opts.ours} o LEFT JOIN ${opts.ref}  r ON ${joinOn} WHERE ${refNull})  AS ours_only
         `,
     });
     const t = totals[0];
@@ -57,7 +71,7 @@ export default async function (
         const sql = `
             SELECT ${filters.join(",\n                   ")}
             FROM ${opts.ref}  r
-            JOIN ${opts.ours} o ON o.${opts.key} = r.${opts.key}
+            JOIN ${opts.ours} o ON ${joinOn}
         `;
         const agg = (await ctx.fns.db.query(ctx, { sql }))[0];
         for (const c of compareCols) {
@@ -72,7 +86,7 @@ export default async function (
         }
     }
 
-    return {
+    const value = {
         ref:  opts.ref,
         ours: opts.ours,
         key:  opts.key,
@@ -82,7 +96,11 @@ export default async function (
         ref_only:  Number(t.ref_only),
         ours_only: Number(t.ours_only),
         fields,
+        ms: Date.now() - t0,
+        cached: false,
     };
+    if (ttl > 0) cache.set(cacheKey, { t: Date.now(), value });
+    return value;
 }
 
 async function discoverSharedColumns(
