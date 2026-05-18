@@ -1,36 +1,38 @@
-import { getSql } from "../db/connect";
+import { $ } from "bun";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { unlink } from "node:fs/promises";
 import run from "./run";
 import { getColumns } from "./columns";
 
 // Execute a ViewDefinition against a `fhir.<type>` table and materialize
-// the result into a staging table.
+// the result into a staging table — via CSV + psql `\copy` for speed.
 //
 //   ctx.fns.viewdef.materialize(ctx, {
 //     viewDefinition,
-//     source: "fhir.patient",
-//     target: "staging.patient_person_view",
-//     batchSize: 1000,                  // default
+//     source: "fhir.observation",
+//     target: "staging.obs_obs_view",
 //   })
 //
-// Creates the target table fresh each run (DROP+CREATE). Column types: text
-// for most things, numeric for decimal/integer, boolean for boolean.
-// Stage-2 SQL casts as needed.
+// Hot path is the inner loop that writes one CSV line per view row to a
+// temp file; once the file is built, a single psql `\copy` streams the
+// whole thing to the server with the COPY protocol — orders of magnitude
+// faster than the old `INSERT INTO ... VALUES (...), (...)` approach for
+// large staging tables (hundreds of thousands+ of rows).
+//
+// CSV null marker is `\N` so we can distinguish NULL from empty string.
 export default async function (
     ctx: Context,
     opts: {
         viewDefinition: any;
         source: string;
         target: string;
-        batchSize?: number;
     },
 ): Promise<{ rows: number; columns: string[]; ms: number }> {
-    const sql = getSql();
     const t0 = Date.now();
     const cols = getColumns(opts.viewDefinition);
     const colTypes = inferColumnTypes(opts.viewDefinition, cols);
-    const batchSize = opts.batchSize ?? 1000;
 
-    // 1. CREATE staging table
     const [schema, tname] = opts.target.split(".");
     if (!schema || !tname) throw new Error(`target must be schema.table, got ${opts.target}`);
     await ctx.fns.db.query(ctx, { sql: `CREATE SCHEMA IF NOT EXISTS ${schema}` });
@@ -40,25 +42,40 @@ export default async function (
         sql: `CREATE TABLE ${opts.target} (${colDdl})`,
     });
 
-    // 2. Read source resources, run view, batch-insert
+    const tmp = join(
+        tmpdir(),
+        `viewdef_${schema}_${tname}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.csv`,
+    );
+    const writer = Bun.file(tmp).writer();
+
     const allRows = await ctx.fns.db.query(ctx, {
         sql: `SELECT resource FROM ${opts.source}`,
     });
     let total = 0;
-    let batch: any[][] = [];
+    const colCount = cols.length;
     for (const row of allRows) {
-        const rows = run(ctx, { resource: row.resource, viewDefinition: opts.viewDefinition });
-        for (const r of rows) batch.push(r);
-        if (batch.length >= batchSize) {
-            await flushBatch(ctx, opts.target, cols, batch);
-            total += batch.length;
-            batch = [];
+        const viewRows = run(ctx, {
+            resource: row.resource,
+            viewDefinition: opts.viewDefinition,
+        });
+        for (const r of viewRows) {
+            writer.write(csvLine(r, colCount) + "\n");
+            total++;
         }
     }
-    if (batch.length > 0) {
-        await flushBatch(ctx, opts.target, cols, batch);
-        total += batch.length;
+    await writer.end();
+
+    const dsn = ctx.env.ATHENA_DSN
+        ?? "postgresql://athena:athena@localhost:54392/athena";
+    const copyCmd =
+        `\\copy ${opts.target} FROM '${tmp}' WITH (FORMAT csv, NULL '\\N')`;
+    const res = await $`psql ${dsn} -v ON_ERROR_STOP=1 -c ${copyCmd}`.quiet();
+    if (res.exitCode !== 0) {
+        throw new Error(
+            `\\copy failed for ${opts.target}: ${res.stderr.toString()}`,
+        );
     }
+    await unlink(tmp).catch(() => {});
 
     const ms = Date.now() - t0;
     return { rows: total, columns: cols, ms };
@@ -72,12 +89,12 @@ function inferColumnTypes(vd: any, colNames: string[]): string[] {
         switch (t) {
             case "decimal":
             case "double":
-            case "number":     return "numeric";
+            case "number":      return "numeric";
             case "integer":
             case "positiveInt":
             case "unsignedInt": return "integer";
-            case "boolean":    return "boolean";
-            default:           return "text";
+            case "boolean":     return "boolean";
+            default:            return "text";
         }
     });
 }
@@ -92,29 +109,26 @@ function findColumns(def: any): any[] {
     return [];
 }
 
-async function flushBatch(
-    ctx: Context,
-    target: string,
-    cols: string[],
-    batch: any[][],
-): Promise<void> {
-    const colList = cols.map((c) => `"${c}"`).join(", ");
-    const tuples = batch
-        .map((row) =>
-            "(" +
-            row
-                .map((v) => {
-                    if (v === null || v === undefined) return "NULL";
-                    if (typeof v === "number") return String(v);
-                    if (typeof v === "boolean") return v ? "TRUE" : "FALSE";
-                    // text — escape single quotes
-                    return "'" + String(v).replace(/'/g, "''") + "'";
-                })
-                .join(", ") +
-            ")",
-        )
-        .join(", ");
-    await ctx.fns.db.query(ctx, {
-        sql: `INSERT INTO ${target} (${colList}) VALUES ${tuples}`,
-    });
+function csvLine(row: any[], colCount: number): string {
+    const parts = new Array<string>(colCount);
+    for (let i = 0; i < colCount; i++) parts[i] = csvField(row[i]);
+    return parts.join(",");
+}
+
+function csvField(v: any): string {
+    if (v === null || v === undefined) return "\\N";
+    if (typeof v === "number") return String(v);
+    if (typeof v === "boolean") return v ? "true" : "false";
+    const s = String(v);
+    if (s.length === 0) return "";
+    if (
+        s.indexOf(",") >= 0  ||
+        s.indexOf("\n") >= 0 ||
+        s.indexOf("\r") >= 0 ||
+        s.indexOf('"') >= 0  ||
+        s.indexOf("\\") >= 0
+    ) {
+        return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
 }

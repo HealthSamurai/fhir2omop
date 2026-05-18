@@ -107,7 +107,7 @@ unit_resolved AS (
 -- Surrogate IDs are deterministic 64-bit hashes; no JOIN to surrogate tables.
 SELECT
     hashtextextended(v.id, 0)::bigint              AS observation_id,
-    hashtextextended(split_part(v.subject_id, '/', -1), 0)::bigint
+    hashtextextended(regexp_replace(v.subject_id, '^.*[:/|]', ''), 0)::bigint
                                                    AS person_id,
 
     COALESCE(cr.std_concept_id, 0)                 AS observation_concept_id,
@@ -123,18 +123,17 @@ SELECT
     ur.unit_concept_id,
 
     CASE WHEN v.performer_id IS NULL OR v.performer_id = '' THEN NULL::bigint
-         ELSE hashtextextended(split_part(v.performer_id, '/', -1), 0)::bigint
+         ELSE hashtextextended(regexp_replace(v.performer_id, '^.*[:/|]', ''), 0)::bigint
     END                                            AS provider_id,
     CASE WHEN v.encounter_id IS NULL OR v.encounter_id = '' THEN NULL::bigint
-         ELSE hashtextextended(split_part(v.encounter_id, '/', -1), 0)::bigint
+         ELSE hashtextextended(regexp_replace(v.encounter_id, '^.*[:/|]', ''), 0)::bigint
     END                                            AS visit_occurrence_id,
     NULL::bigint                                   AS visit_detail_id,
 
     COALESCE(v.code_value, v.code_text)            AS observation_source_value,
     COALESCE(cr.src_concept_id, 0)                 AS observation_source_concept_id,
     v.value_unit_text                              AS unit_source_value,
-    v.qualifier_code                               AS qualifier_source_value,
-    v.value_text                                   AS value_source_value
+    v.qualifier_code                               AS qualifier_source_value
 
 FROM staging.obs_obs_view v
 JOIN      code_resolved      cr ON cr.staging_id = v.id
@@ -143,7 +142,7 @@ LEFT JOIN qualifier_resolved qr ON qr.staging_id = v.id
 LEFT JOIN unit_resolved      ur ON ur.staging_id = v.id
 
 JOIN fhir.patient fp
-  ON fp.id = split_part(v.subject_id, '/', -1)
+  ON fp.id = regexp_replace(v.subject_id, '^.*[:/|]', '')
 
 WHERE cr.std_domain = 'Observation'                                   -- domain routing
 ;
