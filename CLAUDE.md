@@ -137,6 +137,101 @@ licensed and not included in `CONCEPT.csv` — run `sh cpt.sh` inside
 `athena/bundle/` with a UMLS API key to hydrate them in place before loading,
 if you need them.
 
+### Synthea reference dataset (`synthea2omop/`)
+
+A cloned & wired upstream [`kaiserpreusse/synthea2omop`](https://github.com/kaiserpreusse/synthea2omop)
+lives in the `synthea2omop/` subfolder. It generates a Synthea population and
+loads it into Postgres via OHDSI's R-based ETL — the result is our **ground-truth
+oracle** for validating any FHIR→OMOP pipeline we build.
+
+Crucial property: Synthea generates the same 1,169 patients in BOTH formats
+from the same seed — CSV (`output/csv/`) **and** FHIR R4 bundles
+(`output/fhir/`). The UUIDs in `patients.csv:Id` match `Patient.id` inside the
+FHIR bundles match `cdm.person.person_source_value` after the reference ETL.
+
+```
+[Synthea seed=1779010226473, 1169 patients]
+        │
+        ├──→ synthea2omop/output/csv/   ──► ETL-Synthea (R)  ──► cdm.*       (reference oracle)
+        │
+        └──→ synthea2omop/output/fhir/  ──► bun load-fhir.ts ──► fhir.*      (jsonb staging)
+                                                                  │
+                                                                  ▼ our SoF stage-2 SQL
+                                                                cdm_ours.*   (our pipeline)
+                                                                  │
+                                                                  ▼ diff
+                                                              cdm vs cdm_ours
+                                                              per person_source_value
+```
+
+Setup (one-time, see `synthea2omop/SETUP.md`):
+- `synthea2omop/.env` — Postgres creds + `CDM_SCHEMA=cdm`
+- `synthea2omop/setup-cdm.sh` — creates `cdm` schema with 28 OMOP CDM v5.3
+  event tables and 9 vocab views (`cdm.concept` etc. pointing at `vocab.*`)
+- `synthea2omop/synthea_generate_data/Dockerfile` — patched to
+  `eclipse-temurin:11-jre` (upstream `openjdk:11-jre-buster` is deprecated)
+- `synthea2omop/synthea_load_to_omop_cdm/Dockerfile` — patched to
+  `rocker/r-ver:4.3.3` + extra `libbz2-dev/liblzma-dev/zlib1g-dev/libpcre2-dev`
+  (upstream `r-base:4.3.3` pulled broken Debian-testing apt packages)
+
+Run (~30 min, mostly R-build the first time):
+```sh
+cd synthea2omop
+docker compose --env-file .env -f compose-synthea_generate_data.yml      up --build  # CSV + FHIR
+docker compose --env-file .env -f compose-synthea_load_to_omop_cdm.yml   up --build  # → cdm.*
+```
+
+After completion, `cdm.*` holds the reference OMOP (1,169 person, 87k visits,
+730k measurements, 384k observations, 109k drug_exposure, …).
+
+### Three Postgres schemas in one DB
+
+| Schema | Source | Owner | Purpose |
+|---|---|---|---|
+| `vocab.*` | Athena bundle | `bun script/init-athena.ts` | Standardized vocabularies — read-only |
+| `cdm.*`   | Synthea CSV → ETL-Synthea | `synthea2omop/` docker | **Reference OMOP** (oracle) |
+| `fhir.*`  | Synthea FHIR bundles | `bun script/load-fhir.ts` | Raw FHIR resources for our pipeline |
+| `cdm_ours.*` (TODO) | Synthea FHIR → our SoF stage-2 | not yet created | Our pipeline target (diff against `cdm.*`) |
+
+The FHIR↔OMOP join key is **always** the Synthea UUID:
+
+```sql
+-- The bridge query: link every FHIR resource back to its OMOP row.
+SELECT op.person_id, fp.id, fp.resource->>'gender'
+FROM fhir.patient fp
+JOIN cdm.person   op ON op.person_source_value = fp.id;
+```
+
+### `fhir.*` schema (one table per resourceType)
+
+Schema convention: `fhir.<resource_type_snake_case>(id text PRIMARY KEY,
+resource jsonb NOT NULL)`. Tables are created on-demand by
+`src/fhir/ensureTable.ts` (CamelCase → snake_case: `MedicationRequest` →
+`medication_request`).
+
+Load all bundles in a directory (concurrency=8 by default):
+
+```sh
+bun script/load-fhir.ts synthea2omop/output/fhir
+# → fhir.patient (1169), fhir.encounter (98k), fhir.observation (733k), …
+# Total ~1.94M rows in ~25s
+```
+
+The loader is **idempotent** — re-running re-INSERTs via
+`ON CONFLICT (id) DO UPDATE`. Truncate before re-loading only if you've
+changed the loader logic (see the "double-encoding gotcha" note below).
+
+> **JSONB double-encoding gotcha.** When inserting JSON into a `jsonb`
+> column from Bun.SQL, do **not** pre-`JSON.stringify` the object and pass
+> it as a `$N` parameter — Bun's driver re-encodes string params, and
+> Postgres stores `'"{\"a\":1}"'::jsonb` (a JSON string scalar, not the
+> object). `jsonb_typeof` returns `'string'` instead of `'object'`.
+>
+> Two correct patterns: (a) inline JSON literals in the SQL text and let
+> `::jsonb` parse them server-side (used in `src/fhir/loadBundle.ts`); or
+> (b) pass `params` to `db.query` as primitives only — do extraction
+> rather than insertion of complex types.
+
 ### OMOP CDM (git submodule)
 ```
 CommonDataModel/           # https://github.com/OHDSI/CommonDataModel
@@ -194,9 +289,18 @@ Reload FHIR core: `bun src/load-fhir-core.ts` (rewrites both directories)
 
 ## Architecture: procedural ctx.fns (adapted from hyper-code2)
 
-**One function per file. Folder = namespace.** Files in `src/` are scanned by
-`loadFns` and registered as `ctx.fns.<module>.<fn>` (see `src/loadFns.ts` and
-`src/project/classify.ts`).
+**One function per file. Folder = namespace. STRICTLY two-level: `src/<ns>/<fn>.ts`.**
+
+> **No nesting under `src/`.** Code lives at `src/<ns>/<fn>.ts` and nowhere
+> else. Anything deeper is a mistake — data files (SQL templates, JSON
+> fixtures, CSV) belong **outside `src/`**, typically alongside `mapspec/`,
+> `refs/`, or at the repo root. If you need versioned subfolders for data
+> (e.g. `cdm_version/v531/`), keep them in a top-level dir; the scanner
+> `loadFns`/`classify` does not recurse, but more importantly the convention
+> is to keep `src/` thin and code-only.
+
+Files in `src/` are scanned by `loadFns` and registered as `ctx.fns.<module>.<fn>`
+(see `src/loadFns.ts` and `src/project/classify.ts`).
 
 ```
 src/
@@ -212,6 +316,8 @@ src/
   markdown/                ctx.fns.markdown.* — render, highlight, mermaid
   mapspec/                 ctx.fns.mapspec.* — list (edges loader), render (per-edge UI)
   profiles/                ctx.fns.profiles.* — load, byId, valueSetByUrl, profileForEdge
+  db/                      ctx.fns.db.* — connect (shared Bun.SQL pool), query (REPL-friendly SQL)
+  fhir/                    ctx.fns.fhir.* — init, ensureTable, loadBundle, loadDir (Bundle → fhir.*)
 
   $route_GET.ts            GET /
   $route_profiles_GET.ts   GET /profiles
@@ -270,6 +376,42 @@ After editing `src/<module>/<fn>.ts`:
 3. `http.loadRoutes(ctx)` if you added/renamed a `$route_*.ts`.
 
 The route module cache uses `?t=${Date.now()}` so route files reload on each `loadRoutes`. Non-route fn modules need an explicit `repl.load`.
+
+### Postgres via `ctx.fns.db.query`
+
+The running server holds a shared `Bun.SQL` pool (`src/db/connect.ts`).
+Use it from the REPL for any ad-hoc query — no need to shell out to `psql`:
+
+```bash
+# Simple row read
+bun script/repl.ts '
+const r = await ctx.fns.db.query(ctx, { sql: "select count(*)::int as n from cdm.person" });
+console.log(r);
+'
+
+# Parameterized — $1, $2, ... in the SQL
+bun script/repl.ts '
+const r = await ctx.fns.db.query(ctx, {
+  sql: "select id from fhir.patient where id = $1",
+  params: ["109b34ca-afb2-42b2-08a8-107af1cc6b6e"],
+});
+console.log(r);
+'
+
+# Multi-statement / DDL is fine — just pass via { sql }
+bun script/repl.ts 'await ctx.fns.db.query(ctx, { sql: "truncate table fhir.observation" });'
+```
+
+DSN is taken from `$ATHENA_DSN` / `$FHIR_DSN` (default
+`postgresql://athena:athena@localhost:54392/athena`). Same pool is reused by
+`ctx.fns.fhir.*` and any SoF stage-2 SQL.
+
+> **Note on jsonb params.** `db.query` does not pre-JSON-encode params, so
+> don't pass JS objects as parameter values for `jsonb` columns — Bun's
+> driver would double-encode and you'd store a JSON string scalar instead of
+> the object. Either inline JSON via `'…'::jsonb` literals in the SQL (see
+> `src/fhir/loadBundle.ts`) or extract the value out of an already-loaded
+> row.
 
 ## Scripts
 

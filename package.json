@@ -3,5 +3,8 @@
   "private": true,
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "dependencies": {
+    "fhirpath": "^4.10.1"
   }
 }

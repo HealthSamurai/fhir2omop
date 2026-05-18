@@ -264,6 +264,17 @@ async function renderEdge(ctx: Context, edge: Edge): Promise<string> {
         parts.push(renderViewCard(view));
     }
 
+    // Stage-2 demo ETL SQL (if a sidecar file exists)
+    const etlSqlPath = resolve(
+        import.meta.dir, "..", "..", "mapspec", "etl",
+        `${edge.fhir_resource}__${edge.omop_table}.sql`,
+    );
+    const etlFile = Bun.file(etlSqlPath);
+    if (await etlFile.exists()) {
+        const sql = await etlFile.text();
+        parts.push(renderEtlSqlCard(sql, `${edge.fhir_resource}__${edge.omop_table}.sql`));
+    }
+
     // Condition
     if (edge.condition) {
         parts.push(`<div class="mb-4 px-3 py-2 bg-amber-50 border border-amber-200 rounded text-xs"><strong>Condition:</strong> ${esc(edge.condition)}</div>`);
@@ -463,6 +474,50 @@ function renderViewCard(v: types.profiles.ViewDefinition): string {
     <tbody>${rows}${more}</tbody>
   </table>
 </div>`;
+}
+
+function renderEtlSqlCard(sql: string, filename: string): string {
+    const lines = sql.split("\n").length;
+    const highlighted = highlightSql(sql);
+    return `
+<div class="mb-6 border border-emerald-200 rounded-lg overflow-hidden">
+  <div class="flex items-center justify-between px-4 py-2 bg-emerald-50 border-b border-emerald-200">
+    <div class="flex items-center gap-2 text-xs">
+      <span class="text-[10px] uppercase tracking-wider text-emerald-800 font-semibold">Stage 2 ETL SQL (demo)</span>
+      <code class="font-mono text-sm text-emerald-900">${esc(filename)}</code>
+    </div>
+    <span class="text-[11px] text-emerald-700">${lines} lines · joins <code class="bg-white px-1 rounded">vocab.*</code></span>
+  </div>
+  <pre class="px-4 py-3 text-[11px] leading-relaxed overflow-x-auto bg-white font-mono whitespace-pre m-0">${highlighted}</pre>
+</div>`;
+}
+
+// Lightweight SQL syntax highlighter — keywords + strings + numbers + comments.
+function highlightSql(sql: string): string {
+    const esc1 = (s: string) =>
+        s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    let out = esc1(sql);
+    // Line comments
+    out = out.replace(/(--[^\n]*)/g, '<span style="color:#94a3b8">$1</span>');
+    // Strings (single-quoted)
+    out = out.replace(/(&#39;[^&#39;]*?&#39;|'[^']*')/g, '<span style="color:#16a34a">$1</span>');
+    // Numbers
+    out = out.replace(/\b(\d+)\b/g, '<span style="color:#9333ea">$1</span>');
+    // Keywords (case-insensitive, word-boundary)
+    const kws = [
+        "WITH", "AS", "SELECT", "FROM", "WHERE", "AND", "OR", "NOT", "JOIN",
+        "LEFT", "RIGHT", "INNER", "OUTER", "FULL", "LATERAL", "ON", "USING",
+        "INSERT", "INTO", "VALUES", "UPDATE", "SET", "DELETE", "RETURNING",
+        "GROUP", "BY", "HAVING", "ORDER", "LIMIT", "OFFSET", "DISTINCT",
+        "UNION", "ALL", "EXCEPT", "INTERSECT", "CASE", "WHEN", "THEN", "ELSE", "END",
+        "IS", "NULL", "TRUE", "FALSE", "IN", "EXISTS", "BETWEEN", "LIKE",
+        "CAST", "COALESCE", "COUNT", "SUM", "MIN", "MAX", "AVG",
+        "ROW_NUMBER", "OVER", "PARTITION",
+        "CREATE", "TABLE", "INDEX", "VIEW", "DROP", "ALTER", "SCHEMA",
+    ];
+    const kwRe = new RegExp("\\b(" + kws.join("|") + ")\\b", "gi");
+    out = out.replace(kwRe, '<span style="color:#0369a1;font-weight:600">$1</span>');
+    return out;
 }
 
 function shortVsUrl(u: string): string {

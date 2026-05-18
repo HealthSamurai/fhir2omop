@@ -3,8 +3,27 @@ declare global {
     type Context = import("./$type_Context").Context;
 
     interface FnsRegistry {
-        _test_hashline_edit: {
-        nearby: typeof import("../.hyper/_test_hashline_edit/nearby").default;
+        db: {
+        connect: typeof import("./db/connect").default;
+        query: typeof import("./db/query").default;
+        };
+        etl_synthea: {
+        createCdm: typeof import("./etl_synthea/createCdm").default;
+        createIndices: typeof import("./etl_synthea/createIndices").default;
+        createSyntheaTables: typeof import("./etl_synthea/createSyntheaTables").default;
+        loadAll: typeof import("./etl_synthea/loadAll").default;
+        loadPerson: typeof import("./etl_synthea/loadPerson").default;
+        loadSyntheaCsv: typeof import("./etl_synthea/loadSyntheaCsv").default;
+        render: typeof import("./etl_synthea/render").default;
+        runStep: typeof import("./etl_synthea/runStep").default;
+        translate: typeof import("./etl_synthea/translate").default;
+        };
+        fhir: {
+        connect: typeof import("./fhir/connect").default;
+        ensureTable: typeof import("./fhir/ensureTable").default;
+        init: typeof import("./fhir/init").default;
+        loadBundle: typeof import("./fhir/loadBundle").default;
+        loadDir: typeof import("./fhir/loadDir").default;
         };
         http: {
         loadRoutes: typeof import("./http/loadRoutes").default;
@@ -36,6 +55,12 @@ declare global {
         eval: typeof import("./repl/eval").default;
         load: typeof import("./repl/load").default;
         start: typeof import("./repl/$start").default;
+        };
+        viewdef: {
+        columns: typeof import("./viewdef/columns").default;
+        normalize: typeof import("./viewdef/normalize").default;
+        path: typeof import("./viewdef/path").default;
+        run: typeof import("./viewdef/run").default;
         };
     }
 

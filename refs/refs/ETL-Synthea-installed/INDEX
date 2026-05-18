@@ -1,0 +1,35 @@
+CreateCDMIndexAndConstraintScripts
+                        Create Index and Constraint DDL SQL scripts for
+                        CDM tables on rdbms that support these
+                        features.
+CreateCDMIndices        Create Indices on Common Data Model Tables.
+CreateCDMTables         Create Common Data Model Tables.
+CreateExtraIndices      Create Optional Extra Indices for ETL
+                        Performance
+CreateMapAndRollupTables
+                        Create Vocab Mapping and Visit Rollup Tables.
+CreateSyntheaTables     Create Synthea Tables.
+CreateVisitRollupTables
+                        Create Tables for Visit Rollup Logic.
+CreateVocabMapTables    Create Vocabulary Mapping Tables.
+DropEventTables         Drop OMOP Event Tables.
+DropMapAndRollupTables
+                        Drop Vocabulary Mapping And Visit Rollup
+                        Tables.
+DropSyntheaTables       Drop Synthea Tables.
+DropVocabTables         Drop Vocabulary Tables.
+LoadEventTables         Load CDM Non-Vocabulary Tables.
+LoadSyntheaTables       Load Synthea Tables.
+LoadVocabFromCsv        Load Vocabulary Tables From CSV Files.
+LoadVocabFromSchema     Load Vocabulary Tables From a Preexisting
+                        Schema.
+TruncateEventTables     Truncate Event Tables.
+TruncateVocabTables     Truncate Vocabulary Tables.
+backupCDM               Backup Vocabulary and Event tables before
+                        pruning.
+createPrunedTables      Create pruned CDM and Vocab tables.
+exportToSQLite          Export a CDM (Vocabulary and Event tables) into
+                        a SQLite Database.
+getEventConceptId       Get All Concept_ids In All Event Tables.
+pruneCDM                Prune a CDM.
+restoreCDMTables        Restore the CDM (undo the pruning).

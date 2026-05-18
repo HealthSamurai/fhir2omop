@@ -18,9 +18,12 @@ if (!(await portFile.exists())) {
 }
 const port = (await portFile.text()).trim();
 
+// Long pipelines (e.g. etl_synthea.loadAll) routinely take 30-60 min in
+// the server. Bypass fetch's default idle timeout for the whole roundtrip.
 const res = await fetch(`http://localhost:${port}/repl`, {
     method: "POST",
     body: code,
+    signal: AbortSignal.timeout(60 * 60 * 1000),   // 60 min
 });
 
 const text = await res.text();
