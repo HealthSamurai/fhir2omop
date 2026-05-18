@@ -2,23 +2,17 @@
   "resourceType": "ViewDefinition",
   "id": "omop-patient-person",
   "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-patient-person",
-  "version": "0.2.0",
   "name": "OmopPatientPersonView",
   "title": "Patient → person (FHIR-flat, stage 1)",
+  "version": "0.3.0",
   "status": "draft",
   "experimental": true,
-  "description": "Core demographics record. One FHIR Patient maps to exactly one OMOP person row. The person table is the central identity record — every OMOP event table carries a person_id FK.\n\nStage 1 of FHIR→OMOP: produce a flat row keeping source codes per vocabulary. Stage 2 joins vocab.concept to resolve concept_ids.",
   "extension": [
-    {
-      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
-      "valueString": "person"
-    },
-    {
-      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
-      "valueString": "Patient__person"
-    }
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table", "valueString": "person" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",        "valueString": "Patient__person" }
   ],
   "resource": "Patient",
+  "description": "Stage 1 of FHIR→OMOP: produce one flat row per Patient, preserving raw FHIR values. Stage 2 SQL does ConceptMap lookups (gender / race / ethnicity), resolves location FK, and assigns surrogate person_id.\n\nUses US Core extensions for race / ethnicity / birthsex. Birthsex preferred over Patient.gender for gender_concept_id (closer to OMOP semantics for biological sex).",
   "select": [
     {
       "column": [
@@ -26,304 +20,91 @@
           "name": "id",
           "path": "Patient.id",
           "type": "id",
-          "description": "FHIR Patient.id; surrogate OMOP key derived (hash/sequence) downstream.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "person_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "surrogate key from hash/sequence/lookup of FHIR id"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "race_omb",
-          "path": "Patient.extension('http://hl7.org/fhir/us/core/StructureDefinition/us-core-race').extension('ombCategory').value.ofType(Coding).where(system='urn:oid:2.16.840.1.113883.6.238').code",
-          "type": "code",
-          "description": "OMB race category — OMBRace",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "race_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "lookup vocab.concept WHERE vocabulary_id='OMBRace' AND concept_code = (this column); standard_concept='S' preferred"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "race_text",
-          "path": "Patient.extension('http://hl7.org/fhir/us/core/StructureDefinition/us-core-race').extension('ombCategory').value.ofType(Coding).display",
-          "type": "string",
-          "description": "Free text label from Patient.extension('http://hl7.org/fhir/us/core/StructureDefinition/us-core-race').extension('ombCategory').value.ofType(Coding)",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "race_source_value"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "copy text verbatim into OMOP source_value column"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "ethnicity_omb",
-          "path": "Patient.extension('http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity').extension('ombCategory').value.ofType(Coding).where(system='urn:oid:2.16.840.1.113883.6.238').code",
-          "type": "code",
-          "description": "OMB ethnicity category — OMBEthnicity",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "ethnicity_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "lookup vocab.concept WHERE vocabulary_id='OMBEthnicity' AND concept_code = (this column); standard_concept='S' preferred"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "ethnicity_text",
-          "path": "Patient.extension('http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity').extension('ombCategory').value.ofType(Coding).display",
-          "type": "string",
-          "description": "Free text label from Patient.extension('http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity').extension('ombCategory').value.ofType(Coding)",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "ethnicity_source_value"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "copy text verbatim into OMOP source_value column"
-                }
-              ]
-            }
-          ]
+          "description": "FHIR Patient.id (Synthea UUID). → person_source_value + surrogate person_id."
         },
         {
           "name": "gender",
           "path": "Patient.gender",
           "type": "code",
-          "description": "male→8507, female→8532, other→8521, unknown→8551, absent→0",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "gender_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "resolve CONCEPT reference; downstream maps to gender_concept_id"
-                }
-              ]
-            }
-          ]
+          "description": "male/female/other/unknown. Fallback when birthsex absent. → gender_source_value, optional gender_concept_id."
         },
         {
-          "name": "gender_code",
-          "path": "Patient.gender",
+          "name": "us_core_birthsex",
+          "path": "Patient.extension.where(url='http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex').valueCode.first()",
           "type": "code",
-          "description": "",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "gender_source_value"
-                }
-              ]
-            }
-          ]
+          "description": "Biological sex at birth (M/F). Preferred for gender_concept_id over Patient.gender."
         },
         {
-          "name": "year_of_birth",
+          "name": "birth_date",
           "path": "Patient.birthDate",
           "type": "date",
-          "description": "",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "year_of_birth"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "year(Patient.birthDate)"
-                }
-              ]
-            }
-          ]
+          "description": "→ year/month/day_of_birth (via EXTRACT) and birth_datetime (cast)."
         },
         {
-          "name": "month_of_birth",
-          "path": "Patient.birthDate",
-          "type": "date",
-          "description": "",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "month_of_birth"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "month(Patient.birthDate)"
-                }
-              ]
-            }
-          ]
+          "name": "race_omb_code",
+          "path": "Patient.extension.where(url='http://hl7.org/fhir/us/core/StructureDefinition/us-core-race').extension.where(url='ombCategory').valueCoding.code.first()",
+          "type": "code",
+          "description": "OMB race ombCategory code (2106-3/2054-5/…/UNK). → race_concept_id via 'race' ConceptMap."
         },
         {
-          "name": "day_of_birth",
-          "path": "Patient.birthDate",
-          "type": "date",
-          "description": "",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "day_of_birth"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "day(Patient.birthDate)"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "birth_datetime",
-          "path": "Patient.birthDate + patient-birthTime extension",
-          "type": "dateTime",
-          "description": "",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "birth_datetime"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "address_id",
-          "path": "Patient.address",
-          "type": "Address",
-          "description": "",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "location_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "resolve LOCATION reference; downstream maps to location_id"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "performer_id",
-          "path": "Patient.generalPractitioner[0] (Practitioner)",
-          "type": "Reference(Practitioner)",
-          "description": "",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "provider_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "resolve PROVIDER reference; downstream maps to provider_id"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "managing_organization_id",
-          "path": "Patient.managingOrganization",
-          "type": "Reference(Organization)",
-          "description": "",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "care_site_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "resolve CARE_SITE reference; downstream maps to care_site_id"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "identifier_value",
-          "path": "Patient.identifier (best: SSN > MR > first)",
+          "name": "race_text",
+          "path": "Patient.extension.where(url='http://hl7.org/fhir/us/core/StructureDefinition/us-core-race').extension.where(url='text').valueString.first()",
           "type": "string",
-          "description": "",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "person_source_value"
-                }
-              ]
-            }
-          ]
+          "description": "Human-readable race label. → race_source_value."
+        },
+        {
+          "name": "ethnicity_omb_code",
+          "path": "Patient.extension.where(url='http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity').extension.where(url='ombCategory').valueCoding.code.first()",
+          "type": "code",
+          "description": "OMB ethnicity ombCategory code (2135-2 Hispanic / 2186-5 Not Hispanic). → ethnicity_concept_id."
+        },
+        {
+          "name": "ethnicity_text",
+          "path": "Patient.extension.where(url='http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity').extension.where(url='text').valueString.first()",
+          "type": "string",
+          "description": "Human-readable ethnicity. → ethnicity_source_value."
+        },
+        {
+          "name": "general_practitioner_ref",
+          "path": "Patient.generalPractitioner.first().reference",
+          "type": "string",
+          "description": "Reference string ('Practitioner/<uuid>' or 'urn:uuid:<uuid>'). → provider_id via tailing segment lookup."
+        },
+        {
+          "name": "managing_organization_ref",
+          "path": "Patient.managingOrganization.reference",
+          "type": "string",
+          "description": "→ care_site_id via tailing segment."
+        },
+        {
+          "name": "address_line",
+          "path": "Patient.address.first().line.first()",
+          "type": "string",
+          "description": "→ cdm.location.address_1."
+        },
+        {
+          "name": "address_city",
+          "path": "Patient.address.first().city",
+          "type": "string",
+          "description": "→ cdm.location.city. Used in composite key when matching existing location."
+        },
+        {
+          "name": "address_state",
+          "path": "Patient.address.first().state",
+          "type": "string",
+          "description": "→ cdm.location.state. Synthea writes 2-letter codes (e.g. 'MA')."
+        },
+        {
+          "name": "address_zip",
+          "path": "Patient.address.first().postalCode",
+          "type": "string",
+          "description": "→ cdm.location.zip. 5-digit US ZIP (FHIR side preserves leading zero, unlike ETL-Synthea's R fread)."
+        },
+        {
+          "name": "address_country",
+          "path": "Patient.address.first().country",
+          "type": "string",
+          "description": "→ unused in OMOP location (no country column in v5.3)."
         }
       ]
     }
