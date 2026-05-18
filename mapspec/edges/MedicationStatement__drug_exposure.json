@@ -7,7 +7,6 @@
   "primary": true,
   "required": true,
   "narrative_md": "Patient self-reported medication events. Each MedicationStatement produces one drug_exposure row with drug_type_concept_id defaulting to 44787730 (Patient Self-Reported Medication). This is the only FHIR medication resource with a normative HL7 IG FML mapping. Dynamic type concept adjustment is possible based on basedOn/partOf references (omoponfhir behavior).",
-  "implementation_in_project": "src/mapper/medication-statement.ts",
   "fields": [
     {
       "omop_column": "drug_exposure_id",
@@ -25,7 +24,10 @@
               "project": "fhir-omop-ig",
               "kind": "fml",
               "path": "refs/refs/fhir-omop-ig/input/maps/medication.fml",
-              "lines": [11, 16],
+              "lines": [
+                11,
+                16
+              ],
               "notes": "person_id and drug_exposure_id commented out as TODO"
             }
           ]
@@ -37,7 +39,10 @@
               "project": "omoponfhir",
               "kind": "java",
               "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopMedicationStatement.java",
-              "lines": [657, 660],
+              "lines": [
+                657,
+                660
+              ],
               "notes": "constructOmop() — IdMapping.getOMOPfromFHIR() at entry"
             }
           ]
@@ -78,7 +83,10 @@
               "project": "fhir-omop-ig",
               "kind": "fml",
               "path": "refs/refs/fhir-omop-ig/input/maps/medication.fml",
-              "lines": [24, 26],
+              "lines": [
+                24,
+                26
+              ],
               "notes": "drug_exposure_start_date from effective[x]"
             }
           ]
@@ -90,7 +98,10 @@
               "project": "omoponfhir",
               "kind": "java",
               "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopMedicationStatement.java",
-              "lines": [808, 834],
+              "lines": [
+                808,
+                834
+              ],
               "notes": "Effective date handling (DateTime vs Period); falls back to new Date() rather than dateAsserted"
             }
           ]
@@ -134,7 +145,10 @@
               "project": "fhir-omop-ig",
               "kind": "fml",
               "path": "refs/refs/fhir-omop-ig/input/maps/medication.fml",
-              "lines": [31, 32],
+              "lines": [
+                31,
+                32
+              ],
               "notes": "verbatim_end_date from effectivePeriod.end"
             }
           ]
@@ -146,7 +160,10 @@
               "project": "omoponfhir",
               "kind": "java",
               "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopMedicationStatement.java",
-              "lines": [808, 834],
+              "lines": [
+                808,
+                834
+              ],
               "notes": "Effective date handling — verbatim_end_date not set"
             }
           ]
@@ -171,7 +188,10 @@
               "project": "omoponfhir",
               "kind": "java",
               "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopMedicationStatement.java",
-              "lines": [933, 958],
+              "lines": [
+                933,
+                958
+              ],
               "notes": "Dynamic type concept from basedOn/partOf"
             }
           ]
@@ -183,7 +203,10 @@
               "project": "fhir-omop-ig",
               "kind": "fml",
               "path": "refs/refs/fhir-omop-ig/input/maps/medication.fml",
-              "lines": [34, 38],
+              "lines": [
+                34,
+                38
+              ],
               "notes": "drug_type_concept_id from category.coding.code"
             }
           ]
@@ -195,7 +218,10 @@
               "project": "ETL-German-FHIR-Core",
               "kind": "java",
               "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/MedicationStatementMapper.java",
-              "lines": [600, 600],
+              "lines": [
+                600,
+                600
+              ],
               "notes": "CONCEPT_CLAIM (32817) type concept"
             }
           ]
@@ -216,7 +242,10 @@
               "project": "omoponfhir",
               "kind": "java",
               "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopMedicationStatement.java",
-              "lines": [711, 748],
+              "lines": [
+                711,
+                748
+              ],
               "notes": "stop_reason from statusReason, truncated to 20 chars"
             }
           ]
@@ -228,7 +257,10 @@
               "project": "fhir-omop-ig",
               "kind": "fml",
               "path": "refs/refs/fhir-omop-ig/input/maps/medication.fml",
-              "lines": [39, 45],
+              "lines": [
+                39,
+                45
+              ],
               "notes": "stop_reason from reason.concept.coding.code"
             }
           ]
@@ -256,7 +288,10 @@
               "project": "ETL-German-FHIR-Core",
               "kind": "java",
               "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/MedicationStatementMapper.java",
-              "lines": [622, 634],
+              "lines": [
+                622,
+                634
+              ],
               "notes": "Quantity from doseQuantity or Range mean"
             }
           ]
@@ -268,7 +303,10 @@
               "project": "omoponfhir",
               "kind": "java",
               "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopMedicationStatement.java",
-              "lines": [885, 931],
+              "lines": [
+                885,
+                931
+              ],
               "notes": "Dosage (quantity, unit, route)"
             }
           ]
@@ -304,7 +342,10 @@
               "project": "omoponfhir",
               "kind": "java",
               "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopMedicationStatement.java",
-              "lines": [885, 931],
+              "lines": [
+                885,
+                931
+              ],
               "notes": "Dosage quantity, unit, route handling"
             }
           ]
@@ -316,7 +357,10 @@
               "project": "ETL-German-FHIR-Core",
               "kind": "java",
               "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/MedicationStatementMapper.java",
-              "lines": [610, 621],
+              "lines": [
+                610,
+                621
+              ],
               "notes": "Route concept lookup with date-aware validity checking"
             }
           ]
@@ -352,7 +396,10 @@
               "project": "omoponfhir",
               "kind": "java",
               "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopMedicationStatement.java",
-              "lines": [837, 858],
+              "lines": [
+                837,
+                858
+              ],
               "notes": "Information source to provider, Practitioner filter"
             }
           ]
@@ -364,7 +411,10 @@
               "project": "ETL-German-FHIR-Core",
               "kind": "java",
               "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/MedicationStatementMapper.java",
-              "lines": [574, 637],
+              "lines": [
+                574,
+                637
+              ],
               "notes": "setUpDrugExposure() — no provider_id mapping"
             }
           ]
@@ -401,7 +451,10 @@
               "project": "omoponfhir",
               "kind": "java",
               "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopMedicationStatement.java",
-              "lines": [751, 805],
+              "lines": [
+                751,
+                805
+              ],
               "notes": "Medication resolution including source value extraction"
             }
           ]
@@ -467,7 +520,9 @@
       ]
     }
   ],
-  "concept_maps": ["drug_type"],
+  "concept_maps": [
+    "drug_type"
+  ],
   "references": [
     {
       "project": "fhir-omop-ig",
@@ -479,14 +534,20 @@
       "project": "omoponfhir",
       "kind": "java",
       "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopMedicationStatement.java",
-      "lines": [1, 983],
+      "lines": [
+        1,
+        983
+      ],
       "notes": "Most complete: RxNorm concept lookup, contained reference resolution, route concept lookup, dosage parsing, dynamic type concept from basedOn/partOf, stop_reason truncation to 20 chars."
     },
     {
       "project": "ETL-German-FHIR-Core",
       "kind": "java",
       "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/MedicationStatementMapper.java",
-      "lines": [1, 965],
+      "lines": [
+        1,
+        965
+      ],
       "notes": "ATC vocabulary, dose form and route mapping, Range mean quantity, fan-out per dosage entry. Type concept: 32817 (CLAIM)."
     }
   ],
@@ -494,67 +555,104 @@
     {
       "case": "status = entered-in-error",
       "handling": "Skip -- do not create drug_exposure row. Consensus across all implementations.",
-      "implementations": ["this project", "HL7 IG FML", "omoponfhir", "ETL-German"]
+      "implementations": [
+        "this project",
+        "HL7 IG FML",
+        "omoponfhir",
+        "ETL-German"
+      ]
     },
     {
       "case": "status = stopped",
       "handling": "omoponfhir populates stop_reason from statusReason and still creates the row. This project skips.",
-      "implementations": ["omoponfhir", "this project"]
+      "implementations": [
+        "omoponfhir",
+        "this project"
+      ]
     },
     {
       "case": "status = on-hold / intended / not-taken / unknown",
       "handling": "This project skips. omoponfhir maps all statuses except entered-in-error.",
-      "implementations": ["this project", "omoponfhir"]
+      "implementations": [
+        "this project",
+        "omoponfhir"
+      ]
     },
     {
       "case": "effectiveDateTime (point in time)",
       "handling": "Start and end date are the same. omoponfhir: setDrugExposureStartDate(date); setDrugExposureEndDate(date).",
-      "implementations": ["this project", "omoponfhir"]
+      "implementations": [
+        "this project",
+        "omoponfhir"
+      ]
     },
     {
       "case": "effectivePeriod with start but no end",
       "handling": "End date = start date.",
-      "implementations": ["this project", "omoponfhir"]
+      "implementations": [
+        "this project",
+        "omoponfhir"
+      ]
     },
     {
       "case": "dateAsserted but no effective[x]",
       "handling": "This project falls back to dateAsserted. omoponfhir sets new Date() (current time) if no date found.",
-      "implementations": ["this project", "omoponfhir"]
+      "implementations": [
+        "this project",
+        "omoponfhir"
+      ]
     },
     {
       "case": "basedOn references MedicationRequest",
       "handling": "omoponfhir dynamically sets drug_type_concept_id to 38000177 (Prescription written). This project leaves at 44787730.",
-      "implementations": ["omoponfhir"]
+      "implementations": [
+        "omoponfhir"
+      ]
     },
     {
       "case": "partOf references MedicationAdministration / MedicationDispense",
       "handling": "omoponfhir dynamically sets drug_type_concept_id to 38000179 / 38000175 respectively. This project does not implement.",
-      "implementations": ["omoponfhir"]
+      "implementations": [
+        "omoponfhir"
+      ]
     },
     {
       "case": "medicationReference to contained Medication",
       "handling": "omoponfhir iterates contained[]. ETL-German pre-indexes via medication_id_map. This project skips (returns null).",
-      "implementations": ["omoponfhir", "ETL-German"]
+      "implementations": [
+        "omoponfhir",
+        "ETL-German"
+      ]
     },
     {
       "case": "Multiple dosage entries",
       "handling": "This project takes first. ETL-German creates one drug_exposure per dosage entry (fan-out).",
-      "implementations": ["this project", "ETL-German"]
+      "implementations": [
+        "this project",
+        "ETL-German"
+      ]
     },
     {
       "case": "Multiple codings in medication[x]",
       "handling": "This project uses selectBestCoding() by vocabulary priority. omoponfhir uses CodeableConceptUtil.searchConcept().",
-      "implementations": ["this project", "omoponfhir"]
+      "implementations": [
+        "this project",
+        "omoponfhir"
+      ]
     },
     {
       "case": "drug_source_value exceeds 50 chars",
       "handling": "omoponfhir truncates medicationCodeableConcept.getText() to 50 chars. OMOP CDM field is varchar(50).",
-      "implementations": ["omoponfhir"]
+      "implementations": [
+        "omoponfhir"
+      ]
     },
     {
       "case": "stop_reason exceeds 20 chars",
       "handling": "omoponfhir truncates to 20. OMOP CDM field is varchar(20).",
-      "implementations": ["omoponfhir"]
+      "implementations": [
+        "omoponfhir"
+      ]
     }
   ]
 }

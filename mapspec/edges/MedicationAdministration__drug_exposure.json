@@ -7,7 +7,6 @@
   "primary": true,
   "required": true,
   "narrative_md": "Inpatient medication administration events. Each MedicationAdministration produces one drug_exposure row distinguished by drug_type_concept_id = 38000179 (Physician administered drug). MedicationAdministration carries the richest route and dose-event timing information of the four medication resources.",
-  "implementation_in_project": null,
   "fields": [
     {
       "omop_column": "drug_exposure_id",
@@ -145,7 +144,10 @@
               "project": "fhir-to-omop-demo",
               "kind": "jq",
               "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/MedicationAdministration.jq",
-              "lines": [39, 39],
+              "lines": [
+                39,
+                39
+              ],
               "notes": "drug_type_concept_id = 32818 at line 39"
             }
           ]
@@ -432,7 +434,10 @@
       ]
     }
   ],
-  "concept_maps": ["drug_type", "route"],
+  "concept_maps": [
+    "drug_type",
+    "route"
+  ],
   "references": [
     {
       "project": "ETL-German-FHIR-Core",
@@ -451,7 +456,11 @@
     {
       "case": "status = entered-in-error",
       "handling": "Skip -- do not create drug_exposure row.",
-      "implementations": ["ETL-German", "fhir-to-omop-demo", "consensus"]
+      "implementations": [
+        "ETL-German",
+        "fhir-to-omop-demo",
+        "consensus"
+      ]
     },
     {
       "case": "status = not-done",
@@ -464,7 +473,11 @@
     {
       "case": "effectiveDateTime (point in time)",
       "handling": "Start and end date are the same. omoponfhir general rule: setDrugExposureStartDate(date); setDrugExposureEndDate(date).",
-      "implementations": ["omoponfhir", "ETL-German", "fhir-to-omop-demo"]
+      "implementations": [
+        "omoponfhir",
+        "ETL-German",
+        "fhir-to-omop-demo"
+      ]
     },
     {
       "case": "effectivePeriod with start but no end",
@@ -477,7 +490,9 @@
     {
       "case": "doseRange (Range instead of Quantity)",
       "handling": "ETL-German computes the mean of low and high. Others leave quantity null.",
-      "implementations": ["ETL-German"]
+      "implementations": [
+        "ETL-German"
+      ]
     },
     {
       "case": "Multiple codings in medication[x]",
@@ -486,7 +501,11 @@
     {
       "case": "No medication code found",
       "handling": "Skip -- consensus across implementations.",
-      "implementations": ["ETL-German", "fhir-to-omop-demo", "consensus"]
+      "implementations": [
+        "ETL-German",
+        "fhir-to-omop-demo",
+        "consensus"
+      ]
     }
   ]
 }

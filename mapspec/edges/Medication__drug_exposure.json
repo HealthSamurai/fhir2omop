@@ -8,7 +8,6 @@
   "required": false,
   "condition": "Medication does not directly produce drug_exposure rows. Its code/ingredient data flows into drug_exposure via event resources (MedicationRequest, MedicationDispense, MedicationAdministration, MedicationStatement) when they carry a medicationReference pointing to a Medication resource.",
   "narrative_md": "The FHIR Medication resource is a vocabulary/codeable-concept resource, not a medication event. It does NOT directly produce a drug_exposure row. Instead, its code and ingredient data are resolved into drug_concept_id and drug_source_value on drug_exposure rows produced by the four event resources (MedicationRequest, MedicationDispense, MedicationAdministration, MedicationStatement). This edge documents how Medication fields contribute to drug_exposure columns when referenced.",
-  "implementation_in_project": null,
   "fields": [
     {
       "omop_column": "drug_concept_id",
@@ -79,14 +78,20 @@
       "project": "omoponfhir",
       "kind": "java",
       "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopMedicationRequest.java",
-      "lines": [547, 597],
+      "lines": [
+        547,
+        597
+      ],
       "notes": "Resolves contained #-references in event resources. Iterates contained[] to find Medication by ID fragment, extracts Medication.code."
     },
     {
       "project": "omoponfhir",
       "kind": "java",
       "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopMedicationStatement.java",
-      "lines": [751, 805],
+      "lines": [
+        751,
+        805
+      ],
       "notes": "Same contained-reference resolution logic as MedicationRequest mapper."
     },
     {
@@ -112,22 +117,34 @@
     {
       "case": "medicationReference vs medicationCodeableConcept",
       "handling": "Event resources may carry either medicationReference (pointing to a Medication resource) or inline medicationCodeableConcept. When only medicationReference is present, the Medication resource must be resolved to extract the code. Several implementations skip medicationReference entirely and only process inline codes.",
-      "implementations": ["FhirToCdm", "NACHC", "fhir-x-omop", "this project"]
+      "implementations": [
+        "FhirToCdm",
+        "NACHC",
+        "fhir-x-omop",
+        "this project"
+      ]
     },
     {
       "case": "Contained reference (#id)",
       "handling": "Medication is embedded in the event resource's contained[] array. Iterate contained resources to find a Medication matching the fragment ID. Extract Medication.code. Fall back to Reference.display if no code found.",
-      "implementations": ["omoponfhir"]
+      "implementations": [
+        "omoponfhir"
+      ]
     },
     {
       "case": "Bundle-level reference resolution",
       "handling": "Medication resources appear as separate entries in a Bundle alongside event resources. Requires pre-indexing all Medications by fullUrl/id before processing events. Two strategies: build an in-memory map (ETL-German) or produce partial rows and merge in post-processing (fhir-to-omop-demo).",
-      "implementations": ["ETL-German-FHIR-Core", "fhir-to-omop-demo"]
+      "implementations": [
+        "ETL-German-FHIR-Core",
+        "fhir-to-omop-demo"
+      ]
     },
     {
       "case": "Medication.code absent but ingredient present",
       "handling": "Some Medication resources carry no top-level code but have ingredient[].itemCodeableConcept with ATC codes. ETL-German extracts ATC from ingredients as the drug source value.",
-      "implementations": ["ETL-German-FHIR-Core"]
+      "implementations": [
+        "ETL-German-FHIR-Core"
+      ]
     },
     {
       "case": "Multiple codings in Medication.code",

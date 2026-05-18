@@ -8,7 +8,6 @@
   "required": true,
   "condition": "clinicalStatus is active or absent; verificationStatus is not entered-in-error or refuted",
   "narrative_md": "FHIR AllergyIntolerance records patient allergies and intolerances. OMOP has no dedicated allergy table, so allergies are stored in the observation table with allergy-specific SNOMED concepts. One AllergyIntolerance maps to one observation row. Status filtering excludes inactive/resolved allergies and entered-in-error/refuted records.",
-  "implementation_in_project": "src/mapper/allergy-intolerance.ts",
   "fields": [
     {
       "omop_column": "observation_id",
@@ -40,15 +39,47 @@
         {
           "comment": "Category-based concept (allergy category → concept_id); substance goes to value_as_concept_id",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopAllergyIntolerance.java", "lines": [408, 431] },
-            { "project": "omoponfhir-v54", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopAllergyIntolerance.java", "lines": [408, 431] }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopAllergyIntolerance.java",
+              "lines": [
+                408,
+                431
+              ]
+            },
+            {
+              "project": "omoponfhir-v54",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopAllergyIntolerance.java",
+              "lines": [
+                408,
+                431
+              ]
+            }
           ]
         },
         {
           "comment": "Direct substance concept via vocabulary lookup on AllergyIntolerance.code",
           "references": [
-            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Allergy.fml", "lines": [14, 18] },
-            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [471, 473] }
+            {
+              "project": "fhir-omop-ig",
+              "kind": "fml",
+              "path": "refs/refs/fhir-omop-ig/input/maps/Allergy.fml",
+              "lines": [
+                14,
+                18
+              ]
+            },
+            {
+              "project": "FhirToCdm",
+              "kind": "csharp",
+              "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
+              "lines": [
+                471,
+                473
+              ]
+            }
           ]
         }
       ]
@@ -65,19 +96,43 @@
         {
           "comment": "Full fallback chain: onsetDateTime → onsetPeriod.start → recordedDate; skip if all absent",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopAllergyIntolerance.java", "lines": [387, 389] }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopAllergyIntolerance.java",
+              "lines": [
+                387,
+                389
+              ]
+            }
           ]
         },
         {
           "comment": "recordedDate only (no onset fallback)",
           "references": [
-            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [475, 475] }
+            {
+              "project": "FhirToCdm",
+              "kind": "csharp",
+              "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
+              "lines": [
+                475,
+                475
+              ]
+            }
           ]
         },
         {
           "comment": "onsetDateTime only (dateTime type, no Period or recordedDate fallback)",
           "references": [
-            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Allergy.fml", "lines": [40, 40] }
+            {
+              "project": "fhir-omop-ig",
+              "kind": "fml",
+              "path": "refs/refs/fhir-omop-ig/input/maps/Allergy.fml",
+              "lines": [
+                40,
+                40
+              ]
+            }
           ]
         }
       ]
@@ -101,14 +156,38 @@
         {
           "comment": "32817 (EHR) — modern OMOP CDM v6 recommendation",
           "references": [
-            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [468, 468] }
+            {
+              "project": "FhirToCdm",
+              "kind": "csharp",
+              "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
+              "lines": [
+                468,
+                468
+              ]
+            }
           ]
         },
         {
           "comment": "38000280 (Observation recorded from EHR) — legacy type concept",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopAllergyIntolerance.java", "lines": [446, 446] },
-            { "project": "omoponfhir-v54", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopAllergyIntolerance.java", "lines": [446, 446] }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopAllergyIntolerance.java",
+              "lines": [
+                446,
+                446
+              ]
+            },
+            {
+              "project": "omoponfhir-v54",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopAllergyIntolerance.java",
+              "lines": [
+                446,
+                446
+              ]
+            }
           ]
         }
       ]
@@ -142,13 +221,29 @@
         {
           "comment": "Reaction manifestation code (first manifestation of first reaction)",
           "references": [
-            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Allergy.fml", "lines": [42, 50] }
+            {
+              "project": "fhir-omop-ig",
+              "kind": "fml",
+              "path": "refs/refs/fhir-omop-ig/input/maps/Allergy.fml",
+              "lines": [
+                42,
+                50
+              ]
+            }
           ]
         },
         {
           "comment": "Substance concept (AllergyIntolerance.code, not manifestation) placed here; observation_concept_id holds category concept",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopAllergyIntolerance.java", "lines": [401, 405] }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopAllergyIntolerance.java",
+              "lines": [
+                401,
+                405
+              ]
+            }
           ]
         }
       ]
@@ -200,13 +295,30 @@
         {
           "comment": "recorder only (no asserter consideration)",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopAllergyIntolerance.java", "lines": [392, 398] }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopAllergyIntolerance.java",
+              "lines": [
+                392,
+                398
+              ]
+            }
           ]
         },
         {
           "comment": "Not mapped (provider_id left null or commented out)",
           "references": [
-            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Allergy.fml", "lines": [20, 38], "notes": "Patient/encounter/provider all commented out as TODO" }
+            {
+              "project": "fhir-omop-ig",
+              "kind": "fml",
+              "path": "refs/refs/fhir-omop-ig/input/maps/Allergy.fml",
+              "lines": [
+                20,
+                38
+              ],
+              "notes": "Patient/encounter/provider all commented out as TODO"
+            }
           ]
         }
       ]
@@ -452,21 +564,30 @@
       "project": "omoponfhir",
       "kind": "java",
       "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopAllergyIntolerance.java",
-      "lines": [350, 449],
+      "lines": [
+        350,
+        449
+      ],
       "notes": "Bidirectional (449 lines). Category-driven concept selection: food->4188027, medication->439224, default->40772948. Substance -> value_as_concept_id. Type concept = 38000280."
     },
     {
       "project": "omoponfhir-v54",
       "kind": "java",
       "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopAllergyIntolerance.java",
-      "lines": [350, 450],
+      "lines": [
+        350,
+        450
+      ],
       "notes": "450 lines. Identical logic to omoponfhir."
     },
     {
       "project": "FhirToCdm",
       "kind": "csharp",
       "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
-      "lines": [453, 480],
+      "lines": [
+        453,
+        480
+      ],
       "notes": "Maps AllergyIntolerance -> observation via vocabulary lookup on code. Uses recordedDate for date. No status filtering. Minimal field coverage."
     },
     {
@@ -480,117 +601,168 @@
     {
       "case": "No onsetDateTime, no onsetPeriod, no recordedDate",
       "handling": "Skip the record -- observation_date is NOT NULL. This project returns null.",
-      "implementations": ["this project"]
+      "implementations": [
+        "this project"
+      ]
     },
     {
       "case": "onsetPeriod.start only (no onsetDateTime)",
       "handling": "Use onsetPeriod.start as observation_date.",
-      "implementations": ["this project"]
+      "implementations": [
+        "this project"
+      ]
     },
     {
       "case": "recordedDate only (no onset fields)",
       "handling": "Use as last-resort date.",
-      "implementations": ["this project", "FhirToCdm", "fhir-to-omop-demo"]
+      "implementations": [
+        "this project",
+        "FhirToCdm",
+        "fhir-to-omop-demo"
+      ]
     },
     {
       "case": "No code or empty code.coding[]",
       "handling": "Skip the record -- cannot identify the substance.",
-      "implementations": ["this project"]
+      "implementations": [
+        "this project"
+      ]
     },
     {
       "case": "code with text only (no coding)",
       "handling": "Skip -- no structured code to map.",
-      "implementations": ["this project"]
+      "implementations": [
+        "this project"
+      ]
     },
     {
       "case": "Multiple reaction entries",
       "handling": "Concatenate all manifestation display names into value_as_string, semicolon-separated.",
-      "implementations": ["this project"]
+      "implementations": [
+        "this project"
+      ]
     },
     {
       "case": "Multiple manifestation per reaction",
       "handling": "Include all in value_as_string concatenation.",
-      "implementations": ["this project"]
+      "implementations": [
+        "this project"
+      ]
     },
     {
       "case": "category = medication",
       "handling": "Code might overlap with drug concepts. Still maps to observation, not drug_exposure.",
-      "implementations": ["this project", "omoponfhir", "FhirToCdm", "fhir-omop-ig"]
+      "implementations": [
+        "this project",
+        "omoponfhir",
+        "FhirToCdm",
+        "fhir-omop-ig"
+      ]
     },
     {
       "case": "category = food",
       "handling": "omoponfhir sets observation_concept_id = 4188027 (Allergy to food). This project: not yet implemented.",
-      "implementations": ["omoponfhir"]
+      "implementations": [
+        "omoponfhir"
+      ]
     },
     {
       "case": "criticality present",
       "handling": "Stored in value_source_value.",
-      "implementations": ["this project"]
+      "implementations": [
+        "this project"
+      ]
     },
     {
       "case": "type = intolerance",
       "handling": "Stored in qualifier_source_value. No separate OMOP handling.",
-      "implementations": ["this project"]
+      "implementations": [
+        "this project"
+      ]
     },
     {
       "case": "verificationStatus = entered-in-error",
       "handling": "Skip the record.",
-      "implementations": ["this project"]
+      "implementations": [
+        "this project"
+      ]
     },
     {
       "case": "verificationStatus = refuted",
       "handling": "Skip the record.",
-      "implementations": ["this project"]
+      "implementations": [
+        "this project"
+      ]
     },
     {
       "case": "clinicalStatus = inactive or resolved",
       "handling": "Skip the record.",
-      "implementations": ["this project"]
+      "implementations": [
+        "this project"
+      ]
     },
     {
       "case": "clinicalStatus absent",
       "handling": "Map permissively (not required in FHIR).",
-      "implementations": ["this project"]
+      "implementations": [
+        "this project"
+      ]
     },
     {
       "case": "asserter is a Patient (self-reported)",
       "handling": "Cannot map to OMOP provider_id -- set null. resolveRef will produce an ID but it won't correspond to a provider row.",
-      "implementations": ["this project"]
+      "implementations": [
+        "this project"
+      ]
     },
     {
       "case": "recorder is a RelatedPerson",
       "handling": "Cannot map to OMOP provider_id -- set null.",
-      "implementations": ["this project"]
+      "implementations": [
+        "this project"
+      ]
     },
     {
       "case": "reaction[].severity present",
       "handling": "Lost -- no OMOP field for severity. Could store in qualifier_source_value but this project uses it for type.",
-      "implementations": ["this project"]
+      "implementations": [
+        "this project"
+      ]
     },
     {
       "case": "reaction[].substance differs from code",
       "handling": "The per-reaction substance is lost. Only code (top-level) is mapped.",
-      "implementations": ["this project"]
+      "implementations": [
+        "this project"
+      ]
     },
     {
       "case": "note[] present",
       "handling": "Lost -- no standard OMOP target. Could append to value_as_string but would mix with manifestation text.",
-      "implementations": ["this project"]
+      "implementations": [
+        "this project"
+      ]
     },
     {
       "case": "Multiple coding in code",
       "handling": "Best coding selected by system priority (SNOMED preferred).",
-      "implementations": ["this project"]
+      "implementations": [
+        "this project"
+      ]
     },
     {
       "case": "onsetAge or onsetRange",
       "handling": "Not handled -- only onsetDateTime and onsetPeriod supported. Would require birth date to compute absolute date.",
-      "implementations": ["this project"]
+      "implementations": [
+        "this project"
+      ]
     },
     {
       "case": "onsetString",
       "handling": "Not handled -- free-text onset cannot produce a date. Skip or store in a separate field.",
-      "implementations": ["this project"]
+      "implementations": [
+        "this project"
+      ]
     }
   ]
 }

@@ -7,7 +7,6 @@
   "primary": true,
   "required": true,
   "narrative_md": "FHIR Device and DeviceUseStatement together map to one OMOP device_exposure row. Device carries identity (type, UDI, manufacturer, lot/serial); DeviceUseStatement records the clinical event (who, when, why). Alternatively, Procedure.usedCode can be a source. The mapper must resolve the two-resource join: DeviceUseStatement.device references a Device resource from which type, UDI, and production identifiers are extracted.",
-  "implementation_in_project": null,
   "fields": [
     {
       "omop_column": "device_exposure_id",
@@ -40,19 +39,39 @@
         {
           "comment": "Device.type coding vocab lookup from contained Device; getCodingFirstRep() — DeviceUseStatement+Device pattern",
           "references": [
-            { "project": "omoponfhir-v54-r4", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopDeviceUseStatement.java", "lines": [329, 348] }
+            {
+              "project": "omoponfhir-v54-r4",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopDeviceUseStatement.java",
+              "lines": [
+                329,
+                348
+              ]
+            }
           ]
         },
         {
           "comment": "Procedure.usedCode coding SNOMED lookup — no DeviceUseStatement, no Device resource needed",
           "references": [
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ProcedureMapper.java", "lines": [240, 245] }
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ProcedureMapper.java",
+              "lines": [
+                240,
+                245
+              ]
+            }
           ]
         },
         {
           "comment": "No concept mapping (field not populated — PySpark from Procedure)",
           "references": [
-            { "project": "HealthcareLakeETL", "kind": "python", "path": "refs/refs/HealthcareLakeETL/mappings/device_exposure.py" }
+            {
+              "project": "HealthcareLakeETL",
+              "kind": "python",
+              "path": "refs/refs/HealthcareLakeETL/mappings/device_exposure.py"
+            }
           ]
         }
       ]
@@ -69,19 +88,39 @@
         {
           "comment": "timingPeriod.start from DeviceUseStatement (Period is the primary pattern)",
           "references": [
-            { "project": "omoponfhir-v54-r4", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopDeviceUseStatement.java", "lines": [301, 312] }
+            {
+              "project": "omoponfhir-v54-r4",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopDeviceUseStatement.java",
+              "lines": [
+                301,
+                312
+              ]
+            }
           ]
         },
         {
           "comment": "Procedure.performed[x] start (ETL-German uses Procedure as source, not DeviceUseStatement)",
           "references": [
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ProcedureMapper.java", "lines": [246, 261] }
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ProcedureMapper.java",
+              "lines": [
+                246,
+                261
+              ]
+            }
           ]
         },
         {
           "comment": "performedPeriod.start from FHIR Procedure (PySpark)",
           "references": [
-            { "project": "HealthcareLakeETL", "kind": "python", "path": "refs/refs/HealthcareLakeETL/mappings/device_exposure.py" }
+            {
+              "project": "HealthcareLakeETL",
+              "kind": "python",
+              "path": "refs/refs/HealthcareLakeETL/mappings/device_exposure.py"
+            }
           ]
         }
       ]
@@ -124,14 +163,35 @@
         {
           "comment": "32817 (EHR) — modern OMOP CDM v6 recommendation",
           "references": [
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ProcedureMapper.java", "lines": [246, 261], "notes": "CONCEPT_EHR = 32817" }
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ProcedureMapper.java",
+              "lines": [
+                246,
+                261
+              ],
+              "notes": "CONCEPT_EHR = 32817"
+            }
           ]
         },
         {
           "comment": "44818707 (EHR order list entry) — hardcoded in omoponfhir",
           "references": [
-            { "project": "omoponfhir-v54-r4", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopDeviceUseStatement.java", "lines": [361, 363] },
-            { "project": "omoponfhir-omopv5-r4-mapping", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopDeviceUseStatement.java" }
+            {
+              "project": "omoponfhir-v54-r4",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopDeviceUseStatement.java",
+              "lines": [
+                361,
+                363
+              ]
+            },
+            {
+              "project": "omoponfhir-omopv5-r4-mapping",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopDeviceUseStatement.java"
+            }
           ]
         }
       ]
@@ -198,13 +258,29 @@
         {
           "comment": "system:code composite string when vocab lookup fails (may exceed varchar(50))",
           "references": [
-            { "project": "omoponfhir-v54-r4", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopDeviceUseStatement.java", "lines": [329, 348] }
+            {
+              "project": "omoponfhir-v54-r4",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopDeviceUseStatement.java",
+              "lines": [
+                329,
+                348
+              ]
+            }
           ]
         },
         {
           "comment": "Raw code value only (no system prefix)",
           "references": [
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ProcedureMapper.java", "lines": [204, 216] }
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ProcedureMapper.java",
+              "lines": [
+                204,
+                216
+              ]
+            }
           ]
         }
       ]
@@ -362,7 +438,10 @@
       ]
     }
   ],
-  "concept_maps": ["device_type", "device_type_concept"],
+  "concept_maps": [
+    "device_type",
+    "device_type_concept"
+  ],
   "references": [
     {
       "project": "fhir-omop-ig",
@@ -374,21 +453,30 @@
       "project": "omoponfhir-v54-r4",
       "kind": "java",
       "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopDeviceUseStatement.java",
-      "lines": [224, 366],
+      "lines": [
+        224,
+        366
+      ],
       "notes": "Bidirectional. constructOmop (F->O) handles contained Device resolution, timingPeriod, Device.type vocab lookup, udiCarrier, device_type_concept_id=44818707."
     },
     {
       "project": "omoponfhir-v54-r4",
       "kind": "java",
       "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopDevice.java",
-      "lines": [73, 163],
+      "lines": [
+        73,
+        163
+      ],
       "notes": "O->F read-only (270 lines). constructFHIR builds Device from device_exposure entity."
     },
     {
       "project": "ETL-German-FHIR-Core",
       "kind": "java",
       "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ProcedureMapper.java",
-      "lines": [218, 265],
+      "lines": [
+        218,
+        265
+      ],
       "notes": "Maps Procedure.usedCode to device_exposure. No DeviceUseStatement mapper. Uses SNOMED concept lookup. device_type_concept_id=32817."
     },
     {
@@ -401,7 +489,10 @@
       "project": "GT-FHIR",
       "kind": "java",
       "path": "refs/refs/GT-FHIR/gt-fhir-entities/src/main/java/edu/gatech/i3l/fhir/dstu2/entities/DeviceExposure.java",
-      "lines": [192, 221],
+      "lines": [
+        192,
+        221
+      ],
       "notes": "Legacy DSTU2. O->F read-only. Maps entity to FHIR Device (not DeviceUseStatement)."
     },
     {
@@ -435,7 +526,9 @@
     {
       "case": "DeviceUseStatement.status = entered-in-error",
       "handling": "Do not create a device_exposure row. ETL-German filters on acceptable status values (completed, active, on-hold).",
-      "implementations": ["ETL-German"]
+      "implementations": [
+        "ETL-German"
+      ]
     },
     {
       "case": "Device is external (not contained)",
@@ -444,17 +537,23 @@
     {
       "case": "Procedure.usedCode with multiple codings",
       "handling": "Create one device_exposure row per coding entry (ETL-German approach). Deduplicate if needed.",
-      "implementations": ["ETL-German"]
+      "implementations": [
+        "ETL-German"
+      ]
     },
     {
       "case": "device_source_value exceeds 50 chars",
       "handling": "OMOP field is varchar(50). Truncate the source value. system:code format from omoponfhir may exceed this limit for long system URIs.",
-      "implementations": ["omoponfhir"]
+      "implementations": [
+        "omoponfhir"
+      ]
     },
     {
       "case": "Device.type has multiple codings (e.g., SNOMED + GMDN)",
       "handling": "Use the first coding that maps to a standard OMOP concept. Store all codings in device_source_value or pick the primary one. omoponfhir uses getCodingFirstRep().",
-      "implementations": ["omoponfhir"]
+      "implementations": [
+        "omoponfhir"
+      ]
     },
     {
       "case": "Implantable device with no end date",

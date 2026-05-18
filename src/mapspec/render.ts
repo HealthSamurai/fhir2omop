@@ -1,5 +1,7 @@
 import { resolve } from "node:path";
-import { loadEdges, byResource, byTable, type Edge } from "./list";
+// No cross-imports between project files (CLAUDE.md). Edges go through
+// ctx.fns.mapspec.* — late-bound, hot-reloadable via REPL.
+type Edge = any;
 
 export default async function (
     ctx: Context,
@@ -9,8 +11,8 @@ export default async function (
     if (opts.table_only) {
         const safeTable = sanitize(opts.table_only);
         if (!safeTable) return null;
-        const edges = loadEdges();
-        const byT = byTable(edges);
+        const edges = ctx.fns.mapspec.loadEdges(ctx);
+        const byT = ctx.fns.mapspec.byTable(ctx, { edges });
         const sources = byT.get(safeTable) ?? [];
         if (sources.length === 0) return null;
         return {
@@ -27,8 +29,8 @@ export default async function (
         const safeTable = sanitize(opts.table);
         if (!safeTable) return null;
 
-        const edge = loadEdges().find(
-            (e) => e.fhir_resource === safeRes && e.omop_table === safeTable,
+        const edge = ctx.fns.mapspec.loadEdges(ctx).find(
+            (e: any) => e.fhir_resource === safeRes && e.omop_table === safeTable,
         );
         if (edge) {
             return {
@@ -49,8 +51,8 @@ export default async function (
     }
 
     // Resource index: destinations panel + narrative markdown
-    const edges = loadEdges();
-    const byR = byResource(edges);
+    const edges = ctx.fns.mapspec.loadEdges(ctx);
+    const byR = ctx.fns.mapspec.byResource(ctx, { edges });
     const dests = byR.get(safeRes) ?? [];
     const destsHtml = dests.length ? renderResourceDestinations(safeRes, dests) : "";
 
@@ -239,6 +241,19 @@ async function renderEdge(ctx: Context, edge: Edge): Promise<string> {
     const sc = statusColors[edge.status] ?? "bg-gray-100 text-gray-600";
     parts.push(`<span class="ml-2 px-2 py-0.5 rounded text-xs font-medium ${sc}">${esc(edge.status)}</span>`);
     if (edge.primary) parts.push(`<span class="px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">primary</span>`);
+
+    // Our-pipeline implementation badge: view JSON + ETL SQL both present?
+    const viewPath = resolve(import.meta.dir, "..", "..", "mapspec", "views",
+        `${edge.fhir_resource}__${edge.omop_table}.view.json`);
+    const sqlPath  = resolve(import.meta.dir, "..", "..", "mapspec", "etl",
+        `${edge.fhir_resource}__${edge.omop_table}.sql`);
+    const hasView = await Bun.file(viewPath).exists();
+    const hasSql  = await Bun.file(sqlPath).exists();
+    if (hasView && hasSql) {
+        parts.push(`<span class="px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800" title="ViewDefinition + Stage-2 SQL both present">✓ our impl</span>`);
+    } else if (hasView || hasSql) {
+        parts.push(`<span class="px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800" title="Only ${hasView ? 'ViewDefinition' : 'Stage-2 SQL'} present">${hasView ? 'view only' : 'sql only'}</span>`);
+    }
     parts.push(`</div>`);
 
     // Narrative
@@ -275,15 +290,22 @@ async function renderEdge(ctx: Context, edge: Edge): Promise<string> {
         parts.push(renderEtlSqlCard(sql, `${edge.fhir_resource}__${edge.omop_table}.sql`));
     }
 
+    // Diff card — live comparison cdm.<table> vs cdm_ours_fhir.<table>
+    try {
+        const diffCard = await renderDiffCard(ctx, edge.omop_table);
+        if (diffCard) parts.push(diffCard);
+    } catch (e: any) {
+        // Skip silently — diff is best-effort
+    }
+
     // Condition
     if (edge.condition) {
         parts.push(`<div class="mb-4 px-3 py-2 bg-amber-50 border border-amber-200 rounded text-xs"><strong>Condition:</strong> ${esc(edge.condition)}</div>`);
     }
 
-    // Implementation
-    if (edge.implementation_in_project) {
-        parts.push(`<div class="mb-4 px-3 py-2 bg-gray-50 border border-gray-200 rounded text-xs"><strong>Implementation:</strong> <code>${esc(edge.implementation_in_project)}</code></div>`);
-    }
+    // Implementation field is obsolete — it pointed to the old src/mapper/*.ts
+    // files (deleted ages ago). The actual current implementation is shown by
+    // the ViewDefinition card (Stage 1) + ETL SQL card (Stage 2) above.
 
     // Fields list (one card per field)
     parts.push(`<h3 class="text-sm font-semibold mt-6 mb-2 text-gray-700">Fields <span class="text-gray-400 font-normal">(${edge.fields.length})</span></h3>`);
@@ -474,6 +496,130 @@ function renderViewCard(v: types.profiles.ViewDefinition): string {
     <tbody>${rows}${more}</tbody>
   </table>
 </div>`;
+}
+
+async function renderDiffCard(ctx: Context, omopTable: string): Promise<string | null> {
+    const refSchema = "cdm";
+    const oursSchema = "cdm_ours_fhir";
+
+    // OMOP source-value key naming is inconsistent:
+    //   person      → person_source_value
+    //   visit_occurrence → visit_source_value         (NOT visit_occurrence_source_value)
+    //   procedure_occurrence → procedure_source_value
+    //   condition_occurrence → condition_source_value
+    // Strip trailing _occurrence / _exposure / _period and try a few forms.
+    const candidates = [
+        `${omopTable}_source_value`,
+        `${omopTable.replace(/_occurrence$/, "")}_source_value`,
+        `${omopTable.replace(/_exposure$/,   "")}_source_value`,
+        `${omopTable.replace(/_period$/,     "")}_source_value`,
+        `${omopTable.replace(/_era$/,        "")}_source_value`,
+    ];
+
+    const inList = candidates.map((c) => `'${c}'`).join(",");
+    const exists = await ctx.fns.db.query(ctx, {
+        sql: `
+            SELECT
+                EXISTS(SELECT 1 FROM information_schema.tables  WHERE table_schema=$1 AND table_name=$2) AS ref_ok,
+                EXISTS(SELECT 1 FROM information_schema.tables  WHERE table_schema=$3 AND table_name=$2) AS ours_ok,
+                (SELECT column_name FROM information_schema.columns
+                  WHERE table_schema=$1 AND table_name=$2 AND column_name IN (${inList})
+                  LIMIT 1) AS key_col
+        `,
+        params: [refSchema, omopTable, oursSchema],
+    });
+    if (!exists[0]?.ref_ok || !exists[0]?.ours_ok) return null;
+    const keyCol: string | null = exists[0].key_col;
+    if (!keyCol) return null;
+
+    const r = await ctx.fns.diff.compareTables(ctx, {
+        ref:  `${refSchema}.${omopTable}`,
+        ours: `${oursSchema}.${omopTable}`,
+        key:  keyCol,
+    });
+
+    // Skip if both empty
+    if (r.ref_rows === 0 && r.ours_rows === 0) return null;
+
+    const fields = r.fields ?? [];
+    const concept_fields = fields.filter((f: any) => f.column.endsWith("concept_id"));
+    const concept_diffs = concept_fields.filter((f: any) => f.mismatch > 0 || f.ours_null > 0);
+
+    const status =
+        r.ref_rows === 0 ? `<span class="px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">reference empty</span>`
+      : r.ours_rows === 0 ? `<span class="px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">not loaded yet</span>`
+      : concept_diffs.length === 0 ? `<span class="px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">concept match 100%</span>`
+      : `<span class="px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">${concept_diffs.length} concept_id diff${concept_diffs.length > 1 ? "s" : ""}</span>`;
+
+    const totalsRow = `
+        <tr>
+          <td class="px-2 py-1 text-[12px] text-gray-700">rows</td>
+          <td class="px-2 py-1 font-mono text-[12px] text-right">${num(r.ref_rows)}</td>
+          <td class="px-2 py-1 font-mono text-[12px] text-right">${num(r.ours_rows)}</td>
+          <td class="px-2 py-1 font-mono text-[12px] text-right">${num(r.in_both)}</td>
+          <td class="px-2 py-1 font-mono text-[12px] text-right">${r.ref_only > 0  ? `<span class="text-red-700">${num(r.ref_only)}</span>`  : "0"}</td>
+          <td class="px-2 py-1 font-mono text-[12px] text-right">${r.ours_only > 0 ? `<span class="text-amber-700">${num(r.ours_only)}</span>` : "0"}</td>
+        </tr>`;
+
+    const fieldRows = fields
+        .map((f: any) => {
+            const flag = f.mismatch > 0 ? " ⚠️" : (f.ours_null > 0 ? " ∅" : "");
+            const colorMismatch = f.mismatch > 0 ? "text-yellow-700 font-medium" : "text-gray-500";
+            const colorOursNull = f.ours_null > 0 ? "text-amber-700" : "text-gray-400";
+            return `<tr>
+              <td class="px-2 py-1 font-mono text-[11px] text-gray-800">${esc(f.column)}${flag}</td>
+              <td class="px-2 py-1 font-mono text-[11px] text-right text-gray-700">${num(f.match)}</td>
+              <td class="px-2 py-1 font-mono text-[11px] text-right ${colorMismatch}">${num(f.mismatch)}</td>
+              <td class="px-2 py-1 font-mono text-[11px] text-right ${colorOursNull}">${num(f.ours_null)}</td>
+            </tr>`;
+        })
+        .join("");
+
+    return `
+<div class="mb-6 border border-sky-200 rounded-lg overflow-hidden">
+  <div class="flex items-center justify-between px-4 py-2 bg-sky-50 border-b border-sky-200">
+    <div class="flex items-center gap-2 text-xs">
+      <span class="text-[10px] uppercase tracking-wider text-sky-800 font-semibold">Live diff</span>
+      <code class="font-mono text-sm text-sky-900">${esc(refSchema)}.${esc(omopTable)}</code>
+      <span class="text-gray-400">vs</span>
+      <code class="font-mono text-sm text-sky-900">${esc(oursSchema)}.${esc(omopTable)}</code>
+      ${status}
+    </div>
+    <span class="text-[11px] text-sky-700">join key: <code class="bg-white px-1 rounded">${esc(keyCol)}</code></span>
+  </div>
+  <table class="w-full bg-white text-xs">
+    <thead class="bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500 border-b border-gray-200">
+      <tr>
+        <th class="text-left  px-2 py-1.5 font-medium">metric</th>
+        <th class="text-right px-2 py-1.5 font-medium">reference</th>
+        <th class="text-right px-2 py-1.5 font-medium">ours</th>
+        <th class="text-right px-2 py-1.5 font-medium">in both</th>
+        <th class="text-right px-2 py-1.5 font-medium">ref only</th>
+        <th class="text-right px-2 py-1.5 font-medium">ours only</th>
+      </tr>
+    </thead>
+    <tbody>${totalsRow}</tbody>
+  </table>
+  ${fields.length > 0 ? `
+  <details class="bg-white border-t border-sky-100">
+    <summary class="px-4 py-2 cursor-pointer text-[11px] text-sky-700 hover:bg-sky-25 select-none">${fields.length} columns compared ▾</summary>
+    <table class="w-full bg-white text-xs">
+      <thead class="bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500 border-y border-gray-200">
+        <tr>
+          <th class="text-left  px-2 py-1.5 font-medium">column</th>
+          <th class="text-right px-2 py-1.5 font-medium">match</th>
+          <th class="text-right px-2 py-1.5 font-medium">mismatch</th>
+          <th class="text-right px-2 py-1.5 font-medium">ours NULL only</th>
+        </tr>
+      </thead>
+      <tbody>${fieldRows}</tbody>
+    </table>
+  </details>` : ""}
+</div>`;
+}
+
+function num(n: number): string {
+    return n.toLocaleString();
 }
 
 function renderEtlSqlCard(sql: string, filename: string): string {

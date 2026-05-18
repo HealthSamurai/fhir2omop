@@ -7,8 +7,7 @@
   "primary": false,
   "required": false,
   "condition": "Patient.deceasedDateTime is present",
-  "narrative_md": "Mortality record. At most one death row per person. Only created when Patient.deceasedDateTime is present \u2014 deceasedBoolean=true without a date cannot produce a row because death_date is NOT NULL.",
-  "implementation_in_project": "src/mapper/patient.ts",
+  "narrative_md": "Mortality record. At most one death row per person. Only created when Patient.deceasedDateTime is present — deceasedBoolean=true without a date cannot produce a row because death_date is NOT NULL.",
   "fields": [
     {
       "omop_column": "person_id",
@@ -25,21 +24,42 @@
       "fhir_type": "dateTime",
       "omop_type": "date",
       "required": true,
-      "transform": "dateTime \u2192 date",
-      "notes": "NOT NULL \u2014 this is why deceasedBoolean=true cannot produce a row",
+      "transform": "dateTime → date",
+      "notes": "NOT NULL — this is why deceasedBoolean=true cannot produce a row",
       "sources": [
         {
           "comment": "Populate from deceasedDateTime; drop row if only deceasedBoolean=true (log warning)",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPatient.java" },
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/PatientMapper.java", "lines": [653, 675], "notes": "Death staging via post_process_map" }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPatient.java"
+            },
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/PatientMapper.java",
+              "lines": [
+                653,
+                675
+              ],
+              "notes": "Death staging via post_process_map"
+            }
           ]
         },
         {
-          "comment": "Not implemented \u2014 death row not created at all (mortality data silently lost)",
+          "comment": "Not implemented — death row not created at all (mortality data silently lost)",
           "references": [
-            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs" },
-            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/person/OmopPersonBuilder.java" }
+            {
+              "project": "FhirToCdm",
+              "kind": "csharp",
+              "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs"
+            },
+            {
+              "project": "NACHC-fhir-to-omop",
+              "kind": "java",
+              "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/person/OmopPersonBuilder.java"
+            }
           ]
         }
       ]
@@ -62,14 +82,31 @@
         {
           "comment": "Constant 32817 (EHR) — generic default for FHIR-sourced data",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPatient.java" }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPatient.java"
+            }
           ]
         },
         {
           "comment": "Constant 32887 (EHR record patient status Deceased) — more specific provenance concept",
           "references": [
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/Constants.java", "notes": "CONCEPT_EHR_RECORD_STATUS_DECEASED" },
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/PatientMapper.java", "lines": [653, 675] }
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/Constants.java",
+              "notes": "CONCEPT_EHR_RECORD_STATUS_DECEASED"
+            },
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/PatientMapper.java",
+              "lines": [
+                653,
+                675
+              ]
+            }
           ]
         }
       ]
@@ -147,11 +184,14 @@
     {
       "case": "deceasedBoolean=true only",
       "handling": "No row created; log warning. death_date is NOT NULL.",
-      "implementations": ["this project", "ETL-German"]
+      "implementations": [
+        "this project",
+        "ETL-German"
+      ]
     },
     {
       "case": "deceasedBoolean=false",
-      "handling": "No row \u2014 person is alive."
+      "handling": "No row — person is alive."
     },
     {
       "case": "Partial deceasedDateTime (e.g. 2024-03)",
@@ -160,11 +200,13 @@
     {
       "case": "Patient updated to alive (incremental)",
       "handling": "Delete existing death row by person_id.",
-      "implementations": ["ETL-German"]
+      "implementations": [
+        "ETL-German"
+      ]
     },
     {
       "case": "birthDate after deceasedDateTime",
-      "handling": "Data quality error \u2014 log and skip."
+      "handling": "Data quality error — log and skip."
     },
     {
       "case": "6 of 9 surveyed implementations silently lose mortality data",

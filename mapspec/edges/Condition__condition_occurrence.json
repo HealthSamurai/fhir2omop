@@ -8,7 +8,6 @@
   "required": true,
   "condition": "clinicalStatus in (active, recurrence, relapse, absent) AND verificationStatus not in (entered-in-error, refuted) AND onset or recordedDate resolvable",
   "narrative_md": "One FHIR Condition maps to one condition_occurrence row. Status filtering drops entered-in-error, refuted, and inactive/resolved conditions. Onset is resolved via a priority chain (onsetDateTime > onsetPeriod.start > recordedDate); conditions with no resolvable start date are skipped. Category drives type_concept_id (problem-list-item vs encounter-diagnosis). Domain routing is not implemented -- all conditions go to condition_occurrence regardless of OMOP vocabulary domain_id.",
-  "implementation_in_project": "src/mapper/condition.ts",
   "fields": [
     {
       "omop_column": "condition_occurrence_id",
@@ -41,25 +40,57 @@
         {
           "comment": "Service-backed vocabulary lookup via ConceptService (fhirCode2OmopConcept)",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopCondition.java", "lines": [509, 512] }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopCondition.java",
+              "lines": [
+                509,
+                512
+              ]
+            }
           ]
         },
         {
           "comment": "Database-backed LookupCode() — iterates all code.Coding entries, creates one row per coding",
           "references": [
-            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [263, 265] }
+            {
+              "project": "FhirToCdm",
+              "kind": "csharp",
+              "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
+              "lines": [
+                263,
+                265
+              ]
+            }
           ]
         },
         {
           "comment": "FindOmopConcepts with full domain routing (Condition/Observation/Procedure/Measurement) and ICD-10-GM + ORPHA support",
           "references": [
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ConditionMapper.java", "lines": [921, 988] }
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ConditionMapper.java",
+              "lines": [
+                921,
+                988
+              ]
+            }
           ]
         },
         {
           "comment": "DB-backed FhirToOmopConceptMapper; hardcoded type concept 32020 (non-standard)",
           "references": [
-            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/condition/OmopConditionOccurrenceBuilder.java", "lines": [57, 58] }
+            {
+              "project": "NACHC-fhir-to-omop",
+              "kind": "java",
+              "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/condition/OmopConditionOccurrenceBuilder.java",
+              "lines": [
+                57,
+                58
+              ]
+            }
           ]
         }
       ]
@@ -76,25 +107,57 @@
         {
           "comment": "Full chain: onsetDateTime, onsetPeriod, recordedDate, and onsetAge/onsetRange via ResourceOnset helper",
           "references": [
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ConditionMapper.java", "lines": [737, 773] }
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ConditionMapper.java",
+              "lines": [
+                737,
+                773
+              ]
+            }
           ]
         },
         {
           "comment": "onsetDateTime and onsetPeriod; uses 9999-12-31 sentinel when onset missing instead of skipping",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopCondition.java", "lines": [537, 563] }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopCondition.java",
+              "lines": [
+                537,
+                563
+              ]
+            }
           ]
         },
         {
           "comment": "Both recordedDate (line 22) and onset:dateTime (line 23) mapped; last match wins in FML (no explicit priority)",
           "references": [
-            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/condition.fml", "lines": [22, 23] }
+            {
+              "project": "fhir-omop-ig",
+              "kind": "fml",
+              "path": "refs/refs/fhir-omop-ig/input/maps/condition.fml",
+              "lines": [
+                22,
+                23
+              ]
+            }
           ]
         },
         {
           "comment": "onsetDateTime cast only; crashes if absent (no fallback)",
           "references": [
-            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [265, 265] }
+            {
+              "project": "FhirToCdm",
+              "kind": "csharp",
+              "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
+              "lines": [
+                265,
+                265
+              ]
+            }
           ]
         }
       ]
@@ -138,26 +201,66 @@
         {
           "comment": "Category-aware bidirectional mapping via OmopConceptMapping (problem-list-item vs encounter-diagnosis)",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopCondition.java", "lines": [571, 595] }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopCondition.java",
+              "lines": [
+                571,
+                595
+              ]
+            }
           ]
         },
         {
           "comment": "Hardcoded 32817 for all conditions regardless of category",
           "references": [
-            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [274, 274] },
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ConditionMapper.java", "lines": [1102, 1102] }
+            {
+              "project": "FhirToCdm",
+              "kind": "csharp",
+              "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
+              "lines": [
+                274,
+                274
+              ]
+            },
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ConditionMapper.java",
+              "lines": [
+                1102,
+                1102
+              ]
+            }
           ]
         },
         {
           "comment": "Non-standard hardcoded 32020 (EHR encounter diagnosis) — different concept from standard 32817",
           "references": [
-            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/condition/OmopConditionOccurrenceBuilder.java", "lines": [60, 60] }
+            {
+              "project": "NACHC-fhir-to-omop",
+              "kind": "java",
+              "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/condition/OmopConditionOccurrenceBuilder.java",
+              "lines": [
+                60,
+                60
+              ]
+            }
           ]
         },
         {
           "comment": "Different concept IDs per category: encounter-diagnosis→32817, problem-list-item→32818, health-concern→32819",
           "references": [
-            { "project": "fhir-x-omop", "kind": "python", "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/condition_occurrence.py", "lines": [23, 27] }
+            {
+              "project": "fhir-x-omop",
+              "kind": "python",
+              "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/condition_occurrence.py",
+              "lines": [
+                23,
+                27
+              ]
+            }
           ]
         }
       ]
@@ -175,19 +278,43 @@
         {
           "comment": "clinicalStatus code passed through directly without concept translation",
           "references": [
-            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/condition.fml", "lines": [30, 34] }
+            {
+              "project": "fhir-omop-ig",
+              "kind": "fml",
+              "path": "refs/refs/fhir-omop-ig/input/maps/condition.fml",
+              "lines": [
+                30,
+                34
+              ]
+            }
           ]
         },
         {
           "comment": "ICD-10-GM diagnostic confidence extension mapped here instead of clinicalStatus (ETL-German specific)",
           "references": [
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ConditionMapper.java", "lines": [1108, 1133] }
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ConditionMapper.java",
+              "lines": [
+                1108,
+                1133
+              ]
+            }
           ]
         },
         {
           "comment": "Different status concept IDs: active→32893, resolved→32897, inactive→32896",
           "references": [
-            { "project": "fhir-x-omop", "kind": "python", "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/condition_occurrence.py", "lines": [28, 32] }
+            {
+              "project": "fhir-x-omop",
+              "kind": "python",
+              "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/condition_occurrence.py",
+              "lines": [
+                28,
+                32
+              ]
+            }
           ]
         }
       ]
@@ -216,7 +343,15 @@
         {
           "comment": "note[0].text used instead of abatementString",
           "references": [
-            { "project": "fhir-x-omop", "kind": "python", "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/condition_occurrence.py", "lines": [33, 33] }
+            {
+              "project": "fhir-x-omop",
+              "kind": "python",
+              "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/condition_occurrence.py",
+              "lines": [
+                33,
+                33
+              ]
+            }
           ]
         }
       ]
@@ -234,20 +369,52 @@
         {
           "comment": "asserter only (no recorder fallback)",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopCondition.java", "lines": [499, 506] }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopCondition.java",
+              "lines": [
+                499,
+                506
+              ]
+            }
           ]
         },
         {
           "comment": "recorder only (no asserter consideration)",
           "references": [
-            { "project": "fhir-x-omop", "kind": "python", "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/condition_occurrence.py", "lines": [34, 34] }
+            {
+              "project": "fhir-x-omop",
+              "kind": "python",
+              "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/condition_occurrence.py",
+              "lines": [
+                34,
+                34
+              ]
+            }
           ]
         },
         {
           "comment": "Not mapped (provider_id left null)",
           "references": [
-            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [252, 310] },
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ConditionMapper.java", "lines": [1079, 1116] }
+            {
+              "project": "FhirToCdm",
+              "kind": "csharp",
+              "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
+              "lines": [
+                252,
+                310
+              ]
+            },
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ConditionMapper.java",
+              "lines": [
+                1079,
+                1116
+              ]
+            }
           ]
         }
       ]
@@ -400,7 +567,10 @@
       ]
     }
   ],
-  "concept_maps": ["condition_type", "condition_status"],
+  "concept_maps": [
+    "condition_type",
+    "condition_status"
+  ],
   "references": [
     {
       "project": "fhir-omop-ig",
@@ -418,7 +588,10 @@
       "project": "omoponfhir",
       "kind": "java",
       "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopCondition.java",
-      "lines": [1, 620],
+      "lines": [
+        1,
+        620
+      ],
       "notes": "Bidirectional. Most complete. ICD-10/SNOMED via ConceptService. Category-based type concepts. Uses 9999-12-31 sentinel for missing onset."
     },
     {
@@ -431,28 +604,40 @@
       "project": "ETL-German-FHIR-Core",
       "kind": "java",
       "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ConditionMapper.java",
-      "lines": [1, 1654],
+      "lines": [
+        1,
+        1654
+      ],
       "notes": "Most comprehensive F->O. Domain routing, ICD-10-GM, severity/bodySite/stage as observations, multi-coding multi-row, Orpha codes, incremental updates."
     },
     {
       "project": "NACHC-fhir-to-omop",
       "kind": "java",
       "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/condition/OmopConditionOccurrenceBuilder.java",
-      "lines": [1, 66],
+      "lines": [
+        1,
+        66
+      ],
       "notes": "Simple mapper. DB-backed concept lookup. Uses non-standard type concept 32020."
     },
     {
       "project": "fhir-x-omop",
       "kind": "python",
       "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/condition_occurrence.py",
-      "lines": [1, 46],
+      "lines": [
+        1,
+        46
+      ],
       "notes": "Declarative Python mapper F->O. Different status concept IDs (32893/32897/32896) and type concept IDs (32817/32818/32819)."
     },
     {
       "project": "fhir-x-omop",
       "kind": "python",
       "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_fhir/condition.py",
-      "lines": [1, 72],
+      "lines": [
+        1,
+        72
+      ],
       "notes": "O->F direction."
     }
   ],
@@ -460,42 +645,62 @@
     {
       "case": "Missing onset[x] + missing recordedDate",
       "handling": "Skip -- no valid start date. condition_start_date is required in OMOP.",
-      "implementations": ["ETL-German logs via noStartDateCounter", "omoponfhir uses 9999-12-31 sentinel instead of skipping"]
+      "implementations": [
+        "ETL-German logs via noStartDateCounter",
+        "omoponfhir uses 9999-12-31 sentinel instead of skipping"
+      ]
     },
     {
       "case": "onsetAge (e.g. 45 years)",
       "handling": "Not mapped by most. Requires patient birthDate for calculation.",
-      "implementations": ["ETL-German calculates birthDate + age via ResourceOnset helper"]
+      "implementations": [
+        "ETL-German calculates birthDate + age via ResourceOnset helper"
+      ]
     },
     {
       "case": "onsetPeriod with start and end",
       "handling": "start -> condition_start_date, end -> condition_end_date.",
-      "implementations": ["omoponfhir maps Period.end to condition_end_date", "This project maps Period.start only (not Period.end)"]
+      "implementations": [
+        "omoponfhir maps Period.end to condition_end_date",
+        "This project maps Period.start only (not Period.end)"
+      ]
     },
     {
       "case": "Multiple code.coding entries (e.g. ICD-10 + SNOMED)",
       "handling": "Select best coding by vocabulary priority (SNOMED > ICD-10-CM > ICD-10 > CPT-4).",
-      "implementations": ["ETL-German generates separate rows per coding system", "FhirToCdm iterates all codings", "This project picks best only"]
+      "implementations": [
+        "ETL-German generates separate rows per coding system",
+        "FhirToCdm iterates all codings",
+        "This project picks best only"
+      ]
     },
     {
       "case": "severity present",
       "handling": "Dropped by most implementations.",
-      "implementations": ["ETL-German creates separate observation record with qualifier_concept_id = CONCEPT_SEVERITY"]
+      "implementations": [
+        "ETL-German creates separate observation record with qualifier_concept_id = CONCEPT_SEVERITY"
+      ]
     },
     {
       "case": "bodySite present",
       "handling": "Dropped by most implementations.",
-      "implementations": ["ETL-German creates separate observation record with qualifier_concept_id = CONCEPT_FINDING_SITE"]
+      "implementations": [
+        "ETL-German creates separate observation record with qualifier_concept_id = CONCEPT_FINDING_SITE"
+      ]
     },
     {
       "case": "stage present",
       "handling": "Dropped by most implementations.",
-      "implementations": ["ETL-German creates separate observation record with qualifier_concept_id = CONCEPT_STAGE"]
+      "implementations": [
+        "ETL-German creates separate observation record with qualifier_concept_id = CONCEPT_STAGE"
+      ]
     },
     {
       "case": "verificationStatus = provisional",
       "handling": "Mapped. Some implementations skip non-confirmed; this project maps provisional.",
-      "implementations": ["ETL-German has explicit acceptable status list"]
+      "implementations": [
+        "ETL-German has explicit acceptable status list"
+      ]
     },
     {
       "case": "verificationStatus = entered-in-error",
@@ -504,32 +709,47 @@
     {
       "case": "SNOMED code with domain_id != Condition",
       "handling": "Should route to observation/procedure/measurement. Requires vocabulary DB.",
-      "implementations": ["Only ETL-German routes (lines 921-988)", "All others route everything to condition_occurrence"]
+      "implementations": [
+        "Only ETL-German routes (lines 921-988)",
+        "All others route everything to condition_occurrence"
+      ]
     },
     {
       "case": "abatementString longer than 20 chars",
       "handling": "Truncated to fit stop_reason varchar(20).",
-      "implementations": ["This project truncates via .substring(0, 20)"]
+      "implementations": [
+        "This project truncates via .substring(0, 20)"
+      ]
     },
     {
       "case": "Missing Condition.code",
       "handling": "Skip -- no concept to map.",
-      "implementations": ["This project returns null", "ETL-German increments noCodeCounter"]
+      "implementations": [
+        "This project returns null",
+        "ETL-German increments noCodeCounter"
+      ]
     },
     {
       "case": "Missing Condition.subject",
       "handling": "Skip or error.",
-      "implementations": ["This project defaults person_id to 0", "omoponfhir throws FHIRException"]
+      "implementations": [
+        "This project defaults person_id to 0",
+        "omoponfhir throws FHIRException"
+      ]
     },
     {
       "case": "ICD-10-GM primary + secondary codes",
       "handling": "Split into separate condition_occurrence rows.",
-      "implementations": ["ETL-German-specific: splits codes with spaces into primary/secondary"]
+      "implementations": [
+        "ETL-German-specific: splits codes with spaces into primary/secondary"
+      ]
     },
     {
       "case": "Diagnostic confidence (ICD-10-GM extension)",
       "handling": "Maps to condition_status_concept_id.",
-      "implementations": ["ETL-German-specific: extracts from ICD coding extension"]
+      "implementations": [
+        "ETL-German-specific: extracts from ICD coding extension"
+      ]
     }
   ]
 }

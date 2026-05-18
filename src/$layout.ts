@@ -1,13 +1,13 @@
-import { loadEdges, byResource, byTable } from "./mapspec/list";
+// No cross-imports (see CLAUDE.md). Edge loading goes through ctx.fns.mapspec.*
 
 export default function (
     ctx: Context,
     opts: { title?: string; main: string; headExtra?: string; current?: string },
     _req?: Request,
 ) {
-    const edges = loadEdges();
-    const resMap = byResource(edges);
-    const tblMap = byTable(edges);
+    const edges = ctx.fns.mapspec.loadEdges(ctx);
+    const resMap = ctx.fns.mapspec.byResource(ctx, { edges });
+    const tblMap = ctx.fns.mapspec.byTable(ctx, { edges });
 
     // Also merge legacy resources from the old list function
     const legacyList = ctx.fns.mapspec?.list ? ctx.fns.mapspec.list(ctx) : [];

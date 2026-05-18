@@ -337,7 +337,30 @@ src/
 
 - Call other modules through `ctx.fns.<ns>.<fn>(ctx, { ... })`, not `import`.
 - Only `import` from `bun`, `node:*`, or third-party packages.
-- (Historical exception: `src/mapspec/list.ts` is a typed catalog with named exports re-used by `render.ts`. Don't follow that pattern in new code.)
+
+**Why this matters — transitive-import staleness during REPL hot-reload.**
+
+When `A.ts` does `import B from "./B"`, Bun resolves and caches that import
+once at compile time. `repl.load` reloads A by re-importing it with a
+cache-buster (`A.ts?t=Date.now()`) — but the `import B` line inside the
+fresh A still resolves to the **already-cached** B (no cache-buster), so
+your edits to B don't propagate. Symptom: `repl.load` returns success, but
+the running code keeps using the old B.
+
+`ctx.fns` is late-bound: each call reads the current registry, so
+`ctx.fns.B.fn(ctx)` always sees the latest reload. **Use it for every
+cross-file call.** The only exceptions are:
+
+- `import type` (erased at runtime, no cache concern) — but prefer
+  declaring shared types in a `$type_*.ts` file so `genTypes` exposes them
+  globally.
+- pure-function utility imports inside a single namespace folder that
+  never get hot-reloaded standalone — but even there, prefer ctx.fns for
+  consistency and to avoid future surprises.
+
+If you see "I edited B but the change doesn't appear" — first thing to
+check is whether the caller uses `ctx.fns.B.fn` or `import { fn } from
+"./B"`. If the latter, fix it or restart the server.
 
 ### Special filenames (`$` prefix stripped when registering in `ctx.fns`)
 

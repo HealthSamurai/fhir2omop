@@ -7,7 +7,6 @@
   "primary": true,
   "required": true,
   "narrative_md": "One FHIR Specimen maps to exactly one OMOP specimen row. The specimen table captures biological samples collected from a person, including specimen type, collection date, quantity, anatomic site, and disease status. Specimen type (kind of material) maps to specimen_concept_id via SNOMED, while specimen_type_concept_id is a provenance metadata field (EHR = 32817). Collection date is required in OMOP but optional in FHIR.",
-  "implementation_in_project": null,
   "fields": [
     {
       "omop_column": "specimen_id",
@@ -42,13 +41,29 @@
         {
           "comment": "SNOMED-preferred multi-coding lookup via ConceptService; iterates codings, picks SNOMED first",
           "references": [
-            { "project": "omoponfhir-v54", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopSpecimen.java", "lines": [264, 312] }
+            {
+              "project": "omoponfhir-v54",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopSpecimen.java",
+              "lines": [
+                264,
+                312
+              ]
+            }
           ]
         },
         {
           "comment": "Logical model only — no FML transform for Specimen; field defined but not implemented",
           "references": [
-            { "project": "fhir-omop-ig", "kind": "fsh", "path": "refs/refs/fhir-omop-ig/input/fsh/Specimen.fsh", "lines": [1, 22] }
+            {
+              "project": "fhir-omop-ig",
+              "kind": "fsh",
+              "path": "refs/refs/fhir-omop-ig/input/fsh/Specimen.fsh",
+              "lines": [
+                1,
+                22
+              ]
+            }
           ]
         }
       ]
@@ -66,13 +81,31 @@
         {
           "comment": "Hardcoded to 0 — provenance not captured",
           "references": [
-            { "project": "omoponfhir-v54", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopSpecimen.java", "lines": [387, 387], "notes": "specimen_.setSpecimenTypeConcept(new Concept(0L))" }
+            {
+              "project": "omoponfhir-v54",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopSpecimen.java",
+              "lines": [
+                387,
+                387
+              ],
+              "notes": "specimen_.setSpecimenTypeConcept(new Concept(0L))"
+            }
           ]
         },
         {
           "comment": "32817 (EHR) — recommended for EHR-sourced FHIR data",
           "references": [
-            { "project": "fhir-omop-ig", "kind": "fsh", "path": "refs/refs/fhir-omop-ig/input/fsh/Specimen.fsh", "lines": [1, 22], "notes": "field defined in logical model as provenance concept" }
+            {
+              "project": "fhir-omop-ig",
+              "kind": "fsh",
+              "path": "refs/refs/fhir-omop-ig/input/fsh/Specimen.fsh",
+              "lines": [
+                1,
+                22
+              ],
+              "notes": "field defined in logical model as provenance concept"
+            }
           ]
         }
       ]
@@ -89,14 +122,38 @@
         {
           "comment": "collectedDateTime only — throws FHIRException if absent or if type is Period",
           "references": [
-            { "project": "omoponfhir-v54", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopSpecimen.java", "lines": [330, 342] },
-            { "project": "omoponfhir-v54", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-r4-server/src/main/java/edu/gatech/chai/omoponfhir/r4/provider/SpecimenResourceProvider.java", "lines": [269, 285] }
+            {
+              "project": "omoponfhir-v54",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopSpecimen.java",
+              "lines": [
+                330,
+                342
+              ]
+            },
+            {
+              "project": "omoponfhir-v54",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-r4-server/src/main/java/edu/gatech/chai/omoponfhir/r4/provider/SpecimenResourceProvider.java",
+              "lines": [
+                269,
+                285
+              ]
+            }
           ]
         },
         {
           "comment": "Maps specimen_date from OMOP (O→F direction); no FHIR→OMOP date extraction logic",
           "references": [
-            { "project": "tofhir-mappings", "kind": "json", "path": "refs/refs/tofhir-mappings/mappings/omop/specimen-mapping.json", "lines": [44, 61] }
+            {
+              "project": "tofhir-mappings",
+              "kind": "json",
+              "path": "refs/refs/tofhir-mappings/mappings/omop/specimen-mapping.json",
+              "lines": [
+                44,
+                61
+              ]
+            }
           ]
         }
       ]
@@ -184,13 +241,29 @@
         {
           "comment": "First Specimen.identifier value (not accessionIdentifier)",
           "references": [
-            { "project": "omoponfhir-v54", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopSpecimen.java", "lines": [247, 252] }
+            {
+              "project": "omoponfhir-v54",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopSpecimen.java",
+              "lines": [
+                247,
+                252
+              ]
+            }
           ]
         },
         {
           "comment": "Hashed specimen_id string (O→F direction, not FHIR identifier)",
           "references": [
-            { "project": "tofhir-mappings", "kind": "json", "path": "refs/refs/tofhir-mappings/mappings/omop/specimen-mapping.json", "lines": [33, 33] }
+            {
+              "project": "tofhir-mappings",
+              "kind": "json",
+              "path": "refs/refs/tofhir-mappings/mappings/omop/specimen-mapping.json",
+              "lines": [
+                33,
+                33
+              ]
+            }
           ]
         }
       ]
@@ -445,20 +518,30 @@
       ]
     }
   ],
-  "concept_maps": ["specimen_type", "ucum_unit", "anatomic_site"],
+  "concept_maps": [
+    "specimen_type",
+    "ucum_unit",
+    "anatomic_site"
+  ],
   "references": [
     {
       "project": "fhir-omop-ig",
       "kind": "fsh",
       "path": "refs/refs/fhir-omop-ig/input/fsh/Specimen.fsh",
-      "lines": [1, 22],
+      "lines": [
+        1,
+        22
+      ],
       "notes": "Logical model only; no FML transform map exists for Specimen."
     },
     {
       "project": "omoponfhir-v54",
       "kind": "java",
       "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopSpecimen.java",
-      "lines": [1, 531],
+      "lines": [
+        1,
+        531
+      ],
       "notes": "Bidirectional mapper. Most complete Specimen implementation. FHIR->OMOP: lines 234-390. OMOP->FHIR: lines 89-192. Subject validation: lines 392-408. specimen_type_concept_id hardcoded to 0: line 387."
     },
     {
@@ -471,7 +554,10 @@
       "project": "NACHC-fhir-to-omop",
       "kind": "java",
       "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/omop/yaorma/dvo/SpecimenDvo.java",
-      "lines": [32, 48],
+      "lines": [
+        32,
+        48
+      ],
       "notes": "DVO only, no actual Specimen FHIR mapper."
     }
   ],
@@ -479,32 +565,44 @@
     {
       "case": "Missing collection.collected[x]",
       "handling": "OMOP specimen_date is NOT NULL. Options: (a) reject the resource and log warning, (b) fall back to Specimen.receivedTime, (c) use current date (not recommended). omoponfhir throws FHIRException.",
-      "implementations": ["omoponfhir-v54"]
+      "implementations": [
+        "omoponfhir-v54"
+      ]
     },
     {
       "case": "collected[x] is a Period",
       "handling": "OMOP only supports a single date/datetime, not a range. Use Period.start as the collection date. Period.end is lost. omoponfhir throws if collected is not a DateTimeType.",
-      "implementations": ["omoponfhir-v54"]
+      "implementations": [
+        "omoponfhir-v54"
+      ]
     },
     {
       "case": "subject references non-Patient (Device, Group, Location, Substance)",
       "handling": "Reject the resource. OMOP person_id requires a patient. Log warning with the unsupported resource type.",
-      "implementations": ["omoponfhir-v54"]
+      "implementations": [
+        "omoponfhir-v54"
+      ]
     },
     {
       "case": "subject reference unresolvable (Patient not yet in OMOP)",
       "handling": "Either: (a) process Patients first (dependency ordering), (b) defer Specimen to a retry queue, (c) reject. omoponfhir throws FHIRException if patient lookup returns null.",
-      "implementations": ["omoponfhir-v54"]
+      "implementations": [
+        "omoponfhir-v54"
+      ]
     },
     {
       "case": "Missing Specimen.type",
       "handling": "Set specimen_concept_id to 0 and leave specimen_source_value empty. omoponfhir treats type as required via the coding iteration logic -- null type will cause NPE.",
-      "implementations": ["omoponfhir-v54"]
+      "implementations": [
+        "omoponfhir-v54"
+      ]
     },
     {
       "case": "Multiple codings in Specimen.type",
       "handling": "Prefer SNOMED CT coding (http://snomed.info/sct). If no SNOMED, try any coding that maps to a known OMOP vocabulary. If none map, use concept_id 0.",
-      "implementations": ["omoponfhir-v54"]
+      "implementations": [
+        "omoponfhir-v54"
+      ]
     },
     {
       "case": "Specimen.type uses HL7 v2 Table 0487",
@@ -529,7 +627,9 @@
     {
       "case": "Duplicate specimens",
       "handling": "omoponfhir deduplicates on (patient, specimen_concept, collection_date) tuple. If a matching specimen exists, it updates rather than creating a duplicate. Other implementations do not deduplicate.",
-      "implementations": ["omoponfhir-v54"]
+      "implementations": [
+        "omoponfhir-v54"
+      ]
     },
     {
       "case": "specimen_source_id truncation",

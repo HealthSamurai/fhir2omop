@@ -7,24 +7,9 @@
 -- NPI to find the provider. cdm.provider (reference, CSV-side) uses the
 -- Synthea UUID — both are valid; ours preserves the FHIR linkage instead.
 
-INSERT INTO cdm_ours_fhir.provider (
-    provider_id,
-    provider_name,
-    npi,
-    dea,
-    specialty_concept_id,
-    care_site_id,
-    year_of_birth,
-    gender_concept_id,
-    provider_source_value,
-    specialty_source_value,
-    specialty_source_concept_id,
-    gender_source_value,
-    gender_source_concept_id
-)
 SELECT
     ROW_NUMBER() OVER (ORDER BY v.id)        AS provider_id,
-    coalesce(v.family, '') || ', ' || coalesce(v.given, '') AS provider_name,
+    (coalesce(v.family, '') || ', ' || coalesce(v.given, '')) AS provider_name,
     v.npi                                    AS npi,
     NULL::text                               AS dea,
     38004446                                 AS specialty_concept_id,   -- 'Family Practice' (ETL-Synthea hardcodes this)

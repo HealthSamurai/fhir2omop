@@ -8,7 +8,6 @@
   "required": false,
   "condition": "Patient.address is present with usable fields",
   "narrative_md": "Address normalization. One Patient produces at most one location row (most recent home address). The location_id is then set as person.location_id FK.",
-  "implementation_in_project": null,
   "fields": [
     {
       "fhir_path": null,
@@ -22,20 +21,47 @@
         {
           "comment": "Search-or-create with dedup by (address_1, city, state, zip); shared location_id across persons at same address",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPatient.java", "notes": "searchAndUpdate pattern with dedup" },
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/PatientMapper.java", "lines": [293, 334], "notes": "Deferred via post_process_map; dedup in PostProcessTask" }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPatient.java",
+              "notes": "searchAndUpdate pattern with dedup"
+            },
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/PatientMapper.java",
+              "lines": [
+                293,
+                334
+              ],
+              "notes": "Deferred via post_process_map; dedup in PostProcessTask"
+            }
           ]
         },
         {
           "comment": "Per-patient row, no dedup — one location row per person regardless of address uniqueness",
           "references": [
-            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [20, 170], "notes": "CreatePersonAndLocations() per-patient row" }
+            {
+              "project": "FhirToCdm",
+              "kind": "csharp",
+              "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
+              "lines": [
+                20,
+                170
+              ],
+              "notes": "CreatePersonAndLocations() per-patient row"
+            }
           ]
         },
         {
           "comment": "Default location_id = 1 — address not actually mapped",
           "references": [
-            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/person/OmopPersonBuilder.java" }
+            {
+              "project": "NACHC-fhir-to-omop",
+              "kind": "java",
+              "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/person/OmopPersonBuilder.java"
+            }
           ]
         }
       ]
@@ -116,14 +142,35 @@
         {
           "comment": "Concatenated \"zip;city;country\" stored as dataOne in deferred post_process_map row",
           "references": [
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/PatientMapper.java", "lines": [293, 334], "notes": "dataOne = zip;city;country, dataTwo = lines;state" }
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/PatientMapper.java",
+              "lines": [
+                293,
+                334
+              ],
+              "notes": "dataOne = zip;city;country, dataTwo = lines;state"
+            }
           ]
         },
         {
           "comment": "Full address fields mapped directly without explicit source_value field",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPatient.java" },
-            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [20, 170] }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPatient.java"
+            },
+            {
+              "project": "FhirToCdm",
+              "kind": "csharp",
+              "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
+              "lines": [
+                20,
+                170
+              ]
+            }
           ]
         }
       ]

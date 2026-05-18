@@ -8,7 +8,6 @@
   "required": false,
   "condition": "PractitionerRole.practitioner references an existing Practitioner with a provider row",
   "narrative_md": "PractitionerRole enrichment of existing provider row. PractitionerRole does NOT create a new provider row; it adds specialty_concept_id, specialty_source_value, and care_site_id to the row created from the underlying Practitioner resource. One provider row per Practitioner; if multiple PractitionerRoles exist, choose the most recent or most specific.",
-  "implementation_in_project": null,
   "fields": [
     {
       "omop_column": "specialty_concept_id",
@@ -23,19 +22,41 @@
         {
           "comment": "Extracts from specialty[0].coding[0] with multi-coding warning; merges into provider row",
           "references": [
-            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/PractitionerRole.jq", "lines": [10, 53], "notes": "specialty extraction lines 10-23; merge lines 31-53; result at line 44" }
+            {
+              "project": "fhir-to-omop-demo",
+              "kind": "jq",
+              "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/PractitionerRole.jq",
+              "lines": [
+                10,
+                53
+              ],
+              "notes": "specialty extraction lines 10-23; merge lines 31-53; result at line 44"
+            }
           ]
         },
         {
           "comment": "Does not process PractitionerRole; specialty left unmapped",
           "references": [
-            { "project": "omoponfhir-v54", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPractitioner.java", "notes": "Only Practitioner resource is mapped; no PractitionerRole handling" }
+            {
+              "project": "omoponfhir-v54",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPractitioner.java",
+              "notes": "Only Practitioner resource is mapped; no PractitionerRole handling"
+            }
           ]
         },
         {
           "comment": "Falls back to Practitioner.qualification[0].code when no PractitionerRole",
           "references": [
-            { "project": "fhir-x-omop", "kind": "python", "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/provider.py", "lines": [31, 31] }
+            {
+              "project": "fhir-x-omop",
+              "kind": "python",
+              "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/provider.py",
+              "lines": [
+                31,
+                31
+              ]
+            }
           ]
         }
       ]
@@ -51,13 +72,29 @@
         {
           "comment": "Uses specialty.concept_code after OMOP lookup (post-translation value)",
           "references": [
-            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/PractitionerRole.jq", "lines": [49, 49] }
+            {
+              "project": "fhir-to-omop-demo",
+              "kind": "jq",
+              "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/PractitionerRole.jq",
+              "lines": [
+                49,
+                49
+              ]
+            }
           ]
         },
         {
           "comment": "Uses qualification[0].code.coding[0].code from Practitioner (no PractitionerRole processing)",
           "references": [
-            { "project": "fhir-x-omop", "kind": "python", "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/provider.py", "lines": [31, 31] }
+            {
+              "project": "fhir-x-omop",
+              "kind": "python",
+              "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/provider.py",
+              "lines": [
+                31,
+                31
+              ]
+            }
           ]
         }
       ]
@@ -83,13 +120,29 @@
         {
           "comment": "location_ids[0] resolved from PractitionerRole.location (not .organization directly)",
           "references": [
-            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/PractitionerRole.jq", "lines": [45, 45] }
+            {
+              "project": "fhir-to-omop-demo",
+              "kind": "jq",
+              "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/PractitionerRole.jq",
+              "lines": [
+                45,
+                45
+              ]
+            }
           ]
         },
         {
           "comment": "Derived from Practitioner.address via AddressUtil — no PractitionerRole.organization used",
           "references": [
-            { "project": "omoponfhir-v54", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPractitioner.java", "lines": [358, 375] }
+            {
+              "project": "omoponfhir-v54",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPractitioner.java",
+              "lines": [
+                358,
+                375
+              ]
+            }
           ]
         }
       ]
@@ -144,13 +197,18 @@
       ]
     }
   ],
-  "concept_maps": ["specialty"],
+  "concept_maps": [
+    "specialty"
+  ],
   "references": [
     {
       "project": "fhir-to-omop-demo",
       "kind": "jq",
       "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/PractitionerRole.jq",
-      "lines": [1, 80],
+      "lines": [
+        1,
+        80
+      ],
       "notes": "Specialty extraction with multi-coding warning (lines 10-23), merge-based approach where PractitionerRole enriches the provider row (lines 31-53), care_site_id from location_ids[0] (line 45), specialty.concept_code -> specialty_source_value (line 49)."
     },
     {
@@ -176,7 +234,9 @@
     {
       "case": "Multiple PractitionerRoles for same Practitioner",
       "handling": "Single provider row. Use first/most-recent role (by period.end) for specialty and care_site. Log if multiple roles found.",
-      "implementations": ["fhir-to-omop-demo"]
+      "implementations": [
+        "fhir-to-omop-demo"
+      ]
     },
     {
       "case": "PractitionerRole without Practitioner reference",

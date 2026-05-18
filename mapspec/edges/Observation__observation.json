@@ -8,8 +8,9 @@
   "required": false,
   "condition": "category is social-history, survey, or activity",
   "narrative_md": "Qualitative clinical findings: social history, lifestyle factors, survey responses, activity data. One FHIR Observation (or one component) maps to one OMOP observation row. Also receives data from AllergyIntolerance and FamilyMemberHistory.",
-  "implementation_in_project": "src/mapper/observation.ts",
-  "concept_maps": ["interpretation"],
+  "concept_maps": [
+    "interpretation"
+  ],
   "fields": [
     {
       "omop_column": "observation_id",
@@ -40,21 +41,60 @@
         {
           "comment": "LOINC-priority vocab lookup; 0 placeholder when not found",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java", "lines": [1142, 1159], "notes": "constructOmopObservation code lookup" },
-            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Observation.fml" }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java",
+              "lines": [
+                1142,
+                1159
+              ],
+              "notes": "constructOmopObservation code lookup"
+            },
+            {
+              "project": "fhir-omop-ig",
+              "kind": "fml",
+              "path": "refs/refs/fhir-omop-ig/input/maps/Observation.fml"
+            }
           ]
         },
         {
           "comment": "Domain-based routing: LOINC looked up in OMOP vocabulary for domain_id before mapping concept",
           "references": [
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java", "lines": [542, 605], "notes": "LoincStandardDomainLookup; Observation domain case line 692" },
-            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Observation.jq", "lines": [31, 44], "notes": "domain-based routing excluding Condition/Drug/Measurement/Procedure" }
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java",
+              "lines": [
+                542,
+                605
+              ],
+              "notes": "LoincStandardDomainLookup; Observation domain case line 692"
+            },
+            {
+              "project": "fhir-to-omop-demo",
+              "kind": "jq",
+              "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Observation.jq",
+              "lines": [
+                31,
+                44
+              ],
+              "notes": "domain-based routing excluding Condition/Drug/Measurement/Procedure"
+            }
           ]
         },
         {
           "comment": "type_concept_id varies by code system (LOINC=32817, SNOMED=32818), concept lookup depends on code system",
           "references": [
-            { "project": "fhir-x-omop", "kind": "python", "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/observation.py", "lines": [21, 24] }
+            {
+              "project": "fhir-x-omop",
+              "kind": "python",
+              "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/observation.py",
+              "lines": [
+                21,
+                24
+              ]
+            }
           ]
         }
       ]
@@ -70,14 +110,32 @@
         {
           "comment": "effectivePeriod.start fallback; skip when both absent",
           "references": [
-            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Observation.fml", "lines": [29, 33], "notes": "dateTime, instant, Period.start" },
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java" }
+            {
+              "project": "fhir-omop-ig",
+              "kind": "fml",
+              "path": "refs/refs/fhir-omop-ig/input/maps/Observation.fml",
+              "lines": [
+                29,
+                33
+              ],
+              "notes": "dateTime, instant, Period.start"
+            },
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java"
+            }
           ]
         },
         {
           "comment": "issued used as date fallback when effectiveDateTime absent",
           "references": [
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java", "notes": "issued fallback (same as measurement)" }
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java",
+              "notes": "issued fallback (same as measurement)"
+            }
           ]
         }
       ]
@@ -100,20 +158,45 @@
         {
           "comment": "32817 (EHR) constant for all rows",
           "references": [
-            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Observation.fml" },
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java" }
+            {
+              "project": "fhir-omop-ig",
+              "kind": "fml",
+              "path": "refs/refs/fhir-omop-ig/input/maps/Observation.fml"
+            },
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java"
+            }
           ]
         },
         {
           "comment": "Category-sensitive: survey→45905771, exam→44818701 (OMOP→FHIR direction only)",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java", "lines": [1082, 1104], "notes": "Category → type concept mapping" }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java",
+              "lines": [
+                1082,
+                1104
+              ],
+              "notes": "Category → type concept mapping"
+            }
           ]
         },
         {
           "comment": "type_concept_id varies by code system: LOINC=32817, SNOMED=32818",
           "references": [
-            { "project": "fhir-x-omop", "kind": "python", "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/observation.py", "lines": [21, 24] }
+            {
+              "project": "fhir-x-omop",
+              "kind": "python",
+              "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/observation.py",
+              "lines": [
+                21,
+                24
+              ]
+            }
           ]
         }
       ]
@@ -137,21 +220,60 @@
         {
           "comment": "valueString → value_as_string directly",
           "references": [
-            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Observation.fml", "lines": [49, 49], "notes": "valueString → value_as_string" },
-            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Observation.jq", "lines": [160, 160], "notes": "valueString → value_as_string" },
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java" }
+            {
+              "project": "fhir-omop-ig",
+              "kind": "fml",
+              "path": "refs/refs/fhir-omop-ig/input/maps/Observation.fml",
+              "lines": [
+                49,
+                49
+              ],
+              "notes": "valueString → value_as_string"
+            },
+            {
+              "project": "fhir-to-omop-demo",
+              "kind": "jq",
+              "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Observation.jq",
+              "lines": [
+                160,
+                160
+              ],
+              "notes": "valueString → value_as_string"
+            },
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java"
+            }
           ]
         },
         {
           "comment": "CodeableConcept text used as value_as_string fallback",
           "references": [
-            { "project": "HealthcareLakeETL", "kind": "pyspark", "path": "refs/refs/HealthcareLakeETL/mappings/observation.py", "lines": [31, 31], "notes": "value_as_string from CC text" }
+            {
+              "project": "HealthcareLakeETL",
+              "kind": "pyspark",
+              "path": "refs/refs/HealthcareLakeETL/mappings/observation.py",
+              "lines": [
+                31,
+                31
+              ],
+              "notes": "value_as_string from CC text"
+            }
           ]
         },
         {
           "comment": "valueString mapped via FObservationView entity (indirect path)",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java", "lines": [1282, 1290] }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java",
+              "lines": [
+                1282,
+                1290
+              ]
+            }
           ]
         }
       ]
@@ -168,15 +290,44 @@
         {
           "comment": "Full vocabulary lookup to resolve coded result to OMOP standard concept",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java", "lines": [1232, 1280], "notes": "valueCodeableConcept mapping" },
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java" }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java",
+              "lines": [
+                1232,
+                1280
+              ],
+              "notes": "valueCodeableConcept mapping"
+            },
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java"
+            }
           ]
         },
         {
           "comment": "Passthrough of coding[0].code without vocabulary lookup",
           "references": [
-            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Observation.fml", "lines": [44, 48] },
-            { "project": "fhir-x-omop", "kind": "python", "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/observation.py", "lines": [14, 39] }
+            {
+              "project": "fhir-omop-ig",
+              "kind": "fml",
+              "path": "refs/refs/fhir-omop-ig/input/maps/Observation.fml",
+              "lines": [
+                44,
+                48
+              ]
+            },
+            {
+              "project": "fhir-x-omop",
+              "kind": "python",
+              "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/observation.py",
+              "lines": [
+                14,
+                39
+              ]
+            }
           ]
         }
       ]
@@ -218,16 +369,44 @@
         {
           "comment": "UCUM → OMOP vocabulary lookup performed at runtime",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java", "lines": [1197, 1230], "notes": "valueQuantity mapping including unit" },
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java" },
-            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Observation.jq", "notes": "pre-joined vocabulary lookup" }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java",
+              "lines": [
+                1197,
+                1230
+              ],
+              "notes": "valueQuantity mapping including unit"
+            },
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java"
+            },
+            {
+              "project": "fhir-to-omop-demo",
+              "kind": "jq",
+              "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Observation.jq",
+              "notes": "pre-joined vocabulary lookup"
+            }
           ]
         },
         {
           "comment": "Unit passthrough (code value, not vocab lookup) or 0 constant",
           "references": [
-            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Observation.fml", "notes": "unit passthrough per Implementation Comparison" },
-            { "project": "fhir-x-omop", "kind": "python", "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/observation.py", "notes": "hardcoded 0" }
+            {
+              "project": "fhir-omop-ig",
+              "kind": "fml",
+              "path": "refs/refs/fhir-omop-ig/input/maps/Observation.fml",
+              "notes": "unit passthrough per Implementation Comparison"
+            },
+            {
+              "project": "fhir-x-omop",
+              "kind": "python",
+              "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/observation.py",
+              "notes": "hardcoded 0"
+            }
           ]
         }
       ]
@@ -266,25 +445,52 @@
         {
           "comment": "Best vocabulary priority (LOINC > SNOMED > first coding code)",
           "references": [
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java", "notes": "LOINC code" }
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java",
+              "notes": "LOINC code"
+            }
           ]
         },
         {
           "comment": "issued or note text used instead of code",
           "references": [
-            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Observation.fml", "notes": "issued or note → observation_source_value per Implementation Comparison" }
+            {
+              "project": "fhir-omop-ig",
+              "kind": "fml",
+              "path": "refs/refs/fhir-omop-ig/input/maps/Observation.fml",
+              "notes": "issued or note → observation_source_value per Implementation Comparison"
+            }
           ]
         },
         {
           "comment": "identifier.value used as source value",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java", "lines": [1111, 1390], "notes": "identifier.value per Implementation Comparison" }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java",
+              "lines": [
+                1111,
+                1390
+              ],
+              "notes": "identifier.value per Implementation Comparison"
+            }
           ]
         },
         {
           "comment": "coding[0].code (first coding, no priority)",
           "references": [
-            { "project": "fhir-x-omop", "kind": "python", "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/observation.py", "lines": [14, 39] }
+            {
+              "project": "fhir-x-omop",
+              "kind": "python",
+              "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/observation.py",
+              "lines": [
+                14,
+                39
+              ]
+            }
           ]
         }
       ]
@@ -315,7 +521,16 @@
         {
           "comment": "Set to encounter.id to link observation row to the encounter event",
           "references": [
-            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Observation.jq", "lines": [172, 172], "notes": "observation_event_id = encounter.id" }
+            {
+              "project": "fhir-to-omop-demo",
+              "kind": "jq",
+              "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Observation.jq",
+              "lines": [
+                172,
+                172
+              ],
+              "notes": "observation_event_id = encounter.id"
+            }
           ]
         }
       ]
@@ -436,7 +651,10 @@
       "project": "omoponfhir",
       "kind": "java",
       "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java",
-      "lines": [1, 2164]
+      "lines": [
+        1,
+        2164
+      ]
     },
     {
       "project": "ETL-German-FHIR-Core",
@@ -453,7 +671,11 @@
     {
       "case": "valueString present",
       "handling": "Maps directly to value_as_string.",
-      "implementations": ["this project", "HL7 IG FML", "fhir-to-omop-demo"]
+      "implementations": [
+        "this project",
+        "HL7 IG FML",
+        "fhir-to-omop-demo"
+      ]
     },
     {
       "case": "valueCodeableConcept with no matching OMOP concept",

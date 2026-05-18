@@ -6,8 +6,7 @@
   "status": "implemented",
   "primary": true,
   "required": true,
-  "narrative_md": "Core demographics record. One FHIR Patient maps to exactly one OMOP person row. The person table is the central identity record \u2014 every OMOP event table carries a person_id FK.",
-  "implementation_in_project": "src/mapper/patient.ts",
+  "narrative_md": "Core demographics record. One FHIR Patient maps to exactly one OMOP person row. The person table is the central identity record — every OMOP event table carries a person_id FK.",
   "fields": [
     {
       "omop_column": "person_id",
@@ -21,27 +20,56 @@
         {
           "comment": "TODO/commented placeholder — no concrete strategy",
           "references": [
-            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/PersonMap.fml" }
+            {
+              "project": "fhir-omop-ig",
+              "kind": "fml",
+              "path": "refs/refs/fhir-omop-ig/input/maps/PersonMap.fml"
+            }
           ]
         },
         {
           "comment": "Direct copy from FPerson primary key",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPatient.java" }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPatient.java"
+            }
           ]
         },
         {
           "comment": "Auto-incrementing sequence",
           "references": [
-            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [20, 170], "notes": "CreatePersonAndLocations()" },
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/PatientMapper.java" },
-            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/person/OmopPersonBuilder.java" }
+            {
+              "project": "FhirToCdm",
+              "kind": "csharp",
+              "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
+              "lines": [
+                20,
+                170
+              ],
+              "notes": "CreatePersonAndLocations()"
+            },
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/PatientMapper.java"
+            },
+            {
+              "project": "NACHC-fhir-to-omop",
+              "kind": "java",
+              "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/person/OmopPersonBuilder.java"
+            }
           ]
         },
         {
           "comment": "Reuse Patient.id verbatim as integer",
           "references": [
-            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Patient.jq" }
+            {
+              "project": "fhir-to-omop-demo",
+              "kind": "jq",
+              "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Patient.jq"
+            }
           ]
         }
       ]
@@ -54,43 +82,83 @@
       "required": true,
       "fk": "CONCEPT",
       "concept_map": "gender",
-      "notes": "male\u21928507, female\u21928532, other\u21928521, unknown\u21928551, absent\u21920",
+      "notes": "male→8507, female→8532, other→8521, unknown→8551, absent→0",
       "sources": [
         {
           "comment": "Standard concept_id lookup (8507/8532/8521/8551/0)",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPatient.java", "lines": [201, 213] },
-            { "project": "mends-on-fhir", "kind": "whistle-conceptmap", "path": "refs/refs/mends-on-fhir/whistle-mappings/synthea/concept-maps/Person.gender.conceptid.json" }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPatient.java",
+              "lines": [
+                201,
+                213
+              ]
+            },
+            {
+              "project": "mends-on-fhir",
+              "kind": "whistle-conceptmap",
+              "path": "refs/refs/mends-on-fhir/whistle-mappings/synthea/concept-maps/Person.gender.conceptid.json"
+            }
           ]
         },
         {
           "comment": "Pass-through FHIR code without translation (non-normative)",
           "references": [
-            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/PersonMap.fml" }
+            {
+              "project": "fhir-omop-ig",
+              "kind": "fml",
+              "path": "refs/refs/fhir-omop-ig/input/maps/PersonMap.fml"
+            }
           ]
         },
         {
           "comment": "Switch on code with 0 fallback for unknown/other",
           "references": [
-            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [50, 63] }
+            {
+              "project": "FhirToCdm",
+              "kind": "csharp",
+              "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
+              "lines": [
+                50,
+                63
+              ]
+            }
           ]
         },
         {
           "comment": "Concept lookup including German extension support",
           "references": [
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/PatientMapper.java", "lines": [607, 641] }
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/PatientMapper.java",
+              "lines": [
+                607,
+                641
+              ]
+            }
           ]
         },
         {
           "comment": "Prefer us-core-birthsex extension over Patient.gender",
           "references": [
-            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Patient.jq" }
+            {
+              "project": "fhir-to-omop-demo",
+              "kind": "jq",
+              "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Patient.jq"
+            }
           ]
         },
         {
           "comment": "Null when no mapping found",
           "references": [
-            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/util/mapping/GenderMapping.java" }
+            {
+              "project": "NACHC-fhir-to-omop",
+              "kind": "java",
+              "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/util/mapping/GenderMapping.java"
+            }
           ]
         }
       ]
@@ -309,7 +377,11 @@
       ]
     }
   ],
-  "concept_maps": ["gender", "race", "ethnicity"],
+  "concept_maps": [
+    "gender",
+    "race",
+    "ethnicity"
+  ],
   "references": [
     {
       "project": "fhir-omop-ig",
@@ -320,7 +392,10 @@
       "project": "omoponfhir",
       "kind": "java",
       "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPatient.java",
-      "lines": [1, 1338]
+      "lines": [
+        1,
+        1338
+      ]
     },
     {
       "project": "FhirToCdm",
@@ -348,7 +423,11 @@
     {
       "case": "Missing birthDate",
       "handling": "OMOP convention: drop person. Most implementations write year_of_birth=0.",
-      "implementations": ["ETL-German", "NACHC", "omoponfhir"]
+      "implementations": [
+        "ETL-German",
+        "NACHC",
+        "omoponfhir"
+      ]
     },
     {
       "case": "Partial birthDate (year-only or year-month)",

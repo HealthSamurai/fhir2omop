@@ -8,7 +8,6 @@
   "required": false,
   "condition": "DiagnosticReport.conclusion is non-empty or DiagnosticReport.presentedForm contains text-extractable attachments",
   "narrative_md": "When a DiagnosticReport carries free-text content -- either a conclusion string or one or more presentedForm attachments -- a note row is created to preserve the unstructured clinical narrative. This is independent of the domain-routed rows (measurement, observation, procedure_occurrence) that are produced from the report's LOINC code and conclusionCode. A single DiagnosticReport may produce both a domain-routed row and a note row. No reference implementation currently maps DiagnosticReport.conclusion/presentedForm to the OMOP note table; omoponfhir's DocumentReference mapper is the closest reference.",
-  "implementation_in_project": null,
   "fields": [
     {
       "omop_column": "note_id",
@@ -56,13 +55,29 @@
         {
           "comment": "Set from DocumentReference.type via LOINC→NoteType enum mapping (OmopNoteTypeMapping); defaults to concept from type lookup",
           "references": [
-            { "project": "omoponfhir-v54-r4", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopDocumentReference.java", "lines": [239, 279] }
+            {
+              "project": "omoponfhir-v54-r4",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopDocumentReference.java",
+              "lines": [
+                239,
+                279
+              ]
+            }
           ]
         },
         {
           "comment": "Field listed as required but set to null in skeleton mapping",
           "references": [
-            { "project": "fhir-to-omop-demo", "kind": "bash", "path": "refs/refs/fhir-to-omop-demo/data/convert/mapping/010-DiagnosticReport-note.sh", "lines": [14, 29] }
+            {
+              "project": "fhir-to-omop-demo",
+              "kind": "bash",
+              "path": "refs/refs/fhir-to-omop-demo/data/convert/mapping/010-DiagnosticReport-note.sh",
+              "lines": [
+                14,
+                29
+              ]
+            }
           ]
         }
       ]
@@ -80,13 +95,29 @@
         {
           "comment": "Defaults to Concept(0); note_class_concept_id is technically non-compliant when 0 (required field)",
           "references": [
-            { "project": "omoponfhir-v54-r4", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopDocumentReference.java", "lines": [384, 386] }
+            {
+              "project": "omoponfhir-v54-r4",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopDocumentReference.java",
+              "lines": [
+                384,
+                386
+              ]
+            }
           ]
         },
         {
           "comment": "Field listed as required but set to null in skeleton mapping",
           "references": [
-            { "project": "fhir-to-omop-demo", "kind": "bash", "path": "refs/refs/fhir-to-omop-demo/data/convert/mapping/010-DiagnosticReport-note.sh", "lines": [14, 29] }
+            {
+              "project": "fhir-to-omop-demo",
+              "kind": "bash",
+              "path": "refs/refs/fhir-to-omop-demo/data/convert/mapping/010-DiagnosticReport-note.sh",
+              "lines": [
+                14,
+                29
+              ]
+            }
           ]
         }
       ]
@@ -109,19 +140,44 @@
         {
           "comment": "Maps DocumentReference.content.attachment.data (text/plain only); rejects non-text/plain; concatenates multiple attachments",
           "references": [
-            { "project": "omoponfhir-v54-r4", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopDocumentReference.java", "lines": [346, 381] }
+            {
+              "project": "omoponfhir-v54-r4",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopDocumentReference.java",
+              "lines": [
+                346,
+                381
+              ]
+            }
           ]
         },
         {
           "comment": "Field listed but set to null; example shows Synthea presentedForm text/plain base64-encoded content",
           "references": [
-            { "project": "fhir-to-omop-demo", "kind": "bash", "path": "refs/refs/fhir-to-omop-demo/data/convert/mapping/010-DiagnosticReport-note.sh", "lines": [119, 124] }
+            {
+              "project": "fhir-to-omop-demo",
+              "kind": "bash",
+              "path": "refs/refs/fhir-to-omop-demo/data/convert/mapping/010-DiagnosticReport-note.sh",
+              "lines": [
+                119,
+                124
+              ]
+            }
           ]
         },
         {
           "comment": "BuildNote method exists but note creation is commented out (//TMP: NOTE)",
           "references": [
-            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/CdmPersonBuilder.cs", "lines": [700, 710], "notes": "line 358 comment: //TMP: NOTE" }
+            {
+              "project": "FhirToCdm",
+              "kind": "csharp",
+              "path": "refs/refs/FhirToCdm/CdmPersonBuilder.cs",
+              "lines": [
+                700,
+                710
+              ],
+              "notes": "line 358 comment: //TMP: NOTE"
+            }
           ]
         }
       ]
@@ -157,13 +213,29 @@
         {
           "comment": "Resolved from DocumentReference.author[0] (Practitioner reference only)",
           "references": [
-            { "project": "omoponfhir-v54-r4", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopDocumentReference.java", "lines": [312, 326] }
+            {
+              "project": "omoponfhir-v54-r4",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopDocumentReference.java",
+              "lines": [
+                312,
+                326
+              ]
+            }
           ]
         },
         {
           "comment": "Field listed but set to null; no performer resolution",
           "references": [
-            { "project": "fhir-to-omop-demo", "kind": "bash", "path": "refs/refs/fhir-to-omop-demo/data/convert/mapping/010-DiagnosticReport-note.sh", "lines": [14, 29] }
+            {
+              "project": "fhir-to-omop-demo",
+              "kind": "bash",
+              "path": "refs/refs/fhir-to-omop-demo/data/convert/mapping/010-DiagnosticReport-note.sh",
+              "lines": [
+                14,
+                29
+              ]
+            }
           ]
         }
       ]
@@ -179,13 +251,29 @@
         {
           "comment": "Resolved from DocumentReference.context.encounter[0]",
           "references": [
-            { "project": "omoponfhir-v54-r4", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopDocumentReference.java", "lines": [329, 343] }
+            {
+              "project": "omoponfhir-v54-r4",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopDocumentReference.java",
+              "lines": [
+                329,
+                343
+              ]
+            }
           ]
         },
         {
           "comment": "Field listed but set to null; no encounter resolution",
           "references": [
-            { "project": "fhir-to-omop-demo", "kind": "bash", "path": "refs/refs/fhir-to-omop-demo/data/convert/mapping/010-DiagnosticReport-note.sh", "lines": [14, 29] }
+            {
+              "project": "fhir-to-omop-demo",
+              "kind": "bash",
+              "path": "refs/refs/fhir-to-omop-demo/data/convert/mapping/010-DiagnosticReport-note.sh",
+              "lines": [
+                14,
+                29
+              ]
+            }
           ]
         }
       ]
@@ -384,7 +472,11 @@
       ]
     }
   ],
-  "concept_maps": ["note_type", "note_class", "language"],
+  "concept_maps": [
+    "note_type",
+    "note_class",
+    "language"
+  ],
   "references": [
     {
       "project": "ETL-German-FHIR-Core",
@@ -402,14 +494,20 @@
       "project": "omoponfhir-v54-r4",
       "kind": "java",
       "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopDocumentReference.java",
-      "lines": [225, 389],
+      "lines": [
+        225,
+        389
+      ],
       "notes": "Closest reference for FHIR narrative to OMOP note mapping. Maps DocumentReference (not DiagnosticReport) with subject, author, encounter, attachment data (text/plain only)."
     },
     {
       "project": "omoponfhir-v54-r4",
       "kind": "java",
       "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopNoteTypeMapping.java",
-      "lines": [19, 28],
+      "lines": [
+        19,
+        28
+      ],
       "notes": "10 Note Type to LOINC concept mappings."
     },
     {
@@ -445,7 +543,9 @@
     {
       "case": "No contentType on presentedForm",
       "handling": "Assume text/plain if the data field is present and decodable as valid UTF-8 text. Otherwise skip the attachment.",
-      "implementations": ["omoponfhir"]
+      "implementations": [
+        "omoponfhir"
+      ]
     },
     {
       "case": "presentedForm.url without data",
@@ -466,7 +566,9 @@
     {
       "case": "Status is preliminary, registered, or entered-in-error",
       "handling": "ETL-German rejects non-final statuses. For notes, preliminary reports may still contain valuable narrative. Consider accepting preliminary notes but tagging them. Reject entered-in-error.",
-      "implementations": ["ETL-German"]
+      "implementations": [
+        "ETL-German"
+      ]
     },
     {
       "case": "subject references Group (not Patient)",

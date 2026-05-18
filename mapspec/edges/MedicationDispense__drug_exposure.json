@@ -8,7 +8,6 @@
   "required": true,
   "condition": "status != 'entered-in-error' AND status != 'cancelled' AND status != 'declined' AND status != 'stopped'",
   "narrative_md": "Pharmacy dispensing events. One FHIR MedicationDispense produces one OMOP drug_exposure row with drug_type_concept_id = 38000175 (Prescription dispensed in pharmacy). Date is taken from whenHandedOver (fallback whenPrepared). End date is computed from start + daysSupply, or defaults to start date. No reviewed reference implementation covers this mapping; the spec is reconstructed from OMOP drug_exposure schema and FHIR R4 MedicationDispense definition.",
-  "implementation_in_project": null,
   "fields": [
     {
       "fhir_path": null,
@@ -254,7 +253,10 @@
       ]
     }
   ],
-  "concept_maps": ["drug", "route"],
+  "concept_maps": [
+    "drug",
+    "route"
+  ],
   "references": [
     {
       "project": "omoponfhir",

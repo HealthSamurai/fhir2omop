@@ -7,6 +7,13 @@ declare global {
         connect: typeof import("./db/connect").default;
         query: typeof import("./db/query").default;
         };
+        diff: {
+        compareTables: typeof import("./diff/compareTables").default;
+        report: typeof import("./diff/report").default;
+        };
+        etl_fhir: {
+        runEdge: typeof import("./etl_fhir/runEdge").default;
+        };
         etl_synthea: {
         createCdm: typeof import("./etl_synthea/createCdm").default;
         createIndices: typeof import("./etl_synthea/createIndices").default;
@@ -31,7 +38,10 @@ declare global {
         start: typeof import("./http/$start").default;
         };
         mapspec: {
+        byResource: typeof import("./mapspec/byResource").default;
+        byTable: typeof import("./mapspec/byTable").default;
         list: typeof import("./mapspec/list").default;
+        loadEdges: typeof import("./mapspec/loadEdges").default;
         render: typeof import("./mapspec/render").default;
         };
         markdown: {
@@ -58,6 +68,7 @@ declare global {
         };
         viewdef: {
         columns: typeof import("./viewdef/columns").default;
+        materialize: typeof import("./viewdef/materialize").default;
         normalize: typeof import("./viewdef/normalize").default;
         path: typeof import("./viewdef/path").default;
         run: typeof import("./viewdef/run").default;

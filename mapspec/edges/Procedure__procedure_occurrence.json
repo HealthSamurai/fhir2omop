@@ -8,7 +8,6 @@
   "required": true,
   "condition": "status is completed (recommended); code domain_id is Procedure",
   "narrative_md": "One FHIR Procedure maps to one procedure_occurrence row. Domain routing may redirect codes with non-Procedure domain_id to drug_exposure, device_exposure, measurement, or observation. Only completed procedures should produce rows. performed[x] is polymorphic (dateTime or Period) and at least procedure_date is required -- skip the resource if no date is available.",
-  "implementation_in_project": null,
   "fields": [
     {
       "omop_column": "procedure_occurrence_id",
@@ -22,25 +21,53 @@
         {
           "comment": "TODO/commented placeholder — no concrete strategy",
           "references": [
-            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Procedure.fml", "lines": [11, 16] }
+            {
+              "project": "fhir-omop-ig",
+              "kind": "fml",
+              "path": "refs/refs/fhir-omop-ig/input/maps/Procedure.fml",
+              "lines": [
+                11,
+                16
+              ]
+            }
           ]
         },
         {
           "comment": "Sequence via IdMapping lookup table",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopProcedure.java", "lines": [369, 513] }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopProcedure.java",
+              "lines": [
+                369,
+                513
+              ]
+            }
           ]
         },
         {
           "comment": "FhirToOmopIdGenerator.getId() — dedicated ID generation utility",
           "references": [
-            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/procedure/OmopProcedureBuilder.java", "lines": [74, 119] }
+            {
+              "project": "NACHC-fhir-to-omop",
+              "kind": "java",
+              "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/procedure/OmopProcedureBuilder.java",
+              "lines": [
+                74,
+                119
+              ]
+            }
           ]
         },
         {
           "comment": "int(Procedure.id) — verbatim FHIR id cast to integer",
           "references": [
-            { "project": "fhir-x-omop", "kind": "python", "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/procedure_occurrence.py" }
+            {
+              "project": "fhir-x-omop",
+              "kind": "python",
+              "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/procedure_occurrence.py"
+            }
           ]
         }
       ]
@@ -67,25 +94,53 @@
         {
           "comment": "DB lookup via OmopConceptToUse — standard concept resolution from vocabulary tables",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopProcedure.java", "lines": [401, 410] }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopProcedure.java",
+              "lines": [
+                401,
+                410
+              ]
+            }
           ]
         },
         {
           "comment": "DB lookup via LookupCode; one row per coding",
           "references": [
-            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [416, 417] }
+            {
+              "project": "FhirToCdm",
+              "kind": "csharp",
+              "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
+              "lines": [
+                416,
+                417
+              ]
+            }
           ]
         },
         {
           "comment": "Full vocab lookup with OPS/SNOMED/DICOM priority + domain routing",
           "references": [
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ProcedureMapper.java", "lines": [628, 701] }
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ProcedureMapper.java",
+              "lines": [
+                628,
+                701
+              ]
+            }
           ]
         },
         {
           "comment": "Hardcoded to 0 — no vocabulary lookup performed",
           "references": [
-            { "project": "fhir-x-omop", "kind": "python", "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/procedure_occurrence.py" }
+            {
+              "project": "fhir-x-omop",
+              "kind": "python",
+              "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/procedure_occurrence.py"
+            }
           ]
         }
       ]
@@ -115,19 +170,44 @@
         {
           "comment": "Sets end_date = start when performedDateTime (no Period.end available)",
           "references": [
-            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/procedure/OmopProcedureBuilder.java", "lines": [87, 109], "notes": "ProcedureParser.java lines 87-109: Period only, end falls back to start" }
+            {
+              "project": "NACHC-fhir-to-omop",
+              "kind": "java",
+              "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/procedure/OmopProcedureBuilder.java",
+              "lines": [
+                87,
+                109
+              ],
+              "notes": "ProcedureParser.java lines 87-109: Period only, end falls back to start"
+            }
           ]
         },
         {
           "comment": "Leaves null for performedDateTime; only maps Period.end",
           "references": [
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ProcedureMapper.java", "lines": [165, 172] }
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ProcedureMapper.java",
+              "lines": [
+                165,
+                172
+              ]
+            }
           ]
         },
         {
           "comment": "Period only (always casts to Period, fails for performedDateTime)",
           "references": [
-            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [445, 446] }
+            {
+              "project": "FhirToCdm",
+              "kind": "csharp",
+              "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
+              "lines": [
+                445,
+                446
+              ]
+            }
           ]
         }
       ]
@@ -153,21 +233,62 @@
         {
           "comment": "32817 (EHR) — recommended modern convention",
           "references": [
-            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [426, 426] },
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ProcedureMapper.java", "lines": [703, 734], "notes": "uses CONCEPT_EHR constant = 32817" }
+            {
+              "project": "FhirToCdm",
+              "kind": "csharp",
+              "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
+              "lines": [
+                426,
+                426
+              ]
+            },
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ProcedureMapper.java",
+              "lines": [
+                703,
+                734
+              ],
+              "notes": "uses CONCEPT_EHR constant = 32817"
+            }
           ]
         },
         {
           "comment": "44786630 (Primary Procedure) — legacy choice",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopProcedure.java", "lines": [64, 64] },
-            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/procedure/OmopProcedureBuilder.java", "lines": [97, 97] }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopProcedure.java",
+              "lines": [
+                64,
+                64
+              ]
+            },
+            {
+              "project": "NACHC-fhir-to-omop",
+              "kind": "java",
+              "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/procedure/OmopProcedureBuilder.java",
+              "lines": [
+                97,
+                97
+              ]
+            }
           ]
         },
         {
           "comment": "Varies by code system URI — 32818/32820 depending on source",
           "references": [
-            { "project": "fhir-x-omop", "kind": "python", "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/procedure_occurrence.py", "lines": [14, 18] }
+            {
+              "project": "fhir-x-omop",
+              "kind": "python",
+              "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/procedure_occurrence.py",
+              "lines": [
+                14,
+                18
+              ]
+            }
           ]
         }
       ]
@@ -183,20 +304,49 @@
         {
           "comment": "SNOMED body site + OPS site localization extension — most complete body site handling",
           "references": [
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ProcedureMapper.java", "lines": [1007, 1082] }
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ProcedureMapper.java",
+              "lines": [
+                1007,
+                1082
+              ]
+            }
           ]
         },
         {
           "comment": "Not mapped — body site ignored",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopProcedure.java", "notes": "No body site mapping in constructOmop()" },
-            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [407, 451] }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopProcedure.java",
+              "notes": "No body site mapping in constructOmop()"
+            },
+            {
+              "project": "FhirToCdm",
+              "kind": "csharp",
+              "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
+              "lines": [
+                407,
+                451
+              ]
+            }
           ]
         },
         {
           "comment": "Defaults to 0 — no lookup performed",
           "references": [
-            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/procedure/OmopProcedureBuilder.java", "lines": [99, 116] }
+            {
+              "project": "NACHC-fhir-to-omop",
+              "kind": "java",
+              "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/procedure/OmopProcedureBuilder.java",
+              "lines": [
+                99,
+                116
+              ]
+            }
           ]
         }
       ]
@@ -219,13 +369,29 @@
         {
           "comment": "Iterates performers, takes first Practitioner-typed actor; updates provider.specialty if function coded",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopProcedure.java", "lines": [449, 490] }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopProcedure.java",
+              "lines": [
+                449,
+                490
+              ]
+            }
           ]
         },
         {
           "comment": "Defaults to provider_id = 1 when no performer present",
           "references": [
-            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/procedure/OmopProcedureBuilder.java", "lines": [99, 116] }
+            {
+              "project": "NACHC-fhir-to-omop",
+              "kind": "java",
+              "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/procedure/OmopProcedureBuilder.java",
+              "lines": [
+                99,
+                116
+              ]
+            }
           ]
         }
       ]
@@ -271,15 +437,39 @@
         {
           "comment": "Defaults to 1",
           "references": [
-            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/procedure/OmopProcedureBuilder.java", "lines": [99, 116] },
-            { "project": "fhir-x-omop", "kind": "python", "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/procedure_occurrence.py" }
+            {
+              "project": "NACHC-fhir-to-omop",
+              "kind": "java",
+              "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/procedure/OmopProcedureBuilder.java",
+              "lines": [
+                99,
+                116
+              ]
+            },
+            {
+              "project": "fhir-x-omop",
+              "kind": "python",
+              "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/procedure_occurrence.py"
+            }
           ]
         },
         {
           "comment": "Left null — no quantity mapping",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopProcedure.java", "lines": [369, 513] },
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ProcedureMapper.java" }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopProcedure.java",
+              "lines": [
+                369,
+                513
+              ]
+            },
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ProcedureMapper.java"
+            }
           ]
         }
       ]
@@ -411,7 +601,11 @@
       ]
     }
   ],
-  "concept_maps": ["procedure_code", "procedure_type", "body_site"],
+  "concept_maps": [
+    "procedure_code",
+    "procedure_type",
+    "body_site"
+  ],
   "references": [
     {
       "project": "fhir-omop-ig",
@@ -423,7 +617,10 @@
       "project": "omoponfhir",
       "kind": "java",
       "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopProcedure.java",
-      "lines": [1, 515],
+      "lines": [
+        1,
+        515
+      ],
       "notes": "Bidirectional. constructOmop() at lines 369-513. Type concept 44786630. No status filtering, no body site, no domain routing."
     },
     {
@@ -436,14 +633,20 @@
       "project": "ETL-German-FHIR-Core",
       "kind": "java",
       "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ProcedureMapper.java",
-      "lines": [1, 1140],
+      "lines": [
+        1,
+        1140
+      ],
       "notes": "Most complete: OPS/SNOMED/DICOM, full domain routing, body site + OPS localization, device_exposure from usedCode, status filtering, incremental updates."
     },
     {
       "project": "NACHC-fhir-to-omop",
       "kind": "java",
       "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/procedure/OmopProcedureBuilder.java",
-      "lines": [1, 136],
+      "lines": [
+        1,
+        136
+      ],
       "notes": "DSTU3. Domain routing to Procedure/Measurement/Observation/Condition. Defaults: provider_id=1, quantity=1, modifier_concept_id=0."
     },
     {
@@ -463,42 +666,64 @@
     {
       "case": "Multiple bodySite entries",
       "handling": "Take first bodySite[0] for modifier_concept_id. ETL-German filters to SNOMED codings only. Remaining body sites are lost.",
-      "implementations": ["ETL-German"]
+      "implementations": [
+        "ETL-German"
+      ]
     },
     {
       "case": "Multiple performer entries",
       "handling": "Iterate and take first Practitioner-typed actor for provider_id. Non-Practitioner performers (Organization, Device) are ignored.",
-      "implementations": ["omoponfhir", "ETL-German"]
+      "implementations": [
+        "omoponfhir",
+        "ETL-German"
+      ]
     },
     {
       "case": "Multiple code.coding entries",
       "handling": "Select best coding by vocabulary priority (SNOMED > CPT > ICD-10-PCS). ETL-German uses OPS > DICOM > SNOMED priority. FhirToCdm creates one row per coding. HL7 IG takes first coding only.",
-      "implementations": ["ETL-German", "FhirToCdm", "fhir-omop-ig"]
+      "implementations": [
+        "ETL-German",
+        "FhirToCdm",
+        "fhir-omop-ig"
+      ]
     },
     {
       "case": "Code with non-Procedure domain",
       "handling": "Route to appropriate OMOP table (drug_exposure, observation, measurement) based on standard concept's domain_id.",
-      "implementations": ["ETL-German", "NACHC", "FhirToCdm"]
+      "implementations": [
+        "ETL-German",
+        "NACHC",
+        "FhirToCdm"
+      ]
     },
     {
       "case": "Missing performed[x] (no date)",
       "handling": "Skip resource. procedure_date is required. ETL-German logs warning and returns null.",
-      "implementations": ["ETL-German"]
+      "implementations": [
+        "ETL-German"
+      ]
     },
     {
       "case": "Missing subject reference",
       "handling": "Skip resource. person_id is required. omoponfhir throws FHIRException. ETL-German logs and returns null.",
-      "implementations": ["omoponfhir", "ETL-German"]
+      "implementations": [
+        "omoponfhir",
+        "ETL-German"
+      ]
     },
     {
       "case": "Missing code",
       "handling": "Skip resource. procedure_concept_id is required (0 is acceptable). ETL-German logs and skips.",
-      "implementations": ["ETL-German"]
+      "implementations": [
+        "ETL-German"
+      ]
     },
     {
       "case": "status = entered-in-error",
       "handling": "Skip resource. For incremental loads, delete any previously mapped record.",
-      "implementations": ["ETL-German"]
+      "implementations": [
+        "ETL-German"
+      ]
     },
     {
       "case": "Extremely long procedure_source_value",
@@ -507,7 +732,9 @@
     {
       "case": "usedCode (device codes) present",
       "handling": "ETL-German creates device_exposure rows from Procedure.usedCode codings. Other implementations ignore this field.",
-      "implementations": ["ETL-German"]
+      "implementations": [
+        "ETL-German"
+      ]
     },
     {
       "case": "focalDevice present",
@@ -520,7 +747,11 @@
     {
       "case": "performedDateTime (not Period)",
       "handling": "Date part goes to procedure_date/procedure_datetime. procedure_end_date: ETL-German leaves null, NACHC sets end = start.",
-      "implementations": ["ETL-German", "NACHC", "omoponfhir"]
+      "implementations": [
+        "ETL-German",
+        "NACHC",
+        "omoponfhir"
+      ]
     },
     {
       "case": "Procedure.category present",

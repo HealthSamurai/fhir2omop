@@ -1,9 +1,10 @@
-import { loadEdges, byResource, byTable, type Edge } from "./mapspec/list";
+// No cross-imports between project files (CLAUDE.md). Edge data goes
+// through ctx.fns.mapspec.* — late-bound, REPL-reloadable.
 
 export default async function (ctx: Context, _session: any, _req: Request) {
-    const edges = loadEdges();
-    const resMap = byResource(edges);
-    const tblMap = byTable(edges);
+    const edges  = ctx.fns.mapspec.loadEdges(ctx);
+    const resMap = ctx.fns.mapspec.byResource(ctx, { edges });
+    const tblMap = ctx.fns.mapspec.byTable(ctx, { edges });
 
     // Also merge legacy resources
     const legacyList = ctx.fns.mapspec.list(ctx);

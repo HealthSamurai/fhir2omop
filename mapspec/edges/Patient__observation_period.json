@@ -7,8 +7,7 @@
   "primary": false,
   "required": false,
   "condition": "Derived per-person from data availability, not directly from Patient fields",
-  "narrative_md": "Observation period defines spans during which a person is observable. Not a direct field-level mapping from Patient \u2014 derived from event data availability. Most implementations either skip this table or emit a placeholder row at person-creation time.",
-  "implementation_in_project": null,
+  "narrative_md": "Observation period defines spans during which a person is observable. Not a direct field-level mapping from Patient — derived from event data availability. Most implementations either skip this table or emit a placeholder row at person-creation time.",
   "fields": [
     {
       "omop_column": "observation_period_id",
@@ -40,14 +39,35 @@
         {
           "comment": "Fixed constant 1900-01-01 written at person-creation time (Strategy A — incorrect for production)",
           "references": [
-            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/write/singlepatient/WriteOmopPersonToDatabase.java", "lines": [69, 82] }
+            {
+              "project": "NACHC-fhir-to-omop",
+              "kind": "java",
+              "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/write/singlepatient/WriteOmopPersonToDatabase.java",
+              "lines": [
+                69,
+                82
+              ]
+            }
           ]
         },
         {
           "comment": "min(event_date) across all clinical tables computed in post-processing (Strategy B)",
           "references": [
-            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/CdmPersonBuilder.cs", "lines": [463, 475], "notes": "BuildObservationPeriods() with gap merging" },
-            { "project": "ETL-German-FHIR-Core", "kind": "sql", "path": "refs/refs/ETL-German-FHIR-Core/src/main/resources/post_processing/post_process_observation_period.sql" }
+            {
+              "project": "FhirToCdm",
+              "kind": "csharp",
+              "path": "refs/refs/FhirToCdm/CdmPersonBuilder.cs",
+              "lines": [
+                463,
+                475
+              ],
+              "notes": "BuildObservationPeriods() with gap merging"
+            },
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "sql",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/resources/post_processing/post_process_observation_period.sql"
+            }
           ]
         }
       ]
@@ -64,14 +84,36 @@
         {
           "comment": "Fixed constant 2100-01-01 written at person-creation time (Strategy A — incorrect for production)",
           "references": [
-            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/write/singlepatient/WriteOmopPersonToDatabase.java", "lines": [69, 82] }
+            {
+              "project": "NACHC-fhir-to-omop",
+              "kind": "java",
+              "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/write/singlepatient/WriteOmopPersonToDatabase.java",
+              "lines": [
+                69,
+                82
+              ]
+            }
           ]
         },
         {
           "comment": "max(event_date) across clinical tables, with optional gap-merging into multiple periods (Strategy B)",
           "references": [
-            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/CdmPersonBuilder.cs", "lines": [463, 475], "notes": "BuildObservationPeriods() configurable gap parameter" },
-            { "project": "ETL-German-FHIR-Core", "kind": "sql", "path": "refs/refs/ETL-German-FHIR-Core/src/main/resources/post_processing/post_process_observation_period.sql", "notes": "Caps at death_date when person is deceased" }
+            {
+              "project": "FhirToCdm",
+              "kind": "csharp",
+              "path": "refs/refs/FhirToCdm/CdmPersonBuilder.cs",
+              "lines": [
+                463,
+                475
+              ],
+              "notes": "BuildObservationPeriods() configurable gap parameter"
+            },
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "sql",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/resources/post_processing/post_process_observation_period.sql",
+              "notes": "Caps at death_date when person is deceased"
+            }
           ]
         }
       ]
@@ -90,14 +132,34 @@
         {
           "comment": "Constant 44814724 ('Period covering healthcare encounters') hardcoded at person-creation",
           "references": [
-            { "project": "NACHC-fhir-to-omop", "kind": "java", "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/write/singlepatient/WriteOmopPersonToDatabase.java", "lines": [69, 82] }
+            {
+              "project": "NACHC-fhir-to-omop",
+              "kind": "java",
+              "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/write/singlepatient/WriteOmopPersonToDatabase.java",
+              "lines": [
+                69,
+                82
+              ]
+            }
           ]
         },
         {
           "comment": "Configurable — concept_id chosen per pipeline; ETL-German derives from SQL without explicit concept_id constant",
           "references": [
-            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/CdmPersonBuilder.cs", "lines": [463, 475] },
-            { "project": "ETL-German-FHIR-Core", "kind": "sql", "path": "refs/refs/ETL-German-FHIR-Core/src/main/resources/post_processing/post_process_observation_period.sql" }
+            {
+              "project": "FhirToCdm",
+              "kind": "csharp",
+              "path": "refs/refs/FhirToCdm/CdmPersonBuilder.cs",
+              "lines": [
+                463,
+                475
+              ]
+            },
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "sql",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/resources/post_processing/post_process_observation_period.sql"
+            }
           ]
         }
       ]
@@ -134,7 +196,9 @@
       ]
     }
   ],
-  "concept_maps": ["period_type"],
+  "concept_maps": [
+    "period_type"
+  ],
   "references": [
     {
       "project": "NACHC-fhir-to-omop",
@@ -175,7 +239,9 @@
     {
       "case": "Strategy A (fixed 1900-2100) is incorrect for production",
       "handling": "Makes cohort definitions meaningless because every person appears observable for 200 years. Use Strategy B (min/max over events) for any analytic use.",
-      "implementations": ["NACHC"]
+      "implementations": [
+        "NACHC"
+      ]
     },
     {
       "case": "omoponfhir, fhir-to-omop-demo, and fhir-x-omop skip this table",

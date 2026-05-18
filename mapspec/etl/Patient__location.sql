@@ -1,16 +1,6 @@
 -- Stage-2 ETL: Patient (FHIR R4) → location (OMOP CDM v5.3)
 -- Reads staging.patient_person, inserts unique addresses into cdm_ours_fhir.location.
 
-INSERT INTO cdm_ours_fhir.location (
-    location_id,
-    address_1,
-    address_2,
-    city,
-    state,
-    county,
-    zip,
-    location_source_value
-)
 SELECT
     ROW_NUMBER() OVER (ORDER BY city, state, zip)  AS location_id,
     address_1,

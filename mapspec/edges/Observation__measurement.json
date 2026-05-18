@@ -8,7 +8,6 @@
   "required": false,
   "condition": "category is laboratory or vital-signs (or absent/unknown -- default)",
   "narrative_md": "Labs and vitals with numeric/coded results. Domain routing based on Observation.category: laboratory and vital-signs route here. Observations with components (e.g. blood pressure) are expanded -- each component produces its own measurement row.",
-  "implementation_in_project": "src/mapper/observation.ts",
   "fields": [
     {
       "omop_column": "measurement_id",
@@ -40,15 +39,46 @@
         {
           "comment": "LOINC priority vocab lookup; 0 when not found",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java", "lines": [863, 1109], "notes": "constructOmopMeasurement" },
-            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Measurement.fml" }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java",
+              "lines": [
+                863,
+                1109
+              ],
+              "notes": "constructOmopMeasurement"
+            },
+            {
+              "project": "fhir-omop-ig",
+              "kind": "fml",
+              "path": "refs/refs/fhir-omop-ig/input/maps/Measurement.fml"
+            }
           ]
         },
         {
           "comment": "Domain-based routing: LOINC code looked up in OMOP vocabulary for domain_id before mapping concept",
           "references": [
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java", "lines": [542, 605], "notes": "LoincStandardDomainLookup drives routing and concept resolution" },
-            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Observation.jq", "lines": [14, 23], "notes": "domain-based routing via pre-joined vocabulary" }
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java",
+              "lines": [
+                542,
+                605
+              ],
+              "notes": "LoincStandardDomainLookup drives routing and concept resolution"
+            },
+            {
+              "project": "fhir-to-omop-demo",
+              "kind": "jq",
+              "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Observation.jq",
+              "lines": [
+                14,
+                23
+              ],
+              "notes": "domain-based routing via pre-joined vocabulary"
+            }
           ]
         }
       ]
@@ -64,21 +94,66 @@
         {
           "comment": "effectivePeriod.start fallback; skip when both absent",
           "references": [
-            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Measurement.fml", "lines": [30, 32], "notes": "dateTime, instant, Period.start" },
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java", "lines": [279, 291], "notes": "effectivePeriod fallback" },
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java", "lines": [1058, 1071], "notes": "effectiveDateTime / Period; falls back to Date(0) not skip" }
+            {
+              "project": "fhir-omop-ig",
+              "kind": "fml",
+              "path": "refs/refs/fhir-omop-ig/input/maps/Measurement.fml",
+              "lines": [
+                30,
+                32
+              ],
+              "notes": "dateTime, instant, Period.start"
+            },
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java",
+              "lines": [
+                279,
+                291
+              ],
+              "notes": "effectivePeriod fallback"
+            },
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java",
+              "lines": [
+                1058,
+                1071
+              ],
+              "notes": "effectiveDateTime / Period; falls back to Date(0) not skip"
+            }
           ]
         },
         {
           "comment": "issued used as date fallback when effectiveDateTime absent",
           "references": [
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java", "lines": [273, 276], "notes": "issued fallback" }
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java",
+              "lines": [
+                273,
+                276
+              ],
+              "notes": "issued fallback"
+            }
           ]
         },
         {
           "comment": "effectiveInstant also mapped (not handled by this project or most others)",
           "references": [
-            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Measurement.fml", "lines": [29, 29], "notes": "line 29 handles effectiveInstant" }
+            {
+              "project": "fhir-omop-ig",
+              "kind": "fml",
+              "path": "refs/refs/fhir-omop-ig/input/maps/Measurement.fml",
+              "lines": [
+                29,
+                29
+              ],
+              "notes": "line 29 handles effectiveInstant"
+            }
           ]
         }
       ]
@@ -103,15 +178,41 @@
         {
           "comment": "32817 (EHR) constant for all FHIR→OMOP measurement rows",
           "references": [
-            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Measurement.fml" },
-            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [482, 558], "notes": "CreateMeasurement()" },
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java" }
+            {
+              "project": "fhir-omop-ig",
+              "kind": "fml",
+              "path": "refs/refs/fhir-omop-ig/input/maps/Measurement.fml"
+            },
+            {
+              "project": "FhirToCdm",
+              "kind": "csharp",
+              "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
+              "lines": [
+                482,
+                558
+              ],
+              "notes": "CreateMeasurement()"
+            },
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java"
+            }
           ]
         },
         {
           "comment": "Category-sensitive type concept: laboratory→44818702, exam→44818701, survey→45905771 (OMOP→FHIR direction)",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java", "lines": [1080, 1104], "notes": "Category → type concept mapping" }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java",
+              "lines": [
+                1080,
+                1104
+              ],
+              "notes": "Category → type concept mapping"
+            }
           ]
         }
       ]
@@ -143,15 +244,51 @@
         {
           "comment": "Full vocabulary lookup to resolve coded result to OMOP standard concept",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java", "lines": [963, 990], "notes": "valueCodeableConcept mapping with vocab lookup" },
-            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [538, 547], "notes": "ValueCodeableConcept lookup" },
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java", "lines": [1474, 1517], "notes": "setValueCodeableConceptInMeasurement" }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java",
+              "lines": [
+                963,
+                990
+              ],
+              "notes": "valueCodeableConcept mapping with vocab lookup"
+            },
+            {
+              "project": "FhirToCdm",
+              "kind": "csharp",
+              "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
+              "lines": [
+                538,
+                547
+              ],
+              "notes": "ValueCodeableConcept lookup"
+            },
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java",
+              "lines": [
+                1474,
+                1517
+              ],
+              "notes": "setValueCodeableConceptInMeasurement"
+            }
           ]
         },
         {
           "comment": "Passthrough of coding[0] without vocabulary lookup (interpretation → value_as_concept_id)",
           "references": [
-            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Measurement.fml", "lines": [44, 50], "notes": "valueCodeableConcept + interpretation lines" }
+            {
+              "project": "fhir-omop-ig",
+              "kind": "fml",
+              "path": "refs/refs/fhir-omop-ig/input/maps/Measurement.fml",
+              "lines": [
+                44,
+                50
+              ],
+              "notes": "valueCodeableConcept + interpretation lines"
+            }
           ]
         }
       ]
@@ -174,16 +311,48 @@
         {
           "comment": "UCUM → OMOP vocabulary lookup performed at runtime",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java", "lines": [932, 961], "notes": "Unit concept lookup from UCUM vocab; fallback from reference range if valueQuantity.unit absent (lines 1013-1055)" },
-            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [526, 531], "notes": "Unit lookup" },
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java" },
-            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Observation.jq", "notes": "pre-joined vocabulary lookup" }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java",
+              "lines": [
+                932,
+                961
+              ],
+              "notes": "Unit concept lookup from UCUM vocab; fallback from reference range if valueQuantity.unit absent (lines 1013-1055)"
+            },
+            {
+              "project": "FhirToCdm",
+              "kind": "csharp",
+              "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
+              "lines": [
+                526,
+                531
+              ],
+              "notes": "Unit lookup"
+            },
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java"
+            },
+            {
+              "project": "fhir-to-omop-demo",
+              "kind": "jq",
+              "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Observation.jq",
+              "notes": "pre-joined vocabulary lookup"
+            }
           ]
         },
         {
           "comment": "null constant — no UCUM lookup performed",
           "references": [
-            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Measurement.fml", "notes": "unit concept not mapped in FML" }
+            {
+              "project": "fhir-omop-ig",
+              "kind": "fml",
+              "path": "refs/refs/fhir-omop-ig/input/maps/Measurement.fml",
+              "notes": "unit concept not mapped in FML"
+            }
           ]
         }
       ]
@@ -229,7 +398,16 @@
         {
           "comment": "visit_detail_id set to same value as visit_occurrence_id",
           "references": [
-            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "lines": [517, 518], "notes": "visit_detail_id = visit_occurrence_id" }
+            {
+              "project": "FhirToCdm",
+              "kind": "csharp",
+              "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
+              "lines": [
+                517,
+                518
+              ],
+              "notes": "visit_detail_id = visit_occurrence_id"
+            }
           ]
         }
       ]
@@ -244,19 +422,38 @@
         {
           "comment": "Best vocabulary priority (LOINC > SNOMED > first coding code)",
           "references": [
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java", "notes": "LOINC code used" }
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java",
+              "notes": "LOINC code used"
+            }
           ]
         },
         {
           "comment": "issued or note text used instead of code",
           "references": [
-            { "project": "fhir-omop-ig", "kind": "fml", "path": "refs/refs/fhir-omop-ig/input/maps/Measurement.fml", "notes": "issued or note → measurement_source_value per Implementation Comparison" }
+            {
+              "project": "fhir-omop-ig",
+              "kind": "fml",
+              "path": "refs/refs/fhir-omop-ig/input/maps/Measurement.fml",
+              "notes": "issued or note → measurement_source_value per Implementation Comparison"
+            }
           ]
         },
         {
           "comment": "identifier.value used as source value",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java", "lines": [863, 1109], "notes": "identifier.value per Implementation Comparison" }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java",
+              "lines": [
+                863,
+                1109
+              ],
+              "notes": "identifier.value per Implementation Comparison"
+            }
           ]
         }
       ]
@@ -286,15 +483,43 @@
         {
           "comment": "Composite string: comparator+value+unit (or valueString / CC text)",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java", "notes": "Quantity.value toString per Implementation Comparison" },
-            { "project": "FhirToCdm", "kind": "csharp", "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs", "notes": "ValueAsNumber toString per Implementation Comparison" },
-            { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java", "lines": [1529, 1554], "notes": "setValueQuantityInMeasurement" }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java",
+              "notes": "Quantity.value toString per Implementation Comparison"
+            },
+            {
+              "project": "FhirToCdm",
+              "kind": "csharp",
+              "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
+              "notes": "ValueAsNumber toString per Implementation Comparison"
+            },
+            {
+              "project": "ETL-German-FHIR-Core",
+              "kind": "java",
+              "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ObservationMapper.java",
+              "lines": [
+                1529,
+                1554
+              ],
+              "notes": "setValueQuantityInMeasurement"
+            }
           ]
         },
         {
           "comment": "valueString → known concept IDs ('detected'/'not detected') attempted before falling back to value_source_value",
           "references": [
-            { "project": "omoponfhir", "kind": "java", "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java", "lines": [991, 1003], "notes": "valueString → known concepts" }
+            {
+              "project": "omoponfhir",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java",
+              "lines": [
+                991,
+                1003
+              ],
+              "notes": "valueString → known concepts"
+            }
           ]
         }
       ]
@@ -413,7 +638,10 @@
       ]
     }
   ],
-  "concept_maps": ["operator", "measurement_type"],
+  "concept_maps": [
+    "operator",
+    "measurement_type"
+  ],
   "references": [
     {
       "project": "fhir-omop-ig",
@@ -425,7 +653,10 @@
       "project": "omoponfhir",
       "kind": "java",
       "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopObservation.java",
-      "lines": [1, 2164]
+      "lines": [
+        1,
+        2164
+      ]
     },
     {
       "project": "FhirToCdm",
@@ -449,12 +680,20 @@
     {
       "case": "Missing effectiveDateTime",
       "handling": "Skip -- measurement_date is required.",
-      "implementations": ["this project", "ETL-German"]
+      "implementations": [
+        "this project",
+        "ETL-German"
+      ]
     },
     {
       "case": "effectivePeriod instead of dateTime",
       "handling": "Use period.start.",
-      "implementations": ["this project", "HL7 IG FML", "ETL-German", "omoponfhir"]
+      "implementations": [
+        "this project",
+        "HL7 IG FML",
+        "ETL-German",
+        "omoponfhir"
+      ]
     },
     {
       "case": "valueString (no value_as_string in measurement)",
@@ -463,12 +702,19 @@
     {
       "case": "Components (e.g. blood pressure)",
       "handling": "Each component produces its own measurement row with suffixed ID. Parent metadata (date, subject, encounter, performer) is inherited.",
-      "implementations": ["this project", "omoponfhir", "ETL-German"]
+      "implementations": [
+        "this project",
+        "omoponfhir",
+        "ETL-German"
+      ]
     },
     {
       "case": "Status not in {final, amended, corrected}",
       "handling": "Skip entire observation.",
-      "implementations": ["this project", "ETL-German"]
+      "implementations": [
+        "this project",
+        "ETL-German"
+      ]
     },
     {
       "case": "Missing code.coding",

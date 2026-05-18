@@ -8,7 +8,6 @@
   "required": true,
   "condition": "status in {active, completed} AND intent in {order, original-order, reflex-order, filler-order, instance-order}",
   "narrative_md": "Prescription/order stage of the medication lifecycle. One FHIR MedicationRequest maps to one OMOP drug_exposure row. MedicationRequest is the richest of the four FHIR medication-event resources for OMOP purposes because it carries dispense, refill, and supply-duration metadata that the other three lack. Type concept 38000177 (Prescription written).",
-  "implementation_in_project": "src/mapper/medication.ts",
   "fields": [
     {
       "omop_column": "drug_exposure_id",
@@ -26,7 +25,10 @@
               "project": "omoponfhir",
               "kind": "java",
               "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopMedicationRequest.java",
-              "lines": [492, 495],
+              "lines": [
+                492,
+                495
+              ],
               "notes": "IdMapping.getOMOPfromFHIR() call at start of constructOmop()"
             }
           ]
@@ -71,7 +73,10 @@
               "project": "omoponfhir",
               "kind": "java",
               "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopMedicationRequest.java",
-              "lines": [497, 508],
+              "lines": [
+                497,
+                508
+              ],
               "notes": "Patient resolution with FHIRException on failure"
             }
           ]
@@ -83,7 +88,10 @@
               "project": "FhirToCdm",
               "kind": "csharp",
               "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
-              "lines": [322, 373],
+              "lines": [
+                322,
+                373
+              ],
               "notes": "MedicationRequest processing — skips on unresolvable subject"
             }
           ]
@@ -115,7 +123,10 @@
               "project": "omoponfhir",
               "kind": "java",
               "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopMedicationRequest.java",
-              "lines": [622, 623],
+              "lines": [
+                622,
+                623
+              ],
               "notes": "Start/end date from authoredOn"
             }
           ]
@@ -127,7 +138,10 @@
               "project": "NACHC-fhir-to-omop",
               "kind": "java",
               "path": "refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/fhir/parser/medicationrequest/MedicationRequestParser.java",
-              "lines": [140, 153],
+              "lines": [
+                140,
+                153
+              ],
               "notes": "authoredOn with encounter fallback"
             }
           ]
@@ -139,7 +153,10 @@
               "project": "FhirToCdm",
               "kind": "csharp",
               "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
-              "lines": [366, 369],
+              "lines": [
+                366,
+                369
+              ],
               "notes": "Visit-derived dates (start/end from VisitOccurrence)"
             }
           ]
@@ -193,7 +210,10 @@
               "project": "omoponfhir",
               "kind": "java",
               "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopMedicationRequest.java",
-              "lines": [616, 619],
+              "lines": [
+                616,
+                619
+              ],
               "notes": "Type concept 38000177 set here"
             }
           ]
@@ -205,7 +225,10 @@
               "project": "fhir-to-omop-demo",
               "kind": "jq",
               "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/MedicationRequest.jq",
-              "lines": [61, 61],
+              "lines": [
+                61,
+                61
+              ],
               "notes": "drug_type_concept_id = 32838"
             }
           ]
@@ -217,7 +240,10 @@
               "project": "FhirToCdm",
               "kind": "csharp",
               "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
-              "lines": [338, 338],
+              "lines": [
+                338,
+                338
+              ],
               "notes": "Type concept 32817 for all medication resources"
             },
             {
@@ -258,7 +284,10 @@
               "project": "omoponfhir",
               "kind": "java",
               "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopMedicationRequest.java",
-              "lines": [674, 731],
+              "lines": [
+                674,
+                731
+              ],
               "notes": "Dosage quantity + dispense request fallback"
             }
           ]
@@ -270,7 +299,10 @@
               "project": "ETL-German-FHIR-Core",
               "kind": "java",
               "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/MedicationStatementMapper.java",
-              "lines": [622, 634],
+              "lines": [
+                622,
+                634
+              ],
               "notes": "Quantity from doseQuantity or Range mean"
             }
           ]
@@ -299,7 +331,10 @@
               "project": "FhirToCdm",
               "kind": "csharp",
               "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
-              "lines": [352, 354],
+              "lines": [
+                352,
+                354
+              ],
               "notes": "sig from dosageInstruction[0].text"
             }
           ]
@@ -355,7 +390,10 @@
               "project": "omoponfhir",
               "kind": "java",
               "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopMedicationRequest.java",
-              "lines": [733, 742],
+              "lines": [
+                733,
+                742
+              ],
               "notes": "Provider from recorder"
             }
           ]
@@ -367,7 +405,10 @@
               "project": "fhir-to-omop-demo",
               "kind": "jq",
               "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/MedicationRequest.jq",
-              "lines": [69, 69],
+              "lines": [
+                69,
+                69
+              ],
               "notes": "Provider from requester.id"
             }
           ]
@@ -404,7 +445,10 @@
               "project": "omoponfhir",
               "kind": "java",
               "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopMedicationRequest.java",
-              "lines": [547, 597],
+              "lines": [
+                547,
+                597
+              ],
               "notes": "Medication resolution including source value extraction; truncation to 50 chars"
             }
           ]
@@ -416,7 +460,10 @@
               "project": "FhirToCdm",
               "kind": "csharp",
               "path": "refs/refs/FhirToCdm/FhirToCdmMappings.cs",
-              "lines": [325, 327],
+              "lines": [
+                325,
+                327
+              ],
               "notes": "Medication CodeableConcept extraction"
             },
             {
@@ -445,7 +492,10 @@
               "project": "fhir-to-omop-demo",
               "kind": "jq",
               "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/MedicationRequest.jq",
-              "lines": [10, 24],
+              "lines": [
+                10,
+                24
+              ],
               "notes": "Drug concept from pre-computed vocabulary; also produces drug_source_concept_id"
             },
             {
@@ -472,7 +522,10 @@
               "project": "omoponfhir",
               "kind": "java",
               "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopMedicationRequest.java",
-              "lines": [674, 699],
+              "lines": [
+                674,
+                699
+              ],
               "notes": "Dosage quantity + unit extraction"
             }
           ]
@@ -593,13 +646,20 @@
       ]
     }
   ],
-  "concept_maps": ["drug_type", "drug", "route"],
+  "concept_maps": [
+    "drug_type",
+    "drug",
+    "route"
+  ],
   "references": [
     {
       "project": "omoponfhir",
       "kind": "java",
       "path": "refs/refs/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopMedicationRequest.java",
-      "lines": [1, 746],
+      "lines": [
+        1,
+        746
+      ],
       "notes": "Most complete: RxNorm concept lookup, contained reference resolution, route concept lookup, dosage parsing, dispense-request fallback for refills/quantity, provider from recorder."
     },
     {
@@ -631,42 +691,69 @@
     {
       "case": "medicationReference to contained Medication",
       "handling": "omoponfhir iterates contained[] to find matching Medication by ID fragment. This project skips (returns null).",
-      "implementations": ["omoponfhir"]
+      "implementations": [
+        "omoponfhir"
+      ]
     },
     {
       "case": "medicationReference to external Medication",
       "handling": "Requires Bundle-level or server-side resolution. fhir-to-omop-demo merges in post-processing. Most implementations skip.",
-      "implementations": ["fhir-to-omop-demo"]
+      "implementations": [
+        "fhir-to-omop-demo"
+      ]
     },
     {
       "case": "Multiple dosageInstruction entries",
       "handling": "Take first for route and dose. omoponfhir iterates all entries but breaks after first match.",
-      "implementations": ["this project", "omoponfhir"]
+      "implementations": [
+        "this project",
+        "omoponfhir"
+      ]
     },
     {
       "case": "status = entered-in-error",
       "handling": "Skip -- do not create drug_exposure row. All implementations agree.",
-      "implementations": ["this project", "omoponfhir", "FhirToCdm", "fhir-to-omop-demo", "NACHC"]
+      "implementations": [
+        "this project",
+        "omoponfhir",
+        "FhirToCdm",
+        "fhir-to-omop-demo",
+        "NACHC"
+      ]
     },
     {
       "case": "status = stopped",
       "handling": "omoponfhir populates stop_reason from statusReason and still creates the row. This project skips.",
-      "implementations": ["omoponfhir", "this project"]
+      "implementations": [
+        "omoponfhir",
+        "this project"
+      ]
     },
     {
       "case": "status = on-hold / draft / unknown",
       "handling": "This project skips (only maps active and completed). omoponfhir maps all statuses except entered-in-error.",
-      "implementations": ["this project", "omoponfhir"]
+      "implementations": [
+        "this project",
+        "omoponfhir"
+      ]
     },
     {
       "case": "intent = proposal / plan",
       "handling": "This project skips -- only maps order, original-order, reflex-order, filler-order, instance-order. omoponfhir maps all intents.",
-      "implementations": ["this project", "omoponfhir"]
+      "implementations": [
+        "this project",
+        "omoponfhir"
+      ]
     },
     {
       "case": "No end date available",
       "handling": "Use start date as end date. Consensus across all implementations.",
-      "implementations": ["this project", "omoponfhir", "FhirToCdm", "fhir-to-omop-demo"]
+      "implementations": [
+        "this project",
+        "omoponfhir",
+        "FhirToCdm",
+        "fhir-to-omop-demo"
+      ]
     },
     {
       "case": "dispenseRequest absent",
@@ -675,32 +762,49 @@
     {
       "case": "expectedSupplyDuration UCUM units",
       "handling": "This project converts h, d, wk, mo, a to days. Other UCUM duration codes are not supported.",
-      "implementations": ["this project"]
+      "implementations": [
+        "this project"
+      ]
     },
     {
       "case": "authoredOn null",
       "handling": "NACHC falls back to encounter start date. FhirToCdm derives from VisitOccurrence. This project leaves null.",
-      "implementations": ["NACHC", "FhirToCdm", "this project"]
+      "implementations": [
+        "NACHC",
+        "FhirToCdm",
+        "this project"
+      ]
     },
     {
       "case": "Multiple codings in medication[x]",
       "handling": "This project uses selectBestCoding() by vocabulary priority (RxNorm > ATC > NDC > first). fhir-to-omop-demo warns. omoponfhir iterates all codings against OMOP concept table.",
-      "implementations": ["this project", "fhir-to-omop-demo", "omoponfhir"]
+      "implementations": [
+        "this project",
+        "fhir-to-omop-demo",
+        "omoponfhir"
+      ]
     },
     {
       "case": "No medication code found",
       "handling": "This project returns null (skips). omoponfhir throws FHIRException.",
-      "implementations": ["this project", "omoponfhir"]
+      "implementations": [
+        "this project",
+        "omoponfhir"
+      ]
     },
     {
       "case": "drug_source_value exceeds 50 chars",
       "handling": "omoponfhir truncates medicationCodeableConcept.getText() to 50 chars: .substring(0, 50). OMOP CDM field is varchar(50).",
-      "implementations": ["omoponfhir"]
+      "implementations": [
+        "omoponfhir"
+      ]
     },
     {
       "case": "stop_reason exceeds 20 chars",
       "handling": "omoponfhir truncates: .substring(0, 20). OMOP CDM field is varchar(20).",
-      "implementations": ["omoponfhir"]
+      "implementations": [
+        "omoponfhir"
+      ]
     }
   ]
 }

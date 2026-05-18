@@ -8,7 +8,6 @@
   "required": true,
   "condition": "Coverage.status = 'active'",
   "narrative_md": "FHIR Coverage captures a patient's insurance enrollment (payer, plan, coverage period, subscriber relationship). It maps to OMOP payer_plan_period, which records continuous enrollment under a specific health benefit plan from a given payer. Unlike clinical event tables, payer_plan_period carries no _type_concept_id; it is purely administrative. One active Coverage resource produces one payer_plan_period row. Overlapping or adjacent periods for the same person/payer may be collapsed.",
-  "implementation_in_project": null,
   "fields": [
     {
       "omop_column": "payer_plan_period_id",
@@ -39,13 +38,29 @@
         {
           "comment": "MIN(billablePeriod.start) grouped by patient+insurer (derived from EOB, not Coverage directly)",
           "references": [
-            { "project": "avalon-fhir-omop", "kind": "sql", "path": "refs/refs/avalon-fhir-omop/omop-views/models/omop_payer_plan_period.sql", "lines": [30, 51] }
+            {
+              "project": "avalon-fhir-omop",
+              "kind": "sql",
+              "path": "refs/refs/avalon-fhir-omop/omop-views/models/omop_payer_plan_period.sql",
+              "lines": [
+                30,
+                51
+              ]
+            }
           ]
         },
         {
           "comment": "period.start from Coverage (reverse direction: OMOP→FHIR, from payer_plan_period_start_date)",
           "references": [
-            { "project": "mends-on-fhir", "kind": "whistle", "path": "refs/refs/mends-on-fhir/whistle-mappings/synthea/whistle-functions/zzPPP_CoverageImpl.wstl", "lines": [34, 35] }
+            {
+              "project": "mends-on-fhir",
+              "kind": "whistle",
+              "path": "refs/refs/mends-on-fhir/whistle-mappings/synthea/whistle-functions/zzPPP_CoverageImpl.wstl",
+              "lines": [
+                34,
+                35
+              ]
+            }
           ]
         }
       ]
@@ -61,13 +76,29 @@
         {
           "comment": "MAX(COALESCE(billablePeriod.end, billablePeriod.start)) — uses start as fallback when end is absent",
           "references": [
-            { "project": "avalon-fhir-omop", "kind": "sql", "path": "refs/refs/avalon-fhir-omop/omop-views/models/omop_payer_plan_period.sql", "lines": [30, 51] }
+            {
+              "project": "avalon-fhir-omop",
+              "kind": "sql",
+              "path": "refs/refs/avalon-fhir-omop/omop-views/models/omop_payer_plan_period.sql",
+              "lines": [
+                30,
+                51
+              ]
+            }
           ]
         },
         {
           "comment": "period.end from Coverage (reverse direction: OMOP→FHIR)",
           "references": [
-            { "project": "mends-on-fhir", "kind": "whistle", "path": "refs/refs/mends-on-fhir/whistle-mappings/synthea/whistle-functions/zzPPP_CoverageImpl.wstl", "lines": [34, 35] }
+            {
+              "project": "mends-on-fhir",
+              "kind": "whistle",
+              "path": "refs/refs/mends-on-fhir/whistle-mappings/synthea/whistle-functions/zzPPP_CoverageImpl.wstl",
+              "lines": [
+                34,
+                35
+              ]
+            }
           ]
         }
       ]
@@ -86,13 +117,25 @@
         {
           "comment": "Mapped via 130-entry ConceptMap (OMOP payer_concept_id ↔ FHIR v3-ActCode) — reverse direction (OMOP→FHIR)",
           "references": [
-            { "project": "mends-on-fhir", "kind": "json", "path": "refs/refs/mends-on-fhir/whistle-mappings/synthea/concept-maps/PPP.payor-concept-id--Coverage.type.json" }
+            {
+              "project": "mends-on-fhir",
+              "kind": "json",
+              "path": "refs/refs/mends-on-fhir/whistle-mappings/synthea/concept-maps/PPP.payor-concept-id--Coverage.type.json"
+            }
           ]
         },
         {
           "comment": "All concept_ids = 0 or NULL (no vocabulary lookup performed)",
           "references": [
-            { "project": "avalon-fhir-omop", "kind": "sql", "path": "refs/refs/avalon-fhir-omop/omop-views/models/omop_payer_plan_period.sql", "lines": [35, 47] }
+            {
+              "project": "avalon-fhir-omop",
+              "kind": "sql",
+              "path": "refs/refs/avalon-fhir-omop/omop-views/models/omop_payer_plan_period.sql",
+              "lines": [
+                35,
+                47
+              ]
+            }
           ]
         }
       ]
@@ -109,13 +152,29 @@
         {
           "comment": "insurer.display from ExplanationOfBenefit (no Coverage direct mapping)",
           "references": [
-            { "project": "avalon-fhir-omop", "kind": "sql", "path": "refs/refs/avalon-fhir-omop/omop-views/models/omop_payer_plan_period.sql", "lines": [8, 28] }
+            {
+              "project": "avalon-fhir-omop",
+              "kind": "sql",
+              "path": "refs/refs/avalon-fhir-omop/omop-views/models/omop_payer_plan_period.sql",
+              "lines": [
+                8,
+                28
+              ]
+            }
           ]
         },
         {
           "comment": "payor[0].display (from PPP.plan_source_value) — reverse OMOP→FHIR direction",
           "references": [
-            { "project": "mends-on-fhir", "kind": "whistle", "path": "refs/refs/mends-on-fhir/whistle-mappings/synthea/whistle-functions/zzPPP_CoverageImpl.wstl", "lines": [51, 51] }
+            {
+              "project": "mends-on-fhir",
+              "kind": "whistle",
+              "path": "refs/refs/mends-on-fhir/whistle-mappings/synthea/whistle-functions/zzPPP_CoverageImpl.wstl",
+              "lines": [
+                51,
+                51
+              ]
+            }
           ]
         }
       ]
@@ -399,7 +458,10 @@
       ]
     }
   ],
-  "concept_maps": ["payer", "plan_type"],
+  "concept_maps": [
+    "payer",
+    "plan_type"
+  ],
   "references": [
     {
       "project": "fhir-omop-ig",
@@ -456,7 +518,9 @@
     {
       "case": "period.end < period.start",
       "handling": "Data quality error. Skip the record or swap dates with a warning.",
-      "implementations": ["avalon-fhir-omop"]
+      "implementations": [
+        "avalon-fhir-omop"
+      ]
     },
     {
       "case": "Coverage.status != 'active'",
@@ -477,7 +541,9 @@
     {
       "case": "Overlapping Coverage periods (same person, same payer)",
       "handling": "Collapse into a single payer_plan_period row with MIN(start), MAX(end). FhirToCdm does this via CanPayerPlanPeriodBeCombined() -- combines when payer+plan source values match.",
-      "implementations": ["FhirToCdm"]
+      "implementations": [
+        "FhirToCdm"
+      ]
     },
     {
       "case": "Coverage.class[] absent",
@@ -494,7 +560,9 @@
     {
       "case": "Coverage from EOB (no discrete Coverage resource)",
       "handling": "Derive payer_plan_period from ExplanationOfBenefit.billablePeriod + insurer. Group by patient+insurer, MIN/MAX dates.",
-      "implementations": ["avalon-fhir-omop"]
+      "implementations": [
+        "avalon-fhir-omop"
+      ]
     }
   ]
 }

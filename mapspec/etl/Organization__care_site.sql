@@ -1,14 +1,6 @@
 -- Stage-2 ETL: Organization (FHIR R4) → care_site (OMOP CDM v5.3)
 -- Consumes staging.organization_care_site.
 
-INSERT INTO cdm_ours_fhir.care_site (
-    care_site_id,
-    care_site_name,
-    place_of_service_concept_id,
-    location_id,
-    care_site_source_value,
-    place_of_service_source_value
-)
 SELECT
     ROW_NUMBER() OVER (ORDER BY v.id)        AS care_site_id,
     v.name                                   AS care_site_name,

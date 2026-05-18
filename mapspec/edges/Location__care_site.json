@@ -8,7 +8,6 @@
   "required": false,
   "condition": "Location.managingOrganization is present",
   "narrative_md": "Secondary pattern: some implementations (notably fhir-to-omop-demo) create a care_site row from each FHIR Location resource, in addition to the primary care_site row from Organization. The Location-derived care_site row carries the location_id (linking to the location row from the same Location resource) while the Organization-derived row carries the name and place_of_service. The two rows share the same care_site_id and must be merged downstream. This pattern is NOT used by omoponfhir-v54, ETL-German, or NACHC.",
-  "implementation_in_project": null,
   "fields": [
     {
       "omop_column": "care_site_id",
@@ -22,7 +21,16 @@
         {
           "comment": "Derives care_site_id from managingOrganization reference; same ID as Organization-derived row — only fhir-to-omop-demo uses this dual-row pattern",
           "references": [
-            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Location.jq", "lines": [10, 33], "notes": "care_site_id from managingOrganization reference" }
+            {
+              "project": "fhir-to-omop-demo",
+              "kind": "jq",
+              "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Location.jq",
+              "lines": [
+                10,
+                33
+              ],
+              "notes": "care_site_id from managingOrganization reference"
+            }
           ]
         }
       ]
@@ -56,7 +64,16 @@
         {
           "comment": "Sets location_id = Location.id on the second care_site row, linking back to the location row from the same resource — unique to fhir-to-omop-demo dual-row pattern",
           "references": [
-            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Location.jq", "lines": [31, 39], "notes": "Second care_site row; location_id = .id (line 36)" }
+            {
+              "project": "fhir-to-omop-demo",
+              "kind": "jq",
+              "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Location.jq",
+              "lines": [
+                31,
+                39
+              ],
+              "notes": "Second care_site row; location_id = .id (line 36)"
+            }
           ]
         }
       ]

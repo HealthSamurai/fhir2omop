@@ -7,7 +7,6 @@
   "primary": true,
   "required": true,
   "narrative_md": "Individual healthcare provider. One FHIR Practitioner maps to one OMOP provider row. The provider table stores identity (name, NPI, gender, year_of_birth) from Practitioner; specialty and care_site are enriched by PractitionerRole. Clinical event tables carry provider_id FK back to this row.",
-  "implementation_in_project": null,
   "fields": [
     {
       "omop_column": "provider_id",
@@ -21,19 +20,40 @@
         {
           "comment": "IdMapping bidirectional lookup table (FHIR id ↔ OMOP integer)",
           "references": [
-            { "project": "omoponfhir-v54", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPractitioner.java", "notes": "deduplication by providerSourceValue lines 151-168" }
+            {
+              "project": "omoponfhir-v54",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPractitioner.java",
+              "notes": "deduplication by providerSourceValue lines 151-168"
+            }
           ]
         },
         {
           "comment": "Verbatim Practitioner.id cast to integer",
           "references": [
-            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Practitioner.jq", "lines": [16, 31] }
+            {
+              "project": "fhir-to-omop-demo",
+              "kind": "jq",
+              "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Practitioner.jq",
+              "lines": [
+                16,
+                31
+              ]
+            }
           ]
         },
         {
           "comment": "Auto-incrementing sequence",
           "references": [
-            { "project": "fhir-x-omop", "kind": "python", "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/provider.py", "lines": [1, 38] }
+            {
+              "project": "fhir-x-omop",
+              "kind": "python",
+              "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/provider.py",
+              "lines": [
+                1,
+                38
+              ]
+            }
           ]
         }
       ]
@@ -50,13 +70,29 @@
         {
           "comment": "\"family, given\" format",
           "references": [
-            { "project": "omoponfhir-v54", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPractitioner.java", "lines": [331, 355] }
+            {
+              "project": "omoponfhir-v54",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPractitioner.java",
+              "lines": [
+                331,
+                355
+              ]
+            }
           ]
         },
         {
           "comment": "\"given family\" format (space-separated)",
           "references": [
-            { "project": "fhir-x-omop", "kind": "python", "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/provider.py", "lines": [7, 13] }
+            {
+              "project": "fhir-x-omop",
+              "kind": "python",
+              "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/provider.py",
+              "lines": [
+                7,
+                13
+              ]
+            }
           ]
         }
       ]
@@ -72,19 +108,43 @@
         {
           "comment": "Filter identifiers by NPI system URI",
           "references": [
-            { "project": "fhir-x-omop", "kind": "python", "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/provider.py", "lines": [15, 21] }
+            {
+              "project": "fhir-x-omop",
+              "kind": "python",
+              "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/provider.py",
+              "lines": [
+                15,
+                21
+              ]
+            }
           ]
         },
         {
           "comment": "Pre-extracted .npi field from structured input",
           "references": [
-            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Practitioner.jq", "lines": [16, 31] }
+            {
+              "project": "fhir-to-omop-demo",
+              "kind": "jq",
+              "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Practitioner.jq",
+              "lines": [
+                16,
+                31
+              ]
+            }
           ]
         },
         {
           "comment": "identifierFirstRep.value (no NPI system filter)",
           "references": [
-            { "project": "omoponfhir-v54", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPractitioner.java", "lines": [388, 392] }
+            {
+              "project": "omoponfhir-v54",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPractitioner.java",
+              "lines": [
+                388,
+                392
+              ]
+            }
           ]
         }
       ]
@@ -137,20 +197,52 @@
         {
           "comment": "OmopConceptMapping enum — null maps to 8551 (UNKNOWN), not 0",
           "references": [
-            { "project": "omoponfhir-v54", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPractitioner.java", "lines": [378, 386] },
-            { "project": "omoponfhir-v54", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopConceptMapping.java", "lines": [86, 105] }
+            {
+              "project": "omoponfhir-v54",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPractitioner.java",
+              "lines": [
+                378,
+                386
+              ]
+            },
+            {
+              "project": "omoponfhir-v54",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopConceptMapping.java",
+              "lines": [
+                86,
+                105
+              ]
+            }
           ]
         },
         {
           "comment": "Pre-computed gender_concept_id passed as field value",
           "references": [
-            { "project": "fhir-to-omop-demo", "kind": "jq", "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Practitioner.jq", "lines": [16, 31] }
+            {
+              "project": "fhir-to-omop-demo",
+              "kind": "jq",
+              "path": "refs/refs/fhir-to-omop-demo/demo/translate/map/Practitioner.jq",
+              "lines": [
+                16,
+                31
+              ]
+            }
           ]
         },
         {
           "comment": "gender.upper() for source_value only; concept_id not computed",
           "references": [
-            { "project": "fhir-x-omop", "kind": "python", "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/provider.py", "lines": [29, 29] }
+            {
+              "project": "fhir-x-omop",
+              "kind": "python",
+              "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/provider.py",
+              "lines": [
+                29,
+                29
+              ]
+            }
           ]
         }
       ]
@@ -200,13 +292,29 @@
         {
           "comment": "identifierFirstRep.value (first identifier, regardless of system)",
           "references": [
-            { "project": "omoponfhir-v54", "kind": "java", "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPractitioner.java", "lines": [388, 392] }
+            {
+              "project": "omoponfhir-v54",
+              "kind": "java",
+              "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPractitioner.java",
+              "lines": [
+                388,
+                392
+              ]
+            }
           ]
         },
         {
           "comment": "Practitioner.id used verbatim as source value",
           "references": [
-            { "project": "fhir-x-omop", "kind": "python", "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/provider.py", "lines": [26, 26] }
+            {
+              "project": "fhir-x-omop",
+              "kind": "python",
+              "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/provider.py",
+              "lines": [
+                26,
+                26
+              ]
+            }
           ]
         }
       ]
@@ -250,7 +358,9 @@
       ]
     }
   ],
-  "concept_maps": ["gender"],
+  "concept_maps": [
+    "gender"
+  ],
   "references": [
     {
       "project": "fhir-omop-ig",
@@ -262,7 +372,10 @@
       "project": "omoponfhir-v54",
       "kind": "java",
       "path": "refs/refs/omoponfhir-v54-r4/omoponfhir-omopv5-r4-mapping/src/main/java/edu/gatech/chai/omoponfhir/omopv5/r4/mapping/OmopPractitioner.java",
-      "lines": [1, 396],
+      "lines": [
+        1,
+        396
+      ],
       "notes": "Bidirectional. Name formatting (337-354), address->care_site (358-375), gender mapping (378-386), identifier->provider_source_value (388-392), deduplication by providerSourceValue (151-168)."
     },
     {
@@ -275,7 +388,10 @@
       "project": "fhir-x-omop",
       "kind": "python",
       "path": "refs/refs/fhir-x-omop/fhir_x_omop/to_omop/provider.py",
-      "lines": [1, 38],
+      "lines": [
+        1,
+        38
+      ],
       "notes": "Name formatting (7-13), NPI extraction by system (15-21), gender source uppercased (29), year_of_birth (30), specialty fallback to qualification (31)."
     },
     {
@@ -297,12 +413,17 @@
     {
       "case": "Multiple identifiers",
       "handling": "Pick NPI first (system = http://hl7.org/fhir/sid/us-npi), then first identifier. omoponfhir uses identifierFirstRep (line 388).",
-      "implementations": ["omoponfhir-v54", "fhir-x-omop"]
+      "implementations": [
+        "omoponfhir-v54",
+        "fhir-x-omop"
+      ]
     },
     {
       "case": "No PractitionerRole for Practitioner",
       "handling": "specialty_concept_id = 0, care_site_id = null. Provider row is valid but sparse. fhir-x-omop falls back to Practitioner.qualification[0].code for specialty (line 31).",
-      "implementations": ["fhir-x-omop"]
+      "implementations": [
+        "fhir-x-omop"
+      ]
     },
     {
       "case": "Practitioner.gender absent",
@@ -311,12 +432,16 @@
     {
       "case": "Practitioner referenced but not in bundle",
       "handling": "Deferred resolution. Create stub provider with provider_source_value = reference string, populate later. NACHC defaults provider_id to 1.",
-      "implementations": ["NACHC-fhir-to-omop"]
+      "implementations": [
+        "NACHC-fhir-to-omop"
+      ]
     },
     {
       "case": "Duplicate Practitioner (same identifier, different resources)",
       "handling": "Deduplicate by identifier value. omoponfhir searches providerSourceValue column to find existing provider (lines 153-168).",
-      "implementations": ["omoponfhir-v54"]
+      "implementations": [
+        "omoponfhir-v54"
+      ]
     },
     {
       "case": "Name formatting inconsistency",
