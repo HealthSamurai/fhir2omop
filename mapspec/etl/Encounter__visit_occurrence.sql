@@ -84,8 +84,9 @@ FROM staging.encounter_visit v
 LEFT JOIN cdm_ours_fhir.person p
        ON p.person_source_value = regexp_replace(v.subject_ref, '^.*[:/|]', '')
 
+-- performer_ref is 'Practitioner?identifier=…|NPI'. Look up by NPI column.
 LEFT JOIN cdm_ours_fhir.provider pr
-       ON pr.provider_source_value = regexp_replace(v.performer_ref, '^.*[:/|]', '')
+       ON pr.npi = regexp_replace(v.performer_ref, '^.*[:/|]', '')
 
 LEFT JOIN cdm_ours_fhir.care_site cs
        ON cs.care_site_source_value = regexp_replace(v.service_provider_ref, '^.*[:/|]', '')

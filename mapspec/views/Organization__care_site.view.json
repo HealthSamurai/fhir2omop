@@ -2,23 +2,17 @@
   "resourceType": "ViewDefinition",
   "id": "omop-organization-care-site",
   "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-organization-care-site",
-  "version": "0.2.0",
   "name": "OmopOrganizationCareSiteView",
   "title": "Organization → care_site (FHIR-flat, stage 1)",
+  "version": "0.3.0",
   "status": "draft",
   "experimental": true,
-  "description": "Each FHIR Organization maps to one OMOP care_site row representing a healthcare facility or department. Organization.name becomes care_site_name, Organization.type maps to place_of_service_concept_id via OrganizationType vocabulary, and Organization.address resolves to a location row linked via location_id. FHIR Location can also contribute care_site rows in some implementations (see Location__care_site edge). FHIR Organization.partOf hierarchy is flattened -- each level becomes a separate care_site row with no parent linkage.\n\nStage 1 of FHIR→OMOP: produce a flat row keeping source codes per vocabulary. Stage 2 joins vocab.concept to resolve concept_ids.",
   "extension": [
-    {
-      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
-      "valueString": "care_site"
-    },
-    {
-      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
-      "valueString": "Organization__care_site"
-    }
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table", "valueString": "care_site" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",        "valueString": "Organization__care_site" }
   ],
   "resource": "Organization",
+  "description": "Stage 1: one row per Organization. care_site_source_value = Organization.id (UUID) so that Encounter.serviceProvider.reference (which contains the Org UUID after `|` in Synthea) can be resolved by stage 2.",
   "select": [
     {
       "column": [
@@ -26,115 +20,19 @@
           "name": "id",
           "path": "Organization.id",
           "type": "id",
-          "description": "FHIR Organization.id; surrogate OMOP key derived (hash/sequence) downstream.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "care_site_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "surrogate key from hash/sequence/lookup of FHIR id"
-                }
-              ]
-            }
-          ]
+          "description": "Synthea UUID. → care_site_source_value (encounters reference this)."
         },
         {
-          "name": "care_site_name",
+          "name": "name",
           "path": "Organization.name",
           "type": "string",
-          "description": "The name of the care site. Truncate to 255 characters if needed.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "care_site_name"
-                }
-              ]
-            }
-          ]
+          "description": "→ care_site_name."
         },
         {
-          "name": "place_of_service",
-          "path": "Organization.type[0].coding[0]",
-          "type": "CodeableConcept",
-          "description": "High-level characterization of the care site. Should be a concept from the Visit domain. omoponfhir maps via OmopConceptMapping enum (12 codes). 0 if unmapped.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "place_of_service_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "resolve CONCEPT reference; downstream maps to place_of_service_concept_id"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "address_id",
-          "path": "Organization.address",
-          "type": "Address",
-          "description": "Resolved from Organization.address[0] via address lookup-or-create pattern (omoponfhir AddressUtil). fhir-to-omop-demo sets null from Organization; relies on Location resource to populate via a second care_site row. OMOP supports one location per care_site.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "location_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "resolve LOCATION reference; downstream maps to location_id"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "managing_organization_identifier",
-          "path": "Organization.identifier[0].value",
-          "type": "string",
-          "description": "Identifier for traceability and deduplication. Falls back to Organization.name or Organization.id if no identifier present.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "care_site_source_value"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "place_of_service_text",
-          "path": "Organization.type[0]",
-          "type": "string",
-          "description": "Raw organization type code or text before vocabulary mapping.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "place_of_service_source_value"
-                }
-              ]
-            }
-          ]
+          "name": "type_code",
+          "path": "Organization.type.first().coding.first().code",
+          "type": "code",
+          "description": "HL7 organization-type (prov/dept/team/govt/edu/…). → place_of_service_concept_id via small inline lookup."
         }
       ]
     }
