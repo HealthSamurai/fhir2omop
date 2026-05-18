@@ -293,10 +293,18 @@ async function renderEdge(ctx: Context, edge: Edge): Promise<string> {
     // Diff card — lazy-loaded via htmx so the page renders instantly and the
     // heavy diff JOIN happens after first paint. The fragment endpoint
     // (src/diff/$route_$resource_$table_GET.ts) returns the actual card.
+    // The layout sets hx-target="#main-content" + hx-select on <body> for
+    // page boosting. We must hx-disinherit so this lazy fragment replaces
+    // ITSELF (not the whole main content), and hx-select="unset" so the
+    // raw fragment is used as-is.
     parts.push(`
 <div hx-get="/diff/${encodeURIComponent(edge.fhir_resource)}/${encodeURIComponent(edge.omop_table)}"
      hx-trigger="load"
+     hx-target="this"
      hx-swap="outerHTML"
+     hx-select="unset"
+     hx-select-oob="unset"
+     hx-disinherit="*"
      class="mb-6 border border-sky-200 rounded-lg overflow-hidden">
   <div class="flex items-center justify-between px-4 py-2 bg-sky-50 border-b border-sky-200">
     <div class="flex items-center gap-2 text-xs">
