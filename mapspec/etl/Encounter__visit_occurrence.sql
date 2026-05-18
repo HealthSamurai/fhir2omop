@@ -2,10 +2,19 @@
 -- Stage-2 ETL: Encounter (FHIR R4) → visit_occurrence (OMOP CDM v5.3)
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Consumes:
---   • staging.encounter_visit       (output of mapspec/views/Encounter__visit_occurrence.view.json)
---   • cdm_ours_fhir.person          (must be populated first — FK target)
---   • cdm_ours_fhir.provider        (optional FK; null when absent)
---   • cdm_ours_fhir.care_site       (optional FK; null when absent)
+--   • staging.encounter_visit  (output of mapspec/views/Encounter__visit_occurrence.view.json)
+--   • fhir.patient             (orphan check only — its existence proves the Patient is loaded)
+--
+-- Surrogate visit_occurrence_id = hashtextextended(Encounter.id, 0)::bigint.
+-- FKs are inlined as the same hash applied to the extracted identifier — no
+-- JOIN to cdm_ours_fhir.person/provider/care_site. The JOIN to fhir.patient
+-- exists only to drop encounters whose Patient isn't in our loaded universe.
+--
+-- Hash inputs by FK:
+--   • person_id     ← hash(patient UUID extracted from subject.reference)
+--   • provider_id   ← hash(NPI extracted from performer.individual.reference)
+--                     (matches Practitioner__provider's hash(npi) mint)
+--   • care_site_id  ← hash(Org UUID extracted from serviceProvider.reference)
 --
 -- Differences vs ETL-Synthea's insert_visit_occurrence.sql:
 --   • Reference does encounter-rollup (collapse multiple inpatient claim lines
@@ -18,8 +27,11 @@
 -- ─────────────────────────────────────────────────────────────────────────────
 
 SELECT
-    ROW_NUMBER() OVER (ORDER BY v.period_start, v.id)   AS visit_occurrence_id,
-    p.person_id,
+    hashtextextended(v.id, 0)::bigint                    AS visit_occurrence_id,
+
+    -- person_id FK — inline hash, mirrors Patient__person's mint.
+    hashtextextended(regexp_replace(v.subject_ref, '^.*[:/|]', ''), 0)::bigint
+                                                         AS person_id,
 
     -- ActEncounterCode → standard visit_concept_id.
     CASE upper(v.class_code)
@@ -42,8 +54,15 @@ SELECT
 
     32827                                                AS visit_type_concept_id,  -- 'EHR encounter record'
 
-    pr.provider_id,
-    cs.care_site_id,
+    -- provider_id FK — hash extracted NPI. NULL when no performer.
+    CASE WHEN v.performer_ref IS NULL OR v.performer_ref = '' THEN NULL::bigint
+         ELSE hashtextextended(regexp_replace(v.performer_ref, '^.*[:/|]', ''), 0)::bigint
+    END                                                  AS provider_id,
+
+    -- care_site_id FK — hash extracted Org UUID. NULL when no serviceProvider.
+    CASE WHEN v.service_provider_ref IS NULL OR v.service_provider_ref = '' THEN NULL::bigint
+         ELSE hashtextextended(regexp_replace(v.service_provider_ref, '^.*[:/|]', ''), 0)::bigint
+    END                                                  AS care_site_id,
 
     v.id                                                 AS visit_source_value,
     0                                                    AS visit_source_concept_id,
@@ -58,19 +77,9 @@ SELECT
 
 FROM staging.encounter_visit v
 
--- Resolve subject reference → person_id.
--- subject_ref can be 'Patient/UUID', 'urn:uuid:UUID', or
--- 'Patient?identifier=…|UUID'. The trailing identifier is whatever comes
--- after the LAST of '/', ':', or '|'. regexp_replace strips the prefix.
-LEFT JOIN cdm_ours_fhir.person p
-       ON p.person_source_value = regexp_replace(v.subject_ref, '^.*[:/|]', '')
-
--- performer_ref is 'Practitioner?identifier=…|NPI'. Look up by NPI column.
-LEFT JOIN cdm_ours_fhir.provider pr
-       ON pr.npi = regexp_replace(v.performer_ref, '^.*[:/|]', '')
-
-LEFT JOIN cdm_ours_fhir.care_site cs
-       ON cs.care_site_source_value = regexp_replace(v.service_provider_ref, '^.*[:/|]', '')
-
-WHERE p.person_id IS NOT NULL    -- drop encounters whose patient isn't loaded
+-- Orphan filter: only keep encounters whose Patient is loaded in fhir.patient.
+-- This replaces the old `JOIN cdm_ours_fhir.person ... WHERE person_id IS NOT NULL`
+-- check; the existence test is the same, but we no longer borrow the surrogate ID.
+JOIN fhir.patient fp
+  ON fp.id = regexp_replace(v.subject_ref, '^.*[:/|]', '')
 ;

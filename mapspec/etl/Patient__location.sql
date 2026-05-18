@@ -1,8 +1,12 @@
 -- Stage-2 ETL: Patient (FHIR R4) → location (OMOP CDM v5.3)
 -- Reads staging.patient_person, inserts unique addresses into cdm_ours_fhir.location.
+--
+-- Surrogate location_id = hashtextextended(city|state|zip, 0)::bigint.
+-- The SAME expression is used inline by Patient__person.sql to resolve a
+-- person's location_id FK without a JOIN.
 
 SELECT
-    ROW_NUMBER() OVER (ORDER BY city, state, zip)  AS location_id,
+    hashtextextended(zip, 0)::bigint                AS location_id,
     address_1,
     address_2,
     city,

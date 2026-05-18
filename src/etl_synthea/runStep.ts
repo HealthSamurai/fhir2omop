@@ -17,10 +17,11 @@ export default async function (
     ctx: Context,
     opts: { file: string; params: Record<string, string>; verbose?: boolean },
 ): Promise<{ sql: string; ms: number }> {
-    const base = resolve(
-        import.meta.dir, "..", "..",
-        "refs/refs/ETL-Synthea-installed/sql/sql_server",
-    );
+    // Our own editable copy of the ETL-Synthea SQL templates. Originally
+    // sourced from refs/refs/ETL-Synthea-installed/sql/sql_server/cdm_version/v531/
+    // and copied into cdm_loader/ so we can patch them (e.g. switching
+    // ROW_NUMBER surrogate IDs to hash-based deterministic IDs).
+    const base = resolve(import.meta.dir, "..", "..", "cdm_loader");
     const path = opts.file.startsWith("/") ? opts.file : resolve(base, opts.file);
     const raw = await Bun.file(path).text();
     const rendered = render(raw, opts.params);

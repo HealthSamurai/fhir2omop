@@ -41,9 +41,18 @@ code_resolved AS (
           AND std.standard_concept = 'S'
 )
 
+-- Surrogate IDs are deterministic 64-bit hashes:
+--   condition_occurrence_id = hash(Condition.id)
+--   person_id               = hash(patient UUID from subject.reference)
+--   visit_occurrence_id     = hash(Encounter UUID from encounter.reference)
+-- No JOIN to cdm_ours_fhir surrogate tables — the FK is computed from the
+-- same string the upstream ETL hashed. fhir.patient JOIN is purely an
+-- orphan filter.
+
 SELECT
-    ROW_NUMBER() OVER (ORDER BY v.onset_dt, v.id)              AS condition_occurrence_id,
-    p.person_id,
+    hashtextextended(v.id, 0)::bigint                          AS condition_occurrence_id,
+    hashtextextended(regexp_replace(v.subject_ref, '^.*[:/|]', ''), 0)::bigint
+                                                               AS person_id,
 
     COALESCE(cr.std_concept_id, 0)                             AS condition_concept_id,
 
@@ -56,7 +65,10 @@ SELECT
     0                                                          AS condition_status_concept_id,
     v.abatement_string                                         AS stop_reason,
     NULL::bigint                                               AS provider_id,
-    vo.visit_occurrence_id,
+
+    CASE WHEN v.encounter_ref IS NULL OR v.encounter_ref = '' THEN NULL::bigint
+         ELSE hashtextextended(regexp_replace(v.encounter_ref, '^.*[:/|]', ''), 0)::bigint
+    END                                                        AS visit_occurrence_id,
     NULL::bigint                                               AS visit_detail_id,
 
     v.code_value                                               AS condition_source_value,
@@ -66,12 +78,8 @@ SELECT
 FROM staging.condition_occurrence v
 JOIN code_resolved cr ON cr.staging_id = v.id
 
-LEFT JOIN cdm_ours_fhir.person p
-       ON p.person_source_value = regexp_replace(v.subject_ref, '^.*[:/|]', '')
+JOIN fhir.patient fp
+  ON fp.id = regexp_replace(v.subject_ref, '^.*[:/|]', '')
 
-LEFT JOIN cdm_ours_fhir.visit_occurrence vo
-       ON vo.visit_source_value = regexp_replace(v.encounter_ref, '^.*[:/|]', '')
-
-WHERE p.person_id IS NOT NULL                            -- drop orphan rows
-  AND cr.std_domain = 'Condition'                        -- domain routing
+WHERE cr.std_domain = 'Condition'                              -- domain routing
 ;

@@ -1,8 +1,12 @@
 -- Stage-2 ETL: Organization (FHIR R4) → care_site (OMOP CDM v5.3)
 -- Consumes staging.organization_care_site.
 
+-- Surrogate care_site_id = hashtextextended(Organization.id, 0)::bigint.
+-- Encounter.serviceProvider.reference carries the Org UUID; the FK side
+-- uses the same hash inline (no JOIN to cdm_ours_fhir.care_site).
+
 SELECT
-    ROW_NUMBER() OVER (ORDER BY v.id)        AS care_site_id,
+    hashtextextended(v.id, 0)::bigint        AS care_site_id,
     v.name                                   AS care_site_name,
     CASE v.type_code
         WHEN 'prov'  THEN 8940     -- Office (generic outpatient provider)

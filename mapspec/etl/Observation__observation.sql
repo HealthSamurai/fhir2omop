@@ -103,10 +103,12 @@ unit_resolved AS (
        AND c.standard_concept = 'S'
 )
 
--- ─── Final SELECT — shape rows exactly as cdm.observation expects ────────────
+-- ─── Final SELECT — shape rows exactly as cdm_ours_fhir.observation expects ──
+-- Surrogate IDs are deterministic 64-bit hashes; no JOIN to surrogate tables.
 SELECT
-    ROW_NUMBER() OVER (ORDER BY v.id)              AS observation_id,
-    p.person_id,
+    hashtextextended(v.id, 0)::bigint              AS observation_id,
+    hashtextextended(split_part(v.subject_id, '/', -1), 0)::bigint
+                                                   AS person_id,
 
     COALESCE(cr.std_concept_id, 0)                 AS observation_concept_id,
 
@@ -120,8 +122,12 @@ SELECT
     qr.qualifier_concept_id,
     ur.unit_concept_id,
 
-    pr.provider_id,
-    vo.visit_occurrence_id,
+    CASE WHEN v.performer_id IS NULL OR v.performer_id = '' THEN NULL::bigint
+         ELSE hashtextextended(split_part(v.performer_id, '/', -1), 0)::bigint
+    END                                            AS provider_id,
+    CASE WHEN v.encounter_id IS NULL OR v.encounter_id = '' THEN NULL::bigint
+         ELSE hashtextextended(split_part(v.encounter_id, '/', -1), 0)::bigint
+    END                                            AS visit_occurrence_id,
     NULL::bigint                                   AS visit_detail_id,
 
     COALESCE(v.code_value, v.code_text)            AS observation_source_value,
@@ -136,13 +142,8 @@ LEFT JOIN value_resolved     vr ON vr.staging_id = v.id
 LEFT JOIN qualifier_resolved qr ON qr.staging_id = v.id
 LEFT JOIN unit_resolved      ur ON ur.staging_id = v.id
 
-LEFT JOIN cdm.person p
-       ON p.person_source_value = split_part(v.subject_id,   '/', -1)
-LEFT JOIN cdm.visit_occurrence vo
-       ON vo.visit_source_value = split_part(v.encounter_id, '/', -1)
-LEFT JOIN cdm.provider pr
-       ON pr.provider_source_value = split_part(v.performer_id, '/', -1)
+JOIN fhir.patient fp
+  ON fp.id = split_part(v.subject_id, '/', -1)
 
-WHERE p.person_id IS NOT NULL
-  AND cr.std_domain = 'Observation'                                   -- domain routing
+WHERE cr.std_domain = 'Observation'                                   -- domain routing
 ;

@@ -7,8 +7,14 @@
 -- NPI to find the provider. cdm.provider (reference, CSV-side) uses the
 -- Synthea UUID — both are valid; ours preserves the FHIR linkage instead.
 
+-- Surrogate provider_id = hashtextextended(NPI, 0)::bigint.
+-- We hash NPI (not the Practitioner UUID) because Synthea writes
+-- Encounter.participant.individual.reference as 'Practitioner?identifier=…|NPI',
+-- so the FK side extracts NPI from the URL and hashes it too — no JOIN.
+-- Falls back to hash(Practitioner.id) when NPI is NULL.
+
 SELECT
-    ROW_NUMBER() OVER (ORDER BY v.id)        AS provider_id,
+    hashtextextended(coalesce(v.npi, v.id), 0)::bigint  AS provider_id,
     (coalesce(v.family, '') || ', ' || coalesce(v.given, '')) AS provider_name,
     v.npi                                    AS npi,
     NULL::text                               AS dea,

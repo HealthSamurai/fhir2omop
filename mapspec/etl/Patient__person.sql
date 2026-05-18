@@ -14,8 +14,13 @@
 --   • Gender source: us_core_birthsex preferred over Patient.gender.
 -- ─────────────────────────────────────────────────────────────────────────────
 
+-- Surrogate person_id = hashtextextended(Patient.id, 0)::bigint.
+-- The SAME expression is used inline by downstream ETLs (Encounter, Condition,
+-- Observation, …) to resolve the person_id FK from a subject.reference without
+-- a JOIN to cdm_ours_fhir.person.
+
 SELECT
-    ROW_NUMBER() OVER (ORDER BY v.id)              AS person_id,
+    hashtextextended(v.id, 0)::bigint              AS person_id,
 
     -- Gender: prefer birthsex (M/F → 8507/8532), fall back to Patient.gender.
     CASE upper(coalesce(v.us_core_birthsex, ''))
@@ -54,7 +59,11 @@ SELECT
         ELSE 0
     END                                            AS ethnicity_concept_id,
 
-    l.location_id,
+    -- location_id FK: inline hash(zip), mirrors the mint in
+    -- Patient__location.sql and cdm_loader/v531/insert_location.sql.
+    CASE WHEN v.address_zip IS NULL THEN NULL::bigint
+         ELSE hashtextextended(v.address_zip, 0)::bigint
+    END                                            AS location_id,
     NULL::bigint                                   AS provider_id,    -- Synthea: not in Patient
     NULL::bigint                                   AS care_site_id,   -- Synthea: not in Patient
 
@@ -67,8 +76,4 @@ SELECT
     0                                              AS ethnicity_source_concept_id
 
 FROM staging.patient_person v
-LEFT JOIN cdm_ours_fhir.location l
-       ON l.city = v.address_city
-      AND l.state = v.address_state
-      AND l.zip   = v.address_zip
 ;

@@ -20,7 +20,15 @@ export default async function (
         "CommonDataModel/inst/ddl/5.3/postgresql/OMOPCDM_postgresql_5.3_ddl.sql",
     );
     const ddl = await Bun.file(ddlPath).text();
-    const renderedDdl = ddl.split("@cdmDatabaseSchema").join(schema);
+    let renderedDdl = ddl.split("@cdmDatabaseSchema").join(schema);
+
+    // Bump every surrogate `_id` column to BIGINT (concept_id stays INTEGER
+    // since real Athena concept_ids fit in 32 bits). Inserts populate these
+    // with `hashtextextended(source_value, 0)::bigint` — see cdm_loader/v531/.
+    renderedDdl = renderedDdl.replace(
+        /(\b\w+_id)\s+(integer|Integer|INTEGER)\b/g,
+        (m: string, col: string) => /_concept_id$/i.test(col) ? m : `${col} bigint`,
+    );
 
     // 1. Drop & recreate schema
     await ctx.fns.db.query(ctx, { sql: `DROP SCHEMA IF EXISTS ${schema} CASCADE` });

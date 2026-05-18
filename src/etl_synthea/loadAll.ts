@@ -1,9 +1,8 @@
-import runStep from "./runStep";
-import createCdm from "./createCdm";
-import createSyntheaTables from "./createSyntheaTables";
-import loadSyntheaCsv from "./loadSyntheaCsv";
-
 // Full pipeline: Synthea CSV → OMOP CDM v5.3.
+//
+// All sibling fns are invoked through ctx.fns.etl_synthea.* (late-bound)
+// instead of `import` — see CLAUDE.md "Transitive-import staleness" — so
+// editing runStep.ts and `repl.load`-ing it actually takes effect here.
 // Mirrors LoadEventTables.r + CreateMapAndRollupTables.r combined.
 //
 // Step order (locked by ETL-Synthea):
@@ -38,15 +37,15 @@ export default async function (
     log(`config:  cdm=${cdm_schema}  native=${synthea_schema}  csv=${csv_dir}`);
 
     log("1. createCdm");
-    await createCdm(ctx, { cdm_schema });
+    await ctx.fns.etl_synthea.createCdm(ctx, { cdm_schema });
 
     log("2. createSyntheaTables");
-    await createSyntheaTables(ctx, { synthea_schema });
+    await ctx.fns.etl_synthea.createSyntheaTables(ctx, { synthea_schema });
 
     log("3. loadSyntheaCsv (all 18 tables)");
-    await loadSyntheaCsv(ctx, { synthea_schema, csv_dir });
+    await ctx.fns.etl_synthea.loadSyntheaCsv(ctx, { synthea_schema, csv_dir });
 
-    const v531 = "cdm_version/v531";
+    const v531 = "v531";
 
     log("4. CreateVocabMapTables");
     // Reuse already-materialized maps from `cdm.*` (built by the reference run).
@@ -68,10 +67,10 @@ export default async function (
             `${v531}/create_source_to_standard_vocab_map.sql`,
             `${v531}/create_source_to_source_vocab_map.sql`,
         ]) {
-            await runStep(ctx, { file, params, verbose: true });
+            await ctx.fns.etl_synthea.runStep(ctx, { file, params, verbose: true });
         }
     }
-    await runStep(ctx, { file: `${v531}/create_states_map.sql`, params, verbose: true });
+    await ctx.fns.etl_synthea.runStep(ctx, { file: `${v531}/create_states_map.sql`, params, verbose: true });
 
     log("5. CreateVisitRollupTables");
     for (const file of [
@@ -79,7 +78,7 @@ export default async function (
         `${v531}/AAVITable.sql`,
         `${v531}/final_visit_ids.sql`,
     ]) {
-        await runStep(ctx, { file, params, verbose: true });
+        await ctx.fns.etl_synthea.runStep(ctx, { file, params, verbose: true });
     }
 
     log("6. LoadEventTables (19 inserts)");
@@ -104,7 +103,7 @@ export default async function (
         `${v531}/insert_payer_plan_period.sql`,
         `${v531}/insert_cost_v300.sql`,
     ]) {
-        await runStep(ctx, { file, params, verbose: true });
+        await ctx.fns.etl_synthea.runStep(ctx, { file, params, verbose: true });
     }
 
     // Final counts
