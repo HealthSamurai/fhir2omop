@@ -19,61 +19,45 @@
 -- Observation, …) to resolve the person_id FK from a subject.reference without
 -- a JOIN to cdm_ours_fhir.person.
 
+-- All FHIR→OMOP concept resolution goes through ConceptMap tables in cm.*
+-- (materialized from mapspec/profiles/*.cm.json by ctx.fns.conceptmap.materialize).
+-- Gender prefers us-core-birthsex over Patient.gender; both codes live in the
+-- same cm.gender_to_omop table, so a single COALESCE picks the right key.
+--
+-- @relatedArtefact https://fhir2omop.health-samurai.io/ConceptMap/gender-to-omop
+-- @relatedArtefact https://fhir2omop.health-samurai.io/ConceptMap/race-omb-to-omop
+-- @relatedArtefact https://fhir2omop.health-samurai.io/ConceptMap/ethnicity-omb-to-omop
 SELECT
     hashtextextended(v.id, 0)::bigint              AS person_id,
 
-    -- Gender: prefer birthsex (M/F → 8507/8532), fall back to Patient.gender.
-    CASE upper(coalesce(v.us_core_birthsex, ''))
-        WHEN 'M' THEN 8507
-        WHEN 'F' THEN 8532
-        ELSE CASE lower(coalesce(v.gender, ''))
-            WHEN 'male'    THEN 8507
-            WHEN 'female'  THEN 8532
-            WHEN 'other'   THEN 8521
-            WHEN 'unknown' THEN 8551
-            ELSE 0
-        END
-    END                                            AS gender_concept_id,
+    COALESCE(g.concept_id, 0)                      AS gender_concept_id,
 
     EXTRACT(YEAR  FROM v.birth_date::date)::int    AS year_of_birth,
     EXTRACT(MONTH FROM v.birth_date::date)::int    AS month_of_birth,
     EXTRACT(DAY   FROM v.birth_date::date)::int    AS day_of_birth,
     v.birth_date::timestamp                        AS birth_datetime,
 
-    -- Race: full OMB → concept map (all 5 categories + UNK).
-    -- Compare to ETL-Synthea insert_person.sql which only maps 3 of 5.
-    CASE v.race_omb_code
-        WHEN '2106-3' THEN 8527    -- White
-        WHEN '2054-5' THEN 8516    -- Black or African American
-        WHEN '2028-9' THEN 8515    -- Asian
-        WHEN '1002-5' THEN 8657    -- American Indian or Alaska Native
-        WHEN '2076-8' THEN 8557    -- Native Hawaiian or Other Pacific Islander
-        WHEN 'UNK'    THEN 0       -- Unknown — stays 0 (preserves cardinality)
-        ELSE 0
-    END                                            AS race_concept_id,
+    COALESCE(r.concept_id, 0)                      AS race_concept_id,
+    COALESCE(e.concept_id, 0)                      AS ethnicity_concept_id,
 
-    -- Ethnicity: OMB → concept map.
-    CASE v.ethnicity_omb_code
-        WHEN '2135-2' THEN 38003563   -- Hispanic or Latino
-        WHEN '2186-5' THEN 38003564   -- Not Hispanic or Latino
-        ELSE 0
-    END                                            AS ethnicity_concept_id,
-
-    -- location_id FK: inline hash(zip), mirrors the mint in
-    -- Patient__location.sql and cdm_loader/v531/insert_location.sql.
-    CASE WHEN v.address_zip IS NULL THEN NULL::bigint
-         ELSE hashtextextended(v.address_zip, 0)::bigint
-    END                                            AS location_id,
-    NULL::bigint                                   AS provider_id,    -- Synthea: not in Patient
-    NULL::bigint                                   AS care_site_id,   -- Synthea: not in Patient
+    referenceToId(v.location_zip)                  AS location_id,
+    -- generalPractitioner / managingOrganization absent in Synthea, present
+    -- in real-world data. View columns hold bare UUIDs (getReferenceKey()).
+    referenceToId(v.general_practitioner_ref)      AS provider_id,
+    referenceToId(v.managing_organization_ref)     AS care_site_id,
 
     v.id                                           AS person_source_value,
-    coalesce(v.us_core_birthsex, v.gender)         AS gender_source_value,
-    0                                              AS gender_source_concept_id,
+    COALESCE(v.us_core_birthsex, v.gender)         AS gender_source_value,
+    -- source_concept_id == concept_id (no separate OMOP concept for FHIR-side
+    -- source codes — the same Athena Gender/Race/Ethnicity concept covers both).
+    COALESCE(g.concept_id, 0)                      AS gender_source_concept_id,
     v.race_text                                    AS race_source_value,
-    0                                              AS race_source_concept_id,
+    COALESCE(r.concept_id, 0)                      AS race_source_concept_id,
     v.ethnicity_text                               AS ethnicity_source_value,
-    0                                              AS ethnicity_source_concept_id
+    COALESCE(e.concept_id, 0)                      AS ethnicity_source_concept_id
 
 FROM staging.patient_person v
+LEFT JOIN cm.gender_to_omop        g ON g.source_code = COALESCE(v.us_core_birthsex, v.gender)
+LEFT JOIN cm.race_omb_to_omop      r ON r.source_code = v.race_omb_code
+LEFT JOIN cm.ethnicity_omb_to_omop e ON e.source_code = v.ethnicity_omb_code
 ;

@@ -121,6 +121,7 @@ SELECT
     -- effective[x] coalesce: dateTime → Period.start.
     COALESCE(v.effective_dt, v.effective_period_start)::date      AS measurement_date,
     COALESCE(v.effective_dt, v.effective_period_start)::timestamp AS measurement_datetime,
+    NULL::varchar                                  AS measurement_time,
 
     32817                                          AS measurement_type_concept_id,  -- "EHR"
     om.concept_id                                  AS operator_concept_id,
@@ -142,7 +143,10 @@ SELECT
     COALESCE(v.code_value, v.code_text)            AS measurement_source_value,
     COALESCE(cr.src_concept_id, 0)                 AS measurement_source_concept_id,
     v.value_unit_text                              AS unit_source_value,
-    v.value_text                                   AS value_source_value
+    NULL::integer                                  AS unit_source_concept_id,
+    v.value_text                                   AS value_source_value,
+    NULL::bigint                                   AS measurement_event_id,
+    NULL::integer                                  AS meas_event_field_concept_id
 
 FROM staging.obs_meas_view v
 JOIN code_resolved   cr ON cr.staging_id = v.id

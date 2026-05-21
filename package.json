@@ -5,6 +5,7 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "csv-parse": "^6.2.1",
     "fhirpath": "^4.10.1"
   }
 }

@@ -3,6 +3,12 @@ declare global {
     type Context = import("./$type_Context").Context;
 
     interface FnsRegistry {
+        _test_hashline_edit: {
+        nearby: typeof import("../.hyper/_test_hashline_edit/nearby").default;
+        };
+        conceptmap: {
+        materialize: typeof import("./conceptmap/materialize").default;
+        };
         db: {
         connect: typeof import("./db/connect").default;
         query: typeof import("./db/query").default;
@@ -51,6 +57,9 @@ declare global {
         mermaid: typeof import("./markdown/mermaid").default;
         render: typeof import("./markdown/render").default;
         };
+        omop: {
+        byTable: typeof import("./omop/byTable").default;
+        };
         profiles: {
         byId: typeof import("./profiles/byId").default;
         load: typeof import("./profiles/load").default;
@@ -84,6 +93,9 @@ declare global {
     }
 
     namespace types {
+        namespace omop {
+            type Field = import("./omop/$type_Field").Field;
+        }
         namespace profiles {
             type Profile = import("./profiles/$type_Profile").Profile;
             type ValueSet = import("./profiles/$type_ValueSet").ValueSet;

@@ -16,16 +16,15 @@ export default async function (
     profiles: types.profiles.Profile[];
     valuesets: types.profiles.ValueSet[];
     views: types.profiles.ViewDefinition[];
+    conceptmaps: any[];
 }> {
-    const cached = (ctx.state as any).profiles;
-    if (cached) return cached;
-
     const profilesDir = resolve(import.meta.dir, "..", "..", "mapspec", "profiles");
     const viewsDir = resolve(import.meta.dir, "..", "..", "mapspec", "views");
 
     const profiles: types.profiles.Profile[] = [];
     const valuesets: types.profiles.ValueSet[] = [];
     const views: types.profiles.ViewDefinition[] = [];
+    const conceptmaps: any[] = [];
 
     for (const name of readdirSync(profilesDir)) {
         if (!name.endsWith(".json")) continue;
@@ -42,6 +41,8 @@ export default async function (
                 domain: readExt(raw.extension, EXT_DOMAIN),
                 expansionSql: readExt(raw.extension, EXT_SQL),
             });
+        } else if (raw.resourceType === "ConceptMap") {
+            conceptmaps.push(raw);
         }
     }
 
@@ -63,7 +64,6 @@ export default async function (
     valuesets.sort((a, b) => a.id.localeCompare(b.id));
     views.sort((a, b) => a.id.localeCompare(b.id));
 
-    const result = { profiles, valuesets, views };
-    (ctx.state as any).profiles = result;
-    return result;
+    conceptmaps.sort((a, b) => a.id.localeCompare(b.id));
+    return { profiles, valuesets, views, conceptmaps };
 }

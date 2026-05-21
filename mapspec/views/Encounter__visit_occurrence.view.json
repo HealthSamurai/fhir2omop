@@ -24,7 +24,7 @@
         },
         {
           "name": "subject_ref",
-          "path": "Encounter.subject.reference",
+          "path": "Encounter.subject.getReferenceKey()",
           "type": "string",
           "description": "Reference to the Patient (typically 'urn:uuid:UUID'). Stage 2 takes the trailing UUID segment. → person_id."
         },
@@ -66,19 +66,19 @@
         },
         {
           "name": "service_provider_ref",
-          "path": "Encounter.serviceProvider.reference",
+          "path": "Encounter.serviceProvider.getReferenceKey()",
           "type": "string",
           "description": "Organization reference. Stage 2 resolves to care_site_id via the trailing UUID segment."
         },
         {
           "name": "performer_ref",
-          "path": "Encounter.participant.first().individual.reference",
+          "path": "Encounter.participant.first().individual.getReferenceKey()",
           "type": "string",
           "description": "First participant (Practitioner). → provider_id."
         },
         {
           "name": "part_of_ref",
-          "path": "Encounter.partOf.reference",
+          "path": "Encounter.partOf.getReferenceKey()",
           "type": "string",
           "description": "Parent Encounter — feeds visit_detail in a fuller pipeline."
         },

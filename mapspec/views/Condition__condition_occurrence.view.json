@@ -24,13 +24,13 @@
         },
         {
           "name": "subject_ref",
-          "path": "Condition.subject.reference",
+          "path": "Condition.subject.getReferenceKey()",
           "type": "string",
           "description": "Reference to the Patient. Stage 2 takes trailing UUID via regexp_replace. → person_id."
         },
         {
           "name": "encounter_ref",
-          "path": "Condition.encounter.reference",
+          "path": "Condition.encounter.getReferenceKey()",
           "type": "string",
           "description": "Reference to the encounter where this condition was diagnosed/recorded. → visit_occurrence_id."
         },

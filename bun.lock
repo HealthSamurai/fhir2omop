@@ -5,6 +5,7 @@
     "": {
       "name": "fhir2omop",
       "dependencies": {
+        "csv-parse": "^6.2.1",
         "fhirpath": "^4.10.1",
       },
       "peerDependencies": {
@@ -27,7 +28,7 @@
 
     "core-util-is": ["core-util-is@1.0.3", "", {}, "sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ=="],
 
-    "csv-parse": ["csv-parse@4.16.3", "", {}, "sha512-cO1I/zmz4w2dcKHVvpCr7JVRu8/FymG5OEpmvsZYlccYolPBLoVGKUHgNoc4ZGkFeFlWGEDmMyBM+TTqRdW/wg=="],
+    "csv-parse": ["csv-parse@6.2.1", "", {}, "sha512-LRLMV+UCyfMokp8Wb411duBf1gaBKJfOfBWU9eHMJ+b+cJYZsNu3AFmjJf3+yPGd59Exz1TsMjaSFyxnYB9+IQ=="],
 
     "csv-stringify": ["csv-stringify@1.1.2", "", { "dependencies": { "lodash.get": "~4.4.2" } }, "sha512-3NmNhhd+AkYs5YtM1GEh01VR6PKj6qch2ayfQaltx5xpcAdThjnbbI5eT8CzRVpXfGKAxnmrSYLsNl/4f3eWiw=="],
 
@@ -78,5 +79,7 @@
     "util-deprecate": ["util-deprecate@1.0.2", "", {}, "sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw=="],
 
     "xmldoc": ["xmldoc@0.4.0", "", { "dependencies": { "sax": "~1.1.1" } }, "sha512-rJ/+/UzYCSlFNuAzGuRyYgkH2G5agdX1UQn4+5siYw9pkNC3Hu/grYNDx/dqYLreeSjnY5oKg74CMBKxJHSg6Q=="],
+
+    "@lhncbc/ucum-lhc/csv-parse": ["csv-parse@4.16.3", "", {}, "sha512-cO1I/zmz4w2dcKHVvpCr7JVRu8/FymG5OEpmvsZYlccYolPBLoVGKUHgNoc4ZGkFeFlWGEDmMyBM+TTqRdW/wg=="],
   }
 }

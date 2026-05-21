@@ -1,0 +1,27 @@
+{
+  "resourceType": "ConceptMap",
+  "id": "race-omb-to-omop",
+  "url": "https://fhir2omop.health-samurai.io/ConceptMap/race-omb-to-omop",
+  "version": "0.1.0",
+  "name": "RaceOmbToOmop",
+  "title": "US Core race ombCategory → OMOP race_concept_id",
+  "status": "active",
+  "experimental": true,
+  "description": "Maps the 5 OMB race ombCategory codes (CDC Race & Ethnicity code system) plus UNK to OMOP standard race_concept_id values. Unmatched values map to 0 (No matching concept) per OHDSI convention.",
+  "sourceUri": "urn:oid:2.16.840.1.113883.6.238",
+  "targetUri": "https://athena.ohdsi.org/search-terms/terms?domain=Race",
+  "group": [
+    {
+      "source": "urn:oid:2.16.840.1.113883.6.238",
+      "target": "https://athena.ohdsi.org/search-terms/terms?domain=Race",
+      "element": [
+        { "code": "2106-3", "display": "White",                                       "target": [{ "code": "8527", "display": "White",                                       "equivalence": "equivalent" }] },
+        { "code": "2054-5", "display": "Black or African American",                   "target": [{ "code": "8516", "display": "Black or African American",                   "equivalence": "equivalent" }] },
+        { "code": "2028-9", "display": "Asian",                                       "target": [{ "code": "8515", "display": "Asian",                                       "equivalence": "equivalent" }] },
+        { "code": "1002-5", "display": "American Indian or Alaska Native",            "target": [{ "code": "8657", "display": "American Indian or Alaska Native",            "equivalence": "equivalent" }] },
+        { "code": "2076-8", "display": "Native Hawaiian or Other Pacific Islander",   "target": [{ "code": "8557", "display": "Native Hawaiian or Other Pacific Islander",   "equivalence": "equivalent" }] },
+        { "code": "UNK",    "display": "Unknown",                                     "target": [{ "code": "8552", "display": "Unknown",                                     "equivalence": "equivalent" }] }
+      ]
+    }
+  ]
+}

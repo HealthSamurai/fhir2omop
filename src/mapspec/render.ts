@@ -270,25 +270,40 @@ async function renderEdge(ctx: Context, edge: Edge): Promise<string> {
         parts.push(await renderProfileCard(ctx, profile));
     }
 
+    // OMOP target table (Stage 2 destination — shown above the view to give
+    // the FHIRPath columns a target to map against).
+    const omopFields = await ctx.fns.omop.byTable(ctx, { name: edge.omop_table });
+    if (omopFields.length > 0) {
+        parts.push(renderOmopTableCard(edge.omop_table, omopFields));
+    }
+
     // ViewDefinition (stage-1 flattener for this edge)
     const view = await ctx.fns.profiles.viewForEdge(ctx, {
         resource: edge.fhir_resource,
         table: edge.omop_table,
     });
+    const allCms = ((await ctx.fns.profiles.load(ctx)) as any).conceptmaps ?? [];
+    const cmByUrl = new Map<string, any>(allCms.map((c: any) => [c.url, c]));
     if (view) {
         parts.push(renderViewCard(view));
     }
 
-    // Stage-2 demo ETL SQL (if a sidecar file exists)
+    // Stage-2 ETL SQL (declares ConceptMap dependencies via `@relatedArtefact`).
     const etlSqlPath = resolve(
         import.meta.dir, "..", "..", "mapspec", "etl",
         `${edge.fhir_resource}__${edge.omop_table}.sql`,
     );
     const etlFile = Bun.file(etlSqlPath);
-    if (await etlFile.exists()) {
-        const sql = await etlFile.text();
-        parts.push(renderEtlSqlCard(sql, `${edge.fhir_resource}__${edge.omop_table}.sql`));
+    let etlSql = "";
+    if (await etlFile.exists()) etlSql = await etlFile.text();
+
+    // ConceptMaps referenced by `-- @relatedArtefact <url>` comments in SQL.
+    for (const ref of parseRelatedArtefacts(etlSql)) {
+        const cm = cmByUrl.get(ref);
+        if (cm) parts.push(renderConceptMapCard(cm));
     }
+
+    if (etlSql) parts.push(renderEtlSqlCard(etlSql, `${edge.fhir_resource}__${edge.omop_table}.sql`));
 
     // Diff card — lazy-loaded via htmx so the page renders instantly and the
     // heavy diff JOIN happens after first paint. The fragment endpoint
@@ -436,20 +451,41 @@ async function renderProfileCard(ctx: Context, p: types.profiles.Profile): Promi
         ? await ctx.fns.profiles.valueSetByUrl(ctx, { url: codeEl.binding.valueSet })
         : undefined;
 
-    const rows = elements.map((el: any) => {
+    const rows = elements.filter((el: any) => !(el.slicing && !el.sliceName)).map((el: any) => {
         const card = (el.min ?? "") !== "" || el.max
             ? `<span class="font-mono text-[11px] text-gray-700">${el.min ?? ""}..${el.max || "*"}</span>`
             : "";
         const ms = el.mustSupport ? `<span class="ml-1 px-1 py-0.5 rounded bg-blue-50 text-blue-700 text-[10px] font-medium">MS</span>` : "";
-        const types = (el.type ?? []).map((t: any) => t.code).join("|");
+
+        // Path: show sliceName when set, dim discriminator-only rows
+        const pathHtml = el.sliceName
+            ? `${esc(el.path)}<span class="text-pink-700">:${esc(el.sliceName)}</span>`
+            : esc(el.path);
+
+        // Type: show code; if type has profile, link it
+        const typeParts = (el.type ?? []).map((t: any) => {
+            const code = esc(t.code);
+            const profile = (t.profile ?? [])[0];
+            if (profile) {
+                const short = profile.split("/").pop()!.replace(/^StructureDefinition$/, "Ext");
+                return `${code}<a href="${profile}" target="_blank" class="ml-1 text-[10px] text-pink-700 hover:underline" title="${esc(profile)}">${esc(short)}</a>`;
+            }
+            return code;
+        });
+        const types = typeParts.join("|");
+
         const bindingHtml = el.binding
             ? `<a href="${el.binding.valueSet.startsWith("https://fhir2omop") ? `/profiles/${enc(el.binding.valueSet.split("/").pop()!)}` : el.binding.valueSet}" class="text-purple-700 hover:underline">${esc(shortVsUrl(el.binding.valueSet))}</a><span class="text-[10px] uppercase ml-1 text-gray-500">${esc(el.binding.strength)}</span>`
             : (el.fixedCode || el.fixedUri ? `<span class="text-[11px] font-mono text-amber-700">fixed: ${esc(el.fixedCode || el.fixedUri)}</span>` : "");
+        const typeBindingParts: string[] = [];
+        if (types) typeBindingParts.push(`<span class="font-mono text-gray-600">${types}</span>`);
+        if (bindingHtml) typeBindingParts.push(bindingHtml);
+        const typeBindingHtml = typeBindingParts.join(`<span class="mx-1 text-gray-300">·</span>`);
+
         return `<tr class="border-t border-gray-100 align-top">
-  <td class="px-2 py-1 font-mono text-[11px] text-gray-800">${esc(el.path)}</td>
+  <td class="px-2 py-1 font-mono text-[11px] text-gray-800">${pathHtml}</td>
   <td class="px-2 py-1 text-[11px]">${card}${ms}</td>
-  <td class="px-2 py-1 font-mono text-[11px] text-gray-600">${esc(types)}</td>
-  <td class="px-2 py-1 text-[11px]">${bindingHtml}</td>
+  <td class="px-2 py-1 text-[11px]">${typeBindingHtml}</td>
   <td class="px-2 py-1 text-[11px] text-gray-500 leading-snug">${esc(el.comment ?? el.short ?? "")}</td>
 </tr>`;
     }).join("");
@@ -474,8 +510,7 @@ async function renderProfileCard(ctx: Context, p: types.profiles.Profile): Promi
       <tr>
         <th class="px-2 py-1.5 text-left font-medium">Path</th>
         <th class="px-2 py-1.5 text-left font-medium">Card</th>
-        <th class="px-2 py-1.5 text-left font-medium">Type</th>
-        <th class="px-2 py-1.5 text-left font-medium">Binding / Fixed</th>
+        <th class="px-2 py-1.5 text-left font-medium">Type / Binding / Fixed</th>
         <th class="px-2 py-1.5 text-left font-medium">Comment</th>
       </tr>
     </thead>
@@ -484,14 +519,161 @@ async function renderProfileCard(ctx: Context, p: types.profiles.Profile): Promi
 </div>`;
 }
 
-function renderViewCard(v: types.profiles.ViewDefinition): string {
-    const cols = v.select?.[0]?.column ?? [];
-    const rows = cols.slice(0, 30).map((c) => `<tr class="border-t border-gray-100">
-  <td class="px-2 py-1 font-mono text-[11px] font-semibold text-gray-900 whitespace-nowrap">${esc(c.name)}</td>
-  <td class="px-2 py-1 font-mono text-[11px] text-blue-700">${esc(c.path)}</td>
+function renderOmopTableCard(table: string, fields: types.omop.Field[]): string {
+    const rows = fields.map((f) => {
+        const isSource = /_source_/.test(f.name);
+        const pk = f.isPrimaryKey
+            ? `<span class="ml-1 px-1 py-0.5 rounded bg-yellow-100 text-yellow-800 text-[9px] font-semibold">PK</span>`
+            : "";
+        const req = f.required
+            ? `<span class="text-red-600 font-bold" title="NOT NULL">*</span>`
+            : `<span class="text-gray-300">·</span>`;
+        const fk = f.fkTable
+            ? `<a href="/table/${enc(f.fkTable.toLowerCase())}" class="font-mono text-[11px] ${isSource ? "text-gray-400" : "text-blue-700"} hover:underline">${esc(f.fkTable.toLowerCase())}${f.fkField ? "." + esc(f.fkField.toLowerCase()) : ""}</a>`
+            : "";
+        const guidance = f.userGuidance
+            ? `<div class="text-[10px] ${isSource ? "text-gray-400" : "text-gray-500"} leading-snug">${esc(f.userGuidance.slice(0, 200))}${f.userGuidance.length > 200 ? "…" : ""}</div>`
+            : "";
+        const rowCls = isSource ? "text-gray-400" : "";
+        const nameCls = isSource ? "text-gray-400" : "text-gray-900";
+        const typeCls = isSource ? "text-gray-400" : "text-purple-700";
+        return `<tr class="border-t border-gray-100 align-top ${rowCls}">
+  <td class="px-2 py-1 font-mono text-[11px] font-semibold ${nameCls} whitespace-nowrap">${esc(f.name)}${pk}</td>
+  <td class="px-2 py-1 text-center">${req}</td>
+  <td class="px-2 py-1 font-mono text-[11px] ${typeCls} whitespace-nowrap">${esc(f.type)}</td>
+  <td class="px-2 py-1 whitespace-nowrap">${fk}</td>
+  <td class="px-2 py-1 text-[11px]">${guidance}</td>
+</tr>`;
+    }).join("");
+
+    return `
+<div class="mb-6 border border-indigo-200 rounded-lg overflow-hidden">
+  <div class="flex items-center justify-between px-4 py-2 bg-indigo-50 border-b border-indigo-200">
+    <div class="flex items-center gap-2 text-xs">
+      <span class="text-[10px] uppercase tracking-wider text-indigo-800 font-semibold">OMOP CDM v5.4 target</span>
+      <a href="/table/${enc(table)}" class="font-mono text-sm text-indigo-900 hover:underline">${esc(table)}</a>
+    </div>
+    <span class="text-[11px] text-indigo-700">${fields.length} columns · <span class="text-red-600 font-bold">*</span> = required</span>
+  </div>
+  <table class="w-full bg-white text-[11px]">
+    <thead class="bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500 border-b border-gray-200">
+      <tr>
+        <th class="px-2 py-1.5 text-left font-medium w-56">column</th>
+        <th class="px-2 py-1.5 text-center font-medium w-8">req</th>
+        <th class="px-2 py-1.5 text-left font-medium w-32">type</th>
+        <th class="px-2 py-1.5 text-left font-medium w-48">FK</th>
+        <th class="px-2 py-1.5 text-left font-medium">guidance</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+</div>`;
+}
+
+// Parse `-- @relatedArtefact <url>` directives from a stage-2 SQL file.
+function parseRelatedArtefacts(sql: string): string[] {
+    const out: string[] = [];
+    const re = /--\s*@relatedArtefact\s+(\S+)/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(sql)) !== null) {
+        if (!out.includes(m[1]!)) out.push(m[1]!);
+    }
+    return out;
+}
+
+function renderConceptMapCard(cm: any): string {
+    const groups = cm.group ?? [];
+    let total = 0;
+    const groupHtml = groups.map((g: any) => {
+        const elements = g.element ?? [];
+        total += elements.length;
+        const rows = elements.map((el: any) => {
+            const targets = (el.target ?? []).map((t: any) => `<span class="font-mono text-emerald-700">${esc(t.code)}</span> <span class="text-[10px] text-gray-500">${esc(t.display ?? "")}</span>${t.equivalence && t.equivalence !== "equivalent" ? `<span class="ml-1 px-1 rounded bg-amber-100 text-amber-800 text-[9px]">${esc(t.equivalence)}</span>` : ""}`).join(`<span class="mx-1 text-gray-300">,</span>`);
+            return `<tr class="border-t border-gray-100">
+  <td class="px-2 py-1 font-mono text-[11px] text-rose-700 whitespace-nowrap">${esc(el.code)}</td>
+  <td class="px-2 py-1 text-[10px] text-gray-500">${esc(el.display ?? "")}</td>
+  <td class="px-2 py-1 text-[10px] text-gray-400">→</td>
+  <td class="px-2 py-1 text-[11px]">${targets}</td>
+</tr>`;
+        }).join("");
+        const groupHdr = `<tr class="bg-rose-50/40"><td colspan="4" class="px-2 py-1 text-[10px] text-rose-800"><span class="uppercase tracking-wider font-semibold mr-2">group</span><code class="font-mono">${esc(shortVsUrl(g.source ?? "?"))}</code><span class="mx-2 text-gray-400">→</span><code class="font-mono text-emerald-800">${esc(shortVsUrl(g.target ?? "?"))}</code></td></tr>`;
+        return groupHdr + rows;
+    }).join("");
+
+    return `
+<div class="mb-6 border border-rose-200 rounded-lg overflow-hidden" id="cm-${enc(cm.id)}">
+  <div class="flex items-center justify-between px-4 py-2 bg-rose-50 border-b border-rose-200">
+    <div class="flex items-center gap-2 text-xs">
+      <span class="text-[10px] uppercase tracking-wider text-rose-800 font-semibold">ConceptMap</span>
+      <code class="font-mono text-sm text-rose-900">${esc(cm.id)}</code>
+      ${cm.title ? `<span class="text-[11px] text-gray-600">— ${esc(cm.title)}</span>` : ""}
+    </div>
+    <span class="text-[11px] text-rose-700">${total} mapping${total === 1 ? "" : "s"}${groups.length > 1 ? ` · ${groups.length} groups` : ""}</span>
+  </div>
+  ${cm.description ? `<div class="px-4 py-2 text-[11px] text-gray-600 bg-rose-25 border-b border-rose-100">${esc(cm.description)}</div>` : ""}
+  <table class="w-full bg-white text-[11px]">
+    <thead class="bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500 border-b border-gray-200">
+      <tr>
+        <th class="px-2 py-1.5 text-left font-medium w-28">source code</th>
+        <th class="px-2 py-1.5 text-left font-medium">source display</th>
+        <th class="px-2 py-1.5 text-left font-medium w-6"></th>
+        <th class="px-2 py-1.5 text-left font-medium">target</th>
+      </tr>
+    </thead>
+    <tbody>${groupHtml}</tbody>
+  </table>
+</div>`;
+}
+
+function renderViewCard(v: any): string {
+    const consts: any[] = v.constant ?? [];
+
+    const highlightConst = (path: string): string => {
+        let html = esc(path);
+        for (const c of consts) {
+            const re = new RegExp("%" + c.name + "\\b", "g");
+            html = html.replace(re, `<span class="text-pink-700 font-semibold" title="${esc(c.valueString ?? c.valueInteger ?? "")}">%${esc(c.name)}</span>`);
+        }
+        return html;
+    };
+
+    // Walk nested select tree; emit a section per non-empty group, headed by
+    // the forEach / forEachOrNull / unionAll iterator if present.
+    let totalCols = 0;
+    const sections: string[] = [];
+    const visit = (sel: any, depth: number, parentLabel?: string) => {
+        const label =
+            sel.forEachOrNull ? { kind: "forEachOrNull", expr: sel.forEachOrNull }
+            : sel.forEach       ? { kind: "forEach",       expr: sel.forEach }
+            : sel.unionAll      ? { kind: "unionAll",      expr: null }
+            : undefined;
+
+        const cols = sel.column ?? [];
+        totalCols += cols.length;
+        if (cols.length > 0) {
+            const rows = cols.map((c: any) => `<tr class="border-t border-gray-100">
+  <td class="px-2 py-1 font-mono text-[11px] font-semibold text-gray-900 whitespace-nowrap" style="padding-left:${0.5 + depth * 1}rem">${esc(c.name)}</td>
+  <td class="px-2 py-1 font-mono text-[11px] text-blue-700">${highlightConst(c.path)}</td>
   <td class="px-2 py-1 text-[10px] uppercase text-gray-500">${esc(c.type ?? "")}</td>
 </tr>`).join("");
-    const more = cols.length > 30 ? `<tr><td colspan="3" class="px-2 py-1 text-[11px] text-gray-500 italic">… ${cols.length - 30} more — see full ViewDefinition</td></tr>` : "";
+            const headerRow = label
+                ? `<tr class="bg-amber-50/60"><td colspan="3" class="px-2 py-1 text-[11px] text-amber-800" style="padding-left:${0.5 + depth * 1}rem"><span class="text-[10px] uppercase tracking-wider font-semibold mr-2">${esc(label.kind)}</span>${label.expr ? `<code class="font-mono text-amber-900">${highlightConst(label.expr)}</code>` : ""}${parentLabel ? `<span class="ml-2 text-[10px] text-gray-500">(nested in ${esc(parentLabel)})</span>` : ""}</td></tr>`
+                : "";
+            sections.push(headerRow + rows);
+        }
+        for (const child of sel.select ?? []) visit(child, depth + 1, label?.kind);
+    };
+    for (const top of v.select ?? []) visit(top, 0);
+
+    const constRows = consts.map((c) => {
+        const valueKey = Object.keys(c).find((k) => k.startsWith("value")) ?? "valueString";
+        const val = (c as any)[valueKey];
+        return `<tr class="border-t border-orange-100">
+  <td class="px-2 py-1 font-mono text-[11px] font-semibold text-pink-700 whitespace-nowrap">%${esc(c.name)}</td>
+  <td class="px-2 py-1 text-[10px] uppercase text-gray-500 whitespace-nowrap">${esc(valueKey.replace(/^value/, "").toLowerCase())}</td>
+  <td class="px-2 py-1 font-mono text-[11px] text-gray-700 break-all">${esc(String(val))}</td>
+</tr>`;
+    }).join("");
 
     return `
 <div class="mb-6 border border-orange-200 rounded-lg overflow-hidden">
@@ -500,8 +682,15 @@ function renderViewCard(v: types.profiles.ViewDefinition): string {
       <span class="text-[10px] uppercase tracking-wider text-orange-800 font-semibold">ViewDefinition (Stage 1 flattener)</span>
       <a href="/profiles/${enc(v.id)}" class="font-mono text-sm text-orange-900 hover:underline">${esc(v.id)}</a>
     </div>
-    <span class="text-[11px] text-orange-700">${cols.length} columns · resource <code class="bg-white px-1 rounded">${esc(v.resource)}</code></span>
+    <span class="text-[11px] text-orange-700">${totalCols} columns${consts.length ? ` · ${consts.length} variable${consts.length === 1 ? "" : "s"}` : ""} · resource <code class="bg-white px-1 rounded">${esc(v.resource)}</code></span>
   </div>
+  ${consts.length ? `
+  <div class="bg-orange-25 border-b border-orange-100">
+    <div class="px-4 py-1 text-[10px] uppercase tracking-wider text-orange-700 font-medium bg-orange-50/40">Variables (constant)</div>
+    <table class="w-full bg-white text-[11px]">
+      <tbody>${constRows}</tbody>
+    </table>
+  </div>` : ""}
   <table class="w-full bg-white text-[11px]">
     <thead class="bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500 border-b border-gray-200">
       <tr>
@@ -510,7 +699,7 @@ function renderViewCard(v: types.profiles.ViewDefinition): string {
         <th class="px-2 py-1.5 text-left font-medium w-24">type</th>
       </tr>
     </thead>
-    <tbody>${rows}${more}</tbody>
+    <tbody>${sections.join("")}</tbody>
   </table>
 </div>`;
 }

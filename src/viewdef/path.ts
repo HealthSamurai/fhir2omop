@@ -19,7 +19,15 @@ function getResourceKey(nodes: any[]): any[] {
 function getReferenceKey(nodes: any[], opts?: { name?: string }): any[] {
     const resource = opts?.name;
     return nodes.flatMap((node) => {
-        const parts = node.reference.replaceAll("//", "").split("/_history")[0].split("/");
+        const ref: string = node.reference;
+        if (!ref) return [];
+        // urn:uuid:xxx / urn:oid:xxx — Bundle-internal references; key is the
+        // value after the last colon (no resource type to filter on).
+        if (ref.startsWith("urn:")) {
+            const key = ref.slice(ref.lastIndexOf(":") + 1);
+            return resource ? [] : [key];
+        }
+        const parts = ref.replaceAll("//", "").split("/_history")[0].split("/");
         const type = parts[parts.length - 2];
         const key = parts[parts.length - 1];
         if (!resource) return [key];

@@ -107,7 +107,7 @@ value_resolved AS (
            AND c1.concept_code  = v.value_as
          LIMIT 1
     ) loinc_v ON true
-),
+)
 
 -- ─── Assemble final OMOP measurement row ─────────────────────────────────────
 SELECT
@@ -120,6 +120,7 @@ SELECT
 
     v.measurement_date::date,
     v.measurement_datetime::timestamp,
+    NULL::varchar                                  AS measurement_time,
 
     -- DiagnosticReport is a report-level summary; OMOP type concept for
     -- "Lab result" / "Lab report" — 32856 ("Lab") is closest.
@@ -146,7 +147,10 @@ SELECT
         AS measurement_source_concept_id,
 
     NULL::varchar                                  AS unit_source_value,
-    v.value_text                                   AS value_source_value
+    NULL::integer                                  AS unit_source_concept_id,
+    v.value_text                                   AS value_source_value,
+    NULL::bigint                                   AS measurement_event_id,
+    NULL::integer                                  AS meas_event_field_concept_id
 
 FROM staging.dr_meas_view v
 JOIN      code_resolved  cr ON cr.staging_id = v.id

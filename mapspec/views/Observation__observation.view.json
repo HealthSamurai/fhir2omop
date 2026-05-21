@@ -30,19 +30,19 @@
         },
         {
           "name": "subject_id",
-          "path": "Observation.subject.reference",
+          "path": "Observation.subject.getReferenceKey()",
           "type": "string",
           "description": "FHIR reference string. → person_id by trailing segment."
         },
         {
           "name": "encounter_id",
-          "path": "Observation.encounter.reference",
+          "path": "Observation.encounter.getReferenceKey()",
           "type": "string",
           "description": "FHIR encounter reference. → visit_occurrence_id."
         },
         {
           "name": "performer_id",
-          "path": "Observation.performer.first().reference",
+          "path": "Observation.performer.first().getReferenceKey()",
           "type": "string",
           "description": "First performer reference. → provider_id."
         },

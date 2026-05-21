@@ -1,0 +1,23 @@
+{
+  "resourceType": "ConceptMap",
+  "id": "ethnicity-omb-to-omop",
+  "url": "https://fhir2omop.health-samurai.io/ConceptMap/ethnicity-omb-to-omop",
+  "version": "0.1.0",
+  "name": "EthnicityOmbToOmop",
+  "title": "US Core ethnicity ombCategory → OMOP ethnicity_concept_id",
+  "status": "active",
+  "experimental": true,
+  "description": "Maps the 2 OMB ethnicity ombCategory codes to OMOP standard ethnicity_concept_id values. Unmatched (incl. UNK) maps to 0 per OHDSI convention.",
+  "sourceUri": "urn:oid:2.16.840.1.113883.6.238",
+  "targetUri": "https://athena.ohdsi.org/search-terms/terms?domain=Ethnicity",
+  "group": [
+    {
+      "source": "urn:oid:2.16.840.1.113883.6.238",
+      "target": "https://athena.ohdsi.org/search-terms/terms?domain=Ethnicity",
+      "element": [
+        { "code": "2135-2", "display": "Hispanic or Latino",     "target": [{ "code": "38003563", "display": "Hispanic or Latino",     "equivalence": "equivalent" }] },
+        { "code": "2186-5", "display": "Not Hispanic or Latino", "target": [{ "code": "38003564", "display": "Not Hispanic or Latino", "equivalence": "equivalent" }] }
+      ]
+    }
+  ]
+}

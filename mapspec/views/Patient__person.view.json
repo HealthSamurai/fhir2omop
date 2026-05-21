@@ -13,96 +13,104 @@
   ],
   "resource": "Patient",
   "description": "Stage 1 of FHIR→OMOP: produce one flat row per Patient, preserving raw FHIR values. Stage 2 SQL does ConceptMap lookups (gender / race / ethnicity), resolves location FK, and assigns surrogate person_id.\n\nUses US Core extensions for race / ethnicity / birthsex. Birthsex preferred over Patient.gender for gender_concept_id (closer to OMOP semantics for biological sex).",
+  "constant": [
+    { "name": "usCoreRace",      "valueString": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race" },
+    { "name": "usCoreEthnicity", "valueString": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity" },
+    { "name": "usCoreBirthsex",  "valueString": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex" }
+  ],
   "select": [
     {
       "column": [
         {
           "name": "id",
-          "path": "Patient.id",
+          "path": "id",
           "type": "id",
           "description": "FHIR Patient.id (Synthea UUID). → person_source_value + surrogate person_id."
         },
         {
           "name": "gender",
-          "path": "Patient.gender",
+          "path": "gender",
           "type": "code",
-          "description": "male/female/other/unknown. Fallback when birthsex absent. → gender_source_value, optional gender_concept_id."
-        },
+          "description": "male/female/other/unknown. Fallback when birthsex absent. → gender_source_value, optional gender_concept_id."        },
         {
           "name": "us_core_birthsex",
-          "path": "Patient.extension.where(url='http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex').valueCode.first()",
+          "path": "extension(%usCoreBirthsex).valueCode.first()",
           "type": "code",
-          "description": "Biological sex at birth (M/F). Preferred for gender_concept_id over Patient.gender."
-        },
+          "description": "Biological sex at birth (M/F). Preferred for gender_concept_id over Patient.gender."        },
         {
           "name": "birth_date",
-          "path": "Patient.birthDate",
+          "path": "birthDate",
           "type": "date",
           "description": "→ year/month/day_of_birth (via EXTRACT) and birth_datetime (cast)."
         },
         {
           "name": "race_omb_code",
-          "path": "Patient.extension.where(url='http://hl7.org/fhir/us/core/StructureDefinition/us-core-race').extension.where(url='ombCategory').valueCoding.code.first()",
+          "path": "extension(%usCoreRace).extension('ombCategory').valueCoding.code.first()",
           "type": "code",
           "description": "OMB race ombCategory code (2106-3/2054-5/…/UNK). → race_concept_id via 'race' ConceptMap."
         },
         {
           "name": "race_text",
-          "path": "Patient.extension.where(url='http://hl7.org/fhir/us/core/StructureDefinition/us-core-race').extension.where(url='text').valueString.first()",
+          "path": "extension(%usCoreRace).extension('text').valueString.first()",
           "type": "string",
           "description": "Human-readable race label. → race_source_value."
         },
         {
           "name": "ethnicity_omb_code",
-          "path": "Patient.extension.where(url='http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity').extension.where(url='ombCategory').valueCoding.code.first()",
+          "path": "extension(%usCoreEthnicity).extension('ombCategory').valueCoding.code.first()",
           "type": "code",
           "description": "OMB ethnicity ombCategory code (2135-2 Hispanic / 2186-5 Not Hispanic). → ethnicity_concept_id."
         },
         {
           "name": "ethnicity_text",
-          "path": "Patient.extension.where(url='http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity').extension.where(url='text').valueString.first()",
+          "path": "extension(%usCoreEthnicity).extension('text').valueString.first()",
           "type": "string",
           "description": "Human-readable ethnicity. → ethnicity_source_value."
         },
         {
           "name": "general_practitioner_ref",
-          "path": "Patient.generalPractitioner.first().reference",
+          "path": "generalPractitioner.first().getReferenceKey()",
           "type": "string",
           "description": "Reference string ('Practitioner/<uuid>' or 'urn:uuid:<uuid>'). → provider_id via tailing segment lookup."
         },
         {
           "name": "managing_organization_ref",
-          "path": "Patient.managingOrganization.reference",
+          "path": "managingOrganization.getReferenceKey()",
           "type": "string",
           "description": "→ care_site_id via tailing segment."
-        },
+        }
+      ]
+    },
+    {
+      "forEachOrNull": "(address.where(use='official') | address).first()",
+      "column": [
         {
-          "name": "address_line",
-          "path": "Patient.address.first().line.first()",
+          "name": "location_line",
+          "path": "line.join(' ')",
           "type": "string",
-          "description": "→ cdm.location.address_1."
+          "description": "→ cdm.location.address_1. Joins multi-line addresses with space. Prefers use='official' address, falls back to first."
         },
         {
-          "name": "address_city",
-          "path": "Patient.address.first().city",
+          "name": "location_city",
+          "path": "city",
           "type": "string",
           "description": "→ cdm.location.city. Used in composite key when matching existing location."
         },
         {
-          "name": "address_state",
-          "path": "Patient.address.first().state",
+          "name": "location_state",
+          "path": "state",
           "type": "string",
           "description": "→ cdm.location.state. Synthea writes 2-letter codes (e.g. 'MA')."
         },
         {
-          "name": "address_zip",
-          "path": "Patient.address.first().postalCode",
+          "name": "location_zip",
+          "path": "postalCode",
           "type": "string",
           "description": "→ cdm.location.zip. 5-digit US ZIP (FHIR side preserves leading zero, unlike ETL-Synthea's R fread)."
         },
         {
-          "name": "address_country",
-          "path": "Patient.address.first().country",
+          "name": "location_country",
+          "path": "country",
           "type": "string",
           "description": "→ unused in OMOP location (no country column in v5.3)."
         }
