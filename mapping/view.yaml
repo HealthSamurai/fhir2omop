@@ -1,0 +1,36 @@
+$name: condition_condition
+id: id
+subject_ref: subject.reference
+encounter_ref: encounter.reference
+snomed_code: codey.coding.where(system='snomed').code
+icd9_code: codey.coding.where(system='icd9').code
+icd10_code: codey.coding.where(system='icd10').code
+icd11_code: codey.coding.where(system='icd11').code
+code_text: code.text
+onset_dt: onset.ofType(dateTime)
+onset_period_start: onset.ofType(Period).start
+abatement_dt: abatement.ofType(dateTime)
+abatement_period_end: abatement.ofType(Period).end
+abatement_string: abatement.ofType(string)
+clinical_status_code: clinicalStatus.coding.first().code
+recorded_date: recordedDate
+---
+$name: patient_person
+$url: <url>
+name: getResourceKey() # comment
+gender: gender
+us_core_birthsex: extension('http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex').valueCode.first()
+birth_date: birthDate
+race_omb_code: extension('http://hl7.org/fhir/us/core/StructureDefinition/us-core-race').extension('ombCategory').valueCoding.code.first()
+race_text: extension('http://hl7.org/fhir/us/core/StructureDefinition/us-core-race').extension('text').valueString.first()
+ethnicity_omb_code: extension('http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity').extension('ombCategory').valueCoding.code.first()
+ethnicity_text: extension('http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity').extension('text').valueString.first()
+general_practitioner_ref: generalPractitioner.getReferenceKey()
+managing_organization_ref: managingOrganization.getReferenceKey()
+$forEachOrNull:
+  $expr: address.first()
+  address_line: line.join(' ')
+  address_city: city
+  address_state: state
+  address_zip: postalCode
+  address_country: country
