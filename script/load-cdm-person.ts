@@ -76,8 +76,9 @@ await sql.unsafe(`
         year_of_birth, month_of_birth, day_of_birth, birth_datetime,
         race_concept_id, ethnicity_concept_id,
         location_id, provider_id, care_site_id,
-        person_source_value, gender_source_value,
-        race_source_value, ethnicity_source_value
+        person_source_value, gender_source_value, gender_source_concept_id,
+        race_source_value, race_source_concept_id,
+        ethnicity_source_value, ethnicity_source_concept_id
     )
     SELECT
         hashtextextended("Id", 0)::bigint,
@@ -99,8 +100,14 @@ await sql.unsafe(`
         END,
         CASE WHEN "ZIP" IS NULL THEN NULL ELSE hashtextextended("ZIP", 0)::bigint END,
         NULL, NULL,
-        "Id", "GENDER",
-        "RACE", "ETHNICITY"
+        -- source_concept_id columns: ETL-Synthea hardcodes 0 (see
+        -- refs/refs/ETL-Synthea-installed/.../insert_person.sql:58,60,62).
+        -- We reproduce that here so the diff with our FHIR-driven pipeline
+        -- shows the real divergence (we resolve M/F to Athena Gender
+        -- 8507/8532 because they're a valid Gender vocab match).
+        "Id", "GENDER",    0,
+        "RACE",            0,
+        "ETHNICITY",       0
     FROM _synthea_patients;
 `);
 

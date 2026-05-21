@@ -23,6 +23,9 @@
     {
       "source": "http://terminology.hl7.org/CodeSystem/v3-AdministrativeGender",
       "target": "https://athena.ohdsi.org/search-terms/terms?domain=Gender",
+      "extension": [
+        { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-source-vocabulary", "valueString": "Gender" }
+      ],
       "element": [
         { "code": "M",   "display": "Male",    "target": [{ "code": "8507", "display": "MALE",    "equivalence": "equivalent" }] },
         { "code": "F",   "display": "Female",  "target": [{ "code": "8532", "display": "FEMALE",  "equivalence": "equivalent" }] },

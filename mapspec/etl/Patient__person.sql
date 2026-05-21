@@ -48,13 +48,16 @@ SELECT
 
     v.id                                           AS person_source_value,
     COALESCE(v.us_core_birthsex, v.gender)         AS gender_source_value,
-    -- source_concept_id == concept_id (no separate OMOP concept for FHIR-side
-    -- source codes — the same Athena Gender/Race/Ethnicity concept covers both).
-    COALESCE(g.concept_id, 0)                      AS gender_source_concept_id,
+    -- source_concept_id := Athena concept_id of the SOURCE code itself, not
+    -- the target standard concept. The CM materializer pre-computes this
+    -- (M/F in HL7 v3 AdministrativeGender resolves to Gender vocab 8507/8532;
+    --  Patient.gender 'male'/'female' and OMB race/ethnicity codes have no
+    --  Athena match → 0).  See src/conceptmap/materialize.ts.
+    COALESCE(g.source_concept_id, 0)               AS gender_source_concept_id,
     v.race_text                                    AS race_source_value,
-    COALESCE(r.concept_id, 0)                      AS race_source_concept_id,
+    COALESCE(r.source_concept_id, 0)               AS race_source_concept_id,
     v.ethnicity_text                               AS ethnicity_source_value,
-    COALESCE(e.concept_id, 0)                      AS ethnicity_source_concept_id
+    COALESCE(e.source_concept_id, 0)               AS ethnicity_source_concept_id
 
 FROM staging.patient_person v
 LEFT JOIN cm.gender_to_omop        g ON g.source_code = COALESCE(v.us_core_birthsex, v.gender)

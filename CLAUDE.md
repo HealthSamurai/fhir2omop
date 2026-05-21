@@ -26,14 +26,30 @@ bun src/load-fhir-core.ts
 
 # 4. Sanity checks
 ls mapspec/edges/    | wc -l    # 28 FHIR→OMOP edge maps
-ls mapspec/profiles/ | wc -l    # 28 profiles + 8 valuesets + system-aliases.json
+ls mapspec/profiles/ | wc -l    # 28 profiles + valuesets + ConceptMaps (.cm.json)
 ls mapspec/views/    | wc -l    # 28 ViewDefinitions (Stage-1 flatteners)
+ls mapspec/etl/      | wc -l    # Stage-2 SQL files + _functions.sql
 
 # 5. Bring up Postgres + load Athena vocabularies (~6.4M concepts, ~75M ancestor rows)
 docker compose up -d                                      # Postgres 17 (ParadeDB) on :54392
 bun script/init-athena.ts                                 # Pulls bundle ZIP from GCS, loads vocab.*
 
-# 6. Start the UI/dev server (writes its port to .hyper/_runtime/port, default 3000)
+# 6. Generate Synthea dataset (100 living + ~5 deceased = ~105 patients, ~2 min)
+cd synthea
+curl -L -o synthea-with-dependencies.jar \
+  https://github.com/synthetichealth/synthea/releases/download/v3.2.0/synthea-with-dependencies.jar
+java -jar synthea-with-dependencies.jar -s 1779010226473 -c settings.conf -p 100
+cd ..
+
+# 7. Run the Patient → person pipeline end-to-end (~2s on 100 patients)
+PGPASSWORD=athena psql -h localhost -p 54392 -U athena -d athena -v ON_ERROR_STOP=1 \
+  -f mapspec/etl/_functions.sql                            # referenceToId() helper
+bun script/load-fhir.ts synthea/output/fhir                # → fhir.* (105 patient rows + others)
+bun script/load-cdm-person.ts                              # Synthea CSV → cdm.* (reference oracle)
+# (cm.* / staging.* / cdm_ours_fhir.* are built by the server on first edge view, or
+#  via REPL — see "Patient → person pipeline" below.)
+
+# 8. Start the UI/dev server (writes its port to .hyper/_runtime/port, default 3000)
 bun src/\$main.ts                                          # http://localhost:3000
 # In a second terminal you can hot-reload via the REPL — see "REPL workflow" below
 #   bun script/repl.ts 'console.log(Object.keys(ctx.fns))'
@@ -137,61 +153,71 @@ licensed and not included in `CONCEPT.csv` — run `sh cpt.sh` inside
 `athena/bundle/` with a UMLS API key to hydrate them in place before loading,
 if you need them.
 
-### Synthea reference dataset (`synthea2omop/`)
+### Synthea dataset (`synthea/`)
 
-A cloned & wired upstream [`kaiserpreusse/synthea2omop`](https://github.com/kaiserpreusse/synthea2omop)
-lives in the `synthea2omop/` subfolder. It generates a Synthea population and
-loads it into Postgres via OHDSI's R-based ETL — the result is our **ground-truth
-oracle** for validating any FHIR→OMOP pipeline we build.
-
-Crucial property: Synthea generates the same 1,169 patients in BOTH formats
-from the same seed — CSV (`output/csv/`) **and** FHIR R4 bundles
-(`output/fhir/`). The UUIDs in `patients.csv:Id` match `Patient.id` inside the
-FHIR bundles match `cdm.person.person_source_value` after the reference ETL.
+Local Synthea generator — a single jar + settings file, no docker, no R-ETL
+build. Reference oracle (`cdm.*`) is built directly from the CSV output by
+our own loader instead of the OHDSI R-based ETL — much faster (~40 ms vs
+~30 min) and the mapping is transparent SQL (see `script/load-cdm-person.ts`).
 
 ```
-[Synthea seed=1779010226473, 1169 patients]
-        │
-        ├──→ synthea2omop/output/csv/   ──► ETL-Synthea (R)  ──► cdm.*       (reference oracle)
-        │
-        └──→ synthea2omop/output/fhir/  ──► bun load-fhir.ts ──► fhir.*      (jsonb staging)
-                                                                  │
-                                                                  ▼ our SoF stage-2 SQL
-                                                                cdm_ours.*   (our pipeline)
-                                                                  │
-                                                                  ▼ diff
-                                                              cdm vs cdm_ours
-                                                              per person_source_value
+synthea/
+├── synthea-with-dependencies.jar   # gitignored — wget from synthetichealth/synthea v3.2.0 release
+├── settings.conf                   # exporter.fhir.use_us_core_ig = true
+├── output/                         # gitignored
+│   ├── csv/   patients.csv, encounters.csv, …  # → cdm.* via load-cdm-person.ts
+│   └── fhir/  *.json (one bundle per patient + hospital + practitioner)  # → fhir.*
+└── generate.log
 ```
 
-Setup (one-time, see `synthea2omop/SETUP.md`):
-- `synthea2omop/.env` — Postgres creds + `CDM_SCHEMA=cdm`
-- `synthea2omop/setup-cdm.sh` — creates `cdm` schema with 28 OMOP CDM v5.3
-  event tables and 9 vocab views (`cdm.concept` etc. pointing at `vocab.*`)
-- `synthea2omop/synthea_generate_data/Dockerfile` — patched to
-  `eclipse-temurin:11-jre` (upstream `openjdk:11-jre-buster` is deprecated)
-- `synthea2omop/synthea_load_to_omop_cdm/Dockerfile` — patched to
-  `rocker/r-ver:4.3.3` + extra `libbz2-dev/liblzma-dev/zlib1g-dev/libpcre2-dev`
-  (upstream `r-base:4.3.3` pulled broken Debian-testing apt packages)
+Generation (`-s` seed, `-p` living-patient count — Synthea overshoots by
+~5% with deceased replacements so `-p 100` produces ~105 total bundles):
 
-Run (~30 min, mostly R-build the first time):
 ```sh
-cd synthea2omop
-docker compose --env-file .env -f compose-synthea_generate_data.yml      up --build  # CSV + FHIR
-docker compose --env-file .env -f compose-synthea_load_to_omop_cdm.yml   up --build  # → cdm.*
+java -jar synthea/synthea-with-dependencies.jar -s 1779010226473 \
+  -c synthea/settings.conf -p 100
 ```
 
-After completion, `cdm.*` holds the reference OMOP (1,169 person, 87k visits,
-730k measurements, 384k observations, 109k drug_exposure, …).
+US Core IG is **enabled** in `settings.conf` so Patient resources carry
+`us-core-race` / `us-core-ethnicity` / `us-core-birthsex` extensions that
+the stage-1 view extracts.
 
-### Three Postgres schemas in one DB
+Pipeline (FHIR → OMOP, ours) vs reference (Synthea CSV → OMOP, oracle):
+
+```
+[Synthea seed=1779010226473, 100 living patients (~105 total)]
+        │
+        ├──→ synthea/output/csv/    ──► bun script/load-cdm-person.ts  ──► cdm.*           (reference oracle)
+        │                                                                                  │
+        └──→ synthea/output/fhir/   ──► bun script/load-fhir.ts        ──► fhir.*          │
+                                                                          │                │
+                                                                          ▼ stage-1 (SoF)  │
+                                                                       staging.*           │
+                                                                          │                │
+                                                                          ▼ stage-2 SQL    │
+                                                                       cdm_ours_fhir.*  ◄──┘
+                                                                          │
+                                                                          ▼ diff per person_source_value
+                                                                       cdm vs cdm_ours_fhir
+```
+
+The Synthea Patient UUID is the universal join key:
+`patients.csv:Id` = `Patient.id` = `cdm.person.person_source_value`
+= `cdm_ours_fhir.person.person_source_value`. Both sides hash this UUID
+with `hashtextextended(uuid, 0)::bigint` so the surrogate `person_id`s
+match across `cdm.*` and `cdm_ours_fhir.*` — JOINs in the diff page are
+direct (no surrogate-id remap).
+
+### Schemas in one DB
 
 | Schema | Source | Owner | Purpose |
 |---|---|---|---|
-| `vocab.*` | Athena bundle | `bun script/init-athena.ts` | Standardized vocabularies — read-only |
-| `cdm.*`   | Synthea CSV → ETL-Synthea | `synthea2omop/` docker | **Reference OMOP** (oracle) |
-| `fhir.*`  | Synthea FHIR bundles | `bun script/load-fhir.ts` | Raw FHIR resources for our pipeline |
-| `cdm_ours.*` (TODO) | Synthea FHIR → our SoF stage-2 | not yet created | Our pipeline target (diff against `cdm.*`) |
+| `vocab.*`           | Athena bundle | `bun script/init-athena.ts` | Standardized vocabularies — read-only |
+| `cm.*`              | `mapspec/profiles/*.cm.json` | `ctx.fns.conceptmap.materialize` | Source-code → OMOP concept_id lookup tables (one per ConceptMap) |
+| `cdm.*`             | `synthea/output/csv/`        | `bun script/load-cdm-person.ts` | **Reference OMOP** (oracle), Synthea CSV → CDM v5.4 |
+| `fhir.*`            | `synthea/output/fhir/`       | `bun script/load-fhir.ts`       | Raw FHIR resources (jsonb staging) |
+| `staging.*`         | `fhir.*` + view JSONs        | `ctx.fns.viewdef.materialize`   | Stage-1 FHIR-flat materializations (one per ViewDefinition) |
+| `cdm_ours_fhir.*`   | `staging.*` + `cm.*`         | `mapspec/etl/<R>__<T>.sql`      | Our FHIR→OMOP pipeline target (diff against `cdm.*`) |
 
 The FHIR↔OMOP join key is **always** the Synthea UUID:
 
@@ -201,6 +227,31 @@ SELECT op.person_id, fp.id, fp.resource->>'gender'
 FROM fhir.patient fp
 JOIN cdm.person   op ON op.person_source_value = fp.id;
 ```
+
+### Server-side COPY via bind mount
+
+`docker-compose.yml` bind-mounts `./synthea/output:/synthea:ro` so Postgres
+can `COPY … FROM '/synthea/csv/patients.csv'` directly. The CSV path is
+relative to the server's filesystem, not the client. Used by
+`script/load-cdm-person.ts` to load 100 patients in ~40 ms (single
+round-trip, no per-row JS encoding).
+
+### Bun.SQL gotchas
+
+> **30 s default per-query timeout.** A long-running `TRUNCATE` or
+> `COPY`/`INSERT` against a large `fhir.*` table can time out on the client
+> while the backend keeps running — the connection is dropped, but the
+> Postgres process holds locks and blocks everything else. Symptom: every
+> subsequent query hangs in `Lock|relation` (visible in `pg_stat_activity`).
+> Fix: terminate the stuck backends, then prefer `psql`/server-side ops for
+> bulk work. Tracker:
+>
+> ```sql
+> SELECT pid, pg_terminate_backend(pid), age(now(), query_start)
+> FROM pg_stat_activity
+> WHERE state = 'active' AND pid <> pg_backend_pid()
+>   AND age(now(), query_start) > interval '1 minute';
+> ```
 
 ### `fhir.*` schema (one table per resourceType)
 
@@ -212,9 +263,9 @@ resource jsonb NOT NULL)`. Tables are created on-demand by
 Load all bundles in a directory (concurrency=8 by default):
 
 ```sh
-bun script/load-fhir.ts synthea2omop/output/fhir
-# → fhir.patient (1169), fhir.encounter (98k), fhir.observation (733k), …
-# Total ~1.94M rows in ~25s
+bun script/load-fhir.ts synthea/output/fhir
+# → fhir.patient (105), fhir.encounter (~9k), fhir.observation (~74k), …
+# 107 files, ~112k rows in ~1.6s on 100 patients
 ```
 
 The loader is **idempotent** — re-running re-INSERTs via
@@ -314,10 +365,15 @@ src/
   project/                 ctx.fns.project.* — scan / classify / roots
   repl/                    ctx.fns.repl.* — eval, load (hot-reload), POST /repl
   markdown/                ctx.fns.markdown.* — render, highlight, mermaid
-  mapspec/                 ctx.fns.mapspec.* — list (edges loader), render (per-edge UI)
-  profiles/                ctx.fns.profiles.* — load, byId, valueSetByUrl, profileForEdge
+  mapspec/                 ctx.fns.mapspec.* — list (edges loader), render (per-edge UI), renderDiffCard
+  profiles/                ctx.fns.profiles.* — load (no cache), byId, viewForEdge, profileForEdge, valueSetByUrl
   db/                      ctx.fns.db.* — connect (shared Bun.SQL pool), query (REPL-friendly SQL)
   fhir/                    ctx.fns.fhir.* — init, ensureTable, loadBundle, loadDir (Bundle → fhir.*)
+  omop/                    ctx.fns.omop.* — byTable (OMOP CDM v5.4 schema via CommonDataModel CSV)
+  conceptmap/              ctx.fns.conceptmap.* — materialize (ConceptMap JSON → cm.<id> table)
+  viewdef/                 ctx.fns.viewdef.* — path (FHIRPath wrapper), run, materialize (→ staging.*)
+  diff/                    ctx.fns.diff.* — compareTables, createIndices, report
+  etl_fhir/                ctx.fns.etl_fhir.* — runEdge (one stage-2 INSERT, source: mapspec/etl/*.sql)
 
   $route_GET.ts            GET /
   $route_profiles_GET.ts   GET /profiles
@@ -599,23 +655,83 @@ ETL is split into **stage 1** (FHIR-flat) and **stage 2** (OMOP-mapped):
 
 ```
 FHIR resource ── stage 1 ──▶ FHIR-flat row ── stage 2 ──▶ OMOP row
-   (nested)     ViewDefinition    (one column per       vocab.concept join
-                FHIRPath/SQL-on-FHIR  source code system)
+   (nested)     ViewDefinition    (staging.*)      JOIN cm.* + vocab.concept
+                FHIRPath/SQL-on-FHIR             → cdm_ours_fhir.*
 ```
 
-Stage-1 ViewDefinitions live in `mapspec/views/<R>__<T>.view.json`. Each
-`select.column[]` entry is FHIR-native: for a CodeableConcept field it fans
-out into one column per allowed code system (e.g. `code_snomed`,
-`code_icd10cm`, `code_icd9cm`, `code_text`). Every column carries an
-`extension` named `omop-column-target` that declares the stage-2 OMOP target
-column plus a one-line transform note (`vocab.concept WHERE vocabulary_id='…'`,
-or `copy verbatim`, or `resolve reference`). Stage 2 reads those extensions to
-build the vocab join — no OMOP knowledge is baked into stage 1.
+**Stage 1** ViewDefinitions live in `mapspec/views/<R>__<T>.view.json`. They
+are FHIR-native — no OMOP knowledge:
 
-ViewDefinitions are regenerated from the edge JSONs by `script/regen-views.ts`.
-The fan-out table (which code systems each FHIR CodeableConcept produces) is
-hardcoded at the top of that script and is the only place to extend coverage
-for new vocabularies.
+- Paths drop the resource prefix (`birthDate`, not `Patient.birthDate`) and
+  use SoF spec functions: `extension(url)` (with-where shorthand),
+  `getReferenceKey()` (returns the bare id from `Reference.reference`;
+  `src/viewdef/path.ts` handles both `urn:uuid:` Bundle-internals and
+  `ResourceType/id` forms), `line.join(' ')`.
+- Long URLs live in `constant` (e.g.
+  `{"name": "usCoreRace", "valueString": "http://hl7.org/fhir/.../us-core-race"}`)
+  and are referenced as `%usCoreRace`.
+- Nested `select` with `forEach` / `forEachOrNull` / `unionAll` for repeating
+  fields. Example: `forEachOrNull: "(address.where(use='official') | address).first()"`
+  yields one address row per Patient (preferring `use='official'`, else first;
+  emits a null row when there's no address so the outer join cardinality
+  is preserved).
+- Materialized into `staging.<target>` via `ctx.fns.viewdef.materialize` —
+  writes a CSV to /tmp and streams it with psql `\copy` (orders of
+  magnitude faster than per-row INSERT for large tables).
+
+**Stage 2** SQL lives in `mapspec/etl/<R>__<T>.sql`. It is a single SELECT
+the runner wraps with `TRUNCATE; INSERT INTO cdm_ours_fhir.<T>`. Columns
+must be in the EXACT order of the target OMOP table (positional binding —
+see `src/etl_fhir/runEdge.ts`). Concept resolution is **never inline CASE
+expressions** — always a `LEFT JOIN cm.<id>` against a ConceptMap table:
+
+```sql
+-- @relatedArtefact https://fhir2omop.health-samurai.io/ConceptMap/race-omb-to-omop
+SELECT
+    referenceToId(v.id)                       AS person_id,
+    COALESCE(r.concept_id, 0)                 AS race_concept_id,
+    …
+FROM staging.patient_person v
+LEFT JOIN cm.race_omb_to_omop r ON r.source_code = v.race_omb_code;
+```
+
+Shared helpers live in `mapspec/etl/_functions.sql` (apply once, idempotent):
+- `referenceToId(text) → bigint` — null-aware `hashtextextended(ref, 0)::bigint`
+
+### ConceptMaps (`cm.*` tables)
+
+ConceptMaps live alongside profiles at `mapspec/profiles/*.cm.json`. Each
+is a normal FHIR `ConceptMap` resource. `ctx.fns.conceptmap.materialize`
+flattens it into a `cm.<id>` table with one row per element across all
+groups:
+
+```sql
+cm.<id>(
+    source_code     text PRIMARY KEY,
+    concept_id      integer NOT NULL,
+    source_display  text,
+    target_display  text,
+    equivalence     text
+)
+```
+
+`gender-to-omop` has TWO groups (admin-gender lowercase + v3-AdministrativeGender
+uppercase) but one flat table — codes across groups must be unique. The
+loader throws if a clash is detected.
+
+### `@relatedArtefact` directive — view ↔ stage-2 ↔ ConceptMap
+
+Stage-2 SQL declares its ConceptMap dependencies as comments at the top:
+
+```sql
+-- @relatedArtefact https://fhir2omop.health-samurai.io/ConceptMap/gender-to-omop
+-- @relatedArtefact https://fhir2omop.health-samurai.io/ConceptMap/race-omb-to-omop
+```
+
+`src/mapspec/render.ts` parses these out and renders one ConceptMap card
+per URL on the edge page (above the ETL SQL card). Edits to view JSONs no
+longer need a profiles-cache clear — `src/profiles/load.ts` reads from
+disk on every call.
 
 ## Viewer App (Bun + htmx)
 
