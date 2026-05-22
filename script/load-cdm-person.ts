@@ -420,6 +420,71 @@ await sql.unsafe(`
      AND std.domain_id        = 'Procedure';
 `);
 
+// ── cdm.drug_exposure (immunizations.csv only; medication CSVs added separately) ──
+await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS cdm.drug_exposure (
+        drug_exposure_id              bigint NOT NULL,
+        person_id                     bigint NOT NULL,
+        drug_concept_id               integer NOT NULL,
+        drug_exposure_start_date      date NOT NULL,
+        drug_exposure_start_datetime  timestamp,
+        drug_exposure_end_date        date NOT NULL,
+        drug_exposure_end_datetime    timestamp,
+        verbatim_end_date             date,
+        drug_type_concept_id          integer NOT NULL,
+        stop_reason                   varchar(20),
+        refills                       integer,
+        quantity                      numeric,
+        days_supply                   integer,
+        sig                           text,
+        route_concept_id              integer,
+        lot_number                    varchar(50),
+        provider_id                   bigint,
+        visit_occurrence_id           bigint,
+        visit_detail_id               bigint,
+        drug_source_value             varchar(50),
+        drug_source_concept_id        integer,
+        route_source_value            varchar(50),
+        dose_unit_source_value        varchar(50)
+    );
+    ALTER TABLE cdm.drug_exposure ALTER COLUMN drug_exposure_id    TYPE bigint USING drug_exposure_id::bigint;
+    ALTER TABLE cdm.drug_exposure ALTER COLUMN person_id           TYPE bigint USING person_id::bigint;
+    ALTER TABLE cdm.drug_exposure ALTER COLUMN provider_id         TYPE bigint USING provider_id::bigint;
+    ALTER TABLE cdm.drug_exposure ALTER COLUMN visit_occurrence_id TYPE bigint USING visit_occurrence_id::bigint;
+
+    DROP TABLE IF EXISTS _synthea_immunizations;
+    CREATE TEMP TABLE _synthea_immunizations (
+        "DATE" timestamp, "PATIENT" text, "ENCOUNTER" text,
+        "CODE" text, "DESCRIPTION" text, "BASE_COST" numeric
+    );
+    COPY _synthea_immunizations FROM '/synthea/csv/immunizations.csv' WITH (FORMAT csv, HEADER true);
+
+    TRUNCATE cdm.drug_exposure;
+    INSERT INTO cdm.drug_exposure (
+        drug_exposure_id, person_id, drug_concept_id,
+        drug_exposure_start_date, drug_exposure_start_datetime,
+        drug_exposure_end_date, drug_exposure_end_datetime, verbatim_end_date,
+        drug_type_concept_id, stop_reason, refills, quantity, days_supply, sig,
+        route_concept_id, lot_number, provider_id, visit_occurrence_id, visit_detail_id,
+        drug_source_value, drug_source_concept_id, route_source_value, dose_unit_source_value
+    )
+    SELECT
+        row_number() OVER (ORDER BY i."PATIENT", i."DATE", i."CODE"),
+        hashtextextended(i."PATIENT", 0)::bigint,
+        std.concept_id,
+        i."DATE"::date, i."DATE",
+        i."DATE"::date, i."DATE", NULL,
+        32827, NULL, NULL, NULL, NULL, NULL,
+        NULL, NULL, NULL, hashtextextended(i."ENCOUNTER", 0)::bigint, NULL,
+        i."CODE", src.concept_id, NULL, NULL
+    FROM _synthea_immunizations i
+    JOIN vocab.concept src ON src.vocabulary_id = 'CVX' AND src.concept_code = i."CODE"
+    JOIN vocab.concept_relationship rel
+      ON rel.concept_id_1 = src.concept_id AND rel.relationship_id = 'Maps to' AND rel.invalid_reason IS NULL
+    JOIN vocab.concept std
+      ON std.concept_id = rel.concept_id_2 AND std.standard_concept = 'S' AND std.domain_id = 'Drug';
+`);
+
 // ── cdm.condition_occurrence ────────────────────────────────────────────────
 // Source: synthea/output/csv/conditions.csv (START, STOP, PATIENT,
 // ENCOUNTER, CODE, DESCRIPTION). All codes SNOMED. Routing via vocab
