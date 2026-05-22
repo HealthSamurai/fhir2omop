@@ -6,6 +6,9 @@ declare global {
         _test_hashline_edit: {
         nearby: typeof import("../.hyper/_test_hashline_edit/nearby").default;
         };
+        compare: {
+        renderSideBySide: typeof import("./compare/renderSideBySide").default;
+        };
         conceptmap: {
         materialize: typeof import("./conceptmap/materialize").default;
         };
