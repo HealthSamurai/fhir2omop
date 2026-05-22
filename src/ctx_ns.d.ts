@@ -77,6 +77,9 @@ declare global {
         load: typeof import("./repl/load").default;
         start: typeof import("./repl/$start").default;
         };
+        sample: {
+        renderTable: typeof import("./sample/renderTable").default;
+        };
         viewdef: {
         columns: typeof import("./viewdef/columns").default;
         materialize: typeof import("./viewdef/materialize").default;

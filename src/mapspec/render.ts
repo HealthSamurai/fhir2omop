@@ -328,6 +328,22 @@ async function renderEdge(ctx: Context, edge: Edge): Promise<string> {
     </div>
     <span class="text-[10px] text-gray-500">deferred via htmx</span>
   </div>
+</div>
+<div hx-get="/sample/${encodeURIComponent(edge.fhir_resource)}/${encodeURIComponent(edge.omop_table)}"
+     hx-trigger="load"
+     hx-target="this"
+     hx-swap="outerHTML"
+     hx-select="unset"
+     hx-select-oob="unset"
+     hx-disinherit="*"
+     class="mb-6 border border-slate-200 rounded-lg overflow-hidden">
+  <div class="flex items-center justify-between px-4 py-2 bg-slate-50 border-b border-slate-200">
+    <div class="flex items-center gap-2 text-xs">
+      <span class="text-[10px] uppercase tracking-wider text-slate-800 font-semibold">Sample rows</span>
+      <span class="text-[11px] text-slate-700 animate-pulse">loading…</span>
+    </div>
+    <span class="text-[10px] text-gray-500">deferred via htmx</span>
+  </div>
 </div>`);
 
     // Condition

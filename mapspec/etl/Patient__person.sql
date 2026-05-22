@@ -17,7 +17,7 @@ SELECT
     COALESCE(r.concept_id, 0)                      AS race_concept_id,
     COALESCE(e.concept_id, 0)                      AS ethnicity_concept_id,
 
-    referenceToId(v.location_zip)                  AS location_id,
+    referenceToId(v.id)                            AS location_id,
     referenceToId(v.general_practitioner_ref)      AS provider_id,
     referenceToId(v.managing_organization_ref)     AS care_site_id,
 

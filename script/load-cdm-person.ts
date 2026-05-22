@@ -61,15 +61,16 @@ await sql.unsafe(`
     TRUNCATE cdm.person;
     TRUNCATE cdm.location;
 
-    INSERT INTO cdm.location (location_id, city, state, zip, location_source_value)
-    SELECT DISTINCT
-        hashtextextended("ZIP", 0)::bigint,
+    INSERT INTO cdm.location (location_id, address_1, city, state, zip, location_source_value)
+    SELECT
+        hashtextextended("Id", 0)::bigint,
+        "ADDRESS",
         "CITY",
         NULL,
         "ZIP",
         "STATE"
     FROM _synthea_patients
-    WHERE "ZIP" IS NOT NULL;
+    WHERE "ZIP" IS NOT NULL OR "ADDRESS" IS NOT NULL;
 
     INSERT INTO cdm.person (
         person_id, gender_concept_id,
@@ -98,7 +99,7 @@ await sql.unsafe(`
             WHEN 'NONHISPANIC' THEN 38003564
             ELSE 0
         END,
-        CASE WHEN "ZIP" IS NULL THEN NULL ELSE hashtextextended("ZIP", 0)::bigint END,
+        hashtextextended("Id", 0)::bigint,
         NULL, NULL,
         -- source_concept_id columns: ETL-Synthea hardcodes 0 (see
         -- refs/refs/ETL-Synthea-installed/.../insert_person.sql:58,60,62).
