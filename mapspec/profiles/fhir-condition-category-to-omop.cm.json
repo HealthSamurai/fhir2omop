@@ -1,0 +1,22 @@
+{
+  "resourceType": "ConceptMap",
+  "id": "fhir-condition-category-to-omop",
+  "url": "https://fhir2omop.health-samurai.io/ConceptMap/fhir-condition-category-to-omop",
+  "version": "0.1.0",
+  "name": "FhirConditionCategoryToOmop",
+  "title": "FHIR Condition.category → OMOP condition_type_concept_id",
+  "status": "active",
+  "experimental": true,
+  "description": "FHIR Condition.category (problem-list-item / encounter-diagnosis / health-concern from condition-category CodeSystem) maps to OMOP Type Concept vocabulary. Two clean matches: encounter-diagnosis → 32827 (EHR encounter record), problem-list-item → 32840 (EHR problem list). health-concern falls back to 32817 (generic EHR) since OMOP has no closer concept.",
+  "group": [
+    {
+      "source": "http://terminology.hl7.org/CodeSystem/condition-category",
+      "target": "https://athena.ohdsi.org/search-terms/terms?domain=Type%20Concept",
+      "element": [
+        { "code": "encounter-diagnosis", "display": "Encounter Diagnosis", "target": [{ "code": "32827", "display": "EHR encounter record", "equivalence": "equivalent" }] },
+        { "code": "problem-list-item",   "display": "Problem List Item",   "target": [{ "code": "32840", "display": "EHR problem list",    "equivalence": "equivalent" }] },
+        { "code": "health-concern",      "display": "Health Concern",      "target": [{ "code": "32817", "display": "EHR",                  "equivalence": "wider" }] }
+      ]
+    }
+  ]
+}

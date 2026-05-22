@@ -71,6 +71,24 @@
           "description": "Human-readable label, last-resort fallback when no coded value resolves."
         },
         {
+          "name": "category_code",
+          "path": "category.first().coding.first().code",
+          "type": "code",
+          "description": "FHIR Condition.category code (problem-list-item / encounter-diagnosis / health-concern). → condition_type_concept_id via cm.fhir_condition_category_to_omop."
+        },
+        {
+          "name": "evidence_snomed",
+          "path": "evidence.concept.coding.where(system=%snomedSystem).code.first()",
+          "type": "code",
+          "description": "First SNOMED code from Condition.evidence.concept (supporting clinical evidence). Last-resort source-vocab fallback when code.coding has no resolvable code. Synthea omits this — useful only on real-world data."
+        },
+        {
+          "name": "evidence_icd10cm",
+          "path": "evidence.concept.coding.where(system=%icd10cmSystem).code.first()",
+          "type": "code",
+          "description": "First ICD-10-CM code from Condition.evidence.concept."
+        },
+        {
           "name": "onset_dt",
           "path": "onset.ofType(dateTime)",
           "type": "dateTime",
