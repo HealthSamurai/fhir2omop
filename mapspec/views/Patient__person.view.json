@@ -109,10 +109,28 @@
           "description": "→ cdm.location.zip. 5-digit US ZIP (FHIR side preserves leading zero, unlike ETL-Synthea's R fread)."
         },
         {
+          "name": "location_county",
+          "path": "district",
+          "type": "string",
+          "description": "→ cdm.location.county. Mapped from FHIR Address.district. Synthea omits this in its FHIR export (only present in CSV)."
+        },
+        {
           "name": "location_country",
           "path": "country",
           "type": "string",
-          "description": "→ unused in OMOP location (no country column in v5.3)."
+          "description": "→ cdm.location.country_source_value + lookup → country_concept_id via cm.country_iso_to_omop."
+        },
+        {
+          "name": "location_lat",
+          "path": "extension('http://hl7.org/fhir/StructureDefinition/geolocation').extension('latitude').valueDecimal",
+          "type": "decimal",
+          "description": "→ cdm.location.latitude. From FHIR geolocation extension on Address."
+        },
+        {
+          "name": "location_lng",
+          "path": "extension('http://hl7.org/fhir/StructureDefinition/geolocation').extension('longitude').valueDecimal",
+          "type": "decimal",
+          "description": "→ cdm.location.longitude."
         }
       ]
     }

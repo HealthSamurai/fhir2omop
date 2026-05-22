@@ -1,0 +1,24 @@
+{
+  "resourceType": "ConceptMap",
+  "id": "country-iso-to-omop",
+  "url": "https://fhir2omop.health-samurai.io/ConceptMap/country-iso-to-omop",
+  "version": "0.1.0",
+  "name": "CountryIsoToOmop",
+  "title": "ISO 3166 country code → OMOP Geography concept_id",
+  "status": "active",
+  "experimental": true,
+  "description": "Two-letter ISO 3166-1 country codes (FHIR Address.country) to the standardized SNOMED-CT country concept in the OMOP Geography domain. Tiny seed — extend as needed.",
+  "group": [
+    {
+      "source": "urn:iso:std:iso:3166",
+      "target": "https://athena.ohdsi.org/search-terms/terms?domain=Geography",
+      "element": [
+        { "code": "US", "display": "United States of America", "target": [{ "code": "4330442", "display": "United States of America", "equivalence": "equivalent" }] },
+        { "code": "CA", "display": "Canada",                   "target": [{ "code": "4330427", "display": "Canada",                   "equivalence": "equivalent" }] },
+        { "code": "GB", "display": "United Kingdom",           "target": [{ "code": "4330437", "display": "United Kingdom",           "equivalence": "equivalent" }] },
+        { "code": "DE", "display": "Germany",                  "target": [{ "code": "4330439", "display": "Germany",                  "equivalence": "equivalent" }] },
+        { "code": "AU", "display": "Australia",                "target": [{ "code": "4330448", "display": "Australia",                "equivalence": "equivalent" }] }
+      ]
+    }
+  ]
+}
