@@ -1,163 +1,50 @@
--- ─────────────────────────────────────────────────────────────────────────────
--- Stage-2 ETL: DiagnosticReport (FHIR R4) → measurement (OMOP CDM v5.4)
--- ─────────────────────────────────────────────────────────────────────────────
--- Composes:
---   • Stage-1: mapspec/views/DiagnosticReport__measurement.view.json
---   • Athena vocabulary: vocab.concept, vocab.concept_relationship
---   • Target: cdm_ours_fhir.measurement (one row per DiagnosticReport whose
---     code resolves to OMOP domain_id = 'Measurement', typically lab panels).
+-- Stage-2 ETL: DiagnosticReport (FHIR R4) → measurement (OMOP CDM)
 --
--- Surrogate IDs are deterministic 64-bit hashes.
--- DiagnosticReport.id and Observation.id have separate UUID spaces, so
--- their measurement_id hashes don't collide — no offset needed.
---
--- Individual results referenced by DiagnosticReport.result[] are mapped
--- separately by Observation__measurement.sql.
---
--- conclusionCode entries are NOT fan-out'd here — only the first
--- conclusionCode populates value_as_concept_id; multiple codes are an
--- open TODO.
--- ─────────────────────────────────────────────────────────────────────────────
+-- DR's own panel code routed to Measurement domain. Appends to
+-- cdm_ours_fhir.measurement (must run after Observation__measurement.sql).
 
-WITH
--- ─── 1. Resolve DiagnosticReport.code → standard concept (LOINC priority) ────
-code_resolved AS (
-    SELECT
-        v.id                     AS staging_id,
-        loinc_std.concept_id     AS loinc_std_concept_id,
-        loinc_std.domain_id      AS loinc_std_domain,
-        loinc_src.concept_id     AS loinc_src_concept_id,
-        snomed_std.concept_id    AS snomed_std_concept_id,
-        snomed_std.domain_id     AS snomed_std_domain,
-        snomed_src.concept_id    AS snomed_src_concept_id
-    FROM staging.dr_meas_view v
-    LEFT JOIN LATERAL (
-        SELECT c2.concept_id, c2.domain_id
-          FROM vocab.concept c1
-          JOIN vocab.concept_relationship cr
-            ON cr.concept_id_1 = c1.concept_id
-           AND cr.relationship_id = 'Maps to'
-           AND cr.invalid_reason IS NULL
-          JOIN vocab.concept c2
-            ON c2.concept_id = cr.concept_id_2
-           AND c2.standard_concept = 'S'
-         WHERE c1.vocabulary_id = 'LOINC'
-           AND c1.concept_code  = v.code_loinc
-         LIMIT 1
-    ) loinc_std ON true
-    LEFT JOIN LATERAL (
-        SELECT concept_id FROM vocab.concept
-         WHERE vocabulary_id = 'LOINC' AND concept_code = v.code_loinc
-         LIMIT 1
-    ) loinc_src ON true
-    LEFT JOIN LATERAL (
-        SELECT c2.concept_id, c2.domain_id
-          FROM vocab.concept c1
-          JOIN vocab.concept_relationship cr
-            ON cr.concept_id_1 = c1.concept_id
-           AND cr.relationship_id = 'Maps to'
-           AND cr.invalid_reason IS NULL
-          JOIN vocab.concept c2
-            ON c2.concept_id = cr.concept_id_2
-           AND c2.standard_concept = 'S'
-         WHERE c1.vocabulary_id = 'SNOMED'
-           AND c1.concept_code  = v.code_snomed
-         LIMIT 1
-    ) snomed_std ON true
-    LEFT JOIN LATERAL (
-        SELECT concept_id FROM vocab.concept
-         WHERE vocabulary_id = 'SNOMED' AND concept_code = v.code_snomed
-         LIMIT 1
-    ) snomed_src ON true
+WITH codes AS (
+    SELECT id AS staging_id, 1 AS prio, 'LOINC' AS vocab, code_loinc AS code FROM staging.diagnosticreport_measurement WHERE code_loinc IS NOT NULL
+    UNION ALL
+    SELECT id,                2,         'SNOMED',         code_snomed        FROM staging.diagnosticreport_measurement WHERE code_snomed IS NOT NULL
 ),
-
--- ─── 2. Resolve DiagnosticReport.conclusionCode → value_as_concept_id ────────
--- Only the first conclusionCode is taken (view flattens [0]). conclusionCode
--- is typically SNOMED. Falls back to LOINC if SNOMED resolution fails.
-value_resolved AS (
-    SELECT
-        v.id AS staging_id,
-        COALESCE(snomed_v.concept_id, loinc_v.concept_id) AS value_as_concept_id
-    FROM staging.dr_meas_view v
-    LEFT JOIN LATERAL (
-        SELECT c2.concept_id
-          FROM vocab.concept c1
-          JOIN vocab.concept_relationship cr
-            ON cr.concept_id_1 = c1.concept_id
-           AND cr.relationship_id = 'Maps to'
-           AND cr.invalid_reason IS NULL
-          JOIN vocab.concept c2
-            ON c2.concept_id = cr.concept_id_2
-           AND c2.standard_concept = 'S'
-         WHERE c1.vocabulary_id = 'SNOMED'
-           AND c1.concept_code  = v.value_as
-         LIMIT 1
-    ) snomed_v ON true
-    LEFT JOIN LATERAL (
-        SELECT c2.concept_id
-          FROM vocab.concept c1
-          JOIN vocab.concept_relationship cr
-            ON cr.concept_id_1 = c1.concept_id
-           AND cr.relationship_id = 'Maps to'
-           AND cr.invalid_reason IS NULL
-          JOIN vocab.concept c2
-            ON c2.concept_id = cr.concept_id_2
-           AND c2.standard_concept = 'S'
-         WHERE c1.vocabulary_id = 'LOINC'
-           AND c1.concept_code  = v.value_as
-         LIMIT 1
-    ) loinc_v ON true
+resolved AS (
+    SELECT DISTINCT ON (c.staging_id)
+        c.staging_id, c.code AS src_code,
+        src.concept_id AS src_concept_id,
+        std.concept_id AS std_concept_id
+    FROM codes c
+    JOIN vocab.concept src ON src.vocabulary_id = c.vocab AND src.concept_code = c.code
+    JOIN vocab.concept_relationship rel ON rel.concept_id_1 = src.concept_id AND rel.relationship_id = 'Maps to' AND rel.invalid_reason IS NULL
+    JOIN vocab.concept std ON std.concept_id = rel.concept_id_2 AND std.standard_concept = 'S' AND std.domain_id = 'Measurement'
+    ORDER BY c.staging_id, c.prio
 )
 
--- ─── Assemble final OMOP measurement row ─────────────────────────────────────
 SELECT
-    hashtextextended(v.id, 0)::bigint              AS measurement_id,
-    hashtextextended(split_part(v.subject_id, '/', -1), 0)::bigint
-                                                   AS person_id,
+    referenceToId(v.id)                                                     AS measurement_id,
+    referenceToId(v.subject_ref)                                            AS person_id,
+    r.std_concept_id                                                        AS measurement_concept_id,
+    v.effective_dt::date                                                    AS measurement_date,
+    v.effective_dt::timestamp                                               AS measurement_datetime,
+    NULL::varchar                                                           AS measurement_time,
+    32856                                                                   AS measurement_type_concept_id,   -- 'Lab'
+    NULL::integer                                                           AS operator_concept_id,
+    NULL::numeric                                                           AS value_as_number,
+    NULL::integer                                                           AS value_as_concept_id,
+    NULL::integer                                                           AS unit_concept_id,
+    NULL::numeric                                                           AS range_low,
+    NULL::numeric                                                           AS range_high,
+    referenceToId(v.performer_ref)                                          AS provider_id,
+    referenceToId(v.encounter_ref)                                          AS visit_occurrence_id,
+    NULL::bigint                                                            AS visit_detail_id,
+    left(r.src_code, 50)                                                    AS measurement_source_value,
+    r.src_concept_id                                                        AS measurement_source_concept_id,
+    NULL::varchar                                                           AS unit_source_value,
+    NULL::integer                                                           AS unit_source_concept_id,
+    NULL::varchar                                                           AS value_source_value,
+    NULL::bigint                                                            AS measurement_event_id,
+    NULL::integer                                                           AS meas_event_field_concept_id
 
-    COALESCE(cr.loinc_std_concept_id, cr.snomed_std_concept_id, 0)
-        AS measurement_concept_id,
-
-    v.measurement_date::date,
-    v.measurement_datetime::timestamp,
-    NULL::varchar                                  AS measurement_time,
-
-    -- DiagnosticReport is a report-level summary; OMOP type concept for
-    -- "Lab result" / "Lab report" — 32856 ("Lab") is closest.
-    32856                                          AS measurement_type_concept_id,
-
-    NULL::integer                                  AS operator_concept_id,
-    NULL::float                                    AS value_as_number,
-    vr.value_as_concept_id,
-    NULL::integer                                  AS unit_concept_id,
-    NULL::float                                    AS range_low,
-    NULL::float                                    AS range_high,
-
-    CASE WHEN v.performer_id IS NULL OR v.performer_id = '' THEN NULL::bigint
-         ELSE hashtextextended(split_part(v.performer_id, '/', -1), 0)::bigint
-    END                                            AS provider_id,
-    CASE WHEN v.encounter_id IS NULL OR v.encounter_id = '' THEN NULL::bigint
-         ELSE hashtextextended(split_part(v.encounter_id, '/', -1), 0)::bigint
-    END                                            AS visit_occurrence_id,
-    NULL::bigint                                   AS visit_detail_id,
-
-    COALESCE(v.code_loinc, v.code_snomed, v.code_text)
-        AS measurement_source_value,
-    COALESCE(cr.loinc_src_concept_id, cr.snomed_src_concept_id, 0)
-        AS measurement_source_concept_id,
-
-    NULL::varchar                                  AS unit_source_value,
-    NULL::integer                                  AS unit_source_concept_id,
-    v.value_text                                   AS value_source_value,
-    NULL::bigint                                   AS measurement_event_id,
-    NULL::integer                                  AS meas_event_field_concept_id
-
-FROM staging.dr_meas_view v
-JOIN      code_resolved  cr ON cr.staging_id = v.id
-LEFT JOIN value_resolved vr ON vr.staging_id = v.id
-
-JOIN fhir.patient fp
-  ON fp.id = split_part(v.subject_id, '/', -1)
-
-WHERE COALESCE(cr.loinc_std_domain, cr.snomed_std_domain) = 'Measurement'  -- domain routing
+FROM staging.diagnosticreport_measurement v
+JOIN resolved r ON r.staging_id = v.id
 ;
