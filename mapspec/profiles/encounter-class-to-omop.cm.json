@@ -1,0 +1,45 @@
+{
+  "resourceType": "ConceptMap",
+  "id": "encounter-class-to-omop",
+  "url": "https://fhir2omop.health-samurai.io/ConceptMap/encounter-class-to-omop",
+  "version": "0.2.0",
+  "name": "EncounterClassToOmop",
+  "title": "Encounter class → OMOP visit_concept_id",
+  "status": "active",
+  "experimental": true,
+  "description": "Two-group ConceptMap covering both the FHIR R4 Encounter.class (HL7 v3 ActEncounterCode, e.g. AMB/IMP/EMER) and the Synthea CSV `ENCOUNTERCLASS` column (lowercase labels e.g. ambulatory/inpatient/emergency). Targets are standard OMOP concepts from either the Visit vocabulary or CMS Place of Service (both are standard in Athena).",
+  "group": [
+    {
+      "source": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+      "target": "https://athena.ohdsi.org/search-terms/terms?domain=Visit",
+      "element": [
+        { "code": "AMB",    "display": "ambulatory",      "target": [{ "code": "9202",     "display": "Outpatient Visit",      "equivalence": "equivalent" }] },
+        { "code": "IMP",    "display": "inpatient",       "target": [{ "code": "9201",     "display": "Inpatient Visit",       "equivalence": "equivalent" }] },
+        { "code": "ACUTE",  "display": "acute inpatient", "target": [{ "code": "9201",     "display": "Inpatient Visit",       "equivalence": "wider" }] },
+        { "code": "NONAC",  "display": "non-acute",       "target": [{ "code": "42898160", "display": "Non-hospital institution Visit", "equivalence": "wider" }] },
+        { "code": "EMER",   "display": "emergency",       "target": [{ "code": "9203",     "display": "Emergency Room Visit",  "equivalence": "equivalent" }] },
+        { "code": "SS",     "display": "short stay",      "target": [{ "code": "8870",     "display": "Emergency Room - Hospital", "equivalence": "wider" }] },
+        { "code": "HH",     "display": "home health",     "target": [{ "code": "581476",   "display": "Home Visit",            "equivalence": "equivalent" }] },
+        { "code": "FLD",    "display": "field",           "target": [{ "code": "581476",   "display": "Home Visit",            "equivalence": "wider" }] },
+        { "code": "OBSENC", "display": "observation enc", "target": [{ "code": "9202",     "display": "Outpatient Visit",      "equivalence": "wider" }] },
+        { "code": "VR",     "display": "virtual",         "target": [{ "code": "722455",   "display": "Telehealth",            "equivalence": "equivalent" }] },
+        { "code": "PRENC",  "display": "pre-admission",   "target": [{ "code": "9202",     "display": "Outpatient Visit",      "equivalence": "wider" }] }
+      ]
+    },
+    {
+      "source": "https://synthetichealth.github.io/synthea/encounter-class",
+      "target": "https://athena.ohdsi.org/search-terms/terms?domain=Visit",
+      "element": [
+        { "code": "ambulatory",  "display": "ambulatory",   "target": [{ "code": "9202",   "display": "Outpatient Visit",     "equivalence": "equivalent" }] },
+        { "code": "outpatient",  "display": "outpatient",   "target": [{ "code": "9202",   "display": "Outpatient Visit",     "equivalence": "equivalent" }] },
+        { "code": "wellness",    "display": "wellness",     "target": [{ "code": "9202",   "display": "Outpatient Visit",     "equivalence": "wider" }] },
+        { "code": "inpatient",   "display": "inpatient",    "target": [{ "code": "9201",   "display": "Inpatient Visit",      "equivalence": "equivalent" }] },
+        { "code": "emergency",   "display": "emergency",    "target": [{ "code": "9203",   "display": "Emergency Room Visit", "equivalence": "equivalent" }] },
+        { "code": "urgentcare",  "display": "urgent care",  "target": [{ "code": "8870",   "display": "Emergency Room - Hospital", "equivalence": "wider" }] },
+        { "code": "hospice",     "display": "hospice",      "target": [{ "code": "8546",   "display": "Hospice",              "equivalence": "equivalent" }] },
+        { "code": "snf",         "display": "SNF",          "target": [{ "code": "8676",   "display": "Nursing Facility",     "equivalence": "wider" }] },
+        { "code": "virtual",     "display": "virtual",      "target": [{ "code": "722455", "display": "Telehealth",           "equivalence": "equivalent" }] }
+      ]
+    }
+  ]
+}

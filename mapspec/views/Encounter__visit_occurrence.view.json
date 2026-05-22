@@ -18,79 +18,79 @@
       "column": [
         {
           "name": "id",
-          "path": "Encounter.id",
+          "path": "id",
           "type": "id",
           "description": "FHIR Encounter.id (Synthea UUID). → visit_source_value + surrogate visit_occurrence_id."
         },
         {
           "name": "subject_ref",
-          "path": "Encounter.subject.getReferenceKey()",
+          "path": "subject.getReferenceKey()",
           "type": "string",
           "description": "Reference to the Patient (typically 'urn:uuid:UUID'). Stage 2 takes the trailing UUID segment. → person_id."
         },
         {
           "name": "class_code",
-          "path": "Encounter.class.code",
+          "path": "class.code",
           "type": "code",
           "description": "ActEncounterCode (AMB/IMP/EMER/HH/…). → visit_concept_id via inline lookup."
         },
         {
           "name": "class_system",
-          "path": "Encounter.class.system",
+          "path": "class.system",
           "type": "uri",
           "description": "Typically http://terminology.hl7.org/CodeSystem/v3-ActCode."
         },
         {
           "name": "type_code",
-          "path": "Encounter.type.first().coding.first().code",
+          "path": "type.first().coding.first().code",
           "type": "code",
           "description": "First type coding (usually SNOMED procedure code, e.g. 185345009 'Encounter for symptom'). Kept verbatim in *_source_value."
         },
         {
           "name": "type_system",
-          "path": "Encounter.type.first().coding.first().system",
+          "path": "type.first().coding.first().system",
           "type": "uri",
           "description": "Vocabulary URL for type_code."
         },
         {
           "name": "period_start",
-          "path": "Encounter.period.start",
+          "path": "period.start",
           "type": "dateTime",
           "description": "→ visit_start_date / visit_start_datetime."
         },
         {
           "name": "period_end",
-          "path": "Encounter.period.end",
+          "path": "period.end",
           "type": "dateTime",
           "description": "→ visit_end_date / visit_end_datetime. Falls back to period_start when NULL."
         },
         {
           "name": "service_provider_ref",
-          "path": "Encounter.serviceProvider.getReferenceKey()",
+          "path": "serviceProvider.getReferenceKey()",
           "type": "string",
           "description": "Organization reference. Stage 2 resolves to care_site_id via the trailing UUID segment."
         },
         {
           "name": "performer_ref",
-          "path": "Encounter.participant.first().individual.getReferenceKey()",
+          "path": "participant.first().individual.getReferenceKey()",
           "type": "string",
           "description": "First participant (Practitioner). → provider_id."
         },
         {
           "name": "part_of_ref",
-          "path": "Encounter.partOf.getReferenceKey()",
+          "path": "partOf.getReferenceKey()",
           "type": "string",
           "description": "Parent Encounter — feeds visit_detail in a fuller pipeline."
         },
         {
           "name": "admit_source_code",
-          "path": "Encounter.hospitalization.admitSource.coding.first().code",
+          "path": "hospitalization.admitSource.coding.first().code",
           "type": "code",
           "description": "→ admitting_source_concept_id (v5.3) / admitted_from_concept_id (v5.4)."
         },
         {
           "name": "discharge_disposition_code",
-          "path": "Encounter.hospitalization.dischargeDisposition.coding.first().code",
+          "path": "hospitalization.dischargeDisposition.coding.first().code",
           "type": "code",
           "description": "→ discharge_to_concept_id (v5.3) / discharged_to_concept_id (v5.4)."
         }
