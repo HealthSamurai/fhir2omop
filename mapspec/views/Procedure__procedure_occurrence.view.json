@@ -2,342 +2,39 @@
   "resourceType": "ViewDefinition",
   "id": "omop-procedure-procedure-occurrence",
   "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-procedure-procedure-occurrence",
-  "version": "0.2.0",
   "name": "OmopProcedureProcedureOccurrenceView",
   "title": "Procedure → procedure_occurrence (FHIR-flat, stage 1)",
+  "version": "0.3.0",
   "status": "draft",
   "experimental": true,
-  "description": "One FHIR Procedure maps to one procedure_occurrence row. Domain routing may redirect codes with non-Procedure domain_id to drug_exposure, device_exposure, measurement, or observation. Only completed procedures should produce rows. performed[x] is polymorphic (dateTime or Period) and at least procedure_date is required -- skip the resource if no date is available.\n\nStage 1 of FHIR→OMOP: produce a flat row keeping source codes per vocabulary. Stage 2 joins vocab.concept to resolve concept_ids.",
   "extension": [
-    {
-      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
-      "valueString": "procedure_occurrence"
-    },
-    {
-      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
-      "valueString": "Procedure__procedure_occurrence"
-    }
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table", "valueString": "procedure_occurrence" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",        "valueString": "Procedure__procedure_occurrence" }
   ],
   "resource": "Procedure",
+  "description": "One Procedure → one procedure_occurrence row. Code fan-out per known vocabulary (SNOMED preferred since already standard for OMOP Procedure domain; CPT4/HCPCS/ICD10PCS fallback). Stage 2 routes by vocab.concept.domain_id='Procedure'.",
+  "constant": [
+    { "name": "snomedSystem",   "valueString": "http://snomed.info/sct" },
+    { "name": "cpt4System",     "valueString": "http://www.ama-assn.org/go/cpt" },
+    { "name": "hcpcsSystem",    "valueString": "https://www.cms.gov/Medicare/Coding/HCPCSReleaseCodeSets" },
+    { "name": "icd10pcsSystem", "valueString": "http://hl7.org/fhir/sid/icd-10-pcs" }
+  ],
   "select": [
     {
       "column": [
-        {
-          "name": "id",
-          "path": "Procedure.id",
-          "type": "id",
-          "description": "FHIR Procedure.id; surrogate OMOP key derived (hash/sequence) downstream.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "procedure_occurrence_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "surrogate key from hash/sequence/lookup of FHIR id"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "code_cpt",
-          "path": "Procedure.code.coding.where(system='http://www.ama-assn.org/go/cpt').first().code",
-          "type": "code",
-          "description": "Procedure code — CPT4",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "procedure_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "lookup vocab.concept WHERE vocabulary_id='CPT4' AND concept_code = (this column); standard_concept='S' preferred"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "code_hcpcs",
-          "path": "Procedure.code.coding.where(system='https://www.cms.gov/Medicare/Coding/HCPCSReleaseCodeSets').first().code",
-          "type": "code",
-          "description": "Procedure code — HCPCS",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "procedure_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "lookup vocab.concept WHERE vocabulary_id='HCPCS' AND concept_code = (this column); standard_concept='S' preferred"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "code_snomed",
-          "path": "Procedure.code.coding.where(system='http://snomed.info/sct').first().code",
-          "type": "code",
-          "description": "Procedure code — SNOMED",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "procedure_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "lookup vocab.concept WHERE vocabulary_id='SNOMED' AND concept_code = (this column); standard_concept='S' preferred"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "code_icd10pcs",
-          "path": "Procedure.code.coding.where(system='http://www.cms.gov/Medicare/Coding/ICD10').first().code",
-          "type": "code",
-          "description": "Procedure code — ICD10PCS",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "procedure_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "lookup vocab.concept WHERE vocabulary_id='ICD10PCS' AND concept_code = (this column); standard_concept='S' preferred"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "code_icd9cm",
-          "path": "Procedure.code.coding.where(system='http://hl7.org/fhir/sid/icd-9-cm').first().code",
-          "type": "code",
-          "description": "Procedure code — ICD9CM",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "procedure_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "lookup vocab.concept WHERE vocabulary_id='ICD9CM' AND concept_code = (this column); standard_concept='S' preferred"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "code_text",
-          "path": "Procedure.code.text",
-          "type": "string",
-          "description": "Free text label from Procedure.code",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "procedure_source_value"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "copy text verbatim into OMOP source_value column"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "subject_id",
-          "path": "Procedure.subject",
-          "type": "Reference(Patient)",
-          "description": "Resolve Patient reference to integer person_id. Skip resource if unresolved.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "person_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "resolve PERSON reference; downstream maps to person_id"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "procedure_date",
-          "path": "Procedure.performedDateTime",
-          "type": "dateTime",
-          "description": "performedDateTime date part, or performedPeriod.start date part. Required -- skip resource if absent.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "procedure_date"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "procedure_datetime",
-          "path": "Procedure.performedDateTime",
-          "type": "dateTime",
-          "description": "Full ISO datetime. Same source as procedure_date but preserves time component.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "procedure_datetime"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "procedure_end_date",
-          "path": "Procedure.performedPeriod.end",
-          "type": "dateTime",
-          "description": "End date for procedures with duration. For performedDateTime, ETL-German leaves null; NACHC sets end = start.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "procedure_end_date"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "procedure_end_datetime",
-          "path": "Procedure.performedPeriod.end",
-          "type": "dateTime",
-          "description": "Full ISO datetime of procedure end.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "procedure_end_datetime"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "modifier",
-          "path": "Procedure.bodySite[0]",
-          "type": "CodeableConcept",
-          "description": "SNOMED body site mapped to OMOP concept. Take first bodySite[0] entry; remaining entries are lost. ETL-German also checks OPS site localization extension. 0 if unmapped or absent.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "modifier_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "resolve CONCEPT reference; downstream maps to modifier_concept_id"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "modifier_text",
-          "path": "Procedure.bodySite[0].coding[0].code",
-          "type": "code",
-          "description": "Raw body site code string. NACHC defaults to 'Not Available' if null.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "modifier_source_value"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "performer_id",
-          "path": "Procedure.performer[0].actor",
-          "type": "Reference(Practitioner)",
-          "description": "First Practitioner-typed performer. Non-Practitioner performers (Organization, Device) are ignored. NACHC defaults to 1 when absent.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "provider_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "resolve PROVIDER reference; downstream maps to provider_id"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "encounter_id",
-          "path": "Procedure.encounter",
-          "type": "Reference(Encounter)",
-          "description": "Resolve Encounter reference to integer visit_occurrence_id. Null if unresolved (optional field).",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "visit_occurrence_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "resolve VISIT_OCCURRENCE reference; downstream maps to visit_occurrence_id"
-                }
-              ]
-            }
-          ]
-        }
+        { "name": "id",                  "path": "id",                                                       "type": "id",       "description": "FHIR Procedure.id → hash → procedure_occurrence_id." },
+        { "name": "subject_ref",         "path": "subject.getReferenceKey()",                                "type": "string",   "description": "→ person_id (hash)." },
+        { "name": "encounter_ref",       "path": "encounter.getReferenceKey()",                              "type": "string",   "description": "→ visit_occurrence_id (hash)." },
+        { "name": "code_snomed",         "path": "code.coding.where(system=%snomedSystem).code.first()",     "type": "code",     "description": "SNOMED CT — preferred." },
+        { "name": "code_cpt4",           "path": "code.coding.where(system=%cpt4System).code.first()",       "type": "code",     "description": "CPT-4 — fallback." },
+        { "name": "code_hcpcs",          "path": "code.coding.where(system=%hcpcsSystem).code.first()",      "type": "code",     "description": "HCPCS — fallback." },
+        { "name": "code_icd10pcs",       "path": "code.coding.where(system=%icd10pcsSystem).code.first()",   "type": "code",     "description": "ICD-10-PCS — fallback." },
+        { "name": "code_text",           "path": "code.text",                                                "type": "string",   "description": "Human-readable label." },
+        { "name": "performed_dt",        "path": "performed.ofType(dateTime)",                               "type": "dateTime", "description": "performedDateTime branch." },
+        { "name": "performed_period_start", "path": "performed.ofType(Period).start",                        "type": "dateTime", "description": "performedPeriod.start." },
+        { "name": "performed_period_end",   "path": "performed.ofType(Period).end",                          "type": "dateTime", "description": "performedPeriod.end → procedure_end_date." },
+        { "name": "performer_ref",       "path": "performer.first().actor.getReferenceKey()",                "type": "string",   "description": "First performer.actor (Practitioner) → provider_id." },
+        { "name": "status_code",         "path": "status",                                                   "type": "code",     "description": "preparation/in-progress/completed/etc." }
       ]
     }
   ]
