@@ -12,7 +12,13 @@
     { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",        "valueString": "Condition__condition_occurrence" }
   ],
   "resource": "Condition",
-  "description": "Stage 1 of FHIR→OMOP: one flat row per Condition, preserving raw FHIR values. Stage 2 SQL resolves person_id / visit_occurrence_id (via reference resolution), condition_concept_id (via vocab Maps-to with domain='Condition').\n\nOne (code_system, code_value) pair instead of per-vocabulary columns — same pattern as Observation v0.3. Adding ICD10CM/ICD9CM/other vocabs requires no schema change, only system_aliases mapping in stage 2.",
+  "description": "Stage 1 of FHIR→OMOP: one flat row per Condition, preserving raw FHIR values. Code system fan-out — extract one column per known vocabulary so stage 2 can pick the best one deterministically (preferring SNOMED, which is already standard for OMOP Condition domain, then falling back to ICD10CM / ICD9CM / ICD10). Avoids the coding.first() ordering hazard.",
+  "constant": [
+    { "name": "snomedSystem",  "valueString": "http://snomed.info/sct" },
+    { "name": "icd10cmSystem", "valueString": "http://hl7.org/fhir/sid/icd-10-cm" },
+    { "name": "icd9cmSystem",  "valueString": "http://hl7.org/fhir/sid/icd-9-cm" },
+    { "name": "icd10System",   "valueString": "http://hl7.org/fhir/sid/icd-10" }
+  ],
   "select": [
     {
       "column": [
@@ -26,7 +32,7 @@
           "name": "subject_ref",
           "path": "subject.getReferenceKey()",
           "type": "string",
-          "description": "Reference to the Patient. Stage 2 takes trailing UUID via regexp_replace. → person_id."
+          "description": "Reference to the Patient. → person_id (hash)."
         },
         {
           "name": "encounter_ref",
@@ -35,22 +41,34 @@
           "description": "Reference to the encounter where this condition was diagnosed/recorded. → visit_occurrence_id."
         },
         {
-          "name": "code_system",
-          "path": "code.coding.first().system",
-          "type": "uri",
-          "description": "Coding system URL (typically http://snomed.info/sct for Synthea, possibly http://hl7.org/fhir/sid/icd-10-cm for real data). → vocabulary_id via system_aliases in stage 2."
+          "name": "code_snomed",
+          "path": "code.coding.where(system=%snomedSystem).code.first()",
+          "type": "code",
+          "description": "SNOMED CT code (preferred — already standard in OMOP Condition domain; usually skips Maps-to walk)."
         },
         {
-          "name": "code_value",
-          "path": "code.coding.first().code",
+          "name": "code_icd10cm",
+          "path": "code.coding.where(system=%icd10cmSystem).code.first()",
           "type": "code",
-          "description": "Source code → condition_concept_id (after Maps-to + domain='Condition' filter). Also kept verbatim in condition_source_value."
+          "description": "ICD-10-CM code (fallback when no SNOMED). Stage-2 resolves via Maps-to."
+        },
+        {
+          "name": "code_icd9cm",
+          "path": "code.coding.where(system=%icd9cmSystem).code.first()",
+          "type": "code",
+          "description": "ICD-9-CM code (legacy fallback)."
+        },
+        {
+          "name": "code_icd10",
+          "path": "code.coding.where(system=%icd10System).code.first()",
+          "type": "code",
+          "description": "ICD-10 (non-CM) — international rather than US clinical modification."
         },
         {
           "name": "code_text",
           "path": "code.text",
           "type": "string",
-          "description": "Human-readable label, fallback when code_value is missing."
+          "description": "Human-readable label, last-resort fallback when no coded value resolves."
         },
         {
           "name": "onset_dt",
