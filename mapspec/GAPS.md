@@ -170,7 +170,67 @@ the runtime is wired.
 
 ---
 
-## 7. Routing-key gaps in profile `code` bindings
+## 7. US Core race "Other" cannot round-trip — `8522` vs `8552` semantic gap
+
+**OMOP Race vocab distinguishes:**
+- `8522` = **Other Race** — patient declared a race not in the OMB-5 set
+- `8552` = **Unknown** — race was not collected / refused / unknown
+
+These are **different** OMOP concepts.
+
+**US Core race extension** (`http://hl7.org/fhir/us/core/StructureDefinition/us-core-race`)
+has three sub-extensions:
+- `ombCategory` (Coding, 0..5) — bound to a closed value set:
+  the 5 OMB codes (`2106-3`/`2054-5`/`2028-9`/`1002-5`/`2076-8`) **+ `UNK`**
+- `detailed` (Coding, 0..*) — finer-grained race codes (CDC 1000+ codes)
+- `text` (string, **1..1**, must support) — display label
+
+Per US Core 4.0+:
+> If the patient race is not represented by the OMB categories — for example,
+> race is "Other" — only the text element should be present.
+
+That is: real "Other Race" should produce `text="Other"` and **no ombCategory**.
+`ombCategory=UNK` is reserved for genuinely unknown / refused / not collected.
+
+**Problem:** there is no FHIR-native code that means "Other Race" — it is
+expressible **only** as the absence of `ombCategory` plus a free-form `text`.
+Our generic FHIR→OMOP `cm.race_omb_to_omop` table can map `UNK → 8552`
+honestly, but cannot generate `8522` from a code that doesn't exist.
+
+**To derive `8522`, a pipeline must either:**
+1. Parse `text.valueString` — fragile (free text: "Other", "Mixed", "Hispanic"
+   (wrong domain), "Caucasian"/"White" duplicates, varying case/whitespace).
+2. Bake source-system-specific quirks into the ETL (e.g. "Synthea writes
+   `ombCategory=UNK + text=Other` simultaneously").
+3. Inspect `detailed.coding[]` (CDC 1000+ codes) when ombCategory is missing —
+   only viable if the source actually populates it.
+
+**Current behavior of this pipeline (general FHIR→OMOP):**
+- `ombCategory.code` is the canonical signal — trust it.
+- `UNK → 8552 Unknown` (matches FHIR semantics).
+- Other / Multiple / non-OMB races: no FHIR code → `0 (No matching concept)`.
+- We do **not** parse `text` — relying on display strings would silently
+  break on any source whose vocabulary differs from ours.
+
+**Implications for Synthea data:**
+Synthea's FHIR exporter is non-conformant — for CSV `RACE='other'` it emits
+**both** `ombCategory=UNK` *and* `text="Other"`, conflating "Other" with
+"Unknown". Through our pipeline this becomes `race_concept_id=8552`. The
+"Other-ness" is lost upstream by Synthea, not by us; we faithfully translate
+what the FHIR resource actually says.
+
+**If a deployment needs `8522` for "Other"-flavored sources** (e.g. when
+loading Synthea data into a research dataset that cares about that
+distinction), the fix belongs **outside** the generic ETL:
+- Pre-process the FHIR data to strip `ombCategory=UNK` when a non-empty,
+  non-"Unknown" `text` is present, OR
+- Add a source-specific `cm.race_text_<source>_to_omop` ConceptMap for the
+  small closed set of text values that source emits, and JOIN it in a
+  derived pipeline (not in `Patient__person.sql`).
+
+---
+
+## 8. Routing-key gaps in profile `code` bindings
 
 Some routing pairs need a discriminator the current profile doesn't enforce:
 

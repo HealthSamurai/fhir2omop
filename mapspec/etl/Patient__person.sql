@@ -37,22 +37,7 @@ SELECT
     EXTRACT(DAY   FROM v.birth_date::date)::int    AS day_of_birth,
     v.birth_date::timestamp                        AS birth_datetime,
 
-    -- Synthea-specific quirk: when a Patient has RACE='other' in CSV, the
-    -- FHIR exporter emits BOTH ombCategory.code='UNK' (Unknown) AND
-    -- text.valueString='Other'. US Core 4.0+ says: for non-OMB races, omit
-    -- ombCategory and use ONLY text. We work around by treating our CM's
-    -- Unknown (8552) as a fall-through and consulting a tiny closed set of
-    -- text values. In real US Core data this branch never fires —
-    -- ombCategory carries the truth there.
-    COALESCE(
-        CASE WHEN r.concept_id = 8552 THEN
-            CASE lower(trim(v.race_text))
-                WHEN 'other' THEN 8522  -- Other Race
-                ELSE r.concept_id
-            END
-        ELSE r.concept_id END,
-        0
-    )                                              AS race_concept_id,
+    COALESCE(r.concept_id, 0)                      AS race_concept_id,
     COALESCE(e.concept_id, 0)                      AS ethnicity_concept_id,
 
     referenceToId(v.location_zip)                  AS location_id,
