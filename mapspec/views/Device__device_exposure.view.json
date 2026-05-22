@@ -2,237 +2,30 @@
   "resourceType": "ViewDefinition",
   "id": "omop-device-device-exposure",
   "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-device-device-exposure",
-  "version": "0.2.0",
   "name": "OmopDeviceDeviceExposureView",
   "title": "Device → device_exposure (FHIR-flat, stage 1)",
+  "version": "0.3.0",
   "status": "draft",
   "experimental": true,
-  "description": "FHIR Device and DeviceUseStatement together map to one OMOP device_exposure row. Device carries identity (type, UDI, manufacturer, lot/serial); DeviceUseStatement records the clinical event (who, when, why). Alternatively, Procedure.usedCode can be a source. The mapper must resolve the two-resource join: DeviceUseStatement.device references a Device resource from which type, UDI, and production identifiers are extracted.\n\nStage 1 of FHIR→OMOP: produce a flat row keeping source codes per vocabulary. Stage 2 joins vocab.concept to resolve concept_ids.",
   "extension": [
-    {
-      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
-      "valueString": "device_exposure"
-    },
-    {
-      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
-      "valueString": "Device__device_exposure"
-    }
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table", "valueString": "device_exposure" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",        "valueString": "Device__device_exposure" }
   ],
   "resource": "Device",
+  "description": "One Device → one device_exposure row. SNOMED Device-domain concept. NOTE: FHIR Device has no temporal field — Synthea's FHIR export omits the timing info the CSV carries. Real-world data should pair Device with DeviceUseStatement; we extract what's available here.",
+  "constant": [
+    { "name": "snomedSystem", "valueString": "http://snomed.info/sct" }
+  ],
   "select": [
     {
       "column": [
-        {
-          "name": "id",
-          "path": "Device.id",
-          "type": "id",
-          "description": "FHIR Device.id; surrogate OMOP key derived (hash/sequence) downstream.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "device_exposure_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "surrogate key from hash/sequence/lookup of FHIR id"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "type_snomed",
-          "path": "Device.type.coding.where(system='http://snomed.info/sct').first().code",
-          "type": "code",
-          "description": "Device type — SNOMED",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "device_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "lookup vocab.concept WHERE vocabulary_id='SNOMED' AND concept_code = (this column); standard_concept='S' preferred"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "type_text",
-          "path": "Device.type.text",
-          "type": "string",
-          "description": "Free text label from Device.type",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "device_source_value"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "copy text verbatim into OMOP source_value column"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "subject_id",
-          "path": "DeviceUseStatement.subject",
-          "type": "Reference(Patient)",
-          "description": "Resolve Patient reference to integer person_id. DeviceUseStatement.subject is 1..1 and restricted to Patient.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "person_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "resolve PERSON reference; downstream maps to person_id"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "device_exposure_start_date",
-          "path": "DeviceUseStatement.timing[x] (start)",
-          "type": "dateTime | Period",
-          "description": "Required NOT NULL. If no date can be determined, the record cannot be created.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "device_exposure_start_date"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "If timingPeriod: use Period.start. If timingDateTime: use that value. If timingTiming: use bounds start or first event. Fallback to recordedOn if timing absent."
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "device_exposure_start_datetime",
-          "path": "DeviceUseStatement.timing[x] (start)",
-          "type": "dateTime | Period",
-          "description": "Full datetime precision of the start.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "device_exposure_start_datetime"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "device_exposure_end_date",
-          "path": "DeviceUseStatement.timing[x] (end)",
-          "type": "Period",
-          "description": "If timingPeriod: use Period.end. If timingDateTime: null (point-in-time). If timing absent: null.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "device_exposure_end_date"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "device_exposure_end_datetime",
-          "path": "DeviceUseStatement.timing[x] (end)",
-          "type": "Period",
-          "description": "Full datetime precision of the end.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "device_exposure_end_datetime"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "unique_device_id",
-          "path": "Device.udiCarrier[0].deviceIdentifier",
-          "type": "string",
-          "description": "The UDI Device Identifier (UDI-DI). Take from the first udiCarrier entry. This is the fixed portion identifying the device model.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "unique_device_id"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "production_id",
-          "path": "Device.lotNumber",
-          "type": "string",
-          "description": "The UDI Production Identifier (UDI-PI). OMOP v5.4 field. Combine lot number and/or serial number. If both present, prefer lotNumber. Some implementations concatenate: lot:{lotNumber};serial:{serialNumber}.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "production_id"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "performer_id",
-          "path": "DeviceUseStatement.source",
-          "type": "Reference(Practitioner | PractitionerRole | RelatedPerson)",
-          "description": "Resolve Practitioner/PractitionerRole reference to integer provider_id. Only Practitioner maps cleanly to OMOP provider. Patient/RelatedPerson references are skipped.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "provider_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "resolve PROVIDER reference; downstream maps to provider_id"
-                }
-              ]
-            }
-          ]
-        }
+        { "name": "id",          "path": "id",                                                       "type": "id",     "description": "→ device_exposure_id (hash)." },
+        { "name": "subject_ref", "path": "patient.getReferenceKey()",                                 "type": "string", "description": "Patient → person_id." },
+        { "name": "code_snomed", "path": "type.coding.where(system=%snomedSystem).code.first()",      "type": "code",   "description": "SNOMED physical object code." },
+        { "name": "code_text",   "path": "type.text",                                                 "type": "string", "description": "Device display name." },
+        { "name": "udi",         "path": "udiCarrier.first().deviceIdentifier",                       "type": "string", "description": "UDI-DI → device_source_value fallback." },
+        { "name": "lot_number",  "path": "lotNumber",                                                 "type": "string", "description": "→ device_exposure.lot_number." },
+        { "name": "status_code", "path": "status",                                                    "type": "code",   "description": "active / inactive / entered-in-error / unknown." }
       ]
     }
   ]
