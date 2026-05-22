@@ -2,106 +2,26 @@
   "resourceType": "ViewDefinition",
   "id": "omop-practitionerrole-provider",
   "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-practitionerrole-provider",
-  "version": "0.2.0",
   "name": "OmopPractitionerRoleProviderView",
   "title": "PractitionerRole → provider (FHIR-flat, stage 1)",
+  "version": "0.3.0",
   "status": "draft",
   "experimental": true,
-  "description": "PractitionerRole enrichment of existing provider row. PractitionerRole does NOT create a new provider row; it adds specialty_concept_id, specialty_source_value, and care_site_id to the row created from the underlying Practitioner resource. One provider row per Practitioner; if multiple PractitionerRoles exist, choose the most recent or most specific.\n\nStage 1 of FHIR→OMOP: produce a flat row keeping source codes per vocabulary. Stage 2 joins vocab.concept to resolve concept_ids.",
   "extension": [
-    {
-      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
-      "valueString": "provider"
-    },
-    {
-      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
-      "valueString": "PractitionerRole__provider"
-    }
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table", "valueString": "provider" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",        "valueString": "PractitionerRole__provider" }
   ],
   "resource": "PractitionerRole",
+  "description": "PractitionerRole adds role + specialty + care_site link to an existing Practitioner→provider row. Updates cdm.provider.specialty_concept_id and care_site_id in-place via UPDATE.",
+  "constant": [
+    { "name": "snomedSystem", "valueString": "http://snomed.info/sct" }
+  ],
   "select": [
     {
       "column": [
-        {
-          "name": "id",
-          "path": "PractitionerRole.id",
-          "type": "id",
-          "description": "FHIR PractitionerRole.id; surrogate OMOP key derived (hash/sequence) downstream.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "provider_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "surrogate key from hash/sequence/lookup of FHIR id"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "specialty",
-          "path": "PractitionerRole.specialty[0].coding[0]",
-          "type": "CodeableConcept",
-          "description": "SNOMED or NUCC specialty mapped to OMOP concept. Represents the most common or most specific specialty. 0 if unmapped. fhir-to-omop-demo extracts from PractitionerRole.specialty[0].coding[0] (lines 10-23, 44).",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "specialty_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "resolve CONCEPT reference; downstream maps to specialty_concept_id"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "specialty_text",
-          "path": "PractitionerRole.specialty[0].coding[0].code",
-          "type": "string",
-          "description": "Raw specialty code as it appears in source data. Includes physician specialties (internal medicine, emergency medicine) and allied health professionals. fhir-to-omop-demo uses specialty.concept_code (line 49).",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "specialty_source_value"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "managing_organization_id",
-          "path": "PractitionerRole.organization",
-          "type": "Reference(Organization)",
-          "description": "Organization affiliation from PractitionerRole. This is the location that the provider primarily practices in. fhir-to-omop-demo uses location_ids[0] (line 45). omoponfhir creates a CareSite from the Practitioner's address if no PractitionerRole link exists.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "care_site_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "resolve CARE_SITE reference; downstream maps to care_site_id"
-                }
-              ]
-            }
-          ]
-        }
+        { "name": "practitioner_ref", "path": "practitioner.getReferenceKey()", "type": "string" },
+        { "name": "org_ref",          "path": "organization.getReferenceKey()", "type": "string" },
+        { "name": "specialty_code",   "path": "specialty.first().coding.where(system=%snomedSystem).code.first()", "type": "code" }
       ]
     }
   ]
