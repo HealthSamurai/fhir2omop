@@ -18,79 +18,79 @@
       "column": [
         {
           "name": "id",
-          "path": "Condition.id",
+          "path": "id",
           "type": "id",
           "description": "FHIR Condition.id (Synthea UUID). → condition_source_value + surrogate condition_occurrence_id."
         },
         {
           "name": "subject_ref",
-          "path": "Condition.subject.getReferenceKey()",
+          "path": "subject.getReferenceKey()",
           "type": "string",
           "description": "Reference to the Patient. Stage 2 takes trailing UUID via regexp_replace. → person_id."
         },
         {
           "name": "encounter_ref",
-          "path": "Condition.encounter.getReferenceKey()",
+          "path": "encounter.getReferenceKey()",
           "type": "string",
           "description": "Reference to the encounter where this condition was diagnosed/recorded. → visit_occurrence_id."
         },
         {
           "name": "code_system",
-          "path": "Condition.code.coding.first().system",
+          "path": "code.coding.first().system",
           "type": "uri",
           "description": "Coding system URL (typically http://snomed.info/sct for Synthea, possibly http://hl7.org/fhir/sid/icd-10-cm for real data). → vocabulary_id via system_aliases in stage 2."
         },
         {
           "name": "code_value",
-          "path": "Condition.code.coding.first().code",
+          "path": "code.coding.first().code",
           "type": "code",
           "description": "Source code → condition_concept_id (after Maps-to + domain='Condition' filter). Also kept verbatim in condition_source_value."
         },
         {
           "name": "code_text",
-          "path": "Condition.code.text",
+          "path": "code.text",
           "type": "string",
           "description": "Human-readable label, fallback when code_value is missing."
         },
         {
           "name": "onset_dt",
-          "path": "Condition.onset.ofType(dateTime)",
+          "path": "onset.ofType(dateTime)",
           "type": "dateTime",
           "description": "onsetDateTime branch of onset[x]. → condition_start_date / _datetime."
         },
         {
           "name": "onset_period_start",
-          "path": "Condition.onset.ofType(Period).start",
+          "path": "onset.ofType(Period).start",
           "type": "dateTime",
           "description": "onsetPeriod.start branch. Used if onset_dt is absent."
         },
         {
           "name": "abatement_dt",
-          "path": "Condition.abatement.ofType(dateTime)",
+          "path": "abatement.ofType(dateTime)",
           "type": "dateTime",
           "description": "abatementDateTime branch. → condition_end_date / _datetime."
         },
         {
           "name": "abatement_period_end",
-          "path": "Condition.abatement.ofType(Period).end",
+          "path": "abatement.ofType(Period).end",
           "type": "dateTime",
           "description": "abatementPeriod.end branch. Fallback when abatement_dt absent."
         },
         {
           "name": "abatement_string",
-          "path": "Condition.abatement.ofType(string)",
+          "path": "abatement.ofType(string)",
           "type": "string",
           "description": "Free-text abatement note (e.g. 'recovered'). → stop_reason."
         },
         {
           "name": "clinical_status_code",
-          "path": "Condition.clinicalStatus.coding.first().code",
+          "path": "clinicalStatus.coding.first().code",
           "type": "code",
           "description": "active/recurrence/relapse/inactive/remission/resolved (from condition-clinical CodeSystem). → condition_status_source_value (+ optional concept lookup)."
         },
         {
           "name": "recorded_date",
-          "path": "Condition.recordedDate",
+          "path": "recordedDate",
           "type": "dateTime",
           "description": "When the condition was recorded. Useful fallback for condition_start_date."
         }
