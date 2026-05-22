@@ -420,7 +420,67 @@ await sql.unsafe(`
      AND std.domain_id        = 'Procedure';
 `);
 
-// ── cdm.drug_exposure (immunizations.csv only; medication CSVs added separately) ──
+// ── cdm.observation (allergies append; main observations.csv already loaded) ──
+await sql.unsafe(`
+    DROP TABLE IF EXISTS _synthea_allergies;
+    CREATE TEMP TABLE _synthea_allergies (
+        "START" timestamp, "STOP" timestamp,
+        "PATIENT" text, "ENCOUNTER" text,
+        "CODE" text, "SYSTEM" text, "DESCRIPTION" text,
+        "TYPE" text, "CATEGORY" text,
+        "REACTION1" text, "DESCRIPTION1" text, "SEVERITY1" text,
+        "REACTION2" text, "DESCRIPTION2" text, "SEVERITY2" text
+    );
+    COPY _synthea_allergies FROM '/synthea/csv/allergies.csv' WITH (FORMAT csv, HEADER true);
+
+    -- Append allergies (no TRUNCATE — observations.csv already loaded).
+    INSERT INTO cdm.observation (
+        observation_id, person_id, observation_concept_id,
+        observation_date, observation_datetime, observation_type_concept_id,
+        value_as_concept_id, provider_id, visit_occurrence_id,
+        observation_source_value, observation_source_concept_id, value_source_value
+    )
+    SELECT
+        (SELECT COALESCE(max(observation_id),0) FROM cdm.observation) + row_number() OVER (ORDER BY a."PATIENT", a."START", a."CODE"),
+        hashtextextended(a."PATIENT", 0)::bigint,
+        std.concept_id,
+        a."START"::date, a."START", 32817,
+        std.concept_id,
+        NULL, hashtextextended(a."ENCOUNTER", 0)::bigint,
+        a."CODE", src.concept_id, left(a."DESCRIPTION", 50)
+    FROM _synthea_allergies a
+    JOIN vocab.concept src ON src.vocabulary_id = 'SNOMED' AND src.concept_code = a."CODE"
+    JOIN vocab.concept_relationship rel
+      ON rel.concept_id_1 = src.concept_id AND rel.relationship_id = 'Maps to' AND rel.invalid_reason IS NULL
+    JOIN vocab.concept std
+      ON std.concept_id = rel.concept_id_2 AND std.standard_concept = 'S';
+`);
+
+// ── cdm.death ───────────────────────────────────────────────────────────────
+await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS cdm.death (
+        person_id              bigint NOT NULL,
+        death_date             date NOT NULL,
+        death_datetime         timestamp,
+        death_type_concept_id  integer,
+        cause_concept_id       integer,
+        cause_source_value     varchar(50),
+        cause_source_concept_id integer
+    );
+    ALTER TABLE cdm.death ALTER COLUMN person_id TYPE bigint USING person_id::bigint;
+
+    TRUNCATE cdm.death;
+    INSERT INTO cdm.death (person_id, death_date, death_datetime, death_type_concept_id)
+    SELECT
+        hashtextextended("Id", 0)::bigint,
+        "DEATHDATE"::date,
+        "DEATHDATE"::timestamp,
+        32817
+    FROM _synthea_patients
+    WHERE "DEATHDATE" IS NOT NULL;
+`);
+
+// ── cdm.drug_exposure (medications + immunizations) ─────────────────────────
 await sql.unsafe(`
     CREATE TABLE IF NOT EXISTS cdm.drug_exposure (
         drug_exposure_id              bigint NOT NULL,

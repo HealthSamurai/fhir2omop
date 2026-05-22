@@ -2,85 +2,22 @@
   "resourceType": "ViewDefinition",
   "id": "omop-patient-death",
   "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-patient-death",
-  "version": "0.2.0",
   "name": "OmopPatientDeathView",
   "title": "Patient → death (FHIR-flat, stage 1)",
+  "version": "0.3.0",
   "status": "draft",
   "experimental": true,
-  "description": "Mortality record. At most one death row per person. Only created when Patient.deceasedDateTime is present — deceasedBoolean=true without a date cannot produce a row because death_date is NOT NULL.\n\nStage 1 of FHIR→OMOP: produce a flat row keeping source codes per vocabulary. Stage 2 joins vocab.concept to resolve concept_ids.",
   "extension": [
-    {
-      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
-      "valueString": "death"
-    },
-    {
-      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
-      "valueString": "Patient__death"
-    }
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table", "valueString": "death" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",        "valueString": "Patient__death" }
   ],
   "resource": "Patient",
+  "description": "Mortality record. At most one row per person, only when deceasedDateTime is present (deceasedBoolean=true without a date can't produce a row — death_date is NOT NULL).",
   "select": [
     {
       "column": [
-        {
-          "name": "id",
-          "path": "Patient.id",
-          "type": "id",
-          "description": "FHIR Patient.id; surrogate OMOP key derived (hash/sequence) downstream.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "person_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "surrogate key from hash/sequence/lookup of FHIR id"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "death_date",
-          "path": "Patient.deceasedDateTime",
-          "type": "dateTime",
-          "description": "NOT NULL — this is why deceasedBoolean=true cannot produce a row",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "death_date"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "dateTime → date"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "death_datetime",
-          "path": "Patient.deceasedDateTime",
-          "type": "dateTime",
-          "description": "",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "death_datetime"
-                }
-              ]
-            }
-          ]
-        }
+        { "name": "id",        "path": "id",                        "type": "id",       "description": "Patient.id → person_id." },
+        { "name": "death_dt",  "path": "deceased.ofType(dateTime)", "type": "dateTime", "description": "deceasedDateTime → death_date / death_datetime." }
       ]
     }
   ]

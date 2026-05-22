@@ -2,329 +2,34 @@
   "resourceType": "ViewDefinition",
   "id": "omop-allergyintolerance-observation",
   "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-allergyintolerance-observation",
-  "version": "0.2.0",
   "name": "OmopAllergyIntoleranceObservationView",
   "title": "AllergyIntolerance → observation (FHIR-flat, stage 1)",
+  "version": "0.3.0",
   "status": "draft",
   "experimental": true,
-  "description": "FHIR AllergyIntolerance records patient allergies and intolerances. OMOP has no dedicated allergy table, so allergies are stored in the observation table with allergy-specific SNOMED concepts. One AllergyIntolerance maps to one observation row. Status filtering excludes inactive/resolved allergies and entered-in-error/refuted records.\n\nStage 1 of FHIR→OMOP: produce a flat row keeping source codes per vocabulary. Stage 2 joins vocab.concept to resolve concept_ids.",
   "extension": [
-    {
-      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
-      "valueString": "observation"
-    },
-    {
-      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
-      "valueString": "AllergyIntolerance__observation"
-    }
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table", "valueString": "observation" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",        "valueString": "AllergyIntolerance__observation" }
   ],
   "resource": "AllergyIntolerance",
+  "description": "OMOP has no dedicated allergy table — allergies live in `observation`. One AllergyIntolerance → one observation row. The SNOMED finding (or RxNorm substance) is both the source code AND the value (it represents the substance the patient is allergic to).",
+  "constant": [
+    { "name": "snomedSystem", "valueString": "http://snomed.info/sct" },
+    { "name": "rxnormSystem", "valueString": "http://www.nlm.nih.gov/research/umls/rxnorm" }
+  ],
   "select": [
     {
       "column": [
-        {
-          "name": "id",
-          "path": "AllergyIntolerance.id",
-          "type": "id",
-          "description": "FHIR AllergyIntolerance.id; surrogate OMOP key derived (hash/sequence) downstream.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "observation_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "surrogate key from hash/sequence/lookup of FHIR id"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "code_snomed",
-          "path": "AllergyIntolerance.code.coding.where(system='http://snomed.info/sct').first().code",
-          "type": "code",
-          "description": "Substance / allergy code — SNOMED",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "observation_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "lookup vocab.concept WHERE vocabulary_id='SNOMED' AND concept_code = (this column); standard_concept='S' preferred"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "code_rxnorm",
-          "path": "AllergyIntolerance.code.coding.where(system='http://www.nlm.nih.gov/research/umls/rxnorm').first().code",
-          "type": "code",
-          "description": "Substance / allergy code — RxNorm",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "observation_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "lookup vocab.concept WHERE vocabulary_id='RxNorm' AND concept_code = (this column); standard_concept='S' preferred"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "code_text",
-          "path": "AllergyIntolerance.code.text",
-          "type": "string",
-          "description": "Free text label from AllergyIntolerance.code",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "observation_source_value"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "copy text verbatim into OMOP source_value column"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "value_code_snomed",
-          "path": "AllergyIntolerance.code.coding.where(system='http://snomed.info/sct').first().code",
-          "type": "code",
-          "description": "Substance code as value — SNOMED",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "value_as_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "lookup vocab.concept WHERE vocabulary_id='SNOMED' AND concept_code = (this column); standard_concept='S' preferred"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "value_code_rxnorm",
-          "path": "AllergyIntolerance.code.coding.where(system='http://www.nlm.nih.gov/research/umls/rxnorm').first().code",
-          "type": "code",
-          "description": "Substance code as value — RxNorm",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "value_as_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "lookup vocab.concept WHERE vocabulary_id='RxNorm' AND concept_code = (this column); standard_concept='S' preferred"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "value_code_text",
-          "path": "AllergyIntolerance.code.text",
-          "type": "string",
-          "description": "Free text label from AllergyIntolerance.code",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "value_as_source_value"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "copy text verbatim into OMOP source_value column"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "subject_id",
-          "path": "AllergyIntolerance.patient",
-          "type": "Reference(Patient)",
-          "description": "Resolve Patient reference via ctx.ids.resolveRef().",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "person_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "resolve PERSON reference; downstream maps to person_id"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "observation_date",
-          "path": "AllergyIntolerance.onsetDateTime",
-          "type": "dateTime",
-          "description": "If all absent, the record is skipped.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "observation_date"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "dateTime -> date; fallback chain: onsetDateTime -> onsetPeriod.start -> recordedDate"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "observation_datetime",
-          "path": "AllergyIntolerance.onsetDateTime",
-          "type": "dateTime",
-          "description": "Full ISO datetime when available. Null if source is date-only or from fallback.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "observation_datetime"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "value_as_string",
-          "path": "AllergyIntolerance.reaction[*].manifestation[*].text",
-          "type": "string",
-          "description": "All reactions and manifestations are included.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "value_as_string"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "Concatenate all reaction manifestation display names, semicolon-separated."
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "qualifier_text",
-          "path": "AllergyIntolerance.type",
-          "type": "code",
-          "description": "\"allergy\" or \"intolerance\". Preserves the type distinction.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "qualifier_source_value"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "performer_id",
-          "path": "AllergyIntolerance.asserter",
-          "type": "Reference(Practitioner | PractitionerRole)",
-          "description": "omoponfhir uses recorder only.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "provider_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "Prefer asserter, fall back to recorder. Only Practitioner/PractitionerRole references are valid for provider_id."
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "encounter_id",
-          "path": "AllergyIntolerance.encounter",
-          "type": "Reference(Encounter)",
-          "description": "Resolve Encounter reference. Null if absent.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "visit_occurrence_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "resolve VISIT_OCCURRENCE reference; downstream maps to visit_occurrence_id"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "value_text",
-          "path": "AllergyIntolerance.criticality",
-          "type": "code",
-          "description": "\"low\", \"high\", or \"unable-to-assess\". Preserves criticality.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "value_source_value"
-                }
-              ]
-            }
-          ]
-        }
+        { "name": "id",            "path": "id",                                                                "type": "id",       "description": "→ observation_id (hash)." },
+        { "name": "subject_ref",   "path": "patient.getReferenceKey()",                                          "type": "string",   "description": "Patient → person_id." },
+        { "name": "encounter_ref", "path": "encounter.getReferenceKey()",                                        "type": "string",   "description": "Encounter → visit_occurrence_id." },
+        { "name": "code_snomed",   "path": "code.coding.where(system=%snomedSystem).code.first()",               "type": "code",     "description": "SNOMED allergy/intolerance finding." },
+        { "name": "code_rxnorm",   "path": "code.coding.where(system=%rxnormSystem).code.first()",               "type": "code",     "description": "RxNorm substance — for drug allergies." },
+        { "name": "code_text",     "path": "code.text",                                                          "type": "string",   "description": "Free-text label." },
+        { "name": "recorded_date", "path": "recordedDate",                                                       "type": "dateTime", "description": "→ observation_date / _datetime." },
+        { "name": "onset_dt",      "path": "onset.ofType(dateTime)",                                             "type": "dateTime", "description": "Fallback when recordedDate is absent." },
+        { "name": "status_code",   "path": "clinicalStatus.coding.first().code",                                 "type": "code",     "description": "active / inactive / resolved." },
+        { "name": "verify_status", "path": "verificationStatus.coding.first().code",                             "type": "code",     "description": "confirmed / unconfirmed / refuted / entered-in-error." }
       ]
     }
   ]
