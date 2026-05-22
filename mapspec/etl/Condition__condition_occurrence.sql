@@ -10,10 +10,17 @@ SELECT
 
     std.concept_id                                                            AS condition_concept_id,
 
-    COALESCE(v.onset_dt, v.onset_period_start, v.recorded_date)::date         AS condition_start_date,
-    COALESCE(v.onset_dt, v.onset_period_start, v.recorded_date)::timestamp    AS condition_start_datetime,
-    COALESCE(v.abatement_dt, v.abatement_period_end)::date                    AS condition_end_date,
-    COALESCE(v.abatement_dt, v.abatement_period_end)::timestamp               AS condition_end_datetime,
+    -- CSV reference writes date components in local time (Synthea
+    -- exports START/STOP as local dates without offset). FHIR carries
+    -- the local zone explicitly ("…+01:00"). The naive `::date` /
+    -- `::timestamp` casts strip the offset, which is correct: both
+    -- pipelines end up with the LOCAL date, which is what Synthea
+    -- intended. Do NOT apply `AT TIME ZONE 'UTC'` here — it would shift
+    -- events near midnight onto a different day from the CSV reference.
+    COALESCE(v.onset_dt, v.onset_period_start, v.recorded_date)::date          AS condition_start_date,
+    COALESCE(v.onset_dt, v.onset_period_start, v.recorded_date)::timestamp     AS condition_start_datetime,
+    COALESCE(v.abatement_dt, v.abatement_period_end)::date                     AS condition_end_date,
+    COALESCE(v.abatement_dt, v.abatement_period_end)::timestamp                AS condition_end_datetime,
 
     32827                                                                     AS condition_type_concept_id,   -- 'EHR encounter record'
     0                                                                         AS condition_status_concept_id,
