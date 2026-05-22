@@ -1,0 +1,25 @@
+{
+  "resourceType": "ConceptMap",
+  "id": "fhir-verification-status-to-omop",
+  "url": "https://fhir2omop.health-samurai.io/ConceptMap/fhir-verification-status-to-omop",
+  "version": "0.1.0",
+  "name": "FhirVerificationStatusToOmopConditionStatus",
+  "title": "FHIR Condition.verificationStatus → OMOP Condition Status concept_id",
+  "status": "active",
+  "experimental": true,
+  "description": "FHIR's verificationStatus value set (condition-ver-status: unconfirmed/provisional/differential/confirmed/refuted/entered-in-error) lines up semantically with OMOP's Condition Status diagnostic-confidence axis. Two clean matches: 'confirmed'=32893 and 'provisional'≈32899 (Preliminary diagnosis). Stage-2 SQL prefers this over clinicalStatus when both are present.",
+  "group": [
+    {
+      "source": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+      "target": "https://athena.ohdsi.org/search-terms/terms?domain=Condition%20Status",
+      "element": [
+        { "code": "unconfirmed",      "display": "Unconfirmed",      "target": [{ "code": "0",     "display": "No matching concept",     "equivalence": "unmatched" }] },
+        { "code": "provisional",      "display": "Provisional",      "target": [{ "code": "32899", "display": "Preliminary diagnosis",   "equivalence": "wider" }] },
+        { "code": "differential",     "display": "Differential",     "target": [{ "code": "0",     "display": "No matching concept",     "equivalence": "unmatched" }] },
+        { "code": "confirmed",        "display": "Confirmed",        "target": [{ "code": "32893", "display": "Confirmed diagnosis",     "equivalence": "equivalent" }] },
+        { "code": "refuted",          "display": "Refuted",          "target": [{ "code": "0",     "display": "No matching concept",     "equivalence": "unmatched" }] },
+        { "code": "entered-in-error", "display": "Entered in error", "target": [{ "code": "0",     "display": "No matching concept",     "equivalence": "unmatched" }] }
+      ]
+    }
+  ]
+}

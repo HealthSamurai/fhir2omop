@@ -86,7 +86,13 @@
           "name": "clinical_status_code",
           "path": "clinicalStatus.coding.first().code",
           "type": "code",
-          "description": "active/recurrence/relapse/inactive/remission/resolved (from condition-clinical CodeSystem). → condition_status_source_value (+ optional concept lookup)."
+          "description": "active/recurrence/relapse/inactive/remission/resolved (from condition-clinical CodeSystem). → condition_status_source_value; mapped via cm.fhir_clinical_status_to_omop. Only 'resolved' has a clean OMOP match (32906)."
+        },
+        {
+          "name": "verification_status_code",
+          "path": "verificationStatus.coding.first().code",
+          "type": "code",
+          "description": "unconfirmed/provisional/differential/confirmed/refuted/entered-in-error (condition-ver-status CodeSystem). Semantically closer to OMOP Condition Status than clinicalStatus is — 'confirmed'→32893, 'provisional'→32899. Stage-2 prefers this over clinical_status_code."
         },
         {
           "name": "recorded_date",

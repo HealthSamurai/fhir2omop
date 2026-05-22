@@ -1,0 +1,25 @@
+{
+  "resourceType": "ConceptMap",
+  "id": "fhir-clinical-status-to-omop",
+  "url": "https://fhir2omop.health-samurai.io/ConceptMap/fhir-clinical-status-to-omop",
+  "version": "0.1.0",
+  "name": "FhirClinicalStatusToOmopConditionStatus",
+  "title": "FHIR Condition.clinicalStatus → OMOP Condition Status concept_id",
+  "status": "active",
+  "experimental": true,
+  "description": "FHIR's clinicalStatus value set (condition-clinical: active/recurrence/relapse/inactive/remission/resolved) is a state-machine of the disease's current state, while OMOP's Condition Status vocabulary (concept_class='Condition Status') describes the diagnostic workflow position (primary/secondary, admitting/discharge, preliminary/confirmed). The two only intersect at 'resolved' = 32906. Everything else maps to 0 (no matching concept). Prefer verificationStatus when available — see fhir-verification-status-to-omop.",
+  "group": [
+    {
+      "source": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+      "target": "https://athena.ohdsi.org/search-terms/terms?domain=Condition%20Status",
+      "element": [
+        { "code": "active",     "display": "Active",     "target": [{ "code": "0",     "display": "No matching concept",    "equivalence": "unmatched" }] },
+        { "code": "recurrence", "display": "Recurrence", "target": [{ "code": "0",     "display": "No matching concept",    "equivalence": "unmatched" }] },
+        { "code": "relapse",    "display": "Relapse",    "target": [{ "code": "0",     "display": "No matching concept",    "equivalence": "unmatched" }] },
+        { "code": "inactive",   "display": "Inactive",   "target": [{ "code": "0",     "display": "No matching concept",    "equivalence": "unmatched" }] },
+        { "code": "remission",  "display": "Remission",  "target": [{ "code": "0",     "display": "No matching concept",    "equivalence": "unmatched" }] },
+        { "code": "resolved",   "display": "Resolved",   "target": [{ "code": "32906", "display": "Resolved condition",     "equivalence": "equivalent" }] }
+      ]
+    }
+  ]
+}

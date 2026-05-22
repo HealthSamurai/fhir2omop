@@ -3,6 +3,8 @@
 -- Routes by vocab.concept.domain_id='Condition' after Maps-to walk.
 --
 -- @relatedArtefact https://fhir2omop.health-samurai.io/ConceptMap/fhir-system-to-omop-vocab
+-- @relatedArtefact https://fhir2omop.health-samurai.io/ConceptMap/fhir-verification-status-to-omop
+-- @relatedArtefact https://fhir2omop.health-samurai.io/ConceptMap/fhir-clinical-status-to-omop
 
 SELECT
     referenceToId(v.id)                                                       AS condition_occurrence_id,
@@ -23,7 +25,10 @@ SELECT
     COALESCE(v.abatement_dt, v.abatement_period_end)::timestamp                AS condition_end_datetime,
 
     32827                                                                     AS condition_type_concept_id,   -- 'EHR encounter record'
-    0                                                                         AS condition_status_concept_id,
+    -- Prefer verificationStatus (semantically closer to OMOP Condition
+    -- Status diagnostic-confidence axis) over clinicalStatus (FHIR's
+    -- disease-state machine; only 'resolved' has a clean target).
+    COALESCE(NULLIF(vstat.concept_id, 0), NULLIF(cstat.concept_id, 0), 0)      AS condition_status_concept_id,
     v.abatement_string                                                        AS stop_reason,
     NULL::bigint                                                              AS provider_id,
 
@@ -48,6 +53,9 @@ LEFT JOIN vocab.concept std
        ON std.concept_id        = rel.concept_id_2
       AND std.standard_concept  = 'S'
       AND std.domain_id         = 'Condition'
+
+LEFT JOIN cm.fhir_clinical_status_to_omop     cstat ON cstat.source_code = v.clinical_status_code
+LEFT JOIN cm.fhir_verification_status_to_omop vstat ON vstat.source_code = v.verification_status_code
 
 WHERE std.concept_id IS NOT NULL
 ;
