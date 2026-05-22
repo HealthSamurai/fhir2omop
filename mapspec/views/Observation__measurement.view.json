@@ -24,114 +24,114 @@
       "column": [
         {
           "name": "id",
-          "path": "Observation.id",
+          "path": "id",
           "type": "id",
           "description": "FHIR Observation.id; → surrogate measurement_id (hash/sequence in stage 2)."
         },
         {
           "name": "subject_id",
-          "path": "Observation.subject.getReferenceKey()",
+          "path": "subject.getReferenceKey()",
           "type": "string",
           "description": "FHIR reference string ('Patient/<id>' or 'urn:uuid:<id>'). Resolve to person_id by trailing segment."
         },
         {
           "name": "encounter_id",
-          "path": "Observation.encounter.getReferenceKey()",
+          "path": "encounter.getReferenceKey()",
           "type": "string",
           "description": "FHIR encounter reference. → visit_occurrence_id."
         },
         {
           "name": "performer_id",
-          "path": "Observation.performer.first().getReferenceKey()",
+          "path": "performer.first().getReferenceKey()",
           "type": "string",
           "description": "First performer reference. → provider_id (Practitioner/PractitionerRole)."
         },
 
         {
           "name": "code_system",
-          "path": "Observation.code.coding.first().system",
+          "path": "code.coding.first().system",
           "type": "uri",
           "description": "Code system URL of the first coding (typically http://loinc.org). Mapped to OMOP vocabulary_id via system-aliases."
         },
         {
           "name": "code_value",
-          "path": "Observation.code.coding.first().code",
+          "path": "code.coding.first().code",
           "type": "code",
           "description": "Source code → measurement_concept_id (after Maps-to). Also kept verbatim as measurement_source_value."
         },
         {
           "name": "code_text",
-          "path": "Observation.code.text",
+          "path": "code.text",
           "type": "string",
           "description": "Free-text label → fallback measurement_source_value when code_value is missing."
         },
 
         {
           "name": "effective_dt",
-          "path": "Observation.effective.ofType(dateTime)",
+          "path": "effective.ofType(dateTime)",
           "type": "dateTime",
           "description": "effectiveDateTime branch of effective[x]. → measurement_date / measurement_datetime."
         },
         {
           "name": "effective_period_start",
-          "path": "Observation.effective.ofType(Period).start",
+          "path": "effective.ofType(Period).start",
           "type": "dateTime",
           "description": "effectivePeriod.start branch. Used if effective_dt is absent."
         },
 
         {
           "name": "value_number",
-          "path": "Observation.valueQuantity.value",
+          "path": "valueQuantity.value",
           "type": "decimal",
           "description": "Numeric value. → value_as_number."
         },
         {
           "name": "value_comparator",
-          "path": "Observation.valueQuantity.comparator",
+          "path": "valueQuantity.comparator",
           "type": "code",
           "description": "Quantity comparator (<, <=, >=, >). → operator_concept_id via tiny lookup."
         },
         {
           "name": "value_unit_code",
-          "path": "Observation.valueQuantity.code",
+          "path": "valueQuantity.code",
           "type": "code",
           "description": "UCUM unit code. → unit_concept_id (joined as system='http://unitsofmeasure.org')."
         },
         {
           "name": "value_unit_text",
-          "path": "Observation.valueQuantity.unit",
+          "path": "valueQuantity.unit",
           "type": "string",
           "description": "Human-readable unit. → unit_source_value."
         },
 
         {
           "name": "value_code_system",
-          "path": "Observation.valueCodeableConcept.coding.first().system",
+          "path": "valueCodeableConcept.coding.first().system",
           "type": "uri",
           "description": "When value[x] is a CodeableConcept: system URL of first coding. → maps with code_value to value_as_concept_id."
         },
         {
           "name": "value_code",
-          "path": "Observation.valueCodeableConcept.coding.first().code",
+          "path": "valueCodeableConcept.coding.first().code",
           "type": "code",
           "description": "Coded value. → value_as_concept_id (after Maps-to)."
         },
         {
           "name": "value_text",
-          "path": "Observation.valueCodeableConcept.text",
+          "path": "valueCodeableConcept.text",
           "type": "string",
           "description": "Free-text answer. → value_source_value."
         },
 
         {
           "name": "range_low",
-          "path": "Observation.referenceRange.first().low.value",
+          "path": "referenceRange.first().low.value",
           "type": "decimal",
           "description": "First reference range lower bound. → range_low."
         },
         {
           "name": "range_high",
-          "path": "Observation.referenceRange.first().high.value",
+          "path": "referenceRange.first().high.value",
           "type": "decimal",
           "description": "First reference range upper bound. → range_high."
         }

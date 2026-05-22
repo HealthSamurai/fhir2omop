@@ -24,114 +24,114 @@
       "column": [
         {
           "name": "id",
-          "path": "Observation.id",
+          "path": "id",
           "type": "id",
           "description": "FHIR Observation.id; → surrogate observation_id (hash/sequence in stage 2)."
         },
         {
           "name": "subject_id",
-          "path": "Observation.subject.getReferenceKey()",
+          "path": "subject.getReferenceKey()",
           "type": "string",
           "description": "FHIR reference string. → person_id by trailing segment."
         },
         {
           "name": "encounter_id",
-          "path": "Observation.encounter.getReferenceKey()",
+          "path": "encounter.getReferenceKey()",
           "type": "string",
           "description": "FHIR encounter reference. → visit_occurrence_id."
         },
         {
           "name": "performer_id",
-          "path": "Observation.performer.first().getReferenceKey()",
+          "path": "performer.first().getReferenceKey()",
           "type": "string",
           "description": "First performer reference. → provider_id."
         },
 
         {
           "name": "code_system",
-          "path": "Observation.code.coding.first().system",
+          "path": "code.coding.first().system",
           "type": "uri",
           "description": "Code system URL of first coding. Mapped to OMOP vocabulary_id via system-aliases."
         },
         {
           "name": "code_value",
-          "path": "Observation.code.coding.first().code",
+          "path": "code.coding.first().code",
           "type": "code",
           "description": "Source code → observation_concept_id (after Maps-to). Also kept verbatim as observation_source_value."
         },
         {
           "name": "code_text",
-          "path": "Observation.code.text",
+          "path": "code.text",
           "type": "string",
           "description": "Free-text label → fallback observation_source_value."
         },
 
         {
           "name": "effective_dt",
-          "path": "Observation.effective.ofType(dateTime)",
+          "path": "effective.ofType(dateTime)",
           "type": "dateTime",
           "description": "effectiveDateTime branch. → observation_date / observation_datetime."
         },
         {
           "name": "effective_period_start",
-          "path": "Observation.effective.ofType(Period).start",
+          "path": "effective.ofType(Period).start",
           "type": "dateTime",
           "description": "effectivePeriod.start fallback."
         },
 
         {
           "name": "value_number",
-          "path": "Observation.valueQuantity.value",
+          "path": "valueQuantity.value",
           "type": "decimal",
           "description": "Numeric value. → value_as_number."
         },
         {
           "name": "value_string",
-          "path": "Observation.valueString",
+          "path": "valueString",
           "type": "string",
           "description": "String value (OMOP observation supports this; measurement does not). → value_as_string."
         },
         {
           "name": "value_unit_code",
-          "path": "Observation.valueQuantity.code",
+          "path": "valueQuantity.code",
           "type": "code",
           "description": "UCUM unit code. → unit_concept_id."
         },
         {
           "name": "value_unit_text",
-          "path": "Observation.valueQuantity.unit",
+          "path": "valueQuantity.unit",
           "type": "string",
           "description": "Human-readable unit. → unit_source_value."
         },
 
         {
           "name": "value_code_system",
-          "path": "Observation.valueCodeableConcept.coding.first().system",
+          "path": "valueCodeableConcept.coding.first().system",
           "type": "uri",
           "description": "When value[x] is a CodeableConcept: system URL of first coding."
         },
         {
           "name": "value_code",
-          "path": "Observation.valueCodeableConcept.coding.first().code",
+          "path": "valueCodeableConcept.coding.first().code",
           "type": "code",
           "description": "Coded value → value_as_concept_id."
         },
         {
           "name": "value_text",
-          "path": "Observation.valueCodeableConcept.text",
+          "path": "valueCodeableConcept.text",
           "type": "string",
           "description": "Free-text answer or assembled summary. → value_source_value."
         },
 
         {
           "name": "qualifier_system",
-          "path": "Observation.interpretation.first().coding.first().system",
+          "path": "interpretation.first().coding.first().system",
           "type": "uri",
           "description": "HL7 ObservationInterpretation system (or SNOMED). → qualifier_concept_id via Maps-to."
         },
         {
           "name": "qualifier_code",
-          "path": "Observation.interpretation.first().coding.first().code",
+          "path": "interpretation.first().coding.first().code",
           "type": "code",
           "description": "Interpretation code (H/L/N/A/AA/…) → qualifier_concept_id. Verbatim → qualifier_source_value."
         }
