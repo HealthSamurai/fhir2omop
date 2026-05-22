@@ -1,0 +1,31 @@
+{
+  "resourceType": "ConceptMap",
+  "id": "fhir-system-to-omop-vocab",
+  "url": "https://fhir2omop.health-samurai.io/ConceptMap/fhir-system-to-omop-vocab",
+  "version": "0.1.0",
+  "name": "FhirSystemToOmopVocab",
+  "title": "FHIR Coding.system URI → OMOP vocabulary_id",
+  "status": "active",
+  "experimental": true,
+  "description": "Translation of FHIR code system canonical URIs to the OMOP `vocab.concept.vocabulary_id` string that holds the same terminology. Used at stage 2 to pick the right Athena vocabulary before doing the code lookup + Maps-to walk.",
+  "group": [
+    {
+      "source": "https://terminology.hl7.org/CodeSystem-*",
+      "target": "https://athena.ohdsi.org/search-terms/terms",
+      "element": [
+        { "code": "http://snomed.info/sct",                          "display": "SNOMED CT",                "target": [{ "code": "SNOMED" }] },
+        { "code": "http://loinc.org",                                "display": "LOINC",                    "target": [{ "code": "LOINC" }] },
+        { "code": "http://www.nlm.nih.gov/research/umls/rxnorm",     "display": "RxNorm",                   "target": [{ "code": "RxNorm" }] },
+        { "code": "http://hl7.org/fhir/sid/icd-10-cm",               "display": "ICD-10-CM",                "target": [{ "code": "ICD10CM" }] },
+        { "code": "http://hl7.org/fhir/sid/icd-9-cm",                "display": "ICD-9-CM",                 "target": [{ "code": "ICD9CM" }] },
+        { "code": "http://hl7.org/fhir/sid/icd-10",                  "display": "ICD-10",                   "target": [{ "code": "ICD10" }] },
+        { "code": "http://hl7.org/fhir/sid/icd-10-pcs",              "display": "ICD-10-PCS",               "target": [{ "code": "ICD10PCS" }] },
+        { "code": "http://hl7.org/fhir/sid/ndc",                     "display": "NDC",                      "target": [{ "code": "NDC" }] },
+        { "code": "http://hl7.org/fhir/sid/cvx",                     "display": "CVX",                      "target": [{ "code": "CVX" }] },
+        { "code": "http://www.ama-assn.org/go/cpt",                  "display": "CPT-4",                    "target": [{ "code": "CPT4" }] },
+        { "code": "https://www.cms.gov/Medicare/Coding/place-of-service-codes", "display": "CMS Place of Service", "target": [{ "code": "CMS Place of Service" }] },
+        { "code": "http://unitsofmeasure.org",                       "display": "UCUM",                     "target": [{ "code": "UCUM" }] }
+      ]
+    }
+  ]
+}

@@ -39,11 +39,16 @@ export default async function (
     const table = `cm.${id.replace(/-/g, "_")}`;
     await ctx.fns.db.query(ctx, { sql: `CREATE SCHEMA IF NOT EXISTS cm` });
     await ctx.fns.db.query(ctx, { sql: `DROP TABLE IF EXISTS ${table}` });
+    // concept_id is NULLable so the same table shape covers both
+    // code-to-concept maps (race / gender / ...) and code-to-string maps
+    // (e.g. FHIR Coding.system → OMOP vocabulary_id). target_code holds the
+    // raw target string; concept_id is the integer parse of it when valid.
     await ctx.fns.db.query(ctx, {
         sql: `CREATE TABLE ${table} (
             source_code        text PRIMARY KEY,
-            concept_id         integer NOT NULL,
+            concept_id         integer,
             source_concept_id  integer NOT NULL DEFAULT 0,
+            target_code        text NOT NULL,
             source_display     text,
             target_display     text,
             equivalence        text
@@ -52,8 +57,9 @@ export default async function (
 
     type Row = {
         source_code: string;
-        concept_id: number;
+        concept_id: number | null;
         source_concept_id: number;
+        target_code: string;
         source_display?: string;
         target_display?: string;
         equivalence?: string;
@@ -86,10 +92,13 @@ export default async function (
             const code = el.code as string;
             if (seen.has(code)) throw new Error(`duplicate source_code '${code}' in ConceptMap ${id}`);
             seen.add(code);
+            const targetCode = String(t.code);
+            const conceptId = /^\d+$/.test(targetCode) ? Number(targetCode) : null;
             rows.push({
                 source_code: code,
-                concept_id: Number(t.code),
+                concept_id: conceptId,
                 source_concept_id: sourceConceptByCode.get(code) ?? 0,
+                target_code: targetCode,
                 source_display: el.display ?? undefined,
                 target_display: t.display ?? undefined,
                 equivalence: t.equivalence ?? undefined,
@@ -102,14 +111,14 @@ export default async function (
         const params: any[] = [];
         let i = 1;
         for (const r of rows) {
-            placeholders.push(`($${i++}, $${i++}, $${i++}, $${i++}, $${i++}, $${i++})`);
+            placeholders.push(`($${i++}, $${i++}, $${i++}, $${i++}, $${i++}, $${i++}, $${i++})`);
             params.push(
-                r.source_code, r.concept_id, r.source_concept_id,
+                r.source_code, r.concept_id, r.source_concept_id, r.target_code,
                 r.source_display ?? null, r.target_display ?? null, r.equivalence ?? null,
             );
         }
         await ctx.fns.db.query(ctx, {
-            sql: `INSERT INTO ${table} (source_code, concept_id, source_concept_id, source_display, target_display, equivalence)
+            sql: `INSERT INTO ${table} (source_code, concept_id, source_concept_id, target_code, source_display, target_display, equivalence)
                   VALUES ${placeholders.join(", ")}`,
             params,
         });

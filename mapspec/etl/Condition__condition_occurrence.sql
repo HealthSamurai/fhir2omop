@@ -1,16 +1,8 @@
 -- Stage-2 ETL: Condition (FHIR R4) → condition_occurrence (OMOP CDM)
 --
 -- Routes by vocab.concept.domain_id='Condition' after Maps-to walk.
--- system_aliases mirrors mapspec/profiles/system-aliases.json (inline so
--- the SQL is self-contained; codegen could replace this with a JOIN to
--- a materialized cm.system_aliases if duplication becomes painful).
-
-WITH system_aliases (system, vocabulary_id) AS (
-    VALUES ('http://snomed.info/sct',            'SNOMED'),
-           ('http://hl7.org/fhir/sid/icd-10-cm', 'ICD10CM'),
-           ('http://hl7.org/fhir/sid/icd-9-cm',  'ICD9CM'),
-           ('http://hl7.org/fhir/sid/icd-10',    'ICD10')
-)
+--
+-- @relatedArtefact https://fhir2omop.health-samurai.io/ConceptMap/fhir-system-to-omop-vocab
 
 SELECT
     referenceToId(v.id)                                                       AS condition_occurrence_id,
@@ -36,10 +28,10 @@ SELECT
     v.clinical_status_code                                                    AS condition_status_source_value
 
 FROM staging.condition_occurrence v
-LEFT JOIN system_aliases sa
-       ON sa.system = v.code_system
+LEFT JOIN cm.fhir_system_to_omop_vocab sa
+       ON sa.source_code = v.code_system
 LEFT JOIN vocab.concept src
-       ON src.vocabulary_id = sa.vocabulary_id
+       ON src.vocabulary_id = sa.target_code
       AND src.concept_code  = v.code_value
 LEFT JOIN vocab.concept_relationship rel
        ON rel.concept_id_1    = src.concept_id
