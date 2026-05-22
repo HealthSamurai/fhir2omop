@@ -12,32 +12,52 @@ export default async function (
     const omopTable = opts.omop_table;
     const limit = opts.limit ?? 20;
 
-    // Join key: prefer the table's PK (<table>_id) — both pipelines hash
-    // the same Patient/Encounter/Condition UUID into the surrogate, so the
-    // values match exactly. Falls back to <table>_source_value otherwise.
-    const candidates = [
-        `${omopTable}_id`,
-        `${omopTable}_source_value`,
-        `${omopTable.replace(/_occurrence$/, "")}_id`,
-        `${omopTable.replace(/_exposure$/,   "")}_id`,
-        `${omopTable.replace(/_occurrence$/, "")}_source_value`,
-        `${omopTable.replace(/_exposure$/,   "")}_source_value`,
-    ];
-    const inList = candidates.map((c) => `'${c}'`).join(",");
+    // Verify both schemas have the table.
     const exists = await ctx.fns.db.query(ctx, {
         sql: `
             SELECT
                 EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema='cdm'           AND table_name=$1) AS ref_ok,
-                EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema='cdm_ours_fhir' AND table_name=$1) AS ours_ok,
-                (SELECT column_name FROM information_schema.columns
-                   WHERE table_schema='cdm' AND table_name=$1 AND column_name IN (${inList})
-                   ORDER BY array_position(ARRAY[${candidates.map((c) => `'${c}'`).join(",")}], column_name)
-                   LIMIT 1) AS key_col
+                EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema='cdm_ours_fhir' AND table_name=$1) AS ours_ok
         `,
         params: [omopTable],
     });
-    if (!exists[0]?.ref_ok || !exists[0]?.ours_ok || !exists[0]?.key_col) return null;
-    const keyCol = exists[0].key_col as string;
+    if (!exists[0]?.ref_ok || !exists[0]?.ours_ok) return null;
+
+    // Join strategy: pick the first column where (a) it exists in both
+    // schemas, AND (b) a JOIN on it actually returns rows. PK <table>_id is
+    // a deterministic hash on our side and a row_number() on the reference
+    // (intentionally different surrogate strategies for tables like
+    // condition_occurrence), so we may need to fall back to either
+    // <table>_source_value or a composite (person_id, source_value,
+    // start_date) that's stable across both pipelines.
+    const stem = omopTable.replace(/_occurrence$|_exposure$|_period$|_era$/, "");
+    const tryKeys: Array<string | string[]> = [
+        `${omopTable}_source_value`,
+        `${stem}_source_value`,
+        `${omopTable}_id`,
+        `${stem}_id`,
+        ["person_id", `${stem}_source_value`, `${stem}_start_date`],
+        ["person_id", `${omopTable}_source_value`, `${omopTable}_start_date`],
+    ];
+    let keyCol: string | string[] | null = null;
+    for (const k of tryKeys) {
+        const keysArr = Array.isArray(k) ? k : [k];
+        const allCols = await ctx.fns.db.query(ctx, {
+            sql: `SELECT count(*)::int AS n FROM information_schema.columns
+                    WHERE table_schema IN ('cdm','cdm_ours_fhir') AND table_name=$1 AND column_name = ANY($2)`,
+            params: [omopTable, keysArr],
+        });
+        if (allCols[0].n !== keysArr.length * 2) continue;  // missing in one or both schemas
+        const onClause = keysArr.map((c) => `o."${c}" IS NOT DISTINCT FROM r."${c}"`).join(" AND ");
+        const probe = await ctx.fns.db.query(ctx, {
+            sql: `SELECT count(*)::int AS n FROM cdm.${omopTable} r JOIN cdm_ours_fhir.${omopTable} o ON ${onClause} LIMIT 1000`,
+        });
+        if (probe[0].n > 0) { keyCol = k; break; }
+    }
+    if (!keyCol) return null;
+    const keysArr = Array.isArray(keyCol) ? keyCol : [keyCol];
+    const onClause = keysArr.map((c) => `o."${c}" IS NOT DISTINCT FROM r."${c}"`).join(" AND ");
+    const displayKey = keysArr.join(" + ");
 
     // Discover shared columns (excl key).
     const shared = await ctx.fns.db.query(ctx, {
@@ -51,33 +71,35 @@ export default async function (
         `,
         params: [omopTable],
     });
-    const cols = shared.map((r: any) => r.column_name as string).filter((c: string) => c !== keyCol);
+    const cols = shared.map((r: any) => r.column_name as string).filter((c: string) => !keysArr.includes(c));
     if (cols.length === 0) return null;
 
-    // Fetch ref + ours rows in one query — preserves order by the ref's key.
+    // Fetch ref + ours rows in one query.
     const selectList = cols.map((c) => `r."${c}" AS "r_${c}", o."${c}" AS "o_${c}"`).join(", ");
+    const keyExpr = keysArr.length === 1
+        ? `r."${keysArr[0]}"::text`
+        : `(${keysArr.map((c) => `r."${c}"::text`).join(" || ' · ' || ")})`;
+    const orderBy = keysArr.map((c) => `r."${c}"`).join(", ");
     const rows = await ctx.fns.db.query(ctx, {
         sql: `
-            SELECT r."${keyCol}" AS key_val, ${selectList}
+            SELECT ${keyExpr} AS key_val, ${selectList}
               FROM cdm.${omopTable} r
-              JOIN cdm_ours_fhir.${omopTable} o
-                ON o."${keyCol}" = r."${keyCol}"
-             ORDER BY r."${keyCol}"
+              JOIN cdm_ours_fhir.${omopTable} o ON ${onClause}
+             ORDER BY ${orderBy}
              LIMIT ${limit}
         `,
     });
 
     if (rows.length === 0) return null;
 
-    // Per-column diff counts on the full table (not just sample) so the
-    // header shows the global divergence picture.
+    // Per-column diff counts on the full table (not just sample).
     const fullDiffs = await ctx.fns.db.query(ctx, {
         sql: `
             SELECT ${cols.map((c) =>
                 `count(*) FILTER (WHERE r."${c}" IS DISTINCT FROM o."${c}")::int AS "mm_${c}"`
             ).join(", ")}
               FROM cdm.${omopTable} r
-              JOIN cdm_ours_fhir.${omopTable} o ON o."${keyCol}" = r."${keyCol}"
+              JOIN cdm_ours_fhir.${omopTable} o ON ${onClause}
         `,
     });
     const mismatches: Record<string, number> = {};
@@ -85,7 +107,7 @@ export default async function (
 
     // Header: key, then one pair (ref / ours) per col.
     const headerCells = [
-        `<th class="sticky left-0 z-10 bg-gray-50 px-2 py-1.5 text-left font-medium border-r border-gray-200" colspan="1">${esc(keyCol)}</th>`,
+        `<th class="sticky left-0 z-10 bg-gray-50 px-2 py-1.5 text-left font-medium border-r border-gray-200" colspan="1">${esc(displayKey)}</th>`,
     ];
     for (const c of cols) {
         const mm = mismatches[c] ?? 0;
