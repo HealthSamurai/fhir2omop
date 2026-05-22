@@ -2,283 +2,34 @@
   "resourceType": "ViewDefinition",
   "id": "omop-diagnosticreport-procedure-occurrence",
   "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-diagnosticreport-procedure-occurrence",
-  "version": "0.2.0",
   "name": "OmopDiagnosticReportProcedureOccurrenceView",
   "title": "DiagnosticReport → procedure_occurrence (FHIR-flat, stage 1)",
+  "version": "0.3.0",
   "status": "draft",
   "experimental": true,
-  "description": "When a DiagnosticReport's LOINC code resolves to an OMOP concept with domain_id = Procedure, the report produces one or more procedure_occurrence rows. This occurs primarily for imaging studies (radiology, nuclear medicine), pathology procedures, and certain clinical assessments whose LOINC codes are classified in the Procedure domain by the OMOP vocabulary. Each conclusionCode entry generates a separate row. This is independent of the Observation results referenced by DiagnosticReport.result[], which are mapped by the Observation mapper.\n\nStage 1 of FHIR→OMOP: produce a flat row keeping source codes per vocabulary. Stage 2 joins vocab.concept to resolve concept_ids.",
   "extension": [
-    {
-      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
-      "valueString": "procedure_occurrence"
-    },
-    {
-      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
-      "valueString": "DiagnosticReport__procedure_occurrence"
-    }
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table", "valueString": "procedure_occurrence" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",        "valueString": "DiagnosticReport__procedure_occurrence" }
   ],
   "resource": "DiagnosticReport",
+  "description": "DR code routed to Procedure domain (e.g., imaging studies). Appends to cdm_ours_fhir.procedure_occurrence.",
+  "constant": [
+    { "name": "loincSystem",   "valueString": "http://loinc.org" },
+    { "name": "snomedSystem",  "valueString": "http://snomed.info/sct" },
+    { "name": "cpt4System",    "valueString": "http://www.ama-assn.org/go/cpt" }
+  ],
   "select": [
     {
       "column": [
-        {
-          "name": "id",
-          "path": "id",
-          "type": "id",
-          "description": "FHIR DiagnosticReport.id; surrogate OMOP key derived (hash/sequence) downstream.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "procedure_occurrence_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "surrogate key from hash/sequence/lookup of FHIR id"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "code_loinc",
-          "path": "code.coding.where(system='http://loinc.org').first().code",
-          "type": "code",
-          "description": "Report code — LOINC",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "procedure_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "lookup vocab.concept WHERE vocabulary_id='LOINC' AND concept_code = (this column); standard_concept='S' preferred"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "code_snomed",
-          "path": "code.coding.where(system='http://snomed.info/sct').first().code",
-          "type": "code",
-          "description": "Report code — SNOMED",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "procedure_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "lookup vocab.concept WHERE vocabulary_id='SNOMED' AND concept_code = (this column); standard_concept='S' preferred"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "code_cpt",
-          "path": "code.coding.where(system='http://www.ama-assn.org/go/cpt').first().code",
-          "type": "code",
-          "description": "Report code — CPT4",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "procedure_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "lookup vocab.concept WHERE vocabulary_id='CPT4' AND concept_code = (this column); standard_concept='S' preferred"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "code_text",
-          "path": "code.text",
-          "type": "string",
-          "description": "Free text label from DiagnosticReport.code",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "procedure_source_value"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "copy text verbatim into OMOP source_value column"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "subject_id",
-          "path": "subject",
-          "type": "Reference(Patient)",
-          "description": "Resolve Patient/{id} reference to integer person_id. Skip row if unresolvable.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "person_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "resolve PERSON reference; downstream maps to person_id"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "procedure_date",
-          "path": "effective[x]",
-          "type": "dateTime|Period",
-          "description": "Date component of effectiveDateTime, or effectivePeriod.start. Skip row if absent (ETL-German behavior).",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "procedure_date"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "procedure_datetime",
-          "path": "effective[x]",
-          "type": "dateTime|Period",
-          "description": "Full timestamp from effectiveDateTime or effectivePeriod.start.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "procedure_datetime"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "procedure_end_date",
-          "path": "effectivePeriod.end",
-          "type": "dateTime",
-          "description": "End date from effectivePeriod.end. ETL-German does not set this field (only uses startDateTime). Leave null for effectiveDateTime.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "procedure_end_date"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "procedure_end_datetime",
-          "path": "effectivePeriod.end",
-          "type": "dateTime",
-          "description": "Full timestamp from effectivePeriod.end. ETL-German does not set this field.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "procedure_end_datetime"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "modifier",
-          "path": "conclusionCode",
-          "type": "Coding",
-          "description": "ETL-German extracts interpretation codes from composite SNOMED expressions in conclusionCode (e.g. the value after = in 118247008:{363713009=373068000}) and resolves them to OMOP concepts (lines 286-297). Set only when conclusionCode contains a :{ composite expression. 0 if absent or unmapped.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "modifier_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "resolve CONCEPT reference; downstream maps to modifier_concept_id"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "performer_id",
-          "path": "performer[0]",
-          "type": "Reference(Practitioner)",
-          "description": "First performer reference resolved to provider_id. Also consider resultsInterpreter[0]. ETL-German does not map this field for DiagnosticReport procedure_occurrence rows (gap in implementation).",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "provider_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "resolve PROVIDER reference; downstream maps to provider_id"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "encounter_id",
-          "path": "encounter",
-          "type": "Reference(Encounter)",
-          "description": "Resolve Encounter/{id} to visit_occurrence_id. ETL-German sets this (line 272).",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "visit_occurrence_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "resolve VISIT_OCCURRENCE reference; downstream maps to visit_occurrence_id"
-                }
-              ]
-            }
-          ]
-        }
+        { "name": "id",            "path": "id",                                                      "type": "id" },
+        { "name": "subject_ref",   "path": "subject.getReferenceKey()",                                "type": "string" },
+        { "name": "encounter_ref", "path": "encounter.getReferenceKey()",                              "type": "string" },
+        { "name": "performer_ref", "path": "performer.first().getReferenceKey()",                      "type": "string" },
+        { "name": "code_loinc",    "path": "code.coding.where(system=%loincSystem).code.first()",      "type": "code" },
+        { "name": "code_snomed",   "path": "code.coding.where(system=%snomedSystem).code.first()",     "type": "code" },
+        { "name": "code_cpt4",     "path": "code.coding.where(system=%cpt4System).code.first()",       "type": "code" },
+        { "name": "code_text",     "path": "code.text",                                                "type": "string" },
+        { "name": "effective_dt",  "path": "effective.ofType(dateTime)",                               "type": "dateTime" }
       ]
     }
   ]
