@@ -21,12 +21,33 @@
   "differential": {
     "element": [
       {
+        "id": "Condition.clinicalStatus",
+        "path": "Condition.clinicalStatus",
+        "mustSupport": true,
+        "binding": {
+          "strength": "required",
+          "valueSet": "http://hl7.org/fhir/ValueSet/condition-clinical",
+          "description": "FHIR disease-state machine (active/recurrence/relapse/inactive/remission/resolved). Carried verbatim to condition_status_source_value and mapped to condition_status_concept_id via cm.fhir_clinical_status_to_omop (only 'resolved'→32906 has a clean OMOP equivalent)."
+        }
+      },
+      {
         "id": "Condition.verificationStatus",
         "path": "Condition.verificationStatus",
+        "mustSupport": true,
         "binding": {
           "strength": "required",
           "valueSet": "http://hl7.org/fhir/ValueSet/condition-ver-status",
-          "description": "Must not be entered-in-error."
+          "description": "Preferred input for condition_status_concept_id — semantically closer to OMOP's diagnostic-confidence axis than clinicalStatus. Maps via cm.fhir_verification_status_to_omop ('confirmed'→32893, 'provisional'→32899). Must not be entered-in-error."
+        }
+      },
+      {
+        "id": "Condition.category",
+        "path": "Condition.category",
+        "mustSupport": true,
+        "binding": {
+          "strength": "preferred",
+          "valueSet": "http://hl7.org/fhir/ValueSet/condition-category",
+          "description": "Maps to condition_type_concept_id via cm.fhir_condition_category_to_omop (encounter-diagnosis→32827, problem-list-item→32840, health-concern→32817). Defaults to 32817 'EHR' when absent."
         }
       },
       {
@@ -37,7 +58,7 @@
         "binding": {
           "strength": "required",
           "valueSet": "https://fhir2omop.health-samurai.io/ValueSet/omop-condition-codes",
-          "description": "SNOMED Condition or a source code (ICD10CM/ICD9CM) that maps to OMOP Condition via concept_relationship 'Maps to'."
+          "description": "Coded diagnosis. Source priority SNOMED → ICD10CM → ICD9CM → ICD10 (deterministic, not coding.first()). Standard concept resolved via vocab.concept_relationship 'Maps to' with domain_id='Condition'."
         }
       },
       {
@@ -49,11 +70,38 @@
         ]
       },
       {
+        "id": "Condition.encounter",
+        "path": "Condition.encounter",
+        "mustSupport": true,
+        "type": [
+          { "code": "Reference", "targetProfile": ["http://hl7.org/fhir/StructureDefinition/Encounter"] }
+        ],
+        "comment": "→ visit_occurrence_id (hash of encounter UUID). NULL when absent."
+      },
+      {
         "id": "Condition.onset[x]",
         "path": "Condition.onset[x]",
         "min": 1,
         "mustSupport": true,
-        "comment": "Required for condition_occurrence.condition_start_date."
+        "comment": "Primary source for condition_start_date/datetime. dateTime + Period branches both supported; Period.start used when only Period is present. Falls back to Condition.recordedDate when both onset branches are missing."
+      },
+      {
+        "id": "Condition.abatement[x]",
+        "path": "Condition.abatement[x]",
+        "mustSupport": true,
+        "comment": "→ condition_end_date/datetime. dateTime + Period.end branches; abatement.string carried into stop_reason."
+      },
+      {
+        "id": "Condition.recordedDate",
+        "path": "Condition.recordedDate",
+        "mustSupport": true,
+        "comment": "Last-resort fallback for condition_start_date when onset is absent. Per HL7 FHIR-OMOP IG, using recorded date as proxy for onset introduces analytical bias — document on a per-source-system basis."
+      },
+      {
+        "id": "Condition.evidence",
+        "path": "Condition.evidence",
+        "mustSupport": true,
+        "comment": "Supporting clinical findings. SNOMED/ICD10CM codes inside evidence.concept.coding act as last-resort fallback (priorities 5–6 in stage-2 UNION ALL) for condition_concept_id when Condition.code has no resolvable coding. Synthea omits this field."
       }
     ]
   }
