@@ -54,5 +54,4 @@ jobs:
         run: bun script/lint-edges.ts --strict
 
       - name: Tests
-        run: bun test --if-present
-        continue-on-error: true   # remove once tests land
+        run: bun test

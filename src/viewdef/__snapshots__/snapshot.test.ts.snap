@@ -1,0 +1,100 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`snap: Patient__person — gender + race + ethnicity + birthsex 1`] = `
+[
+  [
+    "pat-1",
+    "female",
+    "F",
+    "1980-03-14",
+    "2106-3",
+    "White",
+    "2186-5",
+    "Not Hispanic or Latino",
+    null,
+    null,
+    null,
+    "Boston",
+    "MA",
+    "02118",
+    null,
+    "US",
+    null,
+    null,
+  ],
+]
+`;
+
+exports[`snap: Patient__location — single address row 1`] = `
+[
+  [
+    "pat-1",
+    null,
+    null,
+    "Boston",
+    "MA",
+    "02118",
+    null,
+    "US",
+    null,
+    null,
+  ],
+]
+`;
+
+exports[`snap: Condition__condition_occurrence — SNOMED + ICD10CM fan-out 1`] = `
+[
+  [
+    "cond-1",
+    "pat-1",
+    "enc-1",
+    "44054006",
+    "E11.9",
+    null,
+    null,
+    null,
+    "encounter-diagnosis",
+    null,
+    null,
+    "2022-06-01",
+    null,
+    null,
+    null,
+    null,
+    "active",
+    "confirmed",
+    null,
+  ],
+]
+`;
+
+exports[`snap: Observation_component__measurement — BP component fan-out 1`] = `
+[
+  [
+    "obs-bp-1",
+    "pat-1",
+    "enc-1",
+    null,
+    "2024-04-10T08:30:00Z",
+    null,
+    "8480-6",
+    null,
+    124,
+    "mm[Hg]",
+    "mmHg",
+  ],
+  [
+    "obs-bp-1",
+    "pat-1",
+    "enc-1",
+    null,
+    "2024-04-10T08:30:00Z",
+    null,
+    "8462-4",
+    null,
+    78,
+    "mm[Hg]",
+    "mmHg",
+  ],
+]
+`;

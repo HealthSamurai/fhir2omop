@@ -1,0 +1,4 @@
+[test]
+# Skip vendored submodules — refs/refs/recruit ships its own test suite with
+# missing peer deps (pino). Their tests are not ours to run.
+root = "src"

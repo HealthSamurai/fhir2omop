@@ -1,6 +1,9 @@
 {
   "name": "fhir2omop",
   "private": true,
+  "scripts": {
+    "test": "bun test"
+  },
   "peerDependencies": {
     "typescript": "^5"
   },
