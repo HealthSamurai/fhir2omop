@@ -164,6 +164,50 @@ for (const p of plan) {
     log(`  ${p.edge.padEnd(50)} → ${p.target.padEnd(40)} ${n.toString().padStart(7)} rows  ${ms}ms  [${p.mode}]`);
 }
 
+// ── 5. PK / unique constraints on cdm_ours_fhir.* ───────────────────────────
+// Surrogate IDs are 64-bit hashes — collision probability is tiny but
+// non-zero. Without a PK an accidental duplicate from multi-edge appends
+// would silently coexist. We DROP-and-recreate the PK so the load is
+// idempotent.
+log("PK / unique constraints");
+const PK_BY_TABLE: Record<string, string> = {
+    "person":                "person_id",
+    "location":              "location_id",
+    "care_site":             "care_site_id",
+    "provider":              "provider_id",
+    "visit_occurrence":      "visit_occurrence_id",
+    "condition_occurrence":  "condition_occurrence_id",
+    "procedure_occurrence":  "procedure_occurrence_id",
+    "measurement":           "measurement_id",
+    "observation":           "observation_id",
+    "note":                  "note_id",
+    "drug_exposure":         "drug_exposure_id",
+    "device_exposure":       "device_exposure_id",
+    "death":                 "person_id",      // death has no own surrogate
+    "observation_period":    "observation_period_id",
+};
+for (const [tbl, col] of Object.entries(PK_BY_TABLE)) {
+    const ok = await sql.unsafe(
+        `SELECT 1 FROM information_schema.tables WHERE table_schema='cdm_ours_fhir' AND table_name=$1`,
+        [tbl],
+    );
+    if (ok.length === 0) continue;
+    // Drop any existing PK on the table then add fresh one.
+    await psql(`
+        DO $$ DECLARE c text;
+        BEGIN
+            SELECT conname INTO c FROM pg_constraint
+              WHERE conrelid = 'cdm_ours_fhir.${tbl}'::regclass AND contype = 'p';
+            IF c IS NOT NULL THEN EXECUTE format('ALTER TABLE cdm_ours_fhir.${tbl} DROP CONSTRAINT %I', c); END IF;
+        END$$;
+        ALTER TABLE cdm_ours_fhir.${tbl} ADD PRIMARY KEY (${col});
+    `).catch((e: any) => {
+        const msg = (e.message ?? String(e)).split("\n")[0].slice(0, 120);
+        log(`  WARN ${tbl}: ${msg}`);
+    });
+    log(`  PK on cdm_ours_fhir.${tbl} (${col})`);
+}
+
 log("done");
 await sql.end();
 process.exit(0);

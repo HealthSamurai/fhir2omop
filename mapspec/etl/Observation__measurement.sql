@@ -11,7 +11,9 @@
 -- @relatedArtefact https://fhir2omop.health-samurai.io/ConceptMap/fhir-system-to-omop-vocab
 
 WITH resolved AS (
-    SELECT
+    -- DISTINCT ON: 1→N Maps-to occurs in SNOMED. Pick the lowest target
+    -- concept_id deterministically (GAPS.md §6).
+    SELECT DISTINCT ON (v.id)
         v.id AS staging_id,
         src.concept_id AS src_concept_id,
         std.concept_id AS std_concept_id
@@ -20,15 +22,17 @@ WITH resolved AS (
     JOIN vocab.concept src                ON src.vocabulary_id = sa.target_code AND src.concept_code = v.code_value
     JOIN vocab.concept_relationship rel   ON rel.concept_id_1 = src.concept_id AND rel.relationship_id = 'Maps to' AND rel.invalid_reason IS NULL
     JOIN vocab.concept std                ON std.concept_id = rel.concept_id_2 AND std.standard_concept = 'S' AND std.domain_id = 'Measurement'
+    ORDER BY v.id, std.concept_id
 ),
 value_resolved AS (
-    SELECT v.id AS staging_id, vstd.concept_id AS value_as_concept_id
+    SELECT DISTINCT ON (v.id) v.id AS staging_id, vstd.concept_id AS value_as_concept_id
     FROM staging.obs_meas_view v
     JOIN cm.fhir_system_to_omop_vocab vsa ON vsa.source_code = v.value_code_system
     JOIN vocab.concept vsrc               ON vsrc.vocabulary_id = vsa.target_code AND vsrc.concept_code = v.value_code
     JOIN vocab.concept_relationship vrel  ON vrel.concept_id_1 = vsrc.concept_id AND vrel.relationship_id = 'Maps to' AND vrel.invalid_reason IS NULL
     JOIN vocab.concept vstd               ON vstd.concept_id = vrel.concept_id_2 AND vstd.standard_concept = 'S'
     WHERE v.value_code_system IS NOT NULL
+    ORDER BY v.id, vstd.concept_id
 ),
 operator_map (op_code, concept_id) AS (
     VALUES ('<', 4171756), ('<=', 4171754), ('>=', 4171755), ('>', 4172703)
