@@ -25,9 +25,10 @@ bun install
 bun src/load-fhir-core.ts
 
 # 4. Sanity checks
-ls mapspec/edges/    | wc -l    # 28 FHIR→OMOP edge maps
-ls mapspec/profiles/ | wc -l    # 28 profiles + valuesets + ConceptMaps (.cm.json)
-ls mapspec/views/    | wc -l    # 28 ViewDefinitions (Stage-1 flatteners)
+ls mapspec/edges/    | wc -l    # 29 FHIR→OMOP edge maps
+ls mapspec/profiles/ | wc -l    # 28 profiles + 8 valuesets + 9 ConceptMaps (.cm.json) + system-aliases.json
+ls mapspec/views/    | wc -l    # 29 ViewDefinitions (Stage-1 flatteners)
+ls mapspec/etl/      | wc -l    # 24 stage-2 SQL ETLs + _functions.sql (+ 5 stub views for non-Synthea resources)
 ls mapspec/etl/      | wc -l    # Stage-2 SQL files + _functions.sql
 
 # 5. Bring up Postgres + load Athena vocabularies (~6.4M concepts, ~75M ancestor rows)
@@ -45,7 +46,7 @@ cd ..
 PGPASSWORD=athena psql -h localhost -p 54392 -U athena -d athena -v ON_ERROR_STOP=1 \
   -f mapspec/etl/_functions.sql                            # referenceToId() helper
 bun script/load-fhir.ts synthea/output/fhir                # → fhir.* (105 patient rows + others)
-bun script/load-cdm-person.ts                              # Synthea CSV → cdm.* (reference oracle)
+bun script/load-cdm-reference.ts                              # Synthea CSV → cdm.* (reference oracle)
 # (cm.* / staging.* / cdm_ours_fhir.* are built by the server on first edge view, or
 #  via REPL — see "Patient → person pipeline" below.)
 
@@ -158,14 +159,14 @@ if you need them.
 Local Synthea generator — a single jar + settings file, no docker, no R-ETL
 build. Reference oracle (`cdm.*`) is built directly from the CSV output by
 our own loader instead of the OHDSI R-based ETL — much faster (~40 ms vs
-~30 min) and the mapping is transparent SQL (see `script/load-cdm-person.ts`).
+~30 min) and the mapping is transparent SQL (see `script/load-cdm-reference.ts`).
 
 ```
 synthea/
 ├── synthea-with-dependencies.jar   # gitignored — wget from synthetichealth/synthea v3.2.0 release
 ├── settings.conf                   # exporter.fhir.use_us_core_ig = true
 ├── output/                         # gitignored
-│   ├── csv/   patients.csv, encounters.csv, …  # → cdm.* via load-cdm-person.ts
+│   ├── csv/   patients.csv, encounters.csv, …  # → cdm.* via load-cdm-reference.ts
 │   └── fhir/  *.json (one bundle per patient + hospital + practitioner)  # → fhir.*
 └── generate.log
 ```
@@ -187,7 +188,7 @@ Pipeline (FHIR → OMOP, ours) vs reference (Synthea CSV → OMOP, oracle):
 ```
 [Synthea seed=1779010226473, 100 living patients (~105 total)]
         │
-        ├──→ synthea/output/csv/    ──► bun script/load-cdm-person.ts  ──► cdm.*           (reference oracle)
+        ├──→ synthea/output/csv/    ──► bun script/load-cdm-reference.ts  ──► cdm.*           (reference oracle)
         │                                                                                  │
         └──→ synthea/output/fhir/   ──► bun script/load-fhir.ts        ──► fhir.*          │
                                                                           │                │
@@ -214,7 +215,7 @@ direct (no surrogate-id remap).
 |---|---|---|---|
 | `vocab.*`           | Athena bundle | `bun script/init-athena.ts` | Standardized vocabularies — read-only |
 | `cm.*`              | `mapspec/profiles/*.cm.json` | `ctx.fns.conceptmap.materialize` | Source-code → OMOP concept_id lookup tables (one per ConceptMap) |
-| `cdm.*`             | `synthea/output/csv/`        | `bun script/load-cdm-person.ts` | **Reference OMOP** (oracle), Synthea CSV → CDM v5.4 |
+| `cdm.*`             | `synthea/output/csv/`        | `bun script/load-cdm-reference.ts` | **Reference OMOP** (oracle), Synthea CSV → CDM v5.4 |
 | `fhir.*`            | `synthea/output/fhir/`       | `bun script/load-fhir.ts`       | Raw FHIR resources (jsonb staging) |
 | `staging.*`         | `fhir.*` + view JSONs        | `ctx.fns.viewdef.materialize`   | Stage-1 FHIR-flat materializations (one per ViewDefinition) |
 | `cdm_ours_fhir.*`   | `staging.*` + `cm.*`         | `mapspec/etl/<R>__<T>.sql`      | Our FHIR→OMOP pipeline target (diff against `cdm.*`) |
@@ -233,7 +234,7 @@ JOIN cdm.person   op ON op.person_source_value = fp.id;
 `docker-compose.yml` bind-mounts `./synthea/output:/synthea:ro` so Postgres
 can `COPY … FROM '/synthea/csv/patients.csv'` directly. The CSV path is
 relative to the server's filesystem, not the client. Used by
-`script/load-cdm-person.ts` to load 100 patients in ~40 ms (single
+`script/load-cdm-reference.ts` to load 100 patients in ~40 ms (single
 round-trip, no per-row JS encoding).
 
 ### Bun.SQL gotchas
@@ -639,11 +640,17 @@ mapspec/
 - `references[]` — edge-level reference implementations (with the same
   Reference shape used per-field).
 
-Status (May 2026): 28 edges across 20 FHIR resources → 16 OMOP tables.
-`bun -e '...'` over the JSONs shows **136 / 439 fields** carry per-field
-`sources[]`, totalling **327 source-groups** with concrete file/line refs.
-The rest are trivial mappings (constants, single-impl, source-value direct
-copies) — no fabrication, no sources beyond what the markdowns supported.
+Status (May 2026): 29 edges across 21 FHIR resources → 16 OMOP tables.
+24 / 29 edges have wired stage-2 SQL (`mapspec/etl/<R>__<T>.sql`); the
+other 5 are stubs for resources Synthea doesn't emit (Coverage, Specimen,
+Medication, MedicationDispense, MedicationStatement). On a 100-patient
+Synthea cohort the full orchestrator (cm.* → staging.* → cdm_ours_fhir.*)
+finishes in ~30 seconds and populates 14 OMOP tables (~74k rows).
+`bun -e '...'` over the edge JSONs shows **136 / 439 fields** carry
+per-field `sources[]`, totalling **327 source-groups** with concrete
+file/line refs. The rest are trivial mappings (constants, single-impl,
+source-value direct copies) — no fabrication, no sources beyond what
+the markdowns supported.
 
 Adding/editing a mapping: edit `mapspec/edges/<R>__<T>.json` (validate against
 `mapspec/schema/edge.schema.json`). The renderer picks up changes after a
