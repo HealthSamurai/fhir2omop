@@ -16,29 +16,29 @@ tables, end-to-end run ~30s.
       diffs declared view columns vs `v.<col>` refs in stage-2 SQL,
       wired into CI (`--strict`).
 
-- [~] **Profile validation on stage-1** — Lightweight version
-      delivered as `script/validate-staging.ts`: checks that every
-      materialized staging.* table exists, has rows, has zero NULL
-      `id`s, and reports per-FK-reference NULL rates. Flags 100%-NULL
-      columns as `VIOL`, partial as `INFO`. Catches the common
-      "reference missing from source" case before garbage flows
-      downstream; surfaced 10 real Synthea-data gaps (Procedure has
-      no performer, Encounter has no part_of, PractitionerRole has no
-      practitioner back-link, etc.).
-      Still TODO: full FHIR-profile-driven validation — compile
-      `differential.element[].min:1` constraints from the
-      StructureDefinition profile into a SQL WHERE clause and filter
-      non-conformant resources out of `staging.*`. Useful for real
-      EHR data where Synthea's "everything has subject + code"
-      guarantees don't hold.
+- [x] **Profile validation on stage-1** — Two complementary pieces:
+      (a) `script/validate-staging.ts` reports per-FK-reference NULL
+      rates against materialized staging.* (offline diagnostic);
+      (b) `src/profiles/compile.ts` compiles a profile's
+      `differential.element[].min:1` constraints into a JSONB SQL
+      WHERE clause that materialize.ts applies when the orchestrator
+      runs with `--strict-profiles`. Verified on 100-patient Synthea:
+      filter is off by default (zero diff impact); under
+      `--strict-profiles` it correctly removes 2,649 BP outer
+      Observations that lack top-level `value[x]` (they route to the
+      component edge instead). Other staging counts identical → the
+      cohort conforms to every profile.
 
 ## Performance
 
-- [~] **Pre-materialized vocab maps** — Deferred. The original
-      premise (2–10× speedup for vocab JOINs) was eaten by the
-      Maps-to partial index (Observation_measurement: 8.9s→0.7s, 12×).
-      Full 100-patient pipeline now runs in ~26s; no big-ETL is
-      vocab-bound. Worth revisiting when scaling to ≥1M patients.
+- [x] **Pre-materialized vocab maps** — `script/gen-vocab-maps.ts`
+      builds 13 `cm.<vocab>_to_<domain>` lookup tables (LOINC→Meas,
+      LOINC→Obs, SNOMED→{Cond,Proc,Obs,Specimen,Device}, RxNorm→Drug,
+      ICD10/9CM→Cond, CPT4→Proc, HCPCS→Proc, CVX→Drug). 824k rows
+      materialized in ~4s. The 24 existing stage-2 SQLs are NOT
+      rewritten (their vocab.concept_relationship JOINs already
+      sub-second post Maps-to index); the cm.* tables are available
+      for new edges to opt into.
 
 - [x] **Partial index on Maps-to** — `script/init-vocab-indexes.sql`
       adds `ix_concept_relationship_mapsto` (concept_id_1, concept_id_2)
@@ -46,11 +46,13 @@ tables, end-to-end run ~30s.
       Speedups observed: Condition 2.5s→60ms, Procedure 2.3s→91ms,
       Observation_meas 8.9s→0.7s.
 
-- [~] **Per-batch streaming for `viewdef.materialize`** — Deferred.
-      100-patient pipeline runs in ~26s with no memory pressure. Will
-      need to revisit at ≥1M patients; the migration is a localized
-      change in `src/viewdef/materialize.ts` from buffered `SELECT` to
-      `Bun.SQL.simple()` streaming + per-row INSERT batching.
+- [x] **Per-batch streaming for `viewdef.materialize`** — Refactored
+      to keyset-paginated reads (`WHERE id > <cursor> ORDER BY id
+      LIMIT PAGE`). JS memory now bounded to one PAGE worth (default
+      5000 rows, override via `VIEWDEF_PAGE_SIZE`) regardless of
+      cohort size. End-to-end time unchanged at 100 patients
+      (~26s) — confirms the change isn't a perf regression at small
+      scale while making 1M+ patient runs viable.
 
 ## Code quality
 
@@ -91,11 +93,18 @@ tables, end-to-end run ~30s.
       3,586 BP rows (1,793 × systolic/diastolic) on 100-patient
       Synthea.
 
-- [ ] **CVX vocab missing from Athena bundle** — Immunization edge
-      produces 0 rows. Refresh the bundle from
-      [athena.ohdsi.org/vocabulary/download-history](https://athena.ohdsi.org/vocabulary/download-history)
-      with CVX selected, then `bun script/init-athena.ts gs://…/newer.zip`.
-      **External — needs Athena account + GCS upload.**
+- [x] **CVX vocab missing from Athena bundle** — Loaded directly
+      from the CDC public source (`https://www2a.cdc.gov/vaccines/iis/
+      iisstandards/downloads/cvx.txt`) via `script/load-cvx.ts`.
+      289 concepts inserted into `vocab.concept` with vocabulary_id
+      `CVX`, concept_ids in the OMOP Extension reserve range
+      (2_000_000_000+). Doesn't ship the CVX→RxNorm crosswalk
+      (Athena-only), so `Immunization__drug_exposure` was relaxed to
+      LEFT JOIN on Maps-to: 1,616 Synthea immunizations now land in
+      `cdm_ours_fhir.drug_exposure` with `drug_source_concept_id`
+      populated to the CVX concept (was 0 rows before). When a future
+      Athena bundle adds CVX, `drug_concept_id` will start populating
+      retroactively on the next run.
 
 ## UI / operations
 

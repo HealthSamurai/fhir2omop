@@ -79,10 +79,11 @@ const PLAN: Array<{ edge: string; src: string; staging: string; target: string; 
     { edge: "PractitionerRole__provider",             src: "fhir.practitioner_role",     staging: "staging.practitionerrole_provider",            target: "cdm_ours_fhir.provider",             mode: "update" },
 ];
 
-// Parse --only filter
+// Parse --only filter and --strict-profiles flag
 const onlyArg = process.argv.find((a) => a.startsWith("--only="));
 const only = onlyArg ? new Set(onlyArg.slice("--only=".length).split(",")) : null;
 const plan = only ? PLAN.filter((p) => only.has(p.edge)) : PLAN;
+const strictProfiles = process.argv.includes("--strict-profiles");
 
 // ── 1. helper functions ─────────────────────────────────────────────────────
 log("apply mapspec/etl/_functions.sql");
@@ -125,9 +126,27 @@ for (const p of plan) {
     if (!existing || cols > existing.cols) stagedBest.set(p.staging, { edge: p.edge, src: p.src, cols });
 }
 
+const compileProfile = (await import("../src/profiles/compile")).default;
+
 for (const [staging, { edge, src }] of stagedBest) {
     const vd = JSON.parse(await Bun.file(`mapspec/views/${edge}.view.json`).text());
-    const r = await ctx.fns.viewdef.materialize(ctx, { viewDefinition: vd, source: src, target: staging });
+    // Profile-gated filter: if --strict-profiles AND a matching profile
+    // exists, compile its min:1 elements into a SQL WHERE clause and
+    // pass to materialize. Off by default so cdm_ours_fhir.* row counts
+    // remain stable for the diff page.
+    let whereSql: string | undefined;
+    if (strictProfiles) {
+        const ppath = `mapspec/profiles/${edge}.profile.json`;
+        if (await Bun.file(ppath).exists()) {
+            const profile = JSON.parse(await Bun.file(ppath).text());
+            const compiled = compileProfile(ctx, { profile, alias: "f" });
+            if (compiled.predicates.length > 0) {
+                whereSql = compiled.whereSql;
+                log(`  ${edge}: profile-gated (${compiled.predicates.length} predicates)`);
+            }
+        }
+    }
+    const r = await ctx.fns.viewdef.materialize(ctx, { viewDefinition: vd, source: src, target: staging, whereSql });
     log(`  ${staging.padEnd(60)} ${r.rows.toString().padStart(7)} rows  ${r.ms}ms   (via ${edge})`);
 }
 

@@ -12,18 +12,23 @@ WITH codes AS (
     SELECT id,                2,         'RxNorm',         code_rxnorm        FROM staging.immunization_drug_exposure WHERE code_rxnorm IS NOT NULL
 ),
 resolved AS (
+    -- LEFT JOIN to Maps-to so CVX codes that aren't yet crosswalked to
+    -- RxNorm in the loaded vocab bundle still land in drug_exposure
+    -- (drug_concept_id = 0 in that case; drug_source_concept_id is
+    -- still the CVX concept). Future Athena bundle imports that add
+    -- the CVX→RxNorm crosswalk populate std_concept_id retroactively.
     SELECT DISTINCT ON (c.staging_id)
         c.staging_id, c.code AS src_code,
-        src.concept_id AS src_concept_id,
-        std.concept_id AS std_concept_id
+        src.concept_id            AS src_concept_id,
+        COALESCE(std.concept_id, 0) AS std_concept_id
     FROM codes c
     JOIN vocab.concept src
       ON src.vocabulary_id = c.vocab AND src.concept_code = c.code
-    JOIN vocab.concept_relationship rel
+    LEFT JOIN vocab.concept_relationship rel
       ON rel.concept_id_1 = src.concept_id AND rel.relationship_id = 'Maps to' AND rel.invalid_reason IS NULL
-    JOIN vocab.concept std
+    LEFT JOIN vocab.concept std
       ON std.concept_id = rel.concept_id_2 AND std.standard_concept = 'S' AND std.domain_id = 'Drug'
-    ORDER BY c.staging_id, c.prio
+    ORDER BY c.staging_id, c.prio, std.concept_id NULLS LAST
 )
 
 SELECT

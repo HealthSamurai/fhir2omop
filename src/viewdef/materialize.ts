@@ -27,6 +27,8 @@ export default async function (
         viewDefinition: any;
         source: string;
         target: string;
+        /** Optional profile WHERE clause to filter the SELECT (jsonb predicate). */
+        whereSql?: string;
     },
 ): Promise<{ rows: number; columns: string[]; ms: number }> {
     const t0 = Date.now();
@@ -48,20 +50,35 @@ export default async function (
     );
     const writer = Bun.file(tmp).writer();
 
-    const allRows = await ctx.fns.db.query(ctx, {
-        sql: `SELECT resource FROM ${opts.source}`,
-    });
+    // Stream the source in fixed-size pages so JS memory stays bounded
+    // regardless of cohort size. Keyset paginate on `id` (text) — every
+    // fhir.* table has it, and a text-ordered keyset scan walks the
+    // table once in btree order without OFFSET's quadratic re-scan.
+    const PAGE = parseInt(ctx.env.VIEWDEF_PAGE_SIZE ?? "5000", 10);
+    let cursor: string | null = null;
     let total = 0;
     const colCount = cols.length;
-    for (const row of allRows) {
-        const viewRows = run(ctx, {
-            resource: row.resource,
-            viewDefinition: opts.viewDefinition,
+    while (true) {
+        const cursorClause = cursor === null ? "" : `id > '${cursor.replace(/'/g, "''")}'`;
+        const profileClause = opts.whereSql && opts.whereSql !== "TRUE" ? opts.whereSql : "";
+        const clauses = [cursorClause, profileClause].filter(Boolean);
+        const where = clauses.length === 0 ? "" : ` WHERE ${clauses.map((c) => `(${c})`).join(" AND ")}`;
+        const chunk = await ctx.fns.db.query(ctx, {
+            sql: `SELECT id, resource FROM ${opts.source} f${where} ORDER BY id LIMIT ${PAGE}`,
         });
-        for (const r of viewRows) {
-            writer.write(csvLine(r, colCount) + "\n");
-            total++;
+        if (chunk.length === 0) break;
+        for (const row of chunk) {
+            const viewRows = run(ctx, {
+                resource: row.resource,
+                viewDefinition: opts.viewDefinition,
+            });
+            for (const r of viewRows) {
+                writer.write(csvLine(r, colCount) + "\n");
+                total++;
+            }
         }
+        cursor = chunk[chunk.length - 1].id;
+        if (chunk.length < PAGE) break;
     }
     await writer.end();
 
