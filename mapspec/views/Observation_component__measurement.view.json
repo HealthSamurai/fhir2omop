@@ -1,0 +1,41 @@
+{
+  "resourceType": "ViewDefinition",
+  "id": "omop-observation-component-measurement",
+  "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-observation-component-measurement",
+  "name": "OmopObservationComponentMeasurementView",
+  "title": "Observation.component[] → measurement (FHIR-flat, stage 1)",
+  "version": "0.3.0",
+  "status": "draft",
+  "experimental": true,
+  "extension": [
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table", "valueString": "measurement" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",        "valueString": "Observation_component__measurement" }
+  ],
+  "resource": "Observation",
+  "description": "Fan-out Observation.component[] into separate measurement rows — one row per component. The canonical use case is blood pressure: an outer Observation with `code=85354-9` and two components with `code=8480-6` (systolic) + `code=8462-4` (diastolic). measurement_id is derived from (Observation.id, component-index) so each component is unique.",
+  "constant": [
+    { "name": "loincSystem", "valueString": "http://loinc.org" }
+  ],
+  "select": [
+    {
+      "column": [
+        { "name": "id",            "path": "id",                              "type": "id" },
+        { "name": "subject_id",    "path": "subject.getReferenceKey()",        "type": "string" },
+        { "name": "encounter_id",  "path": "encounter.getReferenceKey()",      "type": "string" },
+        { "name": "performer_id",  "path": "performer.first().getReferenceKey()", "type": "string" },
+        { "name": "effective_dt",  "path": "effective.ofType(dateTime)",       "type": "dateTime" },
+        { "name": "effective_period_start", "path": "effective.ofType(Period).start", "type": "dateTime" }
+      ]
+    },
+    {
+      "forEach": "component",
+      "column": [
+        { "name": "component_code_loinc", "path": "code.coding.where(system=%loincSystem).code.first()", "type": "code" },
+        { "name": "component_code_text",  "path": "code.text",                                          "type": "string" },
+        { "name": "component_value_num",  "path": "valueQuantity.value",                                "type": "decimal" },
+        { "name": "component_unit_code",  "path": "valueQuantity.code",                                 "type": "code" },
+        { "name": "component_unit_text",  "path": "valueQuantity.unit",                                 "type": "string" }
+      ]
+    }
+  ]
+}

@@ -56,6 +56,7 @@ const PLAN: Array<{ edge: string; src: string; staging: string; target: string; 
     { edge: "DiagnosticReport__procedure_occurrence", src: "fhir.diagnostic_report",     staging: "staging.diagnosticreport_procedure_occurrence",target: "cdm_ours_fhir.procedure_occurrence", mode: "append" },
 
     { edge: "Observation__measurement",               src: "fhir.observation",           staging: "staging.obs_meas_view",                        target: "cdm_ours_fhir.measurement",          mode: "truncate" },
+    { edge: "Observation_component__measurement",     src: "fhir.observation",           staging: "staging.observation_component_measurement",    target: "cdm_ours_fhir.measurement",          mode: "append" },
     { edge: "DiagnosticReport__measurement",          src: "fhir.diagnostic_report",     staging: "staging.diagnosticreport_measurement",         target: "cdm_ours_fhir.measurement",          mode: "append" },
 
     { edge: "Observation__observation",               src: "fhir.observation",           staging: "staging.obs_obs_view",                         target: "cdm_ours_fhir.observation",          mode: "truncate" },

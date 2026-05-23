@@ -1,0 +1,70 @@
+{
+  "$schema": "../schema/edge.schema.json",
+  "fhir_resource": "Observation",
+  "omop_table": "measurement",
+  "direction": "fhir-to-omop",
+  "status": "implemented",
+  "primary": false,
+  "required": false,
+  "condition": "Observation has component[] — each component fans out into its own measurement row (e.g. blood pressure 85354-9 splits into 8480-6 systolic + 8462-4 diastolic).",
+  "narrative_md": "Sibling edge to `Observation__measurement` that expands `Observation.component[]`. The view does `forEach: component` so each component becomes one staging row; stage-2 derives `measurement_id` from `hash(Observation.id || component.code)` so each component has a deterministic, collision-resistant surrogate.\n\nWithout this edge, component data (the actual systolic/diastolic numbers of a BP reading) was silently dropped. Synthea emits ~2,650 Observations with `component`; this edge captures the inner measurements they carry.",
+  "fields": [
+    {
+      "omop_column": "measurement_id",
+      "fhir_path": "Observation.id + '/' + component.code",
+      "fhir_type": "id",
+      "omop_type": "integer",
+      "required": true,
+      "pk": true,
+      "notes": "hashtextextended(Observation.id || '/' || component.code, 0)"
+    },
+    {
+      "omop_column": "measurement_concept_id",
+      "fhir_path": "Observation.component.code",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "CONCEPT",
+      "notes": "LOINC → standard Measurement concept via vocab.concept_relationship 'Maps to'."
+    },
+    {
+      "omop_column": "value_as_number",
+      "fhir_path": "Observation.component.valueQuantity.value",
+      "fhir_type": "decimal",
+      "omop_type": "float",
+      "notes": "Numeric only — coded components route to observation, not measurement."
+    },
+    {
+      "omop_column": "unit_concept_id",
+      "fhir_path": "Observation.component.valueQuantity.code",
+      "fhir_type": "code",
+      "omop_type": "integer",
+      "fk": "CONCEPT",
+      "notes": "UCUM lookup; 0 when not found."
+    },
+    {
+      "omop_column": "measurement_date",
+      "fhir_path": "Observation.effectiveDateTime | Observation.effectivePeriod.start",
+      "fhir_type": "dateTime",
+      "omop_type": "date",
+      "notes": "Copied from the parent Observation — components share the parent's timing."
+    },
+    {
+      "omop_column": "measurement_type_concept_id",
+      "fhir_path": "(constant)",
+      "fhir_type": "code",
+      "omop_type": "integer",
+      "fk": "CONCEPT",
+      "constant": "32817",
+      "notes": "32817 = 'EHR' — same as parent Observation_measurement."
+    }
+  ],
+  "references": [
+    {
+      "project": "fhir-omop-ig",
+      "kind": "spec",
+      "path": "refs/refs/fhir-omop-ig/input/maps/observation.fml",
+      "notes": "HL7 IG draft StructureMap — does not specify component fan-out; this edge fills that gap."
+    }
+  ]
+}
