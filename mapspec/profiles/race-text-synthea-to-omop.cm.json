@@ -1,0 +1,23 @@
+{
+  "resourceType": "ConceptMap",
+  "id": "race-text-synthea-to-omop",
+  "url": "https://fhir2omop.health-samurai.io/ConceptMap/race-text-synthea-to-omop",
+  "version": "0.1.0",
+  "name": "RaceTextSyntheaToOmop",
+  "title": "Synthea Patient.extension(us-core-race).text → OMOP race_concept_id (Other recovery)",
+  "status": "active",
+  "experimental": true,
+  "description": "Source-specific derived map that recovers the 'Other' (8522) vs 'Unknown' (8552) distinction that the generic OMB ombCategory map loses. Synthea writes BOTH ombCategory=UNK AND text='Other' for patients of races outside the 5 OMB categories — the generic race-omb-to-omop map sends those to 8552 (Unknown). This map looks at the `text` extension and routes 'Other' → 8522, 'Unknown'/null → 8552. Use as fallback when ombCategory=UNK only. See `mapspec/GAPS.md` §7.",
+  "sourceUri": "https://github.com/synthetichealth/synthea",
+  "targetUri": "https://athena.ohdsi.org/search-terms/terms?domain=Race",
+  "group": [
+    {
+      "source": "https://github.com/synthetichealth/synthea",
+      "target": "https://athena.ohdsi.org/search-terms/terms?domain=Race",
+      "element": [
+        { "code": "Other",   "display": "Other (Synthea narrative)", "target": [{ "code": "8522", "display": "Other Race", "equivalence": "equivalent" }] },
+        { "code": "Unknown", "display": "Unknown (Synthea narrative)", "target": [{ "code": "8552", "display": "No matching concept", "equivalence": "equivalent" }] }
+      ]
+    }
+  ]
+}

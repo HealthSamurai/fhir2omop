@@ -246,6 +246,41 @@ insufficient.
 
 ---
 
+## 9. Timezone semantics per source CSV (ETL convention)
+
+Synthea writes timestamps with different precisions and zones depending
+on the CSV. The stage-2 ETLs must cast each in a way that matches the
+**source CSV's own semantics**, not a single project-wide rule. Mixing
+them silently breaks the cdm.* ↔ cdm_ours_fhir.* diff.
+
+| Source CSV | Column shape | FHIR rendering | OMOP cast convention |
+|---|---|---|---|
+| `encounters.csv` | `START, STOP` — ISO-8601 with `Z` (UTC) | `Encounter.period.start/end` (local tz) | `(v.encounter_start::timestamptz AT TIME ZONE 'UTC')::date` — convert FHIR's local-tz back to the UTC the CSV stored. |
+| `procedures.csv` | `START, STOP` — UTC | `Procedure.performedDateTime` / `performedPeriod` (local tz) | Same UTC-rebase as Encounter. |
+| `observations.csv` | `DATE` — UTC | `Observation.effectiveDateTime` (local tz) | Same UTC-rebase. |
+| `conditions.csv` | `START, STOP` — naive **local date** (`YYYY-MM-DD`, no time, no zone) | `Condition.onsetDateTime` (local tz, with time) | `v.onset_dt::date` — naive `::date` cast; **don't** rebase to UTC or the date can flip ±1 across the dateline. |
+| `medications.csv` | `START, STOP` — UTC | `MedicationRequest.authoredOn` (local tz) | UTC-rebase for `drug_exposure_start_datetime`; `::date` for `_start_date`. |
+| `careplans.csv`, `imaging_studies.csv`, `immunizations.csv`, `allergies.csv`, `devices.csv` | Mixed — UTC for datetime-bearing CSVs, naive date for date-only CSVs | varies | Follow the CSV column type: if it has a `T...Z`, UTC-rebase; if it's a bare `YYYY-MM-DD`, naive `::date`. |
+
+**Rule of thumb**: ask "does the *source CSV* string contain a `Z` or
+offset?" — if yes, the FHIR resource was generated **with timezone
+conversion away from UTC**, and the cast must undo that to recover the
+CSV's clock. If the CSV column is a bare date, treat the FHIR value as
+already in the user's clock and cast `::date` without rebasing.
+
+This is why `cdm.condition_occurrence.condition_start_date = '2024-04-09'`
+but `cdm_ours_fhir.condition_occurrence.condition_start_date =
+'2024-04-10'` when you forget — the FHIR resource has
+`onsetDateTime: 2024-04-09T22:00:00-04:00`, which is `2024-04-10T02:00Z`,
+and casting through `timestamptz AT TIME ZONE 'UTC'` then `::date` lands
+in the wrong day.
+
+The convention is encoded across the per-edge stage-2 SQLs and tested
+via the side-by-side diff page; this section documents it so future
+edge authors don't reinvent or mismatch it.
+
+---
+
 ## Action checklist
 
 - [ ] Fix 8 hardcoded `*_source_concept_id` gaps (§1) — add `fhir_path`,
