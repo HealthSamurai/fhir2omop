@@ -50,6 +50,9 @@ jobs:
           }
           process.exit(bad ? 1 : 0);'
 
+      - name: Lint edges (stage-2 SQL refs match view columns)
+        run: bun script/lint-edges.ts --strict
+
       - name: Tests
         run: bun test --if-present
         continue-on-error: true   # remove once tests land
