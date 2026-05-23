@@ -2,152 +2,28 @@
   "resourceType": "ViewDefinition",
   "id": "omop-medication-drug-exposure",
   "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-medication-drug-exposure",
-  "version": "0.2.0",
   "name": "OmopMedicationDrugExposureView",
   "title": "Medication → drug_exposure (FHIR-flat, stage 1)",
+  "version": "0.3.0",
   "status": "draft",
   "experimental": true,
-  "description": "The FHIR Medication resource is a vocabulary/codeable-concept resource, not a medication event. It does NOT directly produce a drug_exposure row. Instead, its code and ingredient data are resolved into drug_concept_id and drug_source_value on drug_exposure rows produced by the four event resources (MedicationRequest, MedicationDispense, MedicationAdministration, MedicationStatement). This edge documents how Medication fields contribute to drug_exposure columns when referenced.\n\nStage 1 of FHIR→OMOP: produce a flat row keeping source codes per vocabulary. Stage 2 joins vocab.concept to resolve concept_ids.",
   "extension": [
-    {
-      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
-      "valueString": "drug_exposure"
-    },
-    {
-      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
-      "valueString": "Medication__drug_exposure"
-    }
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table", "valueString": "drug_exposure" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",        "valueString": "Medication__drug_exposure" }
   ],
   "resource": "Medication",
+  "description": "Standalone Medication resource — drug definition without a patient. Usually NOT mapped to drug_exposure directly; flattened here for completeness so downstream can pick it up if a custom patient link exists.",
+  "constant": [
+    { "name": "rxnormSystem", "valueString": "http://www.nlm.nih.gov/research/umls/rxnorm" },
+    { "name": "ndcSystem",    "valueString": "http://hl7.org/fhir/sid/ndc" }
+  ],
   "select": [
     {
       "column": [
-        {
-          "name": "id",
-          "path": "Medication.id",
-          "type": "id",
-          "description": "FHIR Medication.id; surrogate OMOP key derived (hash/sequence) downstream.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "drug_exposure_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "surrogate key from hash/sequence/lookup of FHIR id"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "drug_rxnorm",
-          "path": "Medication.code.coding.where(system='http://www.nlm.nih.gov/research/umls/rxnorm').first().code",
-          "type": "code",
-          "description": "Medication code — RxNorm",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "drug_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "lookup vocab.concept WHERE vocabulary_id='RxNorm' AND concept_code = (this column); standard_concept='S' preferred"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "drug_ndc",
-          "path": "Medication.code.coding.where(system='http://hl7.org/fhir/sid/ndc').first().code",
-          "type": "code",
-          "description": "Medication code — NDC",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "drug_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "lookup vocab.concept WHERE vocabulary_id='NDC' AND concept_code = (this column); standard_concept='S' preferred"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "drug_atc",
-          "path": "Medication.code.coding.where(system='http://www.whocc.no/atc').first().code",
-          "type": "code",
-          "description": "Medication code — ATC",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "drug_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "lookup vocab.concept WHERE vocabulary_id='ATC' AND concept_code = (this column); standard_concept='S' preferred"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "drug_snomed",
-          "path": "Medication.code.coding.where(system='http://snomed.info/sct').first().code",
-          "type": "code",
-          "description": "Medication code — SNOMED",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "drug_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "lookup vocab.concept WHERE vocabulary_id='SNOMED' AND concept_code = (this column); standard_concept='S' preferred"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "drug_text",
-          "path": "Medication.code.text",
-          "type": "string",
-          "description": "Free text label from Medication.code",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "drug_source_value"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "copy text verbatim into OMOP source_value column"
-                }
-              ]
-            }
-          ]
-        }
+        { "name": "id",          "path": "id",                                                  "type": "id" },
+        { "name": "drug_rxnorm", "path": "code.coding.where(system=%rxnormSystem).code.first()", "type": "code" },
+        { "name": "drug_ndc",    "path": "code.coding.where(system=%ndcSystem).code.first()",    "type": "code" },
+        { "name": "code_text",   "path": "code.text",                                            "type": "string" }
       ]
     }
   ]

@@ -2,245 +2,26 @@
   "resourceType": "ViewDefinition",
   "id": "omop-coverage-payer-plan-period",
   "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-coverage-payer-plan-period",
-  "version": "0.2.0",
   "name": "OmopCoveragePayerPlanPeriodView",
   "title": "Coverage → payer_plan_period (FHIR-flat, stage 1)",
+  "version": "0.3.0",
   "status": "draft",
   "experimental": true,
-  "description": "FHIR Coverage captures a patient's insurance enrollment (payer, plan, coverage period, subscriber relationship). It maps to OMOP payer_plan_period, which records continuous enrollment under a specific health benefit plan from a given payer. Unlike clinical event tables, payer_plan_period carries no _type_concept_id; it is purely administrative. One active Coverage resource produces one payer_plan_period row. Overlapping or adjacent periods for the same person/payer may be collapsed.\n\nStage 1 of FHIR→OMOP: produce a flat row keeping source codes per vocabulary. Stage 2 joins vocab.concept to resolve concept_ids.",
   "extension": [
-    {
-      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
-      "valueString": "payer_plan_period"
-    },
-    {
-      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
-      "valueString": "Coverage__payer_plan_period"
-    }
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table", "valueString": "payer_plan_period" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",        "valueString": "Coverage__payer_plan_period" }
   ],
   "resource": "Coverage",
+  "description": "Insurance coverage period → payer_plan_period row. Synthea doesn't emit Coverage resources by default.",
   "select": [
     {
       "column": [
-        {
-          "name": "id",
-          "path": "Coverage.id",
-          "type": "id",
-          "description": "FHIR Coverage.id; surrogate OMOP key derived (hash/sequence) downstream.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "payer_plan_period_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "surrogate key from hash/sequence/lookup of FHIR id"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "subject_id",
-          "path": "Coverage.beneficiary",
-          "type": "Reference(Patient)",
-          "description": "Resolve Patient reference to integer person_id via the same ID mapping used by the Patient mapper.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "person_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "resolve PERSON reference; downstream maps to person_id"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "payer_plan_period_start_date",
-          "path": "Coverage.period.start",
-          "type": "dateTime",
-          "description": "Coverage start date. If absent, use ETL epoch or earliest known date. NOT NULL in OMOP.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "payer_plan_period_start_date"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "payer_plan_period_end_date",
-          "path": "Coverage.period.end",
-          "type": "dateTime",
-          "description": "Coverage end date. If absent or open-ended, use 9999-12-31 or ETL end date. NOT NULL in OMOP.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "payer_plan_period_end_date"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "payer",
-          "path": "Coverage.payor[0]",
-          "type": "Reference(Organization|Patient|RelatedPerson)",
-          "description": "OMOP Payer vocabulary concept (vocabulary_id='Payer', domain_id='Payer'). Resolve Organization reference, map name to payer concept. Default: 0. If payor references Patient (self-pay), use concept_id 436.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "payer_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "resolve payor[0] -> Organization.name -> OMOP Payer vocabulary lookup"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "payer_text",
-          "path": "Coverage.payor[0]",
-          "type": "Reference(Organization|Patient|RelatedPerson)",
-          "description": "Verbatim payer name or identifier. Resolve Organization reference and extract Organization.name. Fallback to Reference.display. Truncate to 50 chars.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "payer_source_value"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "resolve payor[0] -> Organization.name or Reference.display"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "plan",
-          "path": "Coverage.type.coding[0].code",
-          "type": "code",
-          "description": "Map Coverage.type to OMOP Plan vocabulary. No standard OMOP vocabulary maps directly to Coverage.type. Default: 0.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "plan_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "map Coverage.type (v3-ActCode) to OMOP Plan vocabulary"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "plan_text",
-          "path": "Coverage.type.text",
-          "type": "string",
-          "description": "Plan name as it appears in source. Truncate to 50 chars.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "plan_source_value"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "Use Coverage.type.text, or class entry where type.coding.code='plan'. Concatenate group+plan if both present."
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "sponsor",
-          "path": "Coverage.policyHolder",
-          "type": "Reference(Organization|Patient|RelatedPerson)",
-          "description": "OMOP Sponsor vocabulary concept. The policyHolder (often the employer) is the sponsor. Default: 0.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "sponsor_concept_id"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "resolve policyHolder -> Organization.name -> OMOP Sponsor vocabulary lookup"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "sponsor_text",
-          "path": "Coverage.policyHolder",
-          "type": "Reference(Organization|Patient|RelatedPerson)",
-          "description": "Sponsor name from policyHolder reference. Truncate to 50 chars.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "sponsor_source_value"
-                },
-                {
-                  "url": "transform",
-                  "valueString": "resolve policyHolder -> Organization.name or identifier"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "family_text",
-          "path": "Coverage.subscriberId",
-          "type": "string",
-          "description": "The subscriber ID links all family members under the same policy. Truncate to 50 chars.",
-          "extension": [
-            {
-              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-column-target",
-              "extension": [
-                {
-                  "url": "column",
-                  "valueString": "family_source_value"
-                }
-              ]
-            }
-          ]
-        }
+        { "name": "id",            "path": "id",                                "type": "id" },
+        { "name": "subject_ref",   "path": "beneficiary.getReferenceKey()",      "type": "string" },
+        { "name": "period_start",  "path": "period.start",                      "type": "dateTime" },
+        { "name": "period_end",    "path": "period.end",                        "type": "dateTime" },
+        { "name": "payer_name",    "path": "payor.first().display",             "type": "string" },
+        { "name": "type_text",     "path": "type.text",                         "type": "string" }
       ]
     }
   ]
