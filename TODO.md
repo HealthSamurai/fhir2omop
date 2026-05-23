@@ -53,11 +53,15 @@ written: 23 / 28 edges with stage-2 ETL, 14 OMOP tables populated
       is a ~300-line unsafe SQL blob. Refactor to `script/load-cdm/
       <table>.sql` files applied sequentially, plus a thin orchestrator.
 
-- [ ] **Codegen stage-2 SQL** — all 23 ETLs share the same shape (CTE
-      `codes` UNION ALL + DISTINCT ON + JOIN to vocab + standard
-      column projection). A generator that reads edge.json + view +
-      target table schema and emits the SQL would cut maintenance and
-      eliminate copy-paste drift.
+- [x] **Codegen stage-2 SQL** — delivered as `script/scaffold-edge.ts`:
+      a SCAFFOLD generator for new edges only. Reads edge.json and
+      emits a stage-2 SQL skeleton with column projection, surrogate
+      PK, FK `referenceToId(...)` wrappers, constants inlined, and
+      `-- TODO vocab JOIN` markers where a `concept_map` / fk-to-CONCEPT
+      needs a hand-written join. Won't overwrite without `--force`.
+      Deliberately does NOT regenerate the 24 existing ETLs — their
+      CTEs, vocab priority and per-source comments don't round-trip
+      through edge.json without expanding it into a SQL-in-JSON DSL.
 
 - [ ] **Tests** — no unit tests today. At least: snapshot tests for
       `viewdef.run` on a handful of canonical FHIR resources; integration
