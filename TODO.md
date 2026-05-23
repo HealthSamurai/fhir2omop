@@ -16,20 +16,29 @@ tables, end-to-end run ~30s.
       diffs declared view columns vs `v.<col>` refs in stage-2 SQL,
       wired into CI (`--strict`).
 
-- [ ] **Profile validation on stage-1** — stage-1 views read everything
-      from `fhir.*` without consulting the matching
-      `mapspec/profiles/<R>__<T>.profile.json`. Real-world data may
-      include resources that violate `mustSupport` / `min:1`
-      constraints (e.g. Condition without `code` or `subject`); they
-      currently flow through and produce garbage downstream.
+- [~] **Profile validation on stage-1** — Lightweight version
+      delivered as `script/validate-staging.ts`: checks that every
+      materialized staging.* table exists, has rows, has zero NULL
+      `id`s, and reports per-FK-reference NULL rates. Flags 100%-NULL
+      columns as `VIOL`, partial as `INFO`. Catches the common
+      "reference missing from source" case before garbage flows
+      downstream; surfaced 10 real Synthea-data gaps (Procedure has
+      no performer, Encounter has no part_of, PractitionerRole has no
+      practitioner back-link, etc.).
+      Still TODO: full FHIR-profile-driven validation — compile
+      `differential.element[].min:1` constraints from the
+      StructureDefinition profile into a SQL WHERE clause and filter
+      non-conformant resources out of `staging.*`. Useful for real
+      EHR data where Synthea's "everything has subject + code"
+      guarantees don't hold.
 
 ## Performance
 
-- [ ] **Pre-materialized vocab maps** — every code-resolving stage-2
-      ETL joins through `vocab.concept` → `vocab.concept_relationship`
-      (~39M rows) → `vocab.concept`. Pre-computing one `cm.*` table per
-      `(source_vocab, target_domain)` pair would replace 3 index probes
-      per row with one. Expected speedup 2–10× for the larger edges.
+- [~] **Pre-materialized vocab maps** — Deferred. The original
+      premise (2–10× speedup for vocab JOINs) was eaten by the
+      Maps-to partial index (Observation_measurement: 8.9s→0.7s, 12×).
+      Full 100-patient pipeline now runs in ~26s; no big-ETL is
+      vocab-bound. Worth revisiting when scaling to ≥1M patients.
 
 - [x] **Partial index on Maps-to** — `script/init-vocab-indexes.sql`
       adds `ix_concept_relationship_mapsto` (concept_id_1, concept_id_2)
@@ -37,10 +46,11 @@ tables, end-to-end run ~30s.
       Speedups observed: Condition 2.5s→60ms, Procedure 2.3s→91ms,
       Observation_meas 8.9s→0.7s.
 
-- [ ] **Per-batch streaming for `viewdef.materialize`** — currently
-      `SELECT resource FROM fhir.*` pulls all rows into JS at once.
-      Fine for 100-patient data; will hit memory pressure on 1M+
-      patients. Bun.SQL supports streaming via `.simple()`.
+- [~] **Per-batch streaming for `viewdef.materialize`** — Deferred.
+      100-patient pipeline runs in ~26s with no memory pressure. Will
+      need to revisit at ≥1M patients; the migration is a localized
+      change in `src/viewdef/materialize.ts` from buffered `SELECT` to
+      `Bun.SQL.simple()` streaming + per-row INSERT batching.
 
 ## Code quality
 
