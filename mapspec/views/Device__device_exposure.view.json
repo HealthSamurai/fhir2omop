@@ -25,7 +25,9 @@
         { "name": "code_text",   "path": "type.text",                                                 "type": "string", "description": "Device display name." },
         { "name": "udi",         "path": "udiCarrier.first().deviceIdentifier",                       "type": "string", "description": "UDI-DI → device_source_value fallback." },
         { "name": "lot_number",  "path": "lotNumber",                                                 "type": "string", "description": "→ device_exposure.lot_number." },
-        { "name": "status_code", "path": "status",                                                    "type": "code",   "description": "active / inactive / entered-in-error / unknown." }
+        { "name": "status_code", "path": "status",                                                    "type": "code",   "description": "active / inactive / entered-in-error / unknown." },
+        { "name": "manufacture_date", "path": "manufactureDate",                                      "type": "dateTime", "description": "Manufacture date. Used as a deterministic placeholder for device_exposure_start_date when no implantation date is available. NOT the implantation date." },
+        { "name": "expiration_date",  "path": "expirationDate",                                       "type": "dateTime", "description": "Expiration date. Used as a deterministic placeholder for device_exposure_end_date." }
       ]
     }
   ]

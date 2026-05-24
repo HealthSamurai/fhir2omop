@@ -35,7 +35,9 @@ value_resolved AS (
     ORDER BY v.id, vstd.concept_id
 ),
 operator_map (op_code, concept_id) AS (
-    VALUES ('<', 4171756), ('<=', 4171754), ('>=', 4171755), ('>', 4172703)
+    -- SNOMED Qualifier Value concepts (verified against Athena vocab.concept).
+    -- NB: 4172703 = '=' (Equals), 4172704 = '>' (Greater than) — easy to confuse.
+    VALUES ('<', 4171756), ('<=', 4171754), ('>=', 4171755), ('>', 4172704)
 )
 
 SELECT
@@ -76,4 +78,11 @@ LEFT JOIN value_resolved vr ON vr.staging_id = v.id
 LEFT JOIN vocab.concept unit
        ON unit.vocabulary_id = 'UCUM' AND unit.concept_code = v.value_unit_code AND unit.standard_concept = 'S'
 LEFT JOIN operator_map om ON om.op_code = v.value_comparator
+-- Filter out parent panel rows (e.g. BP panel 85354-9, CBC 58410-2) — the
+-- Observation itself has no value, only its components do. Components are
+-- fanned out by Observation_component__measurement; the parent row would
+-- carry NULL value_as_number AND NULL value_as_concept_id, which is noise.
+WHERE v.value_number IS NOT NULL
+   OR v.value_code   IS NOT NULL
+   OR v.value_text   IS NOT NULL
 ;

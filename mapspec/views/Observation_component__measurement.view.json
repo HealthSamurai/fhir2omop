@@ -30,11 +30,20 @@
     {
       "forEach": "component",
       "column": [
-        { "name": "component_code_loinc", "path": "code.coding.where(system=%loincSystem).code.first()", "type": "code" },
-        { "name": "component_code_text",  "path": "code.text",                                          "type": "string" },
-        { "name": "component_value_num",  "path": "valueQuantity.value",                                "type": "decimal" },
-        { "name": "component_unit_code",  "path": "valueQuantity.code",                                 "type": "code" },
-        { "name": "component_unit_text",  "path": "valueQuantity.unit",                                 "type": "string" }
+        { "name": "component_code_loinc",   "path": "code.coding.where(system=%loincSystem).code.first()", "type": "code" },
+        { "name": "component_code_text",    "path": "code.text",                                          "type": "string" },
+        { "name": "component_value_num",    "path": "valueQuantity.value",                                "type": "decimal" },
+        { "name": "component_unit_code",    "path": "valueQuantity.code",                                 "type": "code" },
+        { "name": "component_unit_text",    "path": "valueQuantity.unit",                                 "type": "string" },
+
+        { "name": "component_value_code_system", "path": "valueCodeableConcept.coding.first().system",    "type": "uri",
+          "description": "When component.value[x] is CodeableConcept (PRAPARE answers, survey responses): system of first coding. → value_as_concept_id via cm.fhir_system_to_omop_vocab + Maps-to." },
+        { "name": "component_value_code",        "path": "valueCodeableConcept.coding.first().code",      "type": "code",
+          "description": "Coded answer code." },
+        { "name": "component_value_text",        "path": "valueCodeableConcept.text",                     "type": "string",
+          "description": "CodeableConcept .text or fallback display." },
+        { "name": "component_value_string",      "path": "valueString",                                    "type": "string",
+          "description": "When component.value[x] is plain valueString." }
       ]
     }
   ]

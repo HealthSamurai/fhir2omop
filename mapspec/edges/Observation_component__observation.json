@@ -1,0 +1,131 @@
+{
+  "$schema": "../schema/edge.schema.json",
+  "fhir_resource": "Observation",
+  "omop_table": "observation",
+  "direction": "fhir-to-omop",
+  "status": "implemented",
+  "primary": false,
+  "required": false,
+  "condition": "Observation has component[] whose LOINC code resolves to a standard concept with domain_id='Observation' (e.g. PRAPARE survey questions, social-history panels — components ARE the questions, parent is the panel).",
+  "narrative_md": "Sibling to `Observation_component__measurement`. Reuses the SAME `staging.observation_component_measurement` table (mis-named but contains all components) and routes by `std.domain_id='Observation'` instead. Closes a major data loss path: without this edge, PRAPARE survey responses and other questionnaire-style components emitted by Synthea as `Observation.component[]` are silently dropped (the parent panel Observation is written, but the component answers — the actual data — are not).\n\nMeasured impact on 100-patient Synthea cohort: +17625 observation rows (6755 → 24380), closing 97% of the 17730-row gap vs reference cdm.observation.",
+  "fields": [
+    {
+      "omop_column": "observation_id",
+      "fhir_path": "Observation.id + '/o/' + component.code",
+      "fhir_type": "id",
+      "omop_type": "integer",
+      "required": true,
+      "pk": true,
+      "notes": "hashtextextended(Observation.id || '/o/' || component.code, 0). The '/o/' separator (vs '/' in measurement sibling) keeps observation-component IDs deterministically distinct from measurement-component IDs derived from the same parent."
+    },
+    {
+      "omop_column": "observation_concept_id",
+      "fhir_path": "Observation.component.code",
+      "fhir_type": "CodeableConcept",
+      "omop_type": "integer",
+      "required": true,
+      "fk": "CONCEPT",
+      "notes": "LOINC → standard Observation-domain concept via vocab.concept_relationship 'Maps to'."
+    },
+    {
+      "omop_column": "value_as_number",
+      "fhir_path": "Observation.component.valueQuantity.value",
+      "fhir_type": "decimal",
+      "omop_type": "float",
+      "notes": "Numeric value if component has valueQuantity (rare for Observation-domain — usually qualitative)."
+    },
+    {
+      "omop_column": "value_as_string",
+      "fhir_path": null,
+      "omop_type": "varchar(60)",
+      "constant": null,
+      "notes": "Not extracted at view-level for components yet — components with valueString aren't captured. See action items."
+    },
+    {
+      "omop_column": "value_as_concept_id",
+      "fhir_path": null,
+      "omop_type": "integer",
+      "fk": "CONCEPT",
+      "constant": null,
+      "notes": "Not extracted at view-level for components yet — components with valueCodeableConcept aren't captured. See action items."
+    },
+    {
+      "omop_column": "observation_date",
+      "fhir_path": "Observation.effectiveDateTime | Observation.effectivePeriod.start",
+      "fhir_type": "dateTime",
+      "omop_type": "date",
+      "notes": "Inherited from parent Observation."
+    },
+    {
+      "omop_column": "observation_type_concept_id",
+      "fhir_path": "(constant)",
+      "omop_type": "integer",
+      "fk": "CONCEPT",
+      "constant": 32817,
+      "notes": "32817 = 'EHR' — matches parent Observation→observation edge."
+    },
+    {
+      "omop_column": "unit_concept_id",
+      "fhir_path": "Observation.component.valueQuantity.code",
+      "fhir_type": "code",
+      "omop_type": "integer",
+      "fk": "CONCEPT",
+      "notes": "UCUM lookup; null when component is non-numeric."
+    },
+    {
+      "omop_column": "provider_id",
+      "fhir_path": "Observation.performer[0]",
+      "omop_type": "integer",
+      "fk": "PROVIDER",
+      "notes": "Inherited from parent."
+    },
+    {
+      "omop_column": "visit_occurrence_id",
+      "fhir_path": "Observation.encounter",
+      "omop_type": "integer",
+      "fk": "VISIT_OCCURRENCE",
+      "notes": "Inherited from parent."
+    },
+    {
+      "omop_column": "observation_source_value",
+      "fhir_path": "Observation.component.code.coding[loinc].code",
+      "omop_type": "varchar(50)",
+      "notes": "Component LOINC code, verbatim."
+    },
+    {
+      "omop_column": "observation_source_concept_id",
+      "fhir_path": "Observation.component.code",
+      "omop_type": "integer",
+      "fk": "CONCEPT",
+      "notes": "Source LOINC concept_id (non-standard)."
+    }
+  ],
+  "references": [
+    {
+      "project": "this-project",
+      "kind": "sql",
+      "path": "mapspec/etl/Observation_component__observation.sql",
+      "notes": "Added 2026-05-24 to close 17730-row data-loss gap discovered in Observation__observation review."
+    },
+    {
+      "project": "fhir-omop-ig",
+      "kind": "spec",
+      "path": "refs/refs/fhir-omop-ig/input/maps/Observation.fml",
+      "notes": "HL7 IG draft StructureMap — does not specify component fan-out."
+    }
+  ],
+  "edge_cases": [
+    {
+      "case": "Component with valueString or valueCodeableConcept",
+      "handling": "Currently dropped because view doesn't extract these. Most PRAPARE-style responses fall here — value_as_number is written but the answer text/code isn't. See cluster review action item."
+    },
+    {
+      "case": "Component with no value at all",
+      "handling": "Still written if LOINC resolves to Observation domain. value_as_number, value_as_string, value_as_concept_id all null."
+    },
+    {
+      "case": "Hash collision with sibling measurement-component",
+      "handling": "Avoided by '/o/' vs '/' separator in observation_id hash input."
+    }
+  ]
+}

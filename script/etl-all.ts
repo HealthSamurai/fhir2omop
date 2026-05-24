@@ -60,6 +60,7 @@ const PLAN: Array<{ edge: string; src: string; staging: string; target: string; 
     { edge: "DiagnosticReport__measurement",          src: "fhir.diagnostic_report",     staging: "staging.diagnosticreport_measurement",         target: "cdm_ours_fhir.measurement",          mode: "append" },
 
     { edge: "Observation__observation",               src: "fhir.observation",           staging: "staging.obs_obs_view",                         target: "cdm_ours_fhir.observation",          mode: "truncate" },
+    { edge: "Observation_component__observation",     src: "fhir.observation",           staging: "staging.observation_component_measurement",    target: "cdm_ours_fhir.observation",          mode: "append" },
     { edge: "AllergyIntolerance__observation",        src: "fhir.allergy_intolerance",   staging: "staging.allergyintolerance_observation",       target: "cdm_ours_fhir.observation",          mode: "append" },
     { edge: "DiagnosticReport__observation",          src: "fhir.diagnostic_report",     staging: "staging.diagnosticreport_observation",         target: "cdm_ours_fhir.observation",          mode: "append" },
 

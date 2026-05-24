@@ -64,4 +64,10 @@ LEFT JOIN vocab.concept src
 LEFT JOIN value_resolved vr ON vr.staging_id = v.id
 LEFT JOIN vocab.concept unit
        ON unit.vocabulary_id = 'UCUM' AND unit.concept_code = v.value_unit_code AND unit.standard_concept = 'S'
+-- Filter out parent panel rows (Observation with only components and no own
+-- value). Children are written by Observation_component__observation.
+WHERE v.value_number IS NOT NULL
+   OR v.value_string IS NOT NULL
+   OR v.value_code   IS NOT NULL
+   OR v.value_text   IS NOT NULL
 ;
