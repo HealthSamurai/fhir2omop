@@ -33,7 +33,9 @@ SELECT
     32827                                                                   AS procedure_type_concept_id,
     NULL::integer                                                           AS modifier_concept_id,
     NULL::integer                                                           AS quantity,
-    referenceToId(v.performer_ref)                                          AS provider_id,
+    -- Practitioner-typed performer only. Organization performers preserved
+    -- in staging.performer_organization_ref. See DiagnosticReport__measurement.
+    referenceToId(v.performer_practitioner_ref)                             AS provider_id,
     referenceToId(v.encounter_ref)                                          AS visit_occurrence_id,
     NULL::bigint                                                            AS visit_detail_id,
     left(r.src_code, 50)                                                    AS procedure_source_value,

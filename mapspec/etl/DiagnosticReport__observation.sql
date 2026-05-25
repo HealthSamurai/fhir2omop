@@ -32,7 +32,10 @@ SELECT
     NULL::integer                                                           AS value_as_concept_id,
     NULL::integer                                                           AS qualifier_concept_id,
     NULL::integer                                                           AS unit_concept_id,
-    referenceToId(v.performer_ref)                                          AS provider_id,
+    -- Only the Practitioner-typed performer becomes provider_id; Organization
+    -- performers (labs) stay in staging for traceability. See sibling
+    -- DiagnosticReport__measurement for the full rationale.
+    referenceToId(v.performer_practitioner_ref)                             AS provider_id,
     referenceToId(v.encounter_ref)                                          AS visit_occurrence_id,
     NULL::bigint                                                            AS visit_detail_id,
     left(r.src_code, 50)                                                    AS observation_source_value,

@@ -34,7 +34,12 @@ SELECT
     NULL::integer                                                           AS unit_concept_id,
     NULL::numeric                                                           AS range_low,
     NULL::numeric                                                           AS range_high,
-    referenceToId(v.performer_ref)                                          AS provider_id,
+    -- Only the Practitioner-typed performer becomes provider_id.
+    -- Organization-typed performers (labs — Quest, Labcorp) are preserved
+    -- in staging.performer_organization_ref but not written here:
+    -- OMOP measurement has no care_site_id slot, and the lab's role is
+    -- already implicit in the visit's care_site_id via Encounter.
+    referenceToId(v.performer_practitioner_ref)                             AS provider_id,
     referenceToId(v.encounter_ref)                                          AS visit_occurrence_id,
     NULL::bigint                                                            AS visit_detail_id,
     left(r.src_code, 50)                                                    AS measurement_source_value,

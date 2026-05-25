@@ -17,7 +17,9 @@ SELECT
                                                                             AS note_text,
     32678                                                                   AS encoding_concept_id,    -- 'UTF-8'
     4180186                                                                 AS language_concept_id,    -- 'English'
-    referenceToId(v.performer_ref)                                          AS provider_id,
+    -- Practitioner-typed performer only. Organization performers preserved
+    -- in staging.performer_organization_ref. See DiagnosticReport__measurement.
+    referenceToId(v.performer_practitioner_ref)                             AS provider_id,
     referenceToId(v.encounter_ref)                                          AS visit_occurrence_id,
     NULL::bigint                                                            AS visit_detail_id,
     left(v.code_loinc, 50)                                                  AS note_source_value,
