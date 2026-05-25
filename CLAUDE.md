@@ -8,6 +8,40 @@ alwaysApply: false
 
 This project maps FHIR R4 resources to OMOP CDM (Common Data Model) for observational health data research.
 
+## Writing convention
+
+**All committed prose is English-only** — code comments, edge.json
+`notes` / `description`, view/profile `description`, CLAUDE.md, README,
+commit messages. Chat with the user can be bilingual; anything that
+lands in the repo stays in English so non-Russian-speaking contributors
+can read it.
+
+## OMOP `*_source_value` semantics (project-wide)
+
+`*_source_value` columns in OMOP are **traceability anchors back to the
+source record, not clinical identifiers**. Per OMOP CDM v5.4 spec
+(`person_source_value` user_guidance):
+
+> Use this field to link back to persons in the source data. This is
+> typically used for error checking of ETL logic.
+
+Concrete rule for this codebase:
+
+- `person.person_source_value` ← `Patient.id` (FHIR resource UUID).
+  **Never** SSN, MR, DL, or other PHI identifiers from
+  `Patient.identifier[]`. Those are PII and don't belong in OMOP;
+  if a downstream consumer needs them, that's a separate id-mapping
+  table per OHDSI privacy guidance — not this column.
+- Same pattern for `provider.provider_source_value`,
+  `care_site.care_site_source_value`,
+  `visit_occurrence.visit_source_value`, etc. — the FHIR resource id
+  is the right value; other identifiers belong elsewhere.
+
+When an edge.json `notes` field says "best: SSN > MR > first" or
+similar, that's a spec bug — fix the spec, don't implement the
+priority. (See `mapspec/edges/Patient__person.json` →
+`fields[person_source_value].notes` for the reference wording.)
+
 ## Bootstrap from zero
 
 ```sh

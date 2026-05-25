@@ -31,6 +31,12 @@ SELECT
     referenceToId(v.general_practitioner_ref)      AS provider_id,
     referenceToId(v.managing_organization_ref)     AS care_site_id,
 
+    -- person_source_value = Patient.id (FHIR resource UUID) on purpose:
+    -- per OMOP CDM v5.4 it's a traceability key back to the source row,
+    -- not a clinical identifier. Synthea also emits SS/MR/DL/PPN in
+    -- Patient.identifier[]; those are PHI and belong in a separate
+    -- id-mapping table per OHDSI guidance, not here. See CLAUDE.md
+    -- "OMOP *_source_value semantics".
     v.id                                           AS person_source_value,
     COALESCE(v.us_core_birthsex, v.gender)         AS gender_source_value,
     COALESCE(g.source_concept_id, 0)               AS gender_source_concept_id,

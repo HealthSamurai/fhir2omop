@@ -271,9 +271,10 @@
     },
     {
       "omop_column": "person_source_value",
-      "fhir_path": "Patient.identifier (best: SSN > MR > first)",
-      "fhir_type": "string",
-      "omop_type": "varchar(50)"
+      "fhir_path": "Patient.id",
+      "fhir_type": "id",
+      "omop_type": "varchar(50)",
+      "notes": "Traceability key, NOT a clinical identifier. OMOP CDM v5.4 spec (user_guidance): 'Use this field to link back to persons in the source data. This is typically used for error checking of ETL logic.' We write Patient.id (the FHIR resource UUID) — the canonical 'where did this row come from' anchor. Synthea also emits PHI identifiers (SS, MR, DL, PPN) in Patient.identifier[], but those are intentionally NOT used here; per OHDSI privacy guidance they belong in a separate id-mapping table, not in person_source_value."
     }
   ],
   "vocabularies": [
