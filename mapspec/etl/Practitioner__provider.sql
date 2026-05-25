@@ -1,20 +1,17 @@
 -- Stage-2 ETL: Practitioner (FHIR R4) → provider (OMOP CDM v5.3)
 -- Consumes staging.practitioner_provider.
 --
--- Key choice: provider_source_value = NPI (not Practitioner.id UUID).
--- This is because Synthea writes Encounter.participant.individual.reference
--- as 'Practitioner?identifier=…|NPI', so the FK lookup from Encounter needs
--- NPI to find the provider. cdm.provider (reference, CSV-side) uses the
--- Synthea UUID — both are valid; ours preserves the FHIR linkage instead.
-
--- Surrogate provider_id = hashtextextended(NPI, 0)::bigint.
--- We hash NPI (not the Practitioner UUID) because Synthea writes
--- Encounter.participant.individual.reference as 'Practitioner?identifier=…|NPI',
--- so the FK side extracts NPI from the URL and hashes it too — no JOIN.
--- Falls back to hash(Practitioner.id) when NPI is NULL.
+-- Surrogate provider_id = hashtextextended(Practitioner.id, 0)::bigint
+-- — ALWAYS the Practitioner.id UUID, never NPI. All consumer ETLs hash
+-- the bare Practitioner.id (via getReferenceKey() applied to a
+-- 'Practitioner/<UUID>' reference). Synthea's original search-ref form
+-- ('Practitioner?identifier=…|NPI') is rewritten to the direct form by
+-- `bun script/resolve-search-refs.ts` BEFORE this ETL runs, so all
+-- sides see the same Practitioner.id and FKs align.
+-- NPI is kept as the standalone `npi` column for traceability.
 
 SELECT
-    hashtextextended(coalesce(v.npi, v.id), 0)::bigint  AS provider_id,
+    hashtextextended(v.id, 0)::bigint                   AS provider_id,
     (coalesce(v.family, '') || ', ' || coalesce(v.given, '')) AS provider_name,
     v.npi                                    AS npi,
     NULL::text                               AS dea,
