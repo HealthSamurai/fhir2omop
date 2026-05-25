@@ -1,0 +1,32 @@
+{
+  "resourceType": "ValueSet",
+  "id": "omop-race-codes",
+  "url": "https://fhir2omop.health-samurai.io/ValueSet/omop-race-codes",
+  "version": "0.1.0",
+  "name": "OmopRaceCodes",
+  "title": "OMOP Race-vocabulary codes (top-level, used in person.race_concept_id)",
+  "status": "draft",
+  "experimental": true,
+  "description": "The seven concepts that may legally land in `person.race_concept_id`: five Standard race concepts (Athena vocabulary_id='Race', standard_concept='S') plus the two non-Standard catch-alls (8522 Other Race, 8552 Unknown). The `system` is the OMOP concept URI; the `code` is the Athena concept_id as a string. Athena has 1,409 Race concepts total — the rest are sub-tribal/sub-ethnic detail (e.g. 'Apache', 'Acadia Band') which are valid descendants but not used at the top level since OMOP `person.race_concept_id` is a single column without hierarchical aggregation semantics.",
+  "extension": [
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-domain", "valueString": "Race" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-expansion-sql",
+      "valueString": "SELECT concept_id::text AS code, concept_name AS display FROM vocab.concept WHERE vocabulary_id = 'Race' AND concept_id IN (8657, 8515, 8516, 8527, 8557, 8522, 8552)" }
+  ],
+  "compose": {
+    "include": [
+      {
+        "system": "https://athena.ohdsi.org/concept",
+        "concept": [
+          { "code": "8657", "display": "American Indian or Alaska Native" },
+          { "code": "8515", "display": "Asian" },
+          { "code": "8516", "display": "Black or African American" },
+          { "code": "8527", "display": "White" },
+          { "code": "8557", "display": "Native Hawaiian or Other Pacific Islander" },
+          { "code": "8522", "display": "Other Race" },
+          { "code": "8552", "display": "Unknown" }
+        ]
+      }
+    ]
+  }
+}

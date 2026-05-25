@@ -30,6 +30,32 @@
         }
       },
       {
+        "id": "Patient.extension:omopRace",
+        "path": "Patient.extension",
+        "sliceName": "omopRace",
+        "min": 0,
+        "max": "1",
+        "mustSupport": true,
+        "type": [{
+          "code": "Extension",
+          "profile": ["https://fhir2omop.health-samurai.io/StructureDefinition/omop-race"]
+        }],
+        "comment": "OMOP-native race (preferred when source already speaks OMOP). valueCoding.code = Athena Race concept_id; copied verbatim into person.race_concept_id. If both omopRace and us-core-race are present, omopRace wins in the ETL."
+      },
+      {
+        "id": "Patient.extension:omopEthnicity",
+        "path": "Patient.extension",
+        "sliceName": "omopEthnicity",
+        "min": 0,
+        "max": "1",
+        "mustSupport": true,
+        "type": [{
+          "code": "Extension",
+          "profile": ["https://fhir2omop.health-samurai.io/StructureDefinition/omop-ethnicity"]
+        }],
+        "comment": "OMOP-native ethnicity (preferred when source already speaks OMOP). valueCoding.code = Athena Ethnicity concept_id (38003563 / 38003564); copied verbatim into person.ethnicity_concept_id. If both omopEthnicity and us-core-ethnicity are present, omopEthnicity wins."
+      },
+      {
         "id": "Patient.extension:race",
         "path": "Patient.extension",
         "sliceName": "race",
@@ -40,7 +66,7 @@
           "code": "Extension",
           "profile": ["http://hl7.org/fhir/us/core/StructureDefinition/us-core-race"]
         }],
-        "comment": "US Core Race. ombCategory.code → race_source_value; text → race_source_value fallback. Mapped to OMOP race_concept_id (8527 White, 8516 Black/African American, 8515 Asian, 8557 NHOPI, 8657 AI/AN, 0 Other/Unknown)."
+        "comment": "US Core Race (fallback when omopRace is absent). ombCategory.code → race_source_value; text → race_source_value fallback. Mapped to OMOP race_concept_id via cm.race_omb_to_omop (+ cm.race_text_synthea_to_omop for Synthea's UNK+text='Other' quirk)."
       },
       {
         "id": "Patient.extension:ethnicity",
@@ -53,7 +79,7 @@
           "code": "Extension",
           "profile": ["http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity"]
         }],
-        "comment": "US Core Ethnicity. ombCategory.code → ethnicity_source_value. Mapped to OMOP ethnicity_concept_id (38003563 Hispanic/Latino, 38003564 Not Hispanic/Latino, 0 Unknown)."
+        "comment": "US Core Ethnicity (fallback when omopEthnicity is absent). ombCategory.code → ethnicity_source_value. Mapped to OMOP ethnicity_concept_id via cm.ethnicity_omb_to_omop."
       },
       {
         "id": "Patient.extension:birthsex",

@@ -1,0 +1,36 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "omop-race",
+  "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-race",
+  "version": "0.1.0",
+  "name": "OmopRace",
+  "title": "OMOP Race (one Athena concept per Patient)",
+  "status": "draft",
+  "experimental": true,
+  "description": "A Patient.extension that carries OMOP's race for this person directly as an Athena Standard concept reference. Unlike US Core race (which permits multiple `ombCategory` slices to support mixed-race source data), OMOP `person.race_concept_id` is a single integer column — by spec 'Mixed races are not supported'. This extension therefore is a flat `valueCoding` with code = Athena Race concept_id and system = the OMOP concept URI. Use this when the source feed already speaks OMOP; use `us-core-race` (and let the ETL map via `cm.race_omb_to_omop`) when the source speaks OMB.",
+  "fhirVersion": "4.0.1",
+  "kind": "complex-type",
+  "abstract": false,
+  "type": "Extension",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension",
+  "derivation": "constraint",
+  "context": [
+    { "type": "element", "expression": "Patient" }
+  ],
+  "differential": {
+    "element": [
+      { "id": "Extension", "path": "Extension", "short": "OMOP race for this Patient — one concept" },
+      { "id": "Extension.url", "path": "Extension.url",
+        "fixedUri": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-race" },
+      { "id": "Extension.value[x]", "path": "Extension.value[x]",
+        "min": 1, "max": "1",
+        "type": [{ "code": "Coding" }],
+        "binding": {
+          "strength": "required",
+          "valueSet": "https://fhir2omop.health-samurai.io/ValueSet/omop-race-codes",
+          "description": "One of the seven Athena Race-vocabulary concepts."
+        }
+      }
+    ]
+  }
+}

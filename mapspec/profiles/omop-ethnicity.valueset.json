@@ -1,0 +1,27 @@
+{
+  "resourceType": "ValueSet",
+  "id": "omop-ethnicity-codes",
+  "url": "https://fhir2omop.health-samurai.io/ValueSet/omop-ethnicity-codes",
+  "version": "0.1.0",
+  "name": "OmopEthnicityCodes",
+  "title": "OMOP Ethnicity-vocabulary codes (top-level, used in person.ethnicity_concept_id)",
+  "status": "draft",
+  "experimental": true,
+  "description": "The two Standard concepts that may land in `person.ethnicity_concept_id`: 38003563 (Hispanic or Latino) and 38003564 (Not Hispanic or Latino). Athena's Ethnicity vocab is flat — the other 148 rows are detail entries ('Mexican', 'Argentinean', etc.) that aren't aggregated above into a hierarchy; OMOP `person.ethnicity_concept_id` takes a single concept and by convention that's one of these two. Use 0 (no matching concept) when ethnicity is unknown or absent.",
+  "extension": [
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-domain", "valueString": "Ethnicity" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-expansion-sql",
+      "valueString": "SELECT concept_id::text AS code, concept_name AS display FROM vocab.concept WHERE vocabulary_id = 'Ethnicity' AND standard_concept = 'S' AND concept_class_id = 'Ethnicity' AND concept_id IN (38003563, 38003564)" }
+  ],
+  "compose": {
+    "include": [
+      {
+        "system": "https://athena.ohdsi.org/concept",
+        "concept": [
+          { "code": "38003563", "display": "Hispanic or Latino" },
+          { "code": "38003564", "display": "Not Hispanic or Latino" }
+        ]
+      }
+    ]
+  }
+}
