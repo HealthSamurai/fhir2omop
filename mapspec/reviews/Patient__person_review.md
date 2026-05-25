@@ -152,19 +152,62 @@ IG `codemappings.md` (не читали в этом ревью — другие 
 
 В порядке приоритета:
 
-1. **[mid] `mapspec/views/Patient__person.view.json`** — добавить колонку `birth_time` из `extension('http://hl7.org/fhir/StructureDefinition/patient-birthTime').valueDateTime`. В `mapspec/etl/Patient__person.sql:21` заменить `v.birth_date::timestamp` на `COALESCE(v.birth_time::timestamp, v.birth_date::timestamp)`. (§4.6)
+All seven items resolved. Status as of 2026-05-25:
 
-2. ~~**[mid]** populate `source_concept_id` in race/ethnicity CMs.~~ — **RESOLVED 2026-05-25 as not-a-bug.** OMOP `*_source_concept_id` user_guidance says it "tends to be zero" for race/ethnicity; OMB codes aren't loaded as concept_codes in Athena's Race/Ethnicity vocabs anyway. See §4.5.
+1. ~~**[mid]** `birth_time` extension support.~~ — **DONE.** View has a
+   `birth_time` column from `birthDate.extension(patient-birthTime).valueDateTime`;
+   SQL uses `COALESCE(birth_time::timestamp, birth_date::timestamp)` for
+   `birth_datetime`. Synthea doesn't emit the extension so no diff on
+   our cohort, but a synthetic test (Patient with the extension set to
+   `1990-06-15T13:45:00-05:00`) confirms the timestamp flows through.
 
-3. **[low] `mapspec/edges/Patient__person.json`** — `vocabularies[name=gender].entries[other].notes` добавить: "HL7 FHIR↔OMOP IG intro doc lists 44814653, which is not present in OMOP CDM v5.4 Athena vocab; use 8521 OTHER per OHDSI Themis". (§4.2)
+2. ~~**[mid]** populate `source_concept_id` in race/ethnicity CMs.~~
+   — **RESOLVED as not-a-bug.** OMOP `*_source_concept_id`
+   user_guidance says it "tends to be zero" for race/ethnicity; OMB
+   codes aren't loaded as `concept_code` in Athena's Race/Ethnicity
+   vocabs anyway. See §4.5.
 
-4. **[low] `mapspec/edges/Patient__person.json` `edge_cases`** — добавить: `{"case": "Multiple addresses, identical to other patient's address", "handling": "Not deduplicated; each Patient gets a unique location_id = hash(Patient.id). Production ETL should dedupe by (line, city, state, zip)."}`. (§4.4)
+3. ~~**[low]** 44814653 note in edge JSON.~~ — **DONE.** Added a note
+   field on `vocabularies[name=gender].entries[other]` citing the
+   IG intro doc error and OHDSI Themis convention for 8521. See §4.2.
 
-5. **[low] `mapspec/edges/Patient__person.json` field `person_source_value`** — либо реализовать SSN/MR priority в view+SQL, либо удалить обещание из `notes`. Сейчас edge spec лжёт о возможностях. (§4.7)
+4. ~~**[low]** address-dedup edge case.~~ — **DONE one better.**
+   Instead of just documenting, implemented address dedup:
+   `location_id = stringToId(concat_ws('|', line, city, state, zip))`
+   on both sides. Two patients sharing an address now share a
+   location row (verified with a clone-address test patient). See §4.4.
 
-6. **[note] `mapspec/etl/Patient__person.sql`** — добавить комментарий в шапку про осознанное расхождение с IG intro (44814653) и про `location_id = hash(Patient.id)` стратегию (объяснить почему допустимо для Synthea).
+5. ~~**[low]** `person_source_value` spec drift.~~ — **DONE.** Edge
+   JSON field corrected from the misleading `"Patient.identifier
+   (best: SSN > MR > first)"` to `Patient.id` with a long-form note
+   citing OMOP user_guidance. Implementation was already right; the
+   spec was the lie. See §4.7.
 
-7. **[follow-up]** В обзорах `Patient__location`, `Patient__death`, `Practitioner__provider`, `Organization__care_site` сверить, что `referenceToId(v.<ref>)` в `Patient__person.sql` действительно резолвится в существующие строки на той стороне. Сейчас стейджа 2 пишет `provider_id` хешем `general_practitioner_ref`, но если `Practitioner` edge никогда не пишет строку с этим хешем — FK будет битый.
+6. ~~**[note]** SQL header documenting deviations from IG.~~ — **DONE.**
+   Block in `Patient__person.sql` calls out (a) gender 'other' →
+   8521 not 44814653, (b) composite address hash for `location_id`,
+   (c) `person_source_value = Patient.id` rationale.
+
+7. ~~**[follow-up]** FK integrity between Patient ETL and
+   Practitioner/Organization edges.~~ — **DONE.**
+   Root cause: Synthea writes `Practitioner?identifier=us-npi|<NPI>`
+   search-references, and `getReferenceKey()` returned the literal
+   `us-npi|<NPI>` tail. Result: 0/6388 Encounter→provider FKs
+   resolved, 0/4592 drug_exposure, 0/8701 note. Fixed by
+   `script/resolve-search-refs.ts` which pre-rewrites all
+   `Resource?identifier=…|VALUE` references to `Resource/<UUID>`
+   form using the resource's own identifier array. Practitioner ETL
+   now hashes Practitioner.id (not NPI) — aligned with all 9
+   consumers. Result after fix: 6388/6388 visit_occurrence,
+   4592/4592 drug_exposure, 6388/8701 note (the rest are
+   Organization-typed DR.performer, a separate routing concern not
+   on Patient/person).
+
+**Bonus** (not in original review): new OMOP-native
+`omop-race` / `omop-ethnicity` FHIR extensions + ValueSets, wired
+through the view and ETL as the preferred path (US Core stays as
+fallback). Documented in CLAUDE.md "OMOP `*_source_value` /
+`*_source_concept_id` semantics".
 
 ## 7. Что в IG/refs полезно для остальных edge'ов
 

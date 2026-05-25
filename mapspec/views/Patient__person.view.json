@@ -46,6 +46,12 @@
           "description": "→ year/month/day_of_birth (via EXTRACT) and birth_datetime (cast)."
         },
         {
+          "name": "birth_time",
+          "path": "birthDate.extension('http://hl7.org/fhir/StructureDefinition/patient-birthTime').valueDateTime.first()",
+          "type": "dateTime",
+          "description": "Optional FHIR patient-birthTime extension on the birthDate element. When present, used to populate birth_datetime with the actual time-of-day; otherwise birth_datetime falls back to birthDate at midnight. Synthea does not emit this extension."
+        },
+        {
           "name": "omop_race_code",
           "path": "extension(%omopRace).valueCoding.code.first()",
           "type": "code",

@@ -299,7 +299,8 @@
           "source_code": "other",
           "source_display": "Other",
           "target_concept_id": 8521,
-          "target_concept_name": "OTHER"
+          "target_concept_name": "OTHER",
+          "notes": "HL7 FHIR↔OMOP IG intro doc (StructureMap-PersonMap-intro.md) lists 44814653 for 'other', but that concept_id is NOT in the Athena vocab.concept table — verified empty in the v20260227 bundle. We use 8521 (OTHER, vocabulary_id='Gender', non-Standard) per OHDSI Themis convention. Track upstream: see review §4.2."
         },
         {
           "source_code": "unknown",

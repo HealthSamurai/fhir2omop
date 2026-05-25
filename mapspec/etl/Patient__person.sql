@@ -5,6 +5,32 @@
 -- @relatedArtefact https://fhir2omop.health-samurai.io/ConceptMap/race-text-synthea-to-omop
 -- @relatedArtefact https://fhir2omop.health-samurai.io/ConceptMap/ethnicity-omb-to-omop
 --
+-- ─── Intentional deviations from the HL7 FHIR↔OMOP IG ─────────────
+-- 1. Gender 'other' maps to 8521 (OTHER, vocabulary_id='Gender',
+--    non-Standard), NOT 44814653 as the IG intro doc claims.
+--    44814653 is not present in Athena's vocab.concept (v20260227
+--    bundle); 8521 is the OHDSI Themis-recommended value. See
+--    mapspec/edges/Patient__person.json vocabularies[gender]
+--    entries[other].notes and review §4.2.
+--
+-- 2. location_id is a composite hash of (line, city, state, zip)
+--    rather than hash(Patient.id). The IG's PersonMap.fml is silent
+--    on location; OMOP user_guidance says "Each instance of a
+--    Location in the source data should be assigned this unique
+--    key" (FAQ #8: "Only the most recent location_id should be
+--    stored in the Person table to eliminate duplication"). Two
+--    patients sharing an address therefore share a location_id.
+--    Patient__location.sql writes the matching row with the same
+--    hash. See review §4.4.
+--
+-- 3. person_source_value is Patient.id (FHIR resource UUID), NOT
+--    a clinical identifier from Patient.identifier[]. Per OMOP
+--    user_guidance this column "links back to persons in the source
+--    data ... typically used for error checking of ETL logic" —
+--    a traceability anchor, not PHI. See CLAUDE.md
+--    "OMOP *_source_value semantics" and review §4.7.
+-- ──────────────────────────────────────────────────────────────────
+--
 -- Race / ethnicity resolution priority:
 --   1. omop-race / omop-ethnicity extension (Athena concept_id verbatim)
 --      — wins when present, no ConceptMap lookup needed.
@@ -21,7 +47,13 @@ SELECT
     EXTRACT(YEAR  FROM v.birth_date::date)::int    AS year_of_birth,
     EXTRACT(MONTH FROM v.birth_date::date)::int    AS month_of_birth,
     EXTRACT(DAY   FROM v.birth_date::date)::int    AS day_of_birth,
-    v.birth_date::timestamp                        AS birth_datetime,
+    -- birth_datetime: prefer patient-birthTime extension when present
+    -- (full timestamp); fall back to birthDate at midnight. Synthea
+    -- doesn't emit patient-birthTime, so this falls back on Synthea
+    -- input — but production EHR feeds with the extension light up
+    -- automatically.
+    COALESCE(v.birth_time::timestamp,
+             v.birth_date::timestamp)              AS birth_datetime,
 
     COALESCE(
         NULLIF(v.omop_race_code, '')::int,                              -- 1. OMOP-native
