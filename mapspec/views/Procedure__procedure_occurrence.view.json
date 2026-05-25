@@ -23,6 +23,7 @@
     {
       "column": [
         { "name": "id",                  "path": "id",                                                       "type": "id",       "description": "FHIR Procedure.id → hash → procedure_occurrence_id." },
+        { "name": "status",              "path": "status",                                                   "type": "code",     "description": "Stage-2 filters 'entered-in-error', 'not-done', 'unknown' so cancelled procedures don't become facts." },
         { "name": "subject_ref",         "path": "subject.getReferenceKey()",                                "type": "string",   "description": "→ person_id (hash)." },
         { "name": "encounter_ref",       "path": "encounter.getReferenceKey()",                              "type": "string",   "description": "→ visit_occurrence_id (hash)." },
         { "name": "code_snomed",         "path": "code.coding.where(system=%snomedSystem).code.first()",     "type": "code",     "description": "SNOMED CT — preferred." },

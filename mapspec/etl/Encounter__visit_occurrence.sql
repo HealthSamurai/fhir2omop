@@ -36,4 +36,5 @@ SELECT
 FROM staging.encounter_visit v
 LEFT JOIN cm.encounter_class_to_omop cls
        ON cls.source_code = v.class_code
+WHERE COALESCE(v.status, 'finished') NOT IN ('entered-in-error', 'cancelled', 'planned', 'unknown')
 ;

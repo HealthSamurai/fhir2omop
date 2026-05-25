@@ -20,6 +20,7 @@
     {
       "column": [
         { "name": "id",            "path": "id",                              "type": "id" },
+        { "name": "status",        "path": "status",                          "type": "code", "description": "Parent Observation.status; stage-2 filters entered-in-error / cancelled / unknown." },
         { "name": "subject_id",    "path": "subject.getReferenceKey()",        "type": "string" },
         { "name": "encounter_id",  "path": "encounter.getReferenceKey()",      "type": "string" },
         { "name": "performer_id",  "path": "performer.first().getReferenceKey()", "type": "string" },

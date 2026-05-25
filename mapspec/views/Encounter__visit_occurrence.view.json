@@ -23,6 +23,12 @@
           "description": "FHIR Encounter.id (Synthea UUID). → visit_source_value + surrogate visit_occurrence_id."
         },
         {
+          "name": "status",
+          "path": "status",
+          "type": "code",
+          "description": "Encounter.status. Stage-2 filters 'entered-in-error', 'cancelled', 'planned', 'unknown' so non-events don't become visit_occurrence rows."
+        },
+        {
           "name": "subject_ref",
           "path": "subject.getReferenceKey()",
           "type": "string",

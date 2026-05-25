@@ -60,4 +60,5 @@ SELECT
 
 FROM staging.procedure_occurrence v
 JOIN resolved r ON r.staging_id = v.id
+WHERE COALESCE(v.status, 'completed') NOT IN ('entered-in-error', 'not-done', 'unknown')
 ;

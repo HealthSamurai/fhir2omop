@@ -55,4 +55,8 @@ SELECT
 
 FROM staging.medicationrequest_drug_exposure v
 JOIN resolved r ON r.staging_id = v.id
+-- Status filter: skip non-events (per OMOP convention drug_exposure
+-- holds completed/active prescriptions, not cancelled drafts or
+-- entered-in-error mistakes).
+WHERE COALESCE(v.status, '') NOT IN ('entered-in-error', 'cancelled', 'draft', 'unknown')
 ;

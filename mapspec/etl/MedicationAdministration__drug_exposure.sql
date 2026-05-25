@@ -53,5 +53,6 @@ SELECT
 
 FROM staging.medicationadministration_drug_exposure v
 JOIN resolved r ON r.staging_id = v.id
-WHERE v.status_code IN ('completed','in-progress','on-hold')
+-- Skip non-events; treat NULL status as 'completed' (FHIR default).
+WHERE COALESCE(v.status_code, 'completed') NOT IN ('entered-in-error', 'not-done', 'unknown')
 ;

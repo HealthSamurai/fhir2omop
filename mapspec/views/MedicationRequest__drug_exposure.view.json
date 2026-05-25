@@ -21,6 +21,7 @@
     {
       "column": [
         { "name": "id",            "path": "id",                                                                                "type": "id",       "description": "FHIR MedicationRequest.id → hash → drug_exposure_id." },
+        { "name": "status",        "path": "status",                                                                            "type": "code",     "description": "MedicationRequest.status. Stage-2 filters out 'entered-in-error', 'cancelled', 'draft', 'unknown' so non-events don't become drug_exposure facts." },
         { "name": "subject_ref",   "path": "subject.getReferenceKey()",                                                          "type": "string",   "description": "Patient → person_id." },
         { "name": "encounter_ref", "path": "encounter.getReferenceKey()",                                                        "type": "string",   "description": "Encounter → visit_occurrence_id." },
         { "name": "requester_ref", "path": "requester.getReferenceKey()",                                                        "type": "string",   "description": "Practitioner → provider_id." },

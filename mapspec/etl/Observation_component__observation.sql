@@ -81,4 +81,5 @@ LEFT JOIN vocab.concept unit
 LEFT JOIN value_resolved vr
   ON vr.parent_id = v.id AND vr.comp_code = v.component_code_loinc
 WHERE v.component_code_loinc IS NOT NULL
+  AND COALESCE(v.status, 'final') NOT IN ('entered-in-error', 'cancelled', 'unknown')
 ;

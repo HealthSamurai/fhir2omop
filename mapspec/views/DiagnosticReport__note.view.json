@@ -20,6 +20,7 @@
     {
       "column": [
         { "name": "id",            "path": "id",                                                  "type": "id",       "description": "DR.id → hash → note_id." },
+        { "name": "status",        "path": "status",                                              "type": "code",     "description": "Stage-2 filters 'entered-in-error', 'cancelled', 'unknown'." },
         { "name": "subject_ref",   "path": "subject.getReferenceKey()",                            "type": "string",   "description": "Patient → person_id." },
         { "name": "encounter_ref", "path": "encounter.getReferenceKey()",                          "type": "string",   "description": "Encounter → visit_occurrence_id." },
         { "name": "performer_ref",              "path": "performer.first().getReferenceKey()",                                                  "type": "string", "description": "DEPRECATED untyped first performer — kept for compatibility but mixes Practitioner and Organization references. Use the typed siblings below." },

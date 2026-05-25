@@ -47,4 +47,5 @@ LEFT JOIN vocab.concept unit
  AND unit.standard_concept = 'S'
 WHERE v.component_code_loinc IS NOT NULL
   AND v.component_value_num IS NOT NULL
+  AND COALESCE(v.status, 'final') NOT IN ('entered-in-error', 'cancelled', 'unknown')
 ;

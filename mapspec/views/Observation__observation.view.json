@@ -29,6 +29,12 @@
           "description": "FHIR Observation.id; → surrogate observation_id (hash/sequence in stage 2)."
         },
         {
+          "name": "status",
+          "path": "status",
+          "type": "code",
+          "description": "Stage-2 filters 'entered-in-error', 'cancelled', 'unknown'."
+        },
+        {
           "name": "subject_id",
           "path": "subject.getReferenceKey()",
           "type": "string",

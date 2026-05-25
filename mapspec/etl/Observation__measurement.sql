@@ -82,7 +82,8 @@ LEFT JOIN operator_map om ON om.op_code = v.value_comparator
 -- Observation itself has no value, only its components do. Components are
 -- fanned out by Observation_component__measurement; the parent row would
 -- carry NULL value_as_number AND NULL value_as_concept_id, which is noise.
-WHERE v.value_number IS NOT NULL
-   OR v.value_code   IS NOT NULL
-   OR v.value_text   IS NOT NULL
+WHERE (v.value_number IS NOT NULL
+    OR v.value_code   IS NOT NULL
+    OR v.value_text   IS NOT NULL)
+  AND COALESCE(v.status, 'final') NOT IN ('entered-in-error', 'cancelled', 'unknown')
 ;

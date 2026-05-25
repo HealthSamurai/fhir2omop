@@ -36,4 +36,5 @@ LEFT JOIN vocab.concept std
 
 WHERE v.effective_dt IS NOT NULL
   AND (v.presented_data IS NOT NULL OR v.conclusion IS NOT NULL OR v.code_text IS NOT NULL)
+  AND COALESCE(v.status, 'final') NOT IN ('entered-in-error', 'cancelled', 'unknown')
 ;

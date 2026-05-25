@@ -75,4 +75,7 @@ JOIN resolved r ON r.staging_id = v.id
 LEFT JOIN cm.fhir_clinical_status_to_omop     cstat ON cstat.source_code = v.clinical_status_code
 LEFT JOIN cm.fhir_verification_status_to_omop vstat ON vstat.source_code = v.verification_status_code
 LEFT JOIN cm.fhir_condition_category_to_omop  cat   ON cat.source_code   = v.category_code
+-- Skip refuted / entered-in-error; treat NULL verificationStatus as
+-- 'confirmed' (FHIR R4 default per the Condition profile).
+WHERE COALESCE(v.verification_status_code, 'confirmed') NOT IN ('refuted', 'entered-in-error')
 ;

@@ -21,6 +21,7 @@
     {
       "column": [
         { "name": "id",            "path": "id",                                                                "type": "id",       "description": "FHIR Immunization.id → hash → drug_exposure_id." },
+        { "name": "status",        "path": "status",                                                            "type": "code",     "description": "Stage-2 filters 'entered-in-error', 'not-done'." },
         { "name": "subject_ref",   "path": "patient.getReferenceKey()",                                          "type": "string",   "description": "Patient → person_id." },
         { "name": "encounter_ref", "path": "encounter.getReferenceKey()",                                        "type": "string",   "description": "Encounter → visit_occurrence_id." },
         { "name": "code_cvx",      "path": "vaccineCode.coding.where(system=%cvxSystem).code.first()",           "type": "code",     "description": "CVX vaccine code." },

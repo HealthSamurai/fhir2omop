@@ -44,4 +44,5 @@ SELECT
 
 FROM staging.diagnosticreport_procedure_occurrence v
 JOIN resolved r ON r.staging_id = v.id
+WHERE COALESCE(v.status, 'final') NOT IN ('entered-in-error', 'cancelled', 'unknown')
 ;

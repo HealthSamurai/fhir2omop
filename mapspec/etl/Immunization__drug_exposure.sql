@@ -59,4 +59,5 @@ SELECT
 
 FROM staging.immunization_drug_exposure v
 JOIN resolved r ON r.staging_id = v.id
+WHERE COALESCE(v.status, 'completed') NOT IN ('entered-in-error', 'not-done')
 ;
