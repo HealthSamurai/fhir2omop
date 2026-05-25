@@ -72,10 +72,36 @@ SELECT * FROM vocab.concept WHERE concept_id=44814653;  -- 0 rows
 
 > **Action:** в `Patient/location` review (отдельный edge) обсудить дедуп по composite key. Здесь — не блокер, но добавить в `edge_cases` "Address dedup not performed; one location_id per patient".
 
-### 4.5. `*_source_concept_id` всегда 0 — недоиспользованное поле
-Все наши `cm.*` имеют `source_concept_id=0` в каждой строке (см. §5). По `StrategiesBestPractices.md` source-id колонки должны нести concept_id, **если source-код существует в OMOP-вокабе как non-standard концепт**. Наш OMB race-код `2106-3` существует в Athena как concept (есть в `vocabulary_id='Race'`). Проверим — это можно автоматизировать одним join-апдейтом ConceptMap-ов. NACHC ([`OmopPersonBuilder.java:69–71`](../../refs/refs/NACHC-fhir-to-omop/src/main/java/org/nachc/tools/fhirtoomop/omop/person/factory/builder/person/OmopPersonBuilder.java)) пишет `raceId` в обе колонки — это упрощение (target=source), но семантически терпимое.
+### 4.5. `*_source_concept_id` always 0 — NOT a bug (resolved 2026-05-25)
 
-> **Action:** в `cm.race_omb_to_omop` и `cm.gender_to_omop` populate `source_concept_id` lookup-ом из `vocab.concept WHERE vocabulary_id IN ('Race','Gender','Race / Ethnicity')`. См. §6.
+Initial reading: race/ethnicity `*_source_concept_id` is 0/105 — looks like
+an unused field. NACHC writes `raceId` into both columns, suggesting we
+could do the same.
+
+**Re-checked against OMOP CDM v5.4 user_guidance and Athena Race vocab:**
+
+- `race_source_concept_id` user_guidance literally says "Due to the
+  small number of options, this tends to be zero." — i.e. **0 is the
+  spec-recommended value**, not a coverage gap.
+- Athena Race vocab uses concept_codes `1`–`5`, `9`, `UNK` (e.g. concept_id
+  8527 has concept_code `5` "White"), **not** the OMB codes
+  (`2106-3`, `2054-5`, …). The OMB code system is not loaded under any
+  race-related `vocabulary_id` in Athena.
+- So an OMB source code has no Athena equivalent to point at. The honest
+  answer is 0; copying the standard target concept_id (NACHC style)
+  duplicates `race_concept_id` and breaks the "trace the source vocab"
+  semantics the column is for.
+
+Same logic applies to ethnicity (OMB `2186-5`/`2135-2` ↔ Athena Ethnicity
+codes `Hispanic`/`Not Hispanic`).
+
+> **Action: none** — close as resolved. Documented in
+> `mapspec/edges/Patient__person.json` `fields[race_source_concept_id].notes`
+> and `fields[ethnicity_source_concept_id].notes`, and in CLAUDE.md
+> "OMOP `*_source_concept_id` semantics — zero is fine". The
+> `omop-source-vocabulary` extension hook in `src/conceptmap/materialize.ts`
+> remains — a future Athena bundle that adds OMB Race as a non-standard
+> vocab would auto-populate this column without an edge change.
 
 ### 4.6. `birth_datetime` — теряем us-core-birthtime
 Наш view вытаскивает `birthDate` как date, и в SQL делаем `birth_date::timestamp` (= полночь). У FHIR есть extension `http://hl7.org/fhir/StructureDefinition/patient-birthTime` (см. edge JSON `fields[].fhir_path: "Patient.birthDate + patient-birthTime extension"`), но **во view она не извлекается**, и в SQL не используется. ETL-German берёт zone Europe/Berlin (`PatientMapper.java:583`) — у нас зона потеряна. Synthea не emits birthTime, поэтому в наших тестах это не всплывает, но edge JSON обещает поддержку.
@@ -128,7 +154,7 @@ IG `codemappings.md` (не читали в этом ревью — другие 
 
 1. **[mid] `mapspec/views/Patient__person.view.json`** — добавить колонку `birth_time` из `extension('http://hl7.org/fhir/StructureDefinition/patient-birthTime').valueDateTime`. В `mapspec/etl/Patient__person.sql:21` заменить `v.birth_date::timestamp` на `COALESCE(v.birth_time::timestamp, v.birth_date::timestamp)`. (§4.6)
 
-2. **[mid] `mapspec/profiles/race-omb-to-omop.cm.json`** и `gender-to-omop.cm.json` — заполнить `source_concept_id` lookup-ом в `vocab.concept` по `vocabulary_id IN ('Race','Gender')` через `concept_code = source_code`. Чтобы `cdm_ours_fhir.person.*_source_concept_id` нес осмысленные не-нулевые значения. Можно SQL-патчем после materialize, либо хардкодом в JSON. (§4.5)
+2. ~~**[mid]** populate `source_concept_id` in race/ethnicity CMs.~~ — **RESOLVED 2026-05-25 as not-a-bug.** OMOP `*_source_concept_id` user_guidance says it "tends to be zero" for race/ethnicity; OMB codes aren't loaded as concept_codes in Athena's Race/Ethnicity vocabs anyway. See §4.5.
 
 3. **[low] `mapspec/edges/Patient__person.json`** — `vocabularies[name=gender].entries[other].notes` добавить: "HL7 FHIR↔OMOP IG intro doc lists 44814653, which is not present in OMOP CDM v5.4 Athena vocab; use 8521 OTHER per OHDSI Themis". (§4.2)
 

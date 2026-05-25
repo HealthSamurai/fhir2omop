@@ -42,6 +42,44 @@ similar, that's a spec bug — fix the spec, don't implement the
 priority. (See `mapspec/edges/Patient__person.json` →
 `fields[person_source_value].notes` for the reference wording.)
 
+## OMOP `*_source_concept_id` semantics — zero is fine
+
+The companion `*_source_concept_id` column is meant to hold the
+Athena concept_id of the source code in its **native vocabulary**, so
+that analysts can trace which source vocab a value came from. Crucially,
+OMOP CDM v5.4 explicitly tells you it's commonly zero:
+
+> `race_source_concept_id` user_guidance: "Due to the small number of
+> options, this tends to be zero. If the source data codes race in an
+> OMOP supported vocabulary store the concept_id here."
+>
+> `ethnicity_source_concept_id` user_guidance: "Due to the small number
+> of options, this tends to be zero."
+
+Concrete rule for this codebase:
+
+- Don't try to "improve coverage" by copying the standard target
+  `concept_id` into `*_source_concept_id` (e.g. setting
+  `race_source_concept_id = race_concept_id`). The semantics differ
+  (source vocab vs. target vocab); doing so is observed in some
+  reference implementations but breaks downstream analytics that read
+  the source concept to recover the original vocabulary.
+- Concrete example: US Core / OMB race codes (`2106-3`, `2054-5`, …)
+  are **not** loaded as `concept_code` under any race vocabulary in
+  Athena — OMOP's Race vocab uses integer codes 1-5/9/UNK. So the
+  honest mapping for an OMB-coded source is `0`, and that's what we
+  ship. (See `mapspec/edges/Patient__person.json` →
+  `fields[race_source_concept_id].notes` for the long-form rationale.)
+- The race **standard concept** (8527 White, 8516 Black, …) goes in
+  `race_concept_id`. The raw OMB code (`2106-3`) goes in
+  `race_source_value`. `race_source_concept_id` stays 0.
+
+If a future Athena bundle does load OMB Race / Ethnicity as a
+non-standard vocabulary with the OMB codes as `concept_code`, then
+materializing `cm.race_omb_to_omop` with the `omop-source-vocabulary`
+extension (see `src/conceptmap/materialize.ts`) will start populating
+this column automatically — no edge.json change needed.
+
 ## Bootstrap from zero
 
 ```sh

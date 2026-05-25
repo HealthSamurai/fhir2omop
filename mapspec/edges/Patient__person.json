@@ -224,7 +224,8 @@
       "fhir_path": null,
       "fhir_type": "code",
       "omop_type": "integer",
-      "constant": 0
+      "constant": 0,
+      "notes": "Intentionally 0. OMOP CDM v5.4 user_guidance: 'Due to the small number of options, this tends to be zero. If the source data codes race in an OMOP supported vocabulary store the concept_id here.' US Core / OMB race codes (2106-3, 2054-5, 2028-9, 1002-5, 2076-8) are NOT loaded as concept_codes under any race vocabulary in Athena — the OMOP Race vocab uses integer codes 1-5/9/UNK (e.g. concept_code='5' for White). So an OMB source code has no Athena counterpart; 0 is the spec-recommended value."
     },
     {
       "omop_column": "ethnicity_concept_id",
@@ -246,7 +247,8 @@
       "fhir_path": null,
       "fhir_type": "code",
       "omop_type": "integer",
-      "constant": 0
+      "constant": 0,
+      "notes": "Intentionally 0. OMOP CDM v5.4 user_guidance: 'Due to the small number of options, this tends to be zero.' OMB ethnicity codes (2186-5 Not Hispanic, 2135-2 Hispanic) are not concept_codes in Athena's Ethnicity vocab; the standard concepts there use codes 'Hispanic' / 'Not Hispanic' (38003563/4). 0 is the spec-recommended value."
     },
     {
       "omop_column": "location_id",
