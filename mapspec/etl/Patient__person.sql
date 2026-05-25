@@ -5,10 +5,13 @@
 -- @relatedArtefact https://fhir2omop.health-samurai.io/ConceptMap/race-text-synthea-to-omop
 -- @relatedArtefact https://fhir2omop.health-samurai.io/ConceptMap/ethnicity-omb-to-omop
 --
--- Race fallback: ombCategory=UNK alone is 'Unknown' (8552). Synthea's
--- exporter also emits text='Other' alongside UNK for patients outside
--- the 5 OMB categories — `cm.race_text_synthea_to_omop` rescues those
--- to 8522 ('Other Race'). See mapspec/GAPS.md §7.
+-- Race / ethnicity resolution priority:
+--   1. omop-race / omop-ethnicity extension (Athena concept_id verbatim)
+--      — wins when present, no ConceptMap lookup needed.
+--   2. US Core race / ethnicity ombCategory + cm.*_omb_to_omop.
+--   3. Synthea Other-recovery: ombCategory=UNK + text='Other' → 8522
+--      via cm.race_text_synthea_to_omop. See mapspec/GAPS.md §7.
+--   4. 0 (no matching concept).
 
 SELECT
     hashtextextended(v.id, 0)::bigint              AS person_id,
@@ -21,11 +24,16 @@ SELECT
     v.birth_date::timestamp                        AS birth_datetime,
 
     COALESCE(
-        CASE WHEN v.race_omb_code = 'UNK' THEN rt.concept_id END,  -- Synthea Other recovery
-        r.concept_id,
+        NULLIF(v.omop_race_code, '')::int,                              -- 1. OMOP-native
+        CASE WHEN v.race_omb_code = 'UNK' THEN rt.concept_id END,       -- 3. Synthea Other
+        r.concept_id,                                                   -- 2. US Core OMB
         0
     )                                              AS race_concept_id,
-    COALESCE(e.concept_id, 0)                      AS ethnicity_concept_id,
+    COALESCE(
+        NULLIF(v.omop_ethnicity_code, '')::int,                         -- 1. OMOP-native
+        e.concept_id,                                                   -- 2. US Core OMB
+        0
+    )                                              AS ethnicity_concept_id,
 
     referenceToId(v.id)                            AS location_id,
     referenceToId(v.general_practitioner_ref)      AS provider_id,
@@ -40,9 +48,10 @@ SELECT
     v.id                                           AS person_source_value,
     COALESCE(v.us_core_birthsex, v.gender)         AS gender_source_value,
     COALESCE(g.source_concept_id, 0)               AS gender_source_concept_id,
-    v.race_text                                    AS race_source_value,
+    COALESCE(v.omop_race_display, v.race_text)     AS race_source_value,
     COALESCE(r.source_concept_id, 0)               AS race_source_concept_id,
-    v.ethnicity_text                               AS ethnicity_source_value,
+    COALESCE(v.omop_ethnicity_display, v.ethnicity_text)
+                                                   AS ethnicity_source_value,
     COALESCE(e.source_concept_id, 0)               AS ethnicity_source_concept_id
 
 FROM staging.patient_person v

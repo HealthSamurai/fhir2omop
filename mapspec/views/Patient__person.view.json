@@ -16,7 +16,9 @@
   "constant": [
     { "name": "usCoreRace",      "valueString": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race" },
     { "name": "usCoreEthnicity", "valueString": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity" },
-    { "name": "usCoreBirthsex",  "valueString": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex" }
+    { "name": "usCoreBirthsex",  "valueString": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex" },
+    { "name": "omopRace",        "valueString": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-race" },
+    { "name": "omopEthnicity",   "valueString": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-ethnicity" }
   ],
   "select": [
     {
@@ -44,28 +46,52 @@
           "description": "→ year/month/day_of_birth (via EXTRACT) and birth_datetime (cast)."
         },
         {
+          "name": "omop_race_code",
+          "path": "extension(%omopRace).valueCoding.code.first()",
+          "type": "code",
+          "description": "OMOP-native race: Athena Race concept_id as string. When present, copied directly into person.race_concept_id (no ConceptMap lookup). Preferred over US Core race."
+        },
+        {
+          "name": "omop_race_display",
+          "path": "extension(%omopRace).valueCoding.display.first()",
+          "type": "string",
+          "description": "Human-readable label from the omop-race extension. → race_source_value (only when omop_race_code is set)."
+        },
+        {
           "name": "race_omb_code",
           "path": "extension(%usCoreRace).extension('ombCategory').valueCoding.code.first()",
           "type": "code",
-          "description": "OMB race ombCategory code (2106-3/2054-5/…/UNK). → race_concept_id via 'race' ConceptMap."
+          "description": "OMB race ombCategory code (2106-3/2054-5/…/UNK). Fallback when omop_race_code absent: resolved via cm.race_omb_to_omop."
         },
         {
           "name": "race_text",
           "path": "extension(%usCoreRace).extension('text').valueString.first()",
           "type": "string",
-          "description": "Human-readable race label. → race_source_value."
+          "description": "Human-readable race label from US Core. → race_source_value when omop_race_display absent."
+        },
+        {
+          "name": "omop_ethnicity_code",
+          "path": "extension(%omopEthnicity).valueCoding.code.first()",
+          "type": "code",
+          "description": "OMOP-native ethnicity: Athena Ethnicity concept_id (38003563 / 38003564) as string. When present, copied directly into person.ethnicity_concept_id. Preferred over US Core ethnicity."
+        },
+        {
+          "name": "omop_ethnicity_display",
+          "path": "extension(%omopEthnicity).valueCoding.display.first()",
+          "type": "string",
+          "description": "Human-readable label from the omop-ethnicity extension. → ethnicity_source_value (only when omop_ethnicity_code is set)."
         },
         {
           "name": "ethnicity_omb_code",
           "path": "extension(%usCoreEthnicity).extension('ombCategory').valueCoding.code.first()",
           "type": "code",
-          "description": "OMB ethnicity ombCategory code (2135-2 Hispanic / 2186-5 Not Hispanic). → ethnicity_concept_id."
+          "description": "OMB ethnicity ombCategory code (2135-2 Hispanic / 2186-5 Not Hispanic). Fallback when omop_ethnicity_code absent: resolved via cm.ethnicity_omb_to_omop."
         },
         {
           "name": "ethnicity_text",
           "path": "extension(%usCoreEthnicity).extension('text').valueString.first()",
           "type": "string",
-          "description": "Human-readable ethnicity. → ethnicity_source_value."
+          "description": "Human-readable ethnicity label from US Core. → ethnicity_source_value when omop_ethnicity_display absent."
         },
         {
           "name": "general_practitioner_ref",
