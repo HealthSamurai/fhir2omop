@@ -17,6 +17,7 @@ const STAGING_TO_VIEW: Record<string, string> = {
     "staging.obs_meas_view":                           "Observation__measurement",
     "staging.obs_obs_view":                            "Observation__observation",
     "staging.dr_meas_view":                            "DiagnosticReport__measurement",
+    "staging.observation_component_measurement":       "Observation_component__measurement",
 };
 
 function viewColumns(view: any): Set<string> {
