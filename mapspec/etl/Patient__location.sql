@@ -1,20 +1,41 @@
 -- Stage-2 ETL: Patient (FHIR R4) → location (OMOP CDM)
 --
--- One location row per Patient (1:1 with person). location_id mirrors
--- person_id (both hashtextextended(Patient.id)). Country resolved via
--- ConceptMap.
+-- location_id is a composite hash of (line, city, state, zip) — two
+-- patients sharing an address share a location row. Matches the OMOP
+-- LOCATION ETL convention ("Each instance of a Location in the source
+-- data should be assigned this unique key" + "unique Location") and
+-- the FK side in Patient__person.sql uses the same hash.
+--
+-- DISTINCT ON (location_id) collapses identical addresses across
+-- patients into one row.
+--
+-- location_source_value: per OMOP user_guidance "Put the verbatim value
+-- for the location here, as it shows up in the source." Privacy note
+-- (OMOP CDM Privacy guide): this field is PII-bearing and should be
+-- reviewed/redacted in de-identified extracts.
 --
 -- @relatedArtefact https://fhir2omop.health-samurai.io/ConceptMap/country-iso-to-omop
 
-SELECT
-    referenceToId(v.id)                            AS location_id,
+SELECT DISTINCT ON (location_id)
+    stringToId(concat_ws('|',
+        v.location_line,
+        v.location_city,
+        v.location_state,
+        v.location_zip
+    ))                                              AS location_id,
     v.location_line                                AS address_1,
     NULL::varchar                                  AS address_2,
     v.location_city                                AS city,
     v.location_state                               AS state,
     v.location_zip                                 AS zip,
     v.location_county                              AS county,
-    v.location_state                               AS location_source_value,
+    -- varchar(50) cap; long composites get truncated. Privacy: PII.
+    left(concat_ws(', ',
+        NULLIF(v.location_line,  ''),
+        NULLIF(v.location_city,  ''),
+        NULLIF(v.location_state, ''),
+        NULLIF(v.location_zip,   '')
+    ), 50)                                          AS location_source_value,
     COALESCE(c.concept_id, 0)                      AS country_concept_id,
     v.location_country                             AS country_source_value,
     v.location_lat::numeric                        AS latitude,

@@ -35,7 +35,18 @@ SELECT
         0
     )                                              AS ethnicity_concept_id,
 
-    referenceToId(v.id)                            AS location_id,
+    -- Dedup: location_id is a hash of the composite address key, NOT
+    -- of Patient.id. Two patients sharing the same address get the
+    -- same location_id, per OMOP CDM v5.4 LOCATION ETL convention:
+    -- "Each instance of a Location in the source data should be
+    -- assigned this unique key" + "The unique key given to a unique
+    -- Location." Patient__location.sql writes the matching row.
+    stringToId(concat_ws('|',
+        v.location_line,
+        v.location_city,
+        v.location_state,
+        v.location_zip
+    ))                                              AS location_id,
     referenceToId(v.general_practitioner_ref)      AS provider_id,
     referenceToId(v.managing_organization_ref)     AS care_site_id,
 
