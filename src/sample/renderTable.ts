@@ -42,6 +42,38 @@ export default async function (
         sql: `SELECT count(*)::int AS n FROM cdm_ours_fhir.${omopTable}`,
     }))[0].n as number;
 
+    // Batched concept lookup: collect every non-zero concept_id that
+    // appears in any *_concept_id column across the sampled rows, then
+    // resolve them via a single vocab.concept query. Rendered inline
+    // next to the value in formatCell, no htmx needed.
+    const conceptIds = new Set<number>();
+    for (const row of rows) {
+        for (const c of colNames) {
+            if (!c.endsWith("concept_id")) continue;
+            const v = (row as any)[c];
+            if (typeof v === "number" && v > 0) conceptIds.add(v);
+        }
+    }
+    const conceptInfo = new Map<number, { name: string; vocab: string; domain: string; standard: boolean }>();
+    if (conceptIds.size > 0) {
+        // Inline integer list — IDs come from our own row data, no
+        // injection surface. Bun.SQL's array-param encoding is fiddly
+        // for int[], simpler to build the IN(...) list directly.
+        const idList = [...conceptIds].join(",");
+        const cs = await ctx.fns.db.query(ctx, {
+            sql: `SELECT concept_id, concept_name, vocabulary_id, domain_id, standard_concept
+                  FROM vocab.concept WHERE concept_id IN (${idList})`,
+        });
+        for (const r of cs as any[]) {
+            conceptInfo.set(r.concept_id, {
+                name:     r.concept_name,
+                vocab:    r.vocabulary_id,
+                domain:   r.domain_id,
+                standard: r.standard_concept === "S",
+            });
+        }
+    }
+
     if (rows.length === 0) {
         return `
 <div class="mb-6 border border-slate-200 rounded-lg overflow-hidden">
@@ -76,7 +108,7 @@ export default async function (
             const titleAttr = tip ? ` title="${esc(tip)}"` : "";
             const tipCls    = tip ? " cursor-help underline decoration-dotted decoration-gray-400 underline-offset-2" : "";
 
-            const cellHtml = formatCell(c, v);
+            const cellHtml = formatCell(c, v, conceptInfo);
             return `
       <tr class="border-t border-gray-200">
         <th class="bg-gray-100 text-left align-top w-72 px-4 py-2.5 font-mono text-xs font-semibold text-gray-800 border-r border-gray-200">
@@ -144,24 +176,29 @@ export default async function (
 </div>`;
 }
 
-function formatCell(col: string, v: any): string {
+function formatCell(
+    col: string,
+    v: any,
+    conceptInfo: Map<number, { name: string; vocab: string; domain: string; standard: boolean }>,
+): string {
     if (v === null || v === undefined) {
         return `<span class="text-gray-300 italic text-[10px]">∅ null</span>`;
     }
     if (col.endsWith("concept_id") && typeof v === "number") {
-        // 0 = "No matching concept" — no point looking it up; render dim.
+        // 0 = "No matching concept" — render dim, no lookup.
         if (v === 0) return `<span class="text-gray-400">0</span>`;
-        // Non-zero concept_id: render the number + an htmx-loaded inline
-        // pill (concept_name + vocab_id / domain_id), fetched on first
-        // hover so the initial card paint stays cheap.
-        return `<span class="inline-flex items-baseline gap-0 group">
-  <span class="text-purple-700 font-semibold cursor-help">${v}</span>
-  <span class="concept-info"
-        hx-get="/concept/${v}"
-        hx-trigger="mouseenter once delay:120ms from:closest tr"
-        hx-target="this"
-        hx-swap="outerHTML"></span>
-</span>`;
+        // Non-zero concept_id: append `(concept_name, vocab)` from the
+        // pre-batched lookup. Full vocab/domain in the title on hover.
+        const info = conceptInfo.get(v);
+        if (!info) {
+            return `<span class="text-purple-700 font-semibold">${v}</span>` +
+                   `<span class="text-xs text-gray-400 ml-1">(not in vocab)</span>`;
+        }
+        const stdMark = info.standard ? " · S" : "";
+        return `<span class="text-purple-700 font-semibold">${v}</span>` +
+               `<span class="text-xs text-gray-500 ml-1" ` +
+               `title="${esc(info.vocab)} / ${esc(info.domain)}${stdMark}">` +
+               `(${esc(info.name)}, ${esc(info.vocab)})</span>`;
     }
     if (col.endsWith("_id") && typeof v === "bigint") {
         return `<span class="text-gray-700" title="${esc(String(v))}">${esc(String(v))}</span>`;
