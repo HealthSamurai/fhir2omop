@@ -18,7 +18,8 @@
     { "name": "usCoreEthnicity", "valueString": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity" },
     { "name": "usCoreBirthsex",  "valueString": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex" },
     { "name": "omopRace",        "valueString": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-race" },
-    { "name": "omopEthnicity",   "valueString": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-ethnicity" }
+    { "name": "omopEthnicity",   "valueString": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-ethnicity" },
+    { "name": "geolocation",     "valueString": "http://hl7.org/fhir/StructureDefinition/geolocation" }
   ],
   "select": [
     {
@@ -154,13 +155,13 @@
         },
         {
           "name": "location_lat",
-          "path": "extension('http://hl7.org/fhir/StructureDefinition/geolocation').extension('latitude').valueDecimal",
+          "path": "extension(%geolocation).extension('latitude').valueDecimal",
           "type": "decimal",
           "description": "→ cdm.location.latitude. From FHIR geolocation extension on Address."
         },
         {
           "name": "location_lng",
-          "path": "extension('http://hl7.org/fhir/StructureDefinition/geolocation').extension('longitude').valueDecimal",
+          "path": "extension(%geolocation).extension('longitude').valueDecimal",
           "type": "decimal",
           "description": "→ cdm.location.longitude."
         }
