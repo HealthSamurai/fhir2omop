@@ -149,8 +149,19 @@ function formatCell(col: string, v: any): string {
         return `<span class="text-gray-300 italic text-[10px]">∅ null</span>`;
     }
     if (col.endsWith("concept_id") && typeof v === "number") {
-        const cls = v === 0 ? "text-gray-400" : "text-purple-700 font-semibold";
-        return `<span class="${cls}">${v}</span>`;
+        // 0 = "No matching concept" — no point looking it up; render dim.
+        if (v === 0) return `<span class="text-gray-400">0</span>`;
+        // Non-zero concept_id: render the number + an htmx-loaded inline
+        // pill (concept_name + vocab_id / domain_id), fetched on first
+        // hover so the initial card paint stays cheap.
+        return `<span class="inline-flex items-baseline gap-0 group">
+  <span class="text-purple-700 font-semibold cursor-help">${v}</span>
+  <span class="concept-info"
+        hx-get="/concept/${v}"
+        hx-trigger="mouseenter once delay:120ms from:closest tr"
+        hx-target="this"
+        hx-swap="outerHTML"></span>
+</span>`;
     }
     if (col.endsWith("_id") && typeof v === "bigint") {
         return `<span class="text-gray-700" title="${esc(String(v))}">${esc(String(v))}</span>`;
