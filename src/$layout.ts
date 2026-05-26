@@ -46,6 +46,27 @@ export default function (
   .prose table { font-size: 13px; }
   .prose th, .prose td { padding: 4px 8px; border: 1px solid #e5e7eb; }
   .prose th { background: #f9fafb; }
+
+  /* Heading hierarchy — prose-sm flattens these too much for review docs. */
+  .prose h1 { font-size: 1.5rem; font-weight: 700; margin-top: 1.2em; margin-bottom: .5em; line-height: 1.25; color: #111827; }
+  .prose h2 { font-size: 1.2rem; font-weight: 600; margin-top: 1.3em; margin-bottom: .35em; padding-bottom: .25em; border-bottom: 1px solid #e5e7eb; color: #111827; }
+  .prose h3 { font-size: 1.02rem; font-weight: 600; margin-top: 1em;   margin-bottom: .25em; color: #1f2937; }
+  .prose h4 { font-size: .95rem;  font-weight: 600; margin-top: .9em;  margin-bottom: .2em;  color: #374151; }
+  .prose p  { margin: .5em 0; line-height: 1.55; }
+  .prose ul, .prose ol { margin: .5em 0; padding-left: 1.4em; }
+  .prose li { margin: .2em 0; }
+  .prose blockquote {
+    margin: .7em 0; padding: .5em .9em;
+    border-left: 3px solid #f59e0b;          /* amber-500 */
+    background: #fffbeb;                     /* amber-50  */
+    color: #44403c;
+    font-style: normal;
+  }
+  .prose blockquote p { margin: .25em 0; }
+  .prose hr { margin: 1.2em 0; border-color: #e5e7eb; }
+  .prose strong { color: #111827; }
+  .prose a { color: #2563eb; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  .prose a:hover { color: #1d4ed8; }
   details summary { cursor: pointer; }
   details summary::-webkit-details-marker { display: none; }
   details summary::marker { display: none; content: ""; }
