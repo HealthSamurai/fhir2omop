@@ -1,6 +1,7 @@
 // Render a sample-rows card for one OMOP table: first N rows of
-// cdm_ours_fhir.<table> as a wide scrollable table. Lazy-loaded via htmx
-// from /sample/:resource/:table.
+// cdm_ours_fhir.<table> as a key/value record viewer with prev/next
+// navigation. One record visible at a time, all N pre-rendered in the
+// DOM so navigation is instant (no htmx round-trip).
 //
 //   ctx.fns.sample.renderTable(ctx, { omop_table, limit?: 50 }) → string|null
 
@@ -27,6 +28,12 @@ export default async function (
     const colNames = cols.map((c: any) => c.column_name as string);
     if (colNames.length === 0) return null;
 
+    // OMOP CDM v5.4 field metadata (datatype, FK target, user_guidance).
+    // We treat OMOP table names case-insensitively.
+    const omopFields = await ctx.fns.omop.byTable(ctx, { name: omopTable });
+    const metaByName = new Map<string, any>();
+    for (const f of omopFields) metaByName.set(f.name.toLowerCase(), f);
+
     const rows = await ctx.fns.db.query(ctx, {
         sql: `SELECT * FROM cdm_ours_fhir.${omopTable} LIMIT ${limit}`,
     });
@@ -35,44 +42,117 @@ export default async function (
         sql: `SELECT count(*)::int AS n FROM cdm_ours_fhir.${omopTable}`,
     }))[0].n as number;
 
-    const head = colNames.map((c) =>
-        `<th class="px-2 py-1.5 text-left font-medium whitespace-nowrap ${c.endsWith("_source_value") || c.endsWith("_source_concept_id") ? "text-gray-400" : "text-gray-600"}">${esc(c)}</th>`
-    ).join("");
+    if (rows.length === 0) {
+        return `
+<div class="mb-6 border border-slate-200 rounded-lg overflow-hidden">
+  <div class="px-4 py-2 bg-slate-50 border-b border-slate-200 text-xs flex items-center gap-2">
+    <span class="text-[10px] uppercase tracking-wider text-slate-800 font-semibold">Sample rows</span>
+    <code class="font-mono text-sm text-slate-900">cdm_ours_fhir.${esc(omopTable)}</code>
+  </div>
+  <div class="px-4 py-6 text-xs text-gray-400 italic">no rows</div>
+</div>`;
+    }
 
-    const body = rows.map((row: any) => {
-        const tds = colNames.map((c) => {
+    // Unique-per-card id so multiple sample cards on one page coexist.
+    const uid = `samp_${omopTable}_${Math.random().toString(36).slice(2, 8)}`;
+
+    const records = rows.map((row: any, idx: number) => {
+        const lines = colNames.map((c) => {
             const v = row[c];
-            const dim = c.endsWith("_source_value") || c.endsWith("_source_concept_id") ? " text-gray-400" : "";
-            if (v === null || v === undefined) return `<td class="px-2 py-1 text-[10px] text-gray-300 italic">∅</td>`;
-            if (c.endsWith("concept_id") && typeof v === "number") {
-                const cls = v === 0 ? "text-gray-400" : "text-purple-700 font-semibold";
-                return `<td class="px-2 py-1 font-mono text-[11px] ${cls}">${v}</td>`;
-            }
-            if (c.endsWith("_id") && typeof v === "bigint") return `<td class="px-2 py-1 font-mono text-[10px]${dim}" title="${esc(String(v))}">${esc(String(v).slice(0, 12))}…</td>`;
-            const s = String(v);
-            return `<td class="px-2 py-1 font-mono text-[11px]${dim}">${esc(s.length > 40 ? s.slice(0, 40) + "…" : s)}</td>`;
+            const meta = metaByName.get(c.toLowerCase());
+            const typeBadge = meta?.type
+                ? `<span class="text-[9px] uppercase tracking-wider text-gray-400 ml-1">${esc(meta.type)}</span>`
+                : "";
+            const flags: string[] = [];
+            if (meta?.isPrimaryKey) flags.push(`<span class="text-[9px] text-amber-700 ml-1" title="primary key">PK</span>`);
+            if (meta?.required)     flags.push(`<span class="text-[9px] text-red-600 ml-1" title="NOT NULL">*</span>`);
+            if (meta?.fkTable)      flags.push(`<span class="text-[9px] text-blue-600 ml-1" title="FK">→${esc(meta.fkTable.toLowerCase())}</span>`);
+            const flagsHtml = flags.join("");
+
+            const guidance = meta?.userGuidance
+                ? `<div class="text-[10px] text-gray-500 leading-snug mt-0.5">${esc(meta.userGuidance)}</div>`
+                : "";
+
+            const cellHtml = formatCell(c, v);
+            return `
+      <div class="border-t border-gray-100 first:border-t-0 px-3 py-1.5">
+        <div class="flex items-baseline gap-2">
+          <div class="w-56 shrink-0 text-[11px] font-mono text-gray-700 leading-snug">
+            ${esc(c)}${typeBadge}${flagsHtml}
+          </div>
+          <div class="flex-1 text-[11px] font-mono overflow-x-auto">${cellHtml}</div>
+        </div>
+        ${guidance ? `<div class="pl-[15rem]">${guidance}</div>` : ""}
+      </div>`;
         }).join("");
-        return `<tr class="border-t border-gray-100 hover:bg-gray-50">${tds}</tr>`;
+        return `<div class="${uid}-rec ${idx === 0 ? "" : "hidden"}" data-idx="${idx}">${lines}</div>`;
     }).join("");
 
+    const total_records = rows.length;
+
+    // Plain JS (no htmx) — prev/next buttons swap which record is visible.
+    // hx-boost="false" so htmx doesn't try to intercept the button clicks.
+    const nav = `
+<script>
+(function(){
+  const recs = document.querySelectorAll('.${uid}-rec');
+  const total = ${total_records};
+  let i = 0;
+  function show(n) {
+    i = ((n % total) + total) % total;
+    recs.forEach((el, idx) => el.classList.toggle('hidden', idx !== i));
+    const counter = document.getElementById('${uid}_counter');
+    if (counter) counter.textContent = (i + 1) + ' / ' + total;
+  }
+  document.getElementById('${uid}_prev')?.addEventListener('click', () => show(i - 1));
+  document.getElementById('${uid}_next')?.addEventListener('click', () => show(i + 1));
+  document.addEventListener('keydown', (e) => {
+    // Only handle when the card is on-screen and not typing in an input.
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+    if (e.key === 'ArrowLeft')  document.getElementById('${uid}_prev')?.click();
+    if (e.key === 'ArrowRight') document.getElementById('${uid}_next')?.click();
+  });
+})();
+</script>`;
+
     return `
-<div class="mb-6 border border-slate-200 rounded-lg overflow-hidden">
+<div class="mb-6 border border-slate-200 rounded-lg overflow-hidden" hx-boost="false">
   <div class="flex items-center justify-between px-4 py-2 bg-slate-50 border-b border-slate-200">
     <div class="flex items-center gap-2 text-xs">
       <span class="text-[10px] uppercase tracking-wider text-slate-800 font-semibold">Sample rows</span>
       <code class="font-mono text-sm text-slate-900">cdm_ours_fhir.${esc(omopTable)}</code>
+      <span class="text-[10px] text-slate-500">· ${colNames.length} columns</span>
     </div>
-    <span class="text-[11px] text-slate-700">showing ${rows.length} of ${total.toLocaleString()} · ${colNames.length} columns</span>
+    <div class="flex items-center gap-2 text-xs">
+      <span class="text-[10px] text-slate-500">showing ${total_records.toLocaleString()} of ${total.toLocaleString()}</span>
+      <button id="${uid}_prev" type="button"
+        class="px-2 py-0.5 rounded border border-slate-300 hover:bg-slate-100 text-slate-700"
+        title="Previous (←)">‹ prev</button>
+      <span id="${uid}_counter" class="font-mono text-[11px] text-slate-700 w-14 text-center">1 / ${total_records}</span>
+      <button id="${uid}_next" type="button"
+        class="px-2 py-0.5 rounded border border-slate-300 hover:bg-slate-100 text-slate-700"
+        title="Next (→)">next ›</button>
+    </div>
   </div>
-  <div class="overflow-x-auto bg-white">
-    <table class="text-[11px] min-w-full">
-      <thead class="bg-gray-50 text-[10px] uppercase tracking-wider border-b border-gray-200">
-        <tr>${head}</tr>
-      </thead>
-      <tbody>${body}</tbody>
-    </table>
-  </div>
+  <div class="bg-white">${records}</div>
+  ${nav}
 </div>`;
+}
+
+function formatCell(col: string, v: any): string {
+    if (v === null || v === undefined) {
+        return `<span class="text-gray-300 italic text-[10px]">∅ null</span>`;
+    }
+    if (col.endsWith("concept_id") && typeof v === "number") {
+        const cls = v === 0 ? "text-gray-400" : "text-purple-700 font-semibold";
+        return `<span class="${cls}">${v}</span>`;
+    }
+    if (col.endsWith("_id") && typeof v === "bigint") {
+        return `<span class="text-gray-700" title="${esc(String(v))}">${esc(String(v))}</span>`;
+    }
+    const dim = col.endsWith("_source_value") || col.endsWith("_source_concept_id") ? " text-gray-500" : " text-gray-900";
+    const s = String(v);
+    return `<span class="${dim}">${esc(s)}</span>`;
 }
 
 function esc(s: string): string {
