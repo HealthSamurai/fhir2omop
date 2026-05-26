@@ -269,9 +269,10 @@ async function renderEdge(ctx: Context, edge: Edge): Promise<string> {
     );
     const reviewFile = Bun.file(reviewPath);
     if (await reviewFile.exists()) {
-        const md = await reviewFile.text();
-        const html = await ctx.fns.markdown.render(ctx, { source: md });
-        parts.push(`
+        const md = (await reviewFile.text()).trim();
+        if (md) {
+            const html = await ctx.fns.markdown.render(ctx, { source: md });
+            parts.push(`
 <details class="mb-6 rounded-lg border-2 border-amber-400 bg-white" open>
   <summary class="cursor-pointer px-4 py-2 font-semibold text-amber-900 hover:bg-amber-50 rounded-t-lg">
     📝 Peer review
@@ -279,6 +280,7 @@ async function renderEdge(ctx: Context, edge: Edge): Promise<string> {
   </summary>
   <div class="prose prose-sm max-w-none px-4 py-3 text-gray-800">${html}</div>
 </details>`);
+        }
     }
 
     // Conversion profile (gate for this edge)
