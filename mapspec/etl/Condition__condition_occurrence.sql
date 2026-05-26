@@ -1,68 +1,27 @@
 -- Stage-2 ETL: Condition → condition_occurrence (per-coding fan-out)
 --
--- @relatedArtefact https://fhir2omop.health-samurai.io/ConceptMap/fhir-system-to-omop-vocab
 -- @relatedArtefact https://fhir2omop.health-samurai.io/ConceptMap/fhir-clinical-status-to-omop
 -- @relatedArtefact https://fhir2omop.health-samurai.io/ConceptMap/fhir-verification-status-to-omop
 -- @relatedArtefact https://fhir2omop.health-samurai.io/ConceptMap/fhir-condition-category-to-omop
 --
--- ─── Per-coding fan-out + domain routing ──────────────────────────
--- staging.condition_occurrence now has one row per (Condition.id,
--- coding) — see view. Each coding is resolved through
--- cm.fhir_system_to_omop_vocab → vocab.concept → Maps-to → standard
--- concept, then routed by std.domain_id to the appropriate OMOP
--- table. THIS edge writes only rows where std.domain_id='Condition'.
--- Sibling edges Condition__observation / __procedure_occurrence /
--- __measurement write the rest.
+-- Reads from staging.condition_resolved which is built once per pipeline
+-- run by mapspec/etl/_resolve_condition.sql (single 4-table vocab JOIN
+-- shared with sibling edges __observation / __procedure_occurrence /
+-- __measurement). Here we just filter by std_domain and project to the
+-- condition_occurrence schema.
 --
--- Dedup: when two codings of the same Condition (typically SNOMED +
--- ICD-10 of the same diagnosis) resolve to the same standard
--- concept_id, DISTINCT ON collapses to one row. ORDER BY prefers
--- SNOMED (already-standard, fewer Maps-to ambiguities) so the
--- surviving source_value is the SNOMED code.
---
--- Surrogate condition_occurrence_id uses (Condition.id, std_concept_id)
--- so different codings of the same Condition that resolve to
--- DIFFERENT std concepts get distinct PKs.
+-- ─── Intentional deviations from the HL7 FHIR↔OMOP IG ─────────────
+-- 1. Per-coding fan-out via the view + Maps-to dedup means one row per
+--    (Condition.id, std_concept_id). Surrogate PK = stringToId(
+--    Condition.id || '|' || std_concept_id).
+-- 2. SNOMED codings whose Maps-to lands in a non-Condition domain
+--    (Observation, Procedure, Measurement) are NOT dropped — they
+--    route to the matching OMOP table via the sibling edges.
+-- 3. verificationStatus drives condition_status_concept_id (preferred
+--    over clinicalStatus, see review §4.4); verificationStatus in
+--    ('refuted', 'entered-in-error') excludes the row entirely.
 -- ──────────────────────────────────────────────────────────────────
 
-WITH resolved AS (
-    SELECT DISTINCT ON (v.id, std.concept_id)
-        v.id,
-        v.subject_ref, v.encounter_ref, v.recorder_ref, v.asserter_ref,
-        v.clinical_status_code, v.verification_status_code, v.category_code,
-        v.onset_dt, v.onset_period_start, v.recorded_date,
-        v.abatement_dt, v.abatement_period_end, v.abatement_string,
-        v.code_text,
-        v.code_system,
-        v.code_value           AS src_code,
-        v.code_display,
-        src.concept_id         AS src_concept_id,
-        std.concept_id         AS std_concept_id,
-        std.domain_id          AS std_domain
-    FROM staging.condition_occurrence v
-    JOIN cm.fhir_system_to_omop_vocab sa
-      ON sa.source_code = v.code_system
-    JOIN vocab.concept src
-      ON src.vocabulary_id  = sa.target_code
-     AND src.concept_code   = v.code_value
-    JOIN vocab.concept_relationship rel
-      ON rel.concept_id_1   = src.concept_id
-     AND rel.relationship_id = 'Maps to'
-     AND rel.invalid_reason IS NULL
-    JOIN vocab.concept std
-      ON std.concept_id      = rel.concept_id_2
-     AND std.standard_concept = 'S'
-    ORDER BY v.id, std.concept_id,
-             CASE v.code_system
-                 WHEN 'http://snomed.info/sct'             THEN 1
-                 WHEN 'http://hl7.org/fhir/sid/icd-10-cm'  THEN 2
-                 WHEN 'http://hl7.org/fhir/sid/icd-9-cm'   THEN 3
-                 WHEN 'http://hl7.org/fhir/sid/icd-10'     THEN 4
-                 ELSE 9
-             END
-)
--- Outer alias `r` (resolved) keeps the linter's `v.<col>` regex from
--- false-positive matching CTE-internal columns against the staging view.
 SELECT
     stringToId(r.id || '|' || r.std_concept_id::text)                        AS condition_occurrence_id,
     referenceToId(r.subject_ref)                                             AS person_id,
@@ -85,7 +44,7 @@ SELECT
     r.src_concept_id                                                         AS condition_source_concept_id,
     left(r.clinical_status_code, 50)                                         AS condition_status_source_value
 
-FROM resolved r
+FROM staging.condition_resolved r
 LEFT JOIN cm.fhir_clinical_status_to_omop     cstat ON cstat.source_code = r.clinical_status_code
 LEFT JOIN cm.fhir_verification_status_to_omop vstat ON vstat.source_code = r.verification_status_code
 LEFT JOIN cm.fhir_condition_category_to_omop  cat   ON cat.source_code   = r.category_code

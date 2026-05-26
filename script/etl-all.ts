@@ -13,6 +13,7 @@
 import { SQL } from "bun";
 import { $ } from "bun";
 import { resolve } from "node:path";
+import { readdirSync } from "node:fs";
 
 const DSN = process.env.ATHENA_DSN ?? "postgresql://athena:athena@localhost:54392/athena";
 const sql = new SQL(DSN, { idleTimeout: 0, maxLifetime: 0 });
@@ -160,6 +161,21 @@ for (const [staging, { edge, src }] of stagedBest) {
 log("ANALYZE staging.* + cm.*");
 for (const staging of stagedBest.keys()) await psql(`ANALYZE ${staging}`);
 for (const cm of conceptmaps)             await psql(`ANALYZE cm.${cm.id.replace(/-/g, "_")}`);
+
+// ── 3b. Shared resolve passes ─────────────────────────────────────────────
+// mapspec/etl/_resolve_*.sql files build derived staging tables so per-
+// domain stage-2 ETLs don't repeat the same vocab JOIN N times. Each file
+// is idempotent (DROP + CREATE TABLE AS). Run order is alphabetical (only
+// matters within a single resource family).
+log("resolve passes (_resolve_*.sql)");
+const resolveFiles = readdirSync("mapspec/etl")
+    .filter((f) => f.startsWith("_resolve_") && f.endsWith(".sql"))
+    .sort();
+for (const f of resolveFiles) {
+    const t1 = Date.now();
+    await psqlFile(`mapspec/etl/${f}`);
+    log(`  ${f.padEnd(40)} ${Date.now() - t1}ms`);
+}
 
 // ── 4. stage-2 ETLs ─────────────────────────────────────────────────────────
 log("stage-2 ETLs");

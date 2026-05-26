@@ -19,6 +19,12 @@ const STAGING_TO_VIEW: Record<string, string> = {
     "staging.dr_meas_view":                            "DiagnosticReport__measurement",
     "staging.observation_component_measurement":       "Observation_component__measurement",
     "staging.condition_occurrence":                    "Condition__condition_occurrence",
+    // condition_resolved is a derived staging table (built by
+    // _resolve_condition.sql); its columns are the resolved superset
+    // of Condition__condition_occurrence view + std_concept_id,
+    // src_*, std_domain. Linter validates against the source view —
+    // CTE-derived cols (std_*, src_*) live in the resolve SQL.
+    "staging.condition_resolved":                      "Condition__condition_occurrence",
 };
 
 function viewColumns(view: any): Set<string> {
