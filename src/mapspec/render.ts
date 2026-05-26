@@ -256,9 +256,11 @@ async function renderEdge(ctx: Context, edge: Edge): Promise<string> {
     }
     parts.push(`</div>`);
 
-    // Narrative
+    // Narrative — render as markdown (headings, lists, bold, code spans).
+    // Wrapped in .prose for typography; mb-4 spacing below.
     if (edge.narrative_md) {
-        parts.push(`<p class="text-gray-600 mb-4 text-sm">${esc(edge.narrative_md)}</p>`);
+        const html = await ctx.fns.markdown.render(ctx, { source: edge.narrative_md });
+        parts.push(`<div class="prose prose-sm max-w-none text-gray-700 mb-4">${html}</div>`);
     }
 
     // Peer-review (mapspec/reviews/<R>__<T>_review.md) — yellow card.
