@@ -69,20 +69,23 @@ export default async function (
             if (meta?.fkTable)      flags.push(`<span class="text-[9px] text-blue-600 ml-1" title="FK">→${esc(meta.fkTable.toLowerCase())}</span>`);
             const flagsHtml = flags.join("");
 
-            const guidance = meta?.userGuidance
-                ? `<div class="text-[10px] text-gray-500 leading-snug mt-0.5">${esc(meta.userGuidance)}</div>`
-                : "";
+            // Hover-only docs: native `title` attribute carries the OMOP
+            // user_guidance + etl_conventions; a subtle dotted underline +
+            // help cursor signals the column has a tooltip.
+            const tipParts: string[] = [];
+            if (meta?.userGuidance)   tipParts.push(meta.userGuidance);
+            if (meta?.etlConventions) tipParts.push(`ETL: ${meta.etlConventions}`);
+            const tip = tipParts.join("\n\n");
+            const titleAttr = tip ? ` title="${esc(tip)}"` : "";
+            const tipHint  = tip ? ' cursor-help underline decoration-dotted decoration-gray-300 underline-offset-2' : "";
 
             const cellHtml = formatCell(c, v);
             return `
-      <div class="border-t border-gray-100 first:border-t-0 px-3 py-1.5">
-        <div class="flex items-baseline gap-2">
-          <div class="w-56 shrink-0 text-[11px] font-mono text-gray-700 leading-snug">
-            ${esc(c)}${typeBadge}${flagsHtml}
-          </div>
-          <div class="flex-1 text-[11px] font-mono overflow-x-auto">${cellHtml}</div>
+      <div class="flex items-baseline gap-2 border-t border-gray-100 first:border-t-0 px-3 py-1.5">
+        <div class="w-56 shrink-0 text-[11px] font-mono text-gray-700 leading-snug">
+          <span class="${tipHint}"${titleAttr}>${esc(c)}</span>${typeBadge}${flagsHtml}
         </div>
-        ${guidance ? `<div class="pl-[15rem]">${guidance}</div>` : ""}
+        <div class="flex-1 text-[11px] font-mono overflow-x-auto">${cellHtml}</div>
       </div>`;
         }).join("");
         return `<div class="${uid}-rec ${idx === 0 ? "" : "hidden"}" data-idx="${idx}">${lines}</div>`;
