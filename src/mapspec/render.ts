@@ -273,7 +273,7 @@ async function renderEdge(ctx: Context, edge: Edge): Promise<string> {
         if (md) {
             const html = await ctx.fns.markdown.render(ctx, { source: md });
             parts.push(`
-<details class="mb-6 rounded-lg border-2 border-amber-400 bg-white" open>
+<details class="mb-6 rounded-lg border-2 border-amber-400 bg-white">
   <summary class="cursor-pointer px-4 py-2 font-semibold text-amber-900 hover:bg-amber-50 rounded-t-lg">
     📝 Peer review
     <span class="text-xs font-normal text-amber-700 ml-2">vs ${edge.fhir_resource}__${edge.omop_table}_review.md</span>
