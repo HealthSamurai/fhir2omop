@@ -57,38 +57,40 @@ export default async function (
     const uid = `samp_${omopTable}_${Math.random().toString(36).slice(2, 8)}`;
 
     const records = rows.map((row: any, idx: number) => {
-        const lines = colNames.map((c) => {
+        const trs = colNames.map((c) => {
             const v = row[c];
             const meta = metaByName.get(c.toLowerCase());
             const typeBadge = meta?.type
-                ? `<span class="text-[9px] uppercase tracking-wider text-gray-400 ml-1">${esc(meta.type)}</span>`
+                ? `<span class="text-[10px] uppercase tracking-wider text-gray-400 ml-1 font-normal">${esc(meta.type)}</span>`
                 : "";
             const flags: string[] = [];
-            if (meta?.isPrimaryKey) flags.push(`<span class="text-[9px] text-amber-700 ml-1" title="primary key">PK</span>`);
-            if (meta?.required)     flags.push(`<span class="text-[9px] text-red-600 ml-1" title="NOT NULL">*</span>`);
-            if (meta?.fkTable)      flags.push(`<span class="text-[9px] text-blue-600 ml-1" title="FK">→${esc(meta.fkTable.toLowerCase())}</span>`);
+            if (meta?.isPrimaryKey) flags.push(`<span class="text-[10px] text-amber-700 ml-1 font-normal" title="primary key">PK</span>`);
+            if (meta?.required)     flags.push(`<span class="text-[10px] text-red-600 ml-1 font-normal" title="NOT NULL">*</span>`);
+            if (meta?.fkTable)      flags.push(`<span class="text-[10px] text-blue-600 ml-1 font-normal" title="FK">→${esc(meta.fkTable.toLowerCase())}</span>`);
             const flagsHtml = flags.join("");
 
-            // Hover-only docs: native `title` attribute carries the OMOP
-            // user_guidance + etl_conventions; a subtle dotted underline +
-            // help cursor signals the column has a tooltip.
             const tipParts: string[] = [];
             if (meta?.userGuidance)   tipParts.push(meta.userGuidance);
             if (meta?.etlConventions) tipParts.push(`ETL: ${meta.etlConventions}`);
             const tip = tipParts.join("\n\n");
             const titleAttr = tip ? ` title="${esc(tip)}"` : "";
-            const tipHint  = tip ? ' cursor-help underline decoration-dotted decoration-gray-300 underline-offset-2' : "";
+            const tipCls    = tip ? " cursor-help underline decoration-dotted decoration-gray-400 underline-offset-2" : "";
 
             const cellHtml = formatCell(c, v);
             return `
-      <div class="flex items-baseline gap-2 border-t border-gray-100 first:border-t-0 px-3 py-1.5">
-        <div class="w-56 shrink-0 text-[11px] font-mono text-gray-700 leading-snug">
-          <span class="${tipHint}"${titleAttr}>${esc(c)}</span>${typeBadge}${flagsHtml}
-        </div>
-        <div class="flex-1 text-[11px] font-mono overflow-x-auto">${cellHtml}</div>
-      </div>`;
+      <tr class="border-t border-gray-200">
+        <th class="bg-gray-100 text-left align-top w-72 px-4 py-2.5 font-mono text-xs font-semibold text-gray-800 border-r border-gray-200">
+          <span class="${tipCls.trim()}"${titleAttr}>${esc(c)}</span>${typeBadge}${flagsHtml}
+        </th>
+        <td class="px-4 py-2.5 font-mono text-xs text-gray-900 align-top">${cellHtml}</td>
+      </tr>`;
         }).join("");
-        return `<div class="${uid}-rec ${idx === 0 ? "" : "hidden"}" data-idx="${idx}">${lines}</div>`;
+        return `
+<div class="${uid}-rec ${idx === 0 ? "" : "hidden"}" data-idx="${idx}">
+  <table class="w-full border-collapse">
+    <tbody>${trs}</tbody>
+  </table>
+</div>`;
     }).join("");
 
     const total_records = rows.length;
@@ -119,7 +121,7 @@ export default async function (
 </script>`;
 
     return `
-<div class="mb-6 border border-slate-200 rounded-lg overflow-hidden" hx-boost="false">
+<div class="not-prose mb-6 border border-slate-200 rounded-lg overflow-hidden" hx-boost="false">
   <div class="flex items-center justify-between px-4 py-2 bg-slate-50 border-b border-slate-200">
     <div class="flex items-center gap-2 text-xs">
       <span class="text-[10px] uppercase tracking-wider text-slate-800 font-semibold">Sample rows</span>
