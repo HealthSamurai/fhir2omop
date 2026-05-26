@@ -24,19 +24,12 @@ export default async function (ctx: Context, _session: any, req: Request) {
 
     if (rows.length === 0) {
         return new Response(
-            `<span class="text-xs text-gray-400 ml-1" title="concept_id ${esc(id)} not in vocab.concept">· not found</span>`,
+            `<span class="text-xs text-gray-400 ml-1">(not found)</span>`,
             { headers: { "content-type": "text/html; charset=utf-8" } },
         );
     }
     const c = rows[0] as any;
-    const isStd = c.standard_concept === "S";
-
-    const html = `<span class="text-xs ml-1 inline-flex items-baseline gap-1 align-baseline"
-        title="${esc(c.concept_name)} — ${esc(c.vocabulary_id)} / ${esc(c.domain_id)}${isStd ? " (Standard)" : ""}">
-  <span class="text-gray-400">·</span>
-  <span class="text-gray-700">${esc(c.concept_name)}</span>
-  <span class="text-[10px] text-gray-400">${esc(c.vocabulary_id)} / ${esc(c.domain_id)}${isStd ? " · S" : ""}</span>
-</span>`;
+    const html = `<span class="text-xs text-gray-500 ml-1" title="${esc(c.vocabulary_id)} / ${esc(c.domain_id)}${c.standard_concept === "S" ? " (Standard)" : ""}">(${esc(c.concept_name)}, ${esc(c.vocabulary_id)})</span>`;
 
     return new Response(html, {
         headers: { "content-type": "text/html; charset=utf-8" },
