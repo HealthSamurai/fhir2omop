@@ -3,8 +3,8 @@
   "id": "omop-condition-condition-occurrence",
   "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-condition-condition-occurrence",
   "name": "OmopConditionConditionOccurrenceView",
-  "title": "Condition → condition_occurrence (FHIR-flat, stage 1)",
-  "version": "0.3.0",
+  "title": "Condition → condition_occurrence (FHIR-flat, stage 1; per-coding fan-out)",
+  "version": "0.4.0",
   "status": "draft",
   "experimental": true,
   "extension": [
@@ -12,130 +12,36 @@
     { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",        "valueString": "Condition__condition_occurrence" }
   ],
   "resource": "Condition",
-  "description": "Stage 1 of FHIR→OMOP: one flat row per Condition, preserving raw FHIR values. Code system fan-out — extract one column per known vocabulary so stage 2 can pick the best one deterministically (preferring SNOMED, which is already standard for OMOP Condition domain, then falling back to ICD10CM / ICD9CM / ICD10). Avoids the coding.first() ordering hazard.",
-  "constant": [
-    { "name": "snomedSystem",  "valueString": "http://snomed.info/sct" },
-    { "name": "icd10cmSystem", "valueString": "http://hl7.org/fhir/sid/icd-10-cm" },
-    { "name": "icd9cmSystem",  "valueString": "http://hl7.org/fhir/sid/icd-9-cm" },
-    { "name": "icd10System",   "valueString": "http://hl7.org/fhir/sid/icd-10" }
-  ],
+  "description": "Stage 1 of FHIR→OMOP. One staging row per `Condition.code.coding[]` (and `Condition.evidence.concept.coding[]`) entry instead of one row per Condition. Stage 2 resolves each coding through cm.fhir_system_to_omop_vocab + Maps-to, dedups when two codings of the same Condition resolve to the same standard concept_id, and routes by std.domain_id to the appropriate OMOP table (condition_occurrence / observation / procedure_occurrence / measurement).\n\nDiff page caveat: the reference Synthea CSV loader picks one coding per condition (the cdm.* oracle), so cdm.* and cdm_ours_fhir.* will no longer line up by source_value. Diff is still meaningful on (person_id, std concept_id, start_date) — see GAPS.md.",
   "select": [
     {
       "column": [
-        {
-          "name": "id",
-          "path": "id",
-          "type": "id",
-          "description": "FHIR Condition.id (Synthea UUID). → condition_source_value + surrogate condition_occurrence_id."
-        },
-        {
-          "name": "subject_ref",
-          "path": "subject.getReferenceKey()",
-          "type": "string",
-          "description": "Reference to the Patient. → person_id (hash)."
-        },
-        {
-          "name": "encounter_ref",
-          "path": "encounter.getReferenceKey()",
-          "type": "string",
-          "description": "Reference to the encounter where this condition was diagnosed/recorded. → visit_occurrence_id."
-        },
-        {
-          "name": "code_snomed",
-          "path": "code.coding.where(system=%snomedSystem).code.first()",
-          "type": "code",
-          "description": "SNOMED CT code (preferred — already standard in OMOP Condition domain; usually skips Maps-to walk)."
-        },
-        {
-          "name": "code_icd10cm",
-          "path": "code.coding.where(system=%icd10cmSystem).code.first()",
-          "type": "code",
-          "description": "ICD-10-CM code (fallback when no SNOMED). Stage-2 resolves via Maps-to."
-        },
-        {
-          "name": "code_icd9cm",
-          "path": "code.coding.where(system=%icd9cmSystem).code.first()",
-          "type": "code",
-          "description": "ICD-9-CM code (legacy fallback)."
-        },
-        {
-          "name": "code_icd10",
-          "path": "code.coding.where(system=%icd10System).code.first()",
-          "type": "code",
-          "description": "ICD-10 (non-CM) — international rather than US clinical modification."
-        },
-        {
-          "name": "code_text",
-          "path": "code.text",
-          "type": "string",
-          "description": "Human-readable label, last-resort fallback when no coded value resolves."
-        },
-        {
-          "name": "category_code",
-          "path": "category.first().coding.first().code",
-          "type": "code",
-          "description": "FHIR Condition.category code (problem-list-item / encounter-diagnosis / health-concern). → condition_type_concept_id via cm.fhir_condition_category_to_omop."
-        },
-        {
-          "name": "evidence_snomed",
-          "path": "evidence.concept.coding.where(system=%snomedSystem).code.first()",
-          "type": "code",
-          "description": "First SNOMED code from Condition.evidence.concept (supporting clinical evidence). Last-resort source-vocab fallback when code.coding has no resolvable code. Synthea omits this — useful only on real-world data."
-        },
-        {
-          "name": "evidence_icd10cm",
-          "path": "evidence.concept.coding.where(system=%icd10cmSystem).code.first()",
-          "type": "code",
-          "description": "First ICD-10-CM code from Condition.evidence.concept."
-        },
-        {
-          "name": "onset_dt",
-          "path": "onset.ofType(dateTime)",
-          "type": "dateTime",
-          "description": "onsetDateTime branch of onset[x]. → condition_start_date / _datetime."
-        },
-        {
-          "name": "onset_period_start",
-          "path": "onset.ofType(Period).start",
-          "type": "dateTime",
-          "description": "onsetPeriod.start branch. Used if onset_dt is absent."
-        },
-        {
-          "name": "abatement_dt",
-          "path": "abatement.ofType(dateTime)",
-          "type": "dateTime",
-          "description": "abatementDateTime branch. → condition_end_date / _datetime."
-        },
-        {
-          "name": "abatement_period_end",
-          "path": "abatement.ofType(Period).end",
-          "type": "dateTime",
-          "description": "abatementPeriod.end branch. Fallback when abatement_dt absent."
-        },
-        {
-          "name": "abatement_string",
-          "path": "abatement.ofType(string)",
-          "type": "string",
-          "description": "Free-text abatement note (e.g. 'recovered'). → stop_reason."
-        },
-        {
-          "name": "clinical_status_code",
-          "path": "clinicalStatus.coding.first().code",
-          "type": "code",
-          "description": "active/recurrence/relapse/inactive/remission/resolved (from condition-clinical CodeSystem). → condition_status_source_value; mapped via cm.fhir_clinical_status_to_omop. Only 'resolved' has a clean OMOP match (32906)."
-        },
-        {
-          "name": "verification_status_code",
-          "path": "verificationStatus.coding.first().code",
-          "type": "code",
-          "description": "unconfirmed/provisional/differential/confirmed/refuted/entered-in-error (condition-ver-status CodeSystem). Semantically closer to OMOP Condition Status than clinicalStatus is — 'confirmed'→32893, 'provisional'→32899. Stage-2 prefers this over clinical_status_code."
-        },
-        {
-          "name": "recorded_date",
-          "path": "recordedDate",
-          "type": "dateTime",
-          "description": "When the condition was recorded. Useful fallback for condition_start_date."
-        }
+        { "name": "id",                       "path": "id",                                        "type": "id" },
+        { "name": "subject_ref",              "path": "subject.getReferenceKey()",                  "type": "string" },
+        { "name": "encounter_ref",            "path": "encounter.getReferenceKey()",                "type": "string" },
+        { "name": "recorder_ref",             "path": "recorder.getReferenceKey()",                 "type": "string", "description": "→ provider_id when asserter is absent (Patient/person review §4.8)." },
+        { "name": "asserter_ref",             "path": "asserter.getReferenceKey()",                 "type": "string", "description": "→ provider_id (preferred)." },
+
+        { "name": "code_text",                "path": "code.text",                                  "type": "string", "description": "Human-readable label, used as condition_source_value when no coding resolves." },
+        { "name": "category_code",            "path": "category.first().coding.first().code",       "type": "code",   "description": "encounter-diagnosis / problem-list-item / health-concern → condition_type_concept_id via cm.fhir_condition_category_to_omop." },
+
+        { "name": "onset_dt",                 "path": "onset.ofType(dateTime)",                     "type": "dateTime" },
+        { "name": "onset_period_start",       "path": "onset.ofType(Period).start",                 "type": "dateTime" },
+        { "name": "recorded_date",            "path": "recordedDate",                               "type": "dateTime" },
+        { "name": "abatement_dt",             "path": "abatement.ofType(dateTime)",                 "type": "dateTime" },
+        { "name": "abatement_period_end",     "path": "abatement.ofType(Period).end",               "type": "dateTime" },
+        { "name": "abatement_string",         "path": "abatement.ofType(string)",                   "type": "string" },
+
+        { "name": "clinical_status_code",     "path": "clinicalStatus.coding.first().code",         "type": "code",   "description": "active/recurrence/relapse/inactive/remission/resolved." },
+        { "name": "verification_status_code", "path": "verificationStatus.coding.first().code",     "type": "code",   "description": "unconfirmed/provisional/differential/confirmed/refuted/entered-in-error." }
+      ]
+    },
+    {
+      "forEach": "code.coding | evidence.concept.coding",
+      "column": [
+        { "name": "code_system",  "path": "system",  "type": "uri",    "description": "Coding.system (e.g. http://snomed.info/sct, http://hl7.org/fhir/sid/icd-10-cm). Looked up via cm.fhir_system_to_omop_vocab → Athena vocabulary_id." },
+        { "name": "code_value",   "path": "code",    "type": "code",   "description": "Coding.code (e.g. 73211009, E11.9). Matched against vocab.concept.concept_code." },
+        { "name": "code_display", "path": "display", "type": "string", "description": "Coding.display, used as condition_source_value when present." }
       ]
     }
   ]

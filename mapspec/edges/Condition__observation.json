@@ -1,0 +1,23 @@
+{
+  "$schema": "../schema/edge.schema.json",
+  "fhir_resource": "Condition",
+  "omop_table": "observation",
+  "direction": "fhir-to-omop",
+  "status": "implemented",
+  "primary": false,
+  "required": false,
+  "condition": "Condition.code.coding Maps to a standard concept with domain_id='Observation' (e.g. SNOMED 'Prediabetes', 'Family history of ...').",
+  "narrative_md": "Sibling of `Condition__condition_occurrence`. Same staging table (`staging.condition_occurrence`, per-coding fan-out). This edge picks the codings whose `Maps to` target lands in the Observation domain rather than the Condition domain — without it those rows (≈3258 / 4204 on Synthea) would be silently dropped. PK is `hash(Condition.id || '|' || std_concept_id)` so different codings of the same Condition that resolve to different std concepts get distinct rows.",
+  "fields": [
+    { "omop_column": "observation_id",      "fhir_path": "Condition.id || '|' || std_concept_id (hashed)", "fhir_type": "id",      "omop_type": "integer", "required": true,  "pk": true },
+    { "omop_column": "person_id",           "fhir_path": "Condition.subject",                              "fhir_type": "Reference(Patient)", "omop_type": "integer", "required": true, "fk": "PERSON" },
+    { "omop_column": "observation_concept_id","fhir_path": "Condition.code.coding (any) → Maps to → standard (domain=Observation)", "fhir_type": "CodeableConcept", "omop_type": "integer", "required": true, "fk": "CONCEPT" },
+    { "omop_column": "observation_date",    "fhir_path": "Condition.onset[x] | Condition.recordedDate",    "fhir_type": "dateTime","omop_type": "date" },
+    { "omop_column": "observation_type_concept_id","fhir_path": "(constant)",                              "fhir_type": "code",    "omop_type": "integer", "constant": 32827, "notes": "EHR encounter record." },
+    { "omop_column": "observation_source_value","fhir_path": "Condition.code.coding.display | code | text","fhir_type": "string", "omop_type": "varchar(50)" },
+    { "omop_column": "observation_source_concept_id","fhir_path": "vocab.concept(coding.system, coding.code)","fhir_type": "code","omop_type": "integer", "fk": "CONCEPT" }
+  ],
+  "references": [
+    { "project": "ETL-German-FHIR-Core", "kind": "java", "path": "refs/refs/ETL-German-FHIR-Core/src/main/java/org/miracum/etl/fhirtoomop/mapper/ConditionMapper.java", "lines": [921, 988], "notes": "FindOmopConcepts routes by domain_id — observation rows for non-Condition-domain codes." }
+  ]
+}

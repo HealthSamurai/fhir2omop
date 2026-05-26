@@ -1,0 +1,20 @@
+{
+  "$schema": "../schema/edge.schema.json",
+  "fhir_resource": "Condition",
+  "omop_table": "procedure_occurrence",
+  "direction": "fhir-to-omop",
+  "status": "implemented",
+  "primary": false,
+  "required": false,
+  "condition": "Condition.code.coding Maps to a standard concept with domain_id='Procedure'.",
+  "narrative_md": "Sibling of `Condition__condition_occurrence`. Same staging table; this edge picks codings whose `Maps to` target lands in the Procedure domain. SNOMED occasionally codes a procedure where the source modeled it as a Condition (e.g. surgical-history-as-condition); without this edge those rows were silently dropped.",
+  "fields": [
+    { "omop_column": "procedure_occurrence_id", "fhir_path": "Condition.id || '|' || std_concept_id (hashed)", "fhir_type": "id", "omop_type": "integer", "required": true, "pk": true },
+    { "omop_column": "person_id",               "fhir_path": "Condition.subject", "fhir_type": "Reference(Patient)", "omop_type": "integer", "required": true, "fk": "PERSON" },
+    { "omop_column": "procedure_concept_id",    "fhir_path": "Condition.code.coding (any) → Maps to → standard (domain=Procedure)", "fhir_type": "CodeableConcept", "omop_type": "integer", "required": true, "fk": "CONCEPT" },
+    { "omop_column": "procedure_date",          "fhir_path": "Condition.onset[x] | Condition.recordedDate", "fhir_type": "dateTime", "omop_type": "date" },
+    { "omop_column": "procedure_type_concept_id","fhir_path": "(constant)", "fhir_type": "code", "omop_type": "integer", "constant": 32827 },
+    { "omop_column": "procedure_source_value",  "fhir_path": "Condition.code.coding.display | code | text", "fhir_type": "string", "omop_type": "varchar(50)" },
+    { "omop_column": "procedure_source_concept_id","fhir_path": "vocab.concept(coding.system, coding.code)", "fhir_type": "code", "omop_type": "integer", "fk": "CONCEPT" }
+  ]
+}
