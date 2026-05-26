@@ -401,7 +401,10 @@ async function renderEdge(ctx: Context, edge: Edge): Promise<string> {
         if (f.pk) badges.push(`<span class="px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-800 text-[10px] font-medium">PK</span>`);
         if (f.fk) badges.push(`<span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 text-[10px] font-medium">FK→${esc(f.fk)}</span>`);
         if (f.required) badges.push(`<span class="px-1.5 py-0.5 rounded bg-green-50 text-green-700 text-[10px] font-medium">required</span>`);
-        if (f.concept_map) badges.push(`<span class="px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 text-[10px] font-medium">map:${esc(f.concept_map)}</span>`);
+        // f.concept_map badge removed: legacy decoration that pointed at
+        // the inline vocabularies[] table (now retired). Real ConceptMap
+        // dependencies live in stage-2 SQL via @relatedArtefact and surface
+        // as rose ConceptMap cards above the Fields list.
         if (f.constant !== undefined) badges.push(`<span class="px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 text-[10px] font-medium">=${esc(String(f.constant))}</span>`);
 
         const fhirPathHtml = f.fhir_path
@@ -447,29 +450,11 @@ async function renderEdge(ctx: Context, edge: Edge): Promise<string> {
     }
     parts.push(`</ul>`);
 
-    // Vocabularies
-    if (edge.vocabularies?.length) {
-        parts.push(`<h3 class="text-sm font-semibold mt-6 mb-2 text-gray-700">Vocabularies</h3>`);
-        for (const vocab of edge.vocabularies) {
-            parts.push(`<div class="mb-4">`);
-            parts.push(`<h4 class="text-xs font-semibold text-gray-600 mb-1">${esc(vocab.name)}</h4>`);
-            parts.push(`<table class="w-full text-xs border border-gray-200"><thead><tr class="bg-gray-50">`);
-            parts.push(`<th class="text-left px-2 py-1 border-b">Source</th>`);
-            parts.push(`<th class="text-left px-2 py-1 border-b">Display</th>`);
-            parts.push(`<th class="text-left px-2 py-1 border-b">Concept ID</th>`);
-            parts.push(`<th class="text-left px-2 py-1 border-b">Concept Name</th>`);
-            parts.push(`</tr></thead><tbody>`);
-            for (const entry of vocab.entries) {
-                parts.push(`<tr class="border-b border-gray-100">`);
-                parts.push(`<td class="px-2 py-1 font-mono">${esc(entry.source_code)}</td>`);
-                parts.push(`<td class="px-2 py-1">${esc(entry.source_display ?? "")}</td>`);
-                parts.push(`<td class="px-2 py-1 font-mono">${entry.target_concept_id ?? "-"}</td>`);
-                parts.push(`<td class="px-2 py-1">${esc(entry.target_concept_name ?? "")}</td>`);
-                parts.push(`</tr>`);
-            }
-            parts.push(`</tbody></table></div>`);
-        }
-    }
+    // Vocabularies — DEPRECATED rendering. edge.vocabularies[] was the
+    // pre-ConceptMap-card representation, now redundant with the rose
+    // ConceptMap cards above (sourced from mapspec/profiles/*.cm.json).
+    // Field kept in edge JSON schema for backward compatibility but no
+    // longer rendered.
 
     // Edge cases
     if (edge.edge_cases?.length) {

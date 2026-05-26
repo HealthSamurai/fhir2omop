@@ -426,7 +426,7 @@
   "edge_cases": [
     {
       "case": "Missing birthDate",
-      "handling": "OMOP convention: drop person. Most implementations write year_of_birth=0.",
+      "handling": "Spec mandates dropping the person (year_of_birth is NOT NULL; OMOP CDM v5.4 user_guidance: 'If no year of birth is available all the person's data should be dropped from the CDM instance'). NOT YET implemented in our stage-2 SQL — a Patient with no birthDate would currently produce NULL year_of_birth and break the INSERT. Synthea always emits birthDate so this hasn't bitten us. Tracked in the OMOP-KG-based review §Critical#1.",
       "implementations": [
         "ETL-German",
         "NACHC",
@@ -438,28 +438,28 @@
       "handling": "Year always populated; month/day null when not provided. birth_datetime null if incomplete."
     },
     {
-      "case": "Missing gender",
-      "handling": "gender_concept_id=0, gender_source_value=null. Per OMOP Themis, use 0 rather than 8551."
+      "case": "Missing or unknown gender",
+      "handling": "We keep the patient and map other→8521, unknown→8551 (both non-Standard Athena Gender concepts). Intentional divergence from OMOP book ETL Step 1, which recommends 'Drop any rows with missing/unknown gender ... only 8507 and 8532 are Standard.' Preserves cohort count and source-value lineage; trade-off documented in the OMOP-KG-based review §Critical#2."
     },
     {
-      "case": "Multiple identifiers",
-      "handling": "Pick best by priority: SSN > MR > first. Encoding varies across implementations."
+      "case": "Multiple Patient.identifier entries (SS, MR, DL, PPN)",
+      "handling": "Not used for person_source_value — that column carries Patient.id (FHIR resource UUID) as the OMOP traceability key per spec, not PHI. Per OHDSI privacy guidance the additional identifiers belong in a separate id-mapping table."
     },
     {
       "case": "Multiple generalPractitioner entries",
-      "handling": "Filter to Practitioner references only. Take last (most recent) or first."
+      "handling": "We take performer.first(). Real EHR with practitioner history should order by reference period / take last. Synthea emits at most one."
     },
     {
       "case": "Multi-race patient (multiple ombCategory entries)",
-      "handling": "OMOP has single race_concept_id. Pick first, or use 8522 (Other), or write 0."
+      "handling": "OMOP race_concept_id is a single integer ('Mixed races are not supported' per spec). We resolve via priority: omop-race extension → race-text-synthea-to-omop (Synthea Other recovery) → race-omb-to-omop (first ombCategory) → 0."
     },
     {
       "case": "deceasedBoolean=true without date",
-      "handling": "Cannot create death row. See Patient__death edge."
+      "handling": "No death row produced (see Patient__death edge — requires deceasedDateTime)."
     },
     {
-      "case": "Multiple address entries",
-      "handling": "Pick most recent home address. See Patient__location edge."
+      "case": "Multiple addresses, identical to other patient's address",
+      "handling": "Address dedup is implemented: location_id = stringToId(concat_ws('|', line, city, state, zip)). Two patients sharing an address share a location row. Patient__location.sql uses DISTINCT ON (location_id) to collapse duplicates on the producer side."
     }
   ]
 }
