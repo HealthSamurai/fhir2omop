@@ -18,7 +18,10 @@ import { PLAN, colCount } from "./etl-plan";
 const DSN = process.env.ATHENA_DSN ?? "postgresql://athena:athena@localhost:54392/athena";
 const sql = new SQL(DSN, { idleTimeout: 0, maxLifetime: 0 });
 
-const T = { fhir: "t_fhir", staging: "t_staging", cdm: "t_cdm" };
+// Per-process schema suffix so concurrent `run-cases` invocations (e.g. several
+// case-authoring agents self-verifying at once) don't clobber each other's t_*.
+const SUF = process.env.RC_SUFFIX ?? String(process.pid);
+const T = { fhir: `t_fhir_${SUF}`, staging: `t_staging_${SUF}`, cdm: `t_cdm_${SUF}` };
 const args = process.argv.slice(2);
 const verbose = args.includes("-v");
 const filter = args.find((a) => !a.startsWith("-"));
@@ -283,5 +286,6 @@ for (const f of files) {
 
 console.log(`\n${"=".repeat(50)}\n${pass} passed, ${fail} failed  (of ${pass + fail})`);
 if (fail) console.log("failed: " + failedCases.join(", "));
+await runScript(`DROP SCHEMA IF EXISTS ${T.fhir} CASCADE; DROP SCHEMA IF EXISTS ${T.staging} CASCADE; DROP SCHEMA IF EXISTS ${T.cdm} CASCADE;`).catch(() => {});
 await sql.end();
 process.exit(fail ? 1 : 0);
