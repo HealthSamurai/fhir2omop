@@ -1,0 +1,156 @@
+{
+  "title": "AllergyIntolerance → observation / substance-as-value + verificationStatus filter",
+  "notes": "OMOP has no dedicated allergy table, so the AllergyIntolerance__observation edge writes each allergy into `observation`, using the allergic substance as BOTH the observation/source concept AND the value concept. One AllergyIntolerance → one observation row.\n\nKEY MAPPING RULES (from mapspec/etl/AllergyIntolerance__observation.sql + mapspec/views/AllergyIntolerance__observation.view.json):\n- The stage-1 view extracts the substance code TWICE: code_snomed = code.coding.where(system='http://snomed.info/sct').code.first(), code_rxnorm = code.coding.where(system='http://www.nlm.nih.gov/research/umls/rxnorm').code.first(). The stage-2 CTE UNIONs them with SNOMED at prio 1 and RxNorm at prio 2, then DISTINCT ON (staging_id) ORDER BY prio keeps SNOMED when both are present. Each surviving code is resolved src.concept_id (the source concept in its native vocab) → 'Maps to' (invalid_reason IS NULL) → std.concept_id (standard_concept='S').\n- observation_concept_id = std_concept_id; value_as_concept_id = std_concept_id (the SUBSTANCE IS THE VALUE — both columns hold the same standard concept); observation_source_concept_id = src_concept_id (the source code's concept in its native vocab — for these substances the source concept is already standard, so src == std).\n- observation_source_value = left(src_code, 50) — the raw substance code string (e.g. '264287008', '7984'), NOT the display.\n- value_source_value = left(code.text, 50) — the free-text substance label.\n- qualifier_source_value = left(clinicalStatus.coding.first().code, 50) — the allergy clinical-status code ('active'); note Synthea AllergyIntolerance carries system 'allergyintolerance-clinical', but the view reads only .code so the system is irrelevant.\n- observation_type_concept_id = 32817 (constant, EHR).\n- observation_date / observation_datetime = COALESCE(recordedDate, onset.ofType(dateTime)) cast ::date / ::timestamp (wall-clock, offset DROPPED not applied: recordedDate '2003-08-17T13:44:09+01:00' → datetime '2003-08-17T13:44:09', date '2003-08-17').\n- person_id = referenceToId(patient.getReferenceKey()); visit_occurrence_id = referenceToId(encounter.getReferenceKey()) (NULL when AllergyIntolerance has no encounter — Synthea's never do, but the edge maps it when present).\n- provider_id, value_as_number, value_as_string, qualifier_concept_id, unit_concept_id, visit_detail_id, unit_source_value, observation_event_id, obs_event_field_concept_id are always NULL for this edge.\n- EXCLUSION: WHERE COALESCE(verificationStatus.coding.first().code, 'confirmed') NOT IN ('entered-in-error', 'refuted') — drops refuted / entered-in-error allergies entirely (zero observation rows).\n\nSurrogate PK observation_id = referenceToId(AllergyIntolerance.id) (omitted from expected rows — derived).\n\nAll concept_ids verified live in vocab.concept (v20260227 bundle):\n- 4138133 'Animal dander' (SNOMED 264287008, Observation, standard 'S', Maps-to self) — environmental allergen.\n- 42538933 'Peanut' (SNOMED 762952008, Observation, standard 'S', Maps-to self) — food allergen.\n- 1729720 'penicillin V' (RxNorm 7984, Drug, standard 'S', Maps-to self) — drug allergen.\n- 32817 'EHR' (Type Concept, standard 'S').\nSynthea's whole allergy cohort is clinicalStatus=active / verificationStatus=confirmed, so the verificationStatus filter is exercised with synthetic refuted / entered-in-error variants over the same Animal-dander resource. The substance variants (a SNOMED environmental, a SNOMED food, an RxNorm drug) and the visit-link presence/absence are the only other dimensions that move.",
+  "cases": [
+    {
+      "desc": "(a) SNOMED environmental allergen (Animal dander) with an encounter → one observation row; substance is both observation_concept_id and value_as_concept_id (4138133); visit_occurrence_id populated",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1965-04-12" },
+        {
+          "resourceType": "Encounter", "id": "enc-1", "status": "finished",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
+          "subject": { "reference": "Patient/patient-1" }
+        },
+        {
+          "resourceType": "AllergyIntolerance", "id": "ai-1",
+          "type": "allergy",
+          "category": [ "environment" ],
+          "criticality": "low",
+          "clinicalStatus": { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical", "code": "active" } ] },
+          "verificationStatus": { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/allergyintolerance-verification", "code": "confirmed" } ] },
+          "code": { "text": "Animal dander (substance)", "coding": [ { "system": "http://snomed.info/sct", "code": "264287008", "display": "Animal dander (substance)" } ] },
+          "patient": { "reference": "Patient/patient-1" },
+          "encounter": { "reference": "Encounter/enc-1" },
+          "recordedDate": "2000-08-07T17:49:44+01:00"
+        }
+      ],
+      "omop": {
+        "observation": [
+          {
+            "person_id": "ref:patient-1",
+            "observation_concept_id": 4138133,
+            "observation_concept_id__name": "Animal dander",
+            "observation_date": "2000-08-07",
+            "observation_datetime": "2000-08-07T17:49:44",
+            "observation_type_concept_id": 32817,
+            "observation_type_concept_id__name": "EHR",
+            "value_as_concept_id": 4138133,
+            "value_as_concept_id__name": "Animal dander",
+            "visit_occurrence_id": "ref:enc-1",
+            "observation_source_value": "264287008",
+            "observation_source_concept_id": 4138133,
+            "observation_source_concept_id__name": "Animal dander",
+            "qualifier_source_value": "active",
+            "value_source_value": "Animal dander (substance)"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(b) SNOMED food allergen (Peanut), NO encounter → one observation row with visit_occurrence_id NULL; date from recordedDate (offset dropped)",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1965-04-12" },
+        {
+          "resourceType": "AllergyIntolerance", "id": "ai-1",
+          "type": "allergy",
+          "category": [ "food" ],
+          "clinicalStatus": { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical", "code": "active" } ] },
+          "verificationStatus": { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/allergyintolerance-verification", "code": "confirmed" } ] },
+          "code": { "text": "Peanut (substance)", "coding": [ { "system": "http://snomed.info/sct", "code": "762952008", "display": "Peanut (substance)" } ] },
+          "patient": { "reference": "Patient/patient-1" },
+          "recordedDate": "2017-12-12T10:40:30+00:00"
+        }
+      ],
+      "omop": {
+        "observation": [
+          {
+            "person_id": "ref:patient-1",
+            "observation_concept_id": 42538933,
+            "observation_concept_id__name": "Peanut",
+            "observation_date": "2017-12-12",
+            "observation_datetime": "2017-12-12T10:40:30",
+            "observation_type_concept_id": 32817,
+            "observation_type_concept_id__name": "EHR",
+            "value_as_concept_id": 42538933,
+            "value_as_concept_id__name": "Peanut",
+            "observation_source_value": "762952008",
+            "observation_source_concept_id": 42538933,
+            "observation_source_concept_id__name": "Peanut",
+            "qualifier_source_value": "active",
+            "value_source_value": "Peanut (substance)"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(c) RxNorm drug-coded allergen (Penicillin V) → one observation row; RxNorm path resolves substance 7984 → standard concept 1729720 in the Drug domain",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1965-04-12" },
+        {
+          "resourceType": "AllergyIntolerance", "id": "ai-1",
+          "type": "allergy",
+          "category": [ "medication" ],
+          "clinicalStatus": { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical", "code": "active" } ] },
+          "verificationStatus": { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/allergyintolerance-verification", "code": "confirmed" } ] },
+          "code": { "text": "Penicillin V", "coding": [ { "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "7984", "display": "Penicillin V" } ] },
+          "patient": { "reference": "Patient/patient-1" },
+          "recordedDate": "2003-08-17T13:44:09+01:00"
+        }
+      ],
+      "omop": {
+        "observation": [
+          {
+            "person_id": "ref:patient-1",
+            "observation_concept_id": 1729720,
+            "observation_concept_id__name": "penicillin V",
+            "observation_date": "2003-08-17",
+            "observation_datetime": "2003-08-17T13:44:09",
+            "observation_type_concept_id": 32817,
+            "observation_type_concept_id__name": "EHR",
+            "value_as_concept_id": 1729720,
+            "value_as_concept_id__name": "penicillin V",
+            "observation_source_value": "7984",
+            "observation_source_concept_id": 1729720,
+            "observation_source_concept_id__name": "penicillin V",
+            "qualifier_source_value": "active",
+            "value_source_value": "Penicillin V"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(d) verificationStatus = 'refuted' → excluded by the stage-2 WHERE filter (omop {} — zero observation rows)",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1965-04-12" },
+        {
+          "resourceType": "AllergyIntolerance", "id": "ai-1",
+          "type": "allergy",
+          "category": [ "environment" ],
+          "clinicalStatus": { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical", "code": "inactive" } ] },
+          "verificationStatus": { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/allergyintolerance-verification", "code": "refuted" } ] },
+          "code": { "text": "Animal dander (substance)", "coding": [ { "system": "http://snomed.info/sct", "code": "264287008", "display": "Animal dander (substance)" } ] },
+          "patient": { "reference": "Patient/patient-1" },
+          "recordedDate": "2000-08-07T17:49:44+01:00"
+        }
+      ],
+      "omop": {}
+    },
+    {
+      "desc": "(e) verificationStatus = 'entered-in-error' → excluded by the stage-2 WHERE filter (omop {} — zero observation rows)",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1965-04-12" },
+        {
+          "resourceType": "AllergyIntolerance", "id": "ai-1",
+          "type": "allergy",
+          "category": [ "environment" ],
+          "clinicalStatus": { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical", "code": "active" } ] },
+          "verificationStatus": { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/allergyintolerance-verification", "code": "entered-in-error" } ] },
+          "code": { "text": "Animal dander (substance)", "coding": [ { "system": "http://snomed.info/sct", "code": "264287008", "display": "Animal dander (substance)" } ] },
+          "patient": { "reference": "Patient/patient-1" },
+          "recordedDate": "2000-08-07T17:49:44+01:00"
+        }
+      ],
+      "omop": {}
+    }
+  ]
+}

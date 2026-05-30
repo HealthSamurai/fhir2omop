@@ -55,3 +55,46 @@ jobs:
 
       - name: Tests
         run: bun test
+
+  cases:
+    # Run the FHIR→OMOP golden cases against the real pipeline, hermetically:
+    # a fresh Postgres seeded with the minimal vocab subset + OMOP DDL + cm.*
+    # built from profiles — no 928MB Athena bundle, no submodules.
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: athena
+          POSTGRES_PASSWORD: athena
+          POSTGRES_DB: athena
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      ATHENA_DSN: postgresql://athena:athena@localhost:5432/athena
+      PGPASSWORD: athena
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install
+        run: bun install
+
+      - name: Install psql client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Provision hermetic test DB (vocab subset + OMOP DDL + helpers + cm.*)
+        run: |
+          psql "$ATHENA_DSN" -v ON_ERROR_STOP=1 -f cases/_vocab_seed.sql
+          psql "$ATHENA_DSN" -v ON_ERROR_STOP=1 -f cases/_cdm_ddl.sql
+          psql "$ATHENA_DSN" -v ON_ERROR_STOP=1 -f mapspec/etl/_functions.sql
+          bun script/build-cm.ts
+
+      - name: Run golden cases
+        run: bun script/run-cases.ts
