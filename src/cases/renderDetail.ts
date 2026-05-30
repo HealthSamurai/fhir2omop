@@ -53,13 +53,14 @@ export default async function (ctx: Context, opts: { case: any }): Promise<strin
   </div>` : "";
         const cls = res ? (res.pass ? "border-emerald-200" : "border-rose-300") : "border-gray-200";
         return `<details open data-k="case-${esc(file.slug)}-${i}" class="border ${cls} rounded-lg overflow-hidden">
-  <summary class="px-4 py-2.5 bg-gray-50 hover:bg-gray-100 flex items-center gap-3">
-    <span class="text-gray-400 text-xs font-mono">#${i + 1}</span>
-    ${dot}
-    <span class="font-medium text-gray-900 flex-1">${esc(v.desc ?? `variant ${i + 1}`)}</span>
-    ${vFlow}
+  <summary class="px-4 py-2.5 bg-gray-50 hover:bg-gray-100 flex items-start justify-between gap-4">
+    <div class="min-w-0 flex-1 font-medium text-gray-900 leading-snug line-clamp-2">
+      <span class="text-gray-400 text-xs font-mono mr-1.5">#${i + 1}</span>${esc(v.desc ?? `variant ${i + 1}`)}
+    </div>
+    <div class="shrink-0 flex items-center flex-wrap justify-end gap-1.5">${dot}${vFlow}</div>
   </summary>
   <div class="p-4">
+  ${v.desc ? `<div class="not-prose text-[13px] text-gray-600 leading-relaxed mb-3">${esc(v.desc)}</div>` : ""}
   ${failBlock}
   <div class="not-prose grid lg:grid-cols-2 gap-5">
     <div>
@@ -78,7 +79,10 @@ export default async function (ctx: Context, opts: { case: any }): Promise<strin
     return `<h1>${esc(file.title)}</h1>
 <div class="-mt-1 mb-1">${flow}</div>
 <p class="font-mono text-[11px] text-gray-400 -mt-1">cases/${esc(file.file)} · ${file.variantCount} variant${file.variantCount === 1 ? "" : "s"}</p>
-${notesHtml ? `<div class="prose prose-sm max-w-none mb-4">${notesHtml}</div>` : ""}
+${notesHtml ? `<details data-k="notes-${esc(file.slug)}" class="not-prose mb-4 border border-gray-200 rounded-lg">
+  <summary class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:bg-gray-50">Notes</summary>
+  <div class="prose prose-sm max-w-none px-3 pb-3">${notesHtml}</div>
+</details>` : ""}
 <p class="not-prose text-[11px] text-gray-400 mb-3">FK ids shown as <span class="font-mono">ref:&lt;logical-id&gt;</span>. Per row, columns not listed are asserted <span class="font-mono">NULL</span>; tables not listed are asserted empty.</p>
 <div class="not-prose space-y-4">${variants.join("")}</div>`;
 }
