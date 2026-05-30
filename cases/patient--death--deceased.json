@@ -72,6 +72,29 @@
         }
       ],
       "omop": {}
+    },
+    {
+      "desc": "(e) date-only deceasedDateTime (no time component) → death_datetime at midnight. Preserves the retired Synthea-CSV oracle's behavior: the CSV DEATHDATE is a calendar date, so the oracle's death_datetime = DEATHDATE::timestamp = midnight. Our FHIR pipeline does the same when deceasedDateTime carries only a date: death_dt::timestamp = midnight.",
+      "fhir": [
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "gender": "female",
+          "birthDate": "1949-03-14",
+          "deceasedDateTime": "2024-08-26"
+        }
+      ],
+      "omop": {
+        "death": [
+          {
+            "person_id": "ref:patient-1",
+            "death_date": "2024-08-26",
+            "death_datetime": "2024-08-26T00:00:00",
+            "death_type_concept_id": 32817,
+            "death_type_concept_id__name": "EHR"
+          }
+        ]
+      }
     }
   ]
 }

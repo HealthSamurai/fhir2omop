@@ -433,6 +433,273 @@
           }
         ]
       }
+    },
+    {
+      "desc": "(m) Synthea-CSV lowercase class 'ambulatory' (group https://synthetichealth.github.io/synthea/encounter-class) → visit_concept_id 9202 (Outpatient Visit). Preserves the retired Synthea-CSV oracle's lowercase ENCOUNTERCLASS coverage; cm.encounter_class_to_omop second group resolves source_code='ambulatory'→9202 the same as v3 AMB.",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "male", "birthDate": "1986-07-04" },
+        { "resourceType": "Practitioner", "id": "prac-1" },
+        { "resourceType": "Organization", "id": "org-1" },
+        {
+          "resourceType": "Encounter",
+          "id": "enc-1",
+          "status": "finished",
+          "class": { "system": "https://synthetichealth.github.io/synthea/encounter-class", "code": "ambulatory" },
+          "subject": { "reference": "Patient/patient-1" },
+          "participant": [{ "individual": { "reference": "Practitioner/prac-1" } }],
+          "serviceProvider": { "reference": "Organization/org-1" },
+          "period": { "start": "2003-12-18T11:48:44Z", "end": "2003-12-18T12:03:44Z" }
+        }
+      ],
+      "omop": {
+        "visit_occurrence": [
+          {
+            "person_id": "ref:patient-1",
+            "visit_concept_id": 9202,
+            "visit_concept_id__name": "Outpatient Visit",
+            "visit_start_date": "2003-12-18",
+            "visit_start_datetime": "2003-12-18T11:48:44",
+            "visit_end_date": "2003-12-18",
+            "visit_end_datetime": "2003-12-18T12:03:44",
+            "visit_type_concept_id": 32827,
+            "visit_type_concept_id__name": "EHR encounter record",
+            "provider_id": "ref:prac-1",
+            "care_site_id": "ref:org-1",
+            "visit_source_value": "enc-1",
+            "visit_source_concept_id": 0,
+            "admitted_from_concept_id": 0,
+            "discharged_to_concept_id": 0
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(n) Synthea-CSV lowercase class 'outpatient' → visit_concept_id 9202 (Outpatient Visit). Synthea-group cm row distinct from 'ambulatory' but same target concept; preserves oracle lowercase coverage.",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1986-07-04" },
+        { "resourceType": "Practitioner", "id": "prac-1" },
+        { "resourceType": "Organization", "id": "org-1" },
+        {
+          "resourceType": "Encounter",
+          "id": "enc-1",
+          "status": "finished",
+          "class": { "system": "https://synthetichealth.github.io/synthea/encounter-class", "code": "outpatient" },
+          "subject": { "reference": "Patient/patient-1" },
+          "participant": [{ "individual": { "reference": "Practitioner/prac-1" } }],
+          "serviceProvider": { "reference": "Organization/org-1" },
+          "period": { "start": "2007-04-02T09:00:00Z", "end": "2007-04-02T09:25:00Z" }
+        }
+      ],
+      "omop": {
+        "visit_occurrence": [
+          {
+            "person_id": "ref:patient-1",
+            "visit_concept_id": 9202,
+            "visit_concept_id__name": "Outpatient Visit",
+            "visit_start_date": "2007-04-02",
+            "visit_start_datetime": "2007-04-02T09:00:00",
+            "visit_end_date": "2007-04-02",
+            "visit_end_datetime": "2007-04-02T09:25:00",
+            "visit_type_concept_id": 32827,
+            "visit_type_concept_id__name": "EHR encounter record",
+            "provider_id": "ref:prac-1",
+            "care_site_id": "ref:org-1",
+            "visit_source_value": "enc-1",
+            "visit_source_concept_id": 0,
+            "admitted_from_concept_id": 0,
+            "discharged_to_concept_id": 0
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(o) Synthea-CSV lowercase class 'wellness' → visit_concept_id 9202 (Outpatient Visit, equivalence='wider'). Preserves oracle lowercase coverage; cm.encounter_class_to_omop source_code='wellness'→9202.",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "male", "birthDate": "1986-07-04" },
+        { "resourceType": "Practitioner", "id": "prac-1" },
+        { "resourceType": "Organization", "id": "org-1" },
+        {
+          "resourceType": "Encounter",
+          "id": "enc-1",
+          "status": "finished",
+          "class": { "system": "https://synthetichealth.github.io/synthea/encounter-class", "code": "wellness" },
+          "subject": { "reference": "Patient/patient-1" },
+          "participant": [{ "individual": { "reference": "Practitioner/prac-1" } }],
+          "serviceProvider": { "reference": "Organization/org-1" },
+          "period": { "start": "2009-10-05T08:30:00Z", "end": "2009-10-05T09:00:00Z" }
+        }
+      ],
+      "omop": {
+        "visit_occurrence": [
+          {
+            "person_id": "ref:patient-1",
+            "visit_concept_id": 9202,
+            "visit_concept_id__name": "Outpatient Visit",
+            "visit_start_date": "2009-10-05",
+            "visit_start_datetime": "2009-10-05T08:30:00",
+            "visit_end_date": "2009-10-05",
+            "visit_end_datetime": "2009-10-05T09:00:00",
+            "visit_type_concept_id": 32827,
+            "visit_type_concept_id__name": "EHR encounter record",
+            "provider_id": "ref:prac-1",
+            "care_site_id": "ref:org-1",
+            "visit_source_value": "enc-1",
+            "visit_source_concept_id": 0,
+            "admitted_from_concept_id": 0,
+            "discharged_to_concept_id": 0
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(p) Synthea-CSV lowercase class 'emergency' → visit_concept_id 9203 (Emergency Room Visit). Preserves oracle lowercase coverage; Synthea-group analogue of v3 EMER.",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1986-07-04" },
+        { "resourceType": "Practitioner", "id": "prac-1" },
+        { "resourceType": "Organization", "id": "org-1" },
+        {
+          "resourceType": "Encounter",
+          "id": "enc-1",
+          "status": "finished",
+          "class": { "system": "https://synthetichealth.github.io/synthea/encounter-class", "code": "emergency" },
+          "subject": { "reference": "Patient/patient-1" },
+          "participant": [{ "individual": { "reference": "Practitioner/prac-1" } }],
+          "serviceProvider": { "reference": "Organization/org-1" },
+          "period": { "start": "2018-05-09T03:15:00Z", "end": "2018-05-09T07:42:00Z" }
+        }
+      ],
+      "omop": {
+        "visit_occurrence": [
+          {
+            "person_id": "ref:patient-1",
+            "visit_concept_id": 9203,
+            "visit_concept_id__name": "Emergency Room Visit",
+            "visit_start_date": "2018-05-09",
+            "visit_start_datetime": "2018-05-09T03:15:00",
+            "visit_end_date": "2018-05-09",
+            "visit_end_datetime": "2018-05-09T07:42:00",
+            "visit_type_concept_id": 32827,
+            "visit_type_concept_id__name": "EHR encounter record",
+            "provider_id": "ref:prac-1",
+            "care_site_id": "ref:org-1",
+            "visit_source_value": "enc-1",
+            "visit_source_concept_id": 0,
+            "admitted_from_concept_id": 0,
+            "discharged_to_concept_id": 0
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(q) Synthea-CSV lowercase class 'inpatient' → visit_concept_id 9201 (Inpatient Visit); multi-day stay. Preserves oracle lowercase coverage; Synthea-group analogue of v3 IMP.",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "male", "birthDate": "1986-07-04" },
+        { "resourceType": "Practitioner", "id": "prac-1" },
+        { "resourceType": "Organization", "id": "org-1" },
+        {
+          "resourceType": "Encounter",
+          "id": "enc-1",
+          "status": "finished",
+          "class": { "system": "https://synthetichealth.github.io/synthea/encounter-class", "code": "inpatient" },
+          "subject": { "reference": "Patient/patient-1" },
+          "participant": [{ "individual": { "reference": "Practitioner/prac-1" } }],
+          "serviceProvider": { "reference": "Organization/org-1" },
+          "period": { "start": "2011-07-25T21:58:50Z", "end": "2011-08-10T22:13:50Z" }
+        }
+      ],
+      "omop": {
+        "visit_occurrence": [
+          {
+            "person_id": "ref:patient-1",
+            "visit_concept_id": 9201,
+            "visit_concept_id__name": "Inpatient Visit",
+            "visit_start_date": "2011-07-25",
+            "visit_start_datetime": "2011-07-25T21:58:50",
+            "visit_end_date": "2011-08-10",
+            "visit_end_datetime": "2011-08-10T22:13:50",
+            "visit_type_concept_id": 32827,
+            "visit_type_concept_id__name": "EHR encounter record",
+            "provider_id": "ref:prac-1",
+            "care_site_id": "ref:org-1",
+            "visit_source_value": "enc-1",
+            "visit_source_concept_id": 0,
+            "admitted_from_concept_id": 0,
+            "discharged_to_concept_id": 0
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(r) Synthea-CSV lowercase class 'urgentcare' → visit_concept_id 8870 (Emergency Room - Hospital, equivalence='wider'). Preserves oracle lowercase coverage; same target concept as v3 SS.",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1986-07-04" },
+        { "resourceType": "Practitioner", "id": "prac-1" },
+        { "resourceType": "Organization", "id": "org-1" },
+        {
+          "resourceType": "Encounter",
+          "id": "enc-1",
+          "status": "finished",
+          "class": { "system": "https://synthetichealth.github.io/synthea/encounter-class", "code": "urgentcare" },
+          "subject": { "reference": "Patient/patient-1" },
+          "participant": [{ "individual": { "reference": "Practitioner/prac-1" } }],
+          "serviceProvider": { "reference": "Organization/org-1" },
+          "period": { "start": "2014-11-02T19:10:00Z", "end": "2014-11-02T21:40:00Z" }
+        }
+      ],
+      "omop": {
+        "visit_occurrence": [
+          {
+            "person_id": "ref:patient-1",
+            "visit_concept_id": 8870,
+            "visit_concept_id__name": "Emergency Room - Hospital",
+            "visit_start_date": "2014-11-02",
+            "visit_start_datetime": "2014-11-02T19:10:00",
+            "visit_end_date": "2014-11-02",
+            "visit_end_datetime": "2014-11-02T21:40:00",
+            "visit_type_concept_id": 32827,
+            "visit_type_concept_id__name": "EHR encounter record",
+            "provider_id": "ref:prac-1",
+            "care_site_id": "ref:org-1",
+            "visit_source_value": "enc-1",
+            "visit_source_concept_id": 0,
+            "admitted_from_concept_id": 0,
+            "discharged_to_concept_id": 0
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(s) Synthea-CSV lowercase class 'virtual' → visit_concept_id 722455 (Telehealth). Preserves oracle lowercase coverage; same target concept as v3 VR.",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "male", "birthDate": "1986-07-04" },
+        {
+          "resourceType": "Encounter",
+          "id": "enc-1",
+          "status": "finished",
+          "class": { "system": "https://synthetichealth.github.io/synthea/encounter-class", "code": "virtual" },
+          "subject": { "reference": "Patient/patient-1" },
+          "period": { "start": "2020-04-01T14:00:00Z", "end": "2020-04-01T14:20:00Z" }
+        }
+      ],
+      "omop": {
+        "visit_occurrence": [
+          {
+            "person_id": "ref:patient-1",
+            "visit_concept_id": 722455,
+            "visit_concept_id__name": "Telehealth",
+            "visit_start_date": "2020-04-01",
+            "visit_start_datetime": "2020-04-01T14:00:00",
+            "visit_end_date": "2020-04-01",
+            "visit_end_datetime": "2020-04-01T14:20:00",
+            "visit_type_concept_id": 32827,
+            "visit_type_concept_id__name": "EHR encounter record",
+            "visit_source_value": "enc-1",
+            "visit_source_concept_id": 0,
+            "admitted_from_concept_id": 0,
+            "discharged_to_concept_id": 0
+          }
+        ]
+      }
     }
   ]
 }

@@ -639,6 +639,51 @@
           }
         ]
       }
+    },
+    {
+      "desc": "(q) lone ICD10CM coding (no SNOMED) → resolve walks cm.fhir_system_to_omop_vocab[icd-10-cm]→ICD10CM concept→'Maps to'→standard Condition; src_concept_id from the non-SNOMED vocab (35207668), std/concept = 320128 (extracted from the retired Synthea-CSV oracle, which was SNOMED-only and never exercised the multi-vocab resolve path)",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1965-04-12" },
+        {
+          "resourceType": "Encounter", "id": "enc-1", "status": "finished",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
+          "subject": { "reference": "Patient/patient-1" }
+        },
+        {
+          "resourceType": "Condition", "id": "cond-1",
+          "clinicalStatus": { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/condition-clinical", "code": "active" } ] },
+          "verificationStatus": { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status", "code": "confirmed" } ] },
+          "category": [ { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/condition-category", "code": "encounter-diagnosis", "display": "Encounter Diagnosis" } ] } ],
+          "code": {
+            "text": "Essential (primary) hypertension",
+            "coding": [ { "system": "http://hl7.org/fhir/sid/icd-10-cm", "code": "I10", "display": "Essential (primary) hypertension" } ]
+          },
+          "subject": { "reference": "Patient/patient-1" },
+          "encounter": { "reference": "Encounter/enc-1" },
+          "onsetDateTime": "2018-09-12T10:00:00+00:00",
+          "recordedDate": "2018-09-12T10:00:00+00:00"
+        }
+      ],
+      "omop": {
+        "condition_occurrence": [
+          {
+            "person_id": "ref:patient-1",
+            "condition_concept_id": 320128,
+            "condition_concept_id__name": "Essential hypertension",
+            "condition_start_date": "2018-09-12",
+            "condition_start_datetime": "2018-09-12T10:00:00",
+            "condition_type_concept_id": 32827,
+            "condition_type_concept_id__name": "EHR encounter record",
+            "condition_status_concept_id": 32893,
+            "condition_status_concept_id__name": "Confirmed diagnosis",
+            "visit_occurrence_id": "ref:enc-1",
+            "condition_source_value": "Essential (primary) hypertension",
+            "condition_source_concept_id": 35207668,
+            "condition_source_concept_id__name": "Essential (primary) hypertension (ICD10CM)",
+            "condition_status_source_value": "active"
+          }
+        ]
+      }
     }
   ]
 }

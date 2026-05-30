@@ -105,6 +105,46 @@
       "omop": {}
     },
     {
+      "desc": "status=active, SNOMED 228869008 Manual wheelchair, manufactureDate present but NO expirationDate -> device_exposure_end_date & device_exposure_end_datetime are NULL (OMOP end is nullable; expiration_date::date of an absent field is NULL). Start still comes from manufactureDate; device maps to itself as standard Device 4045112",
+      "fhir": [
+        {
+          "resourceType": "Device",
+          "id": "device-5",
+          "status": "active",
+          "patient": { "reference": "urn:uuid:patient-5" },
+          "type": {
+            "text": "Manual wheelchair (physical object)",
+            "coding": [
+              { "system": "http://snomed.info/sct", "code": "228869008", "display": "Manual wheelchair (physical object)" }
+            ]
+          },
+          "lotNumber": "7788",
+          "udiCarrier": [ { "deviceIdentifier": "33333333333333" } ],
+          "manufactureDate": "2012-06-01T00:00:00+00:00"
+        }
+      ],
+      "omop": {
+        "device_exposure": [
+          {
+            "person_id": "ref:patient-5",
+            "device_concept_id": 4045112,
+            "device_concept_id__name": "Manual wheelchair",
+            "device_exposure_start_date": "2012-06-01",
+            "device_exposure_start_datetime": "2012-06-01T00:00:00",
+            "device_exposure_end_date": null,
+            "device_exposure_end_datetime": null,
+            "device_type_concept_id": 32817,
+            "device_type_concept_id__name": "EHR",
+            "unique_device_id": "33333333333333",
+            "production_id": "7788",
+            "device_source_value": "228869008",
+            "device_source_concept_id": 4045112,
+            "device_source_concept_id__name": "Manual wheelchair"
+          }
+        ]
+      }
+    },
+    {
       "desc": "status=active but the SNOMED type code has NO standard Device mapping -> INNER JOIN to standard Device-domain concept fails -> zero device_exposure rows (the SNOMED-Maps-To requirement, independent of the status filter)",
       "fhir": [
         {
