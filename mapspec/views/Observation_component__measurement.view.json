@@ -1,10 +1,10 @@
 {
   "resourceType": "ViewDefinition",
-  "id": "omop-observation-component-measurement",
-  "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-observation-component-measurement",
-  "name": "OmopObservationComponentMeasurementView",
-  "title": "Observation.component[] → measurement (FHIR-flat, stage 1)",
-  "version": "0.3.0",
+  "id": "omop-observation-component",
+  "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-observation-component",
+  "name": "OmopObservationComponentView",
+  "title": "Observation.component[] → measurement / observation (FHIR-flat, stage 1; per-component fan-out)",
+  "version": "0.4.0",
   "status": "draft",
   "experimental": true,
   "extension": [
@@ -12,39 +12,35 @@
     { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",        "valueString": "Observation_component__measurement" }
   ],
   "resource": "Observation",
-  "description": "Fan-out Observation.component[] into separate measurement rows — one row per component. The canonical use case is blood pressure: an outer Observation with `code=85354-9` and two components with `code=8480-6` (systolic) + `code=8462-4` (diastolic). measurement_id is derived from (Observation.id, component-index) so each component is unique.",
-  "constant": [
-    { "name": "loincSystem", "valueString": "http://loinc.org" }
-  ],
+  "description": "Fan-out Observation.component[] into one staging row per component. The canonical use case is blood pressure: an outer Observation with code 85354-9 and two components 8480-6 (systolic) + 8462-4 (diastolic).\n\nUnlike the previous version this view carries the component code generically (component_code_system + component_code from the first coding) instead of hard-coding LOINC, so stage 2 resolves it through cm.fhir_system_to_omop_vocab — same as the top-level Observation view. Stage 2 (_resolve_observation_component.sql) resolves once, dedups per (id, component_code, std_concept_id), and routes by std.domain_id; the sibling SQLs are trivial domain filters over staging.observation_component_resolved.",
   "select": [
     {
       "column": [
-        { "name": "id",            "path": "id",                              "type": "id" },
-        { "name": "status",        "path": "status",                          "type": "code", "description": "Parent Observation.status; stage-2 filters entered-in-error / cancelled / unknown." },
-        { "name": "subject_id",    "path": "subject.getReferenceKey()",        "type": "string" },
-        { "name": "encounter_id",  "path": "encounter.getReferenceKey()",      "type": "string" },
-        { "name": "performer_id",  "path": "performer.first().getReferenceKey()", "type": "string" },
-        { "name": "effective_dt",  "path": "effective.ofType(dateTime)",       "type": "dateTime" },
-        { "name": "effective_period_start", "path": "effective.ofType(Period).start", "type": "dateTime" }
+        { "name": "id",                     "path": "id",                                  "type": "id" },
+        { "name": "status",                 "path": "status",                              "type": "code", "description": "Parent Observation.status; stage-2 filters entered-in-error / cancelled / unknown." },
+        { "name": "subject_id",             "path": "subject.getReferenceKey()",            "type": "string" },
+        { "name": "encounter_id",           "path": "encounter.getReferenceKey()",          "type": "string" },
+        { "name": "performer_id",           "path": "performer.first().getReferenceKey()",  "type": "string" },
+        { "name": "effective_dt",           "path": "effective.ofType(dateTime)",           "type": "dateTime" },
+        { "name": "effective_period_start", "path": "effective.ofType(Period).start",       "type": "dateTime" }
       ]
     },
     {
       "forEach": "component",
       "column": [
-        { "name": "component_code_loinc",   "path": "code.coding.where(system=%loincSystem).code.first()", "type": "code" },
-        { "name": "component_code_text",    "path": "code.text",                                          "type": "string" },
-        { "name": "component_value_num",    "path": "valueQuantity.value",                                "type": "decimal" },
-        { "name": "component_unit_code",    "path": "valueQuantity.code",                                 "type": "code" },
-        { "name": "component_unit_text",    "path": "valueQuantity.unit",                                 "type": "string" },
+        { "name": "component_code_system", "path": "code.coding.first().system", "type": "uri",     "description": "Component code system → Athena vocabulary_id via cm.fhir_system_to_omop_vocab." },
+        { "name": "component_code",        "path": "code.coding.first().code",   "type": "code",    "description": "Component code → vocab.concept.concept_code; verbatim → *_source_value." },
+        { "name": "component_code_text",   "path": "code.text",                  "type": "string",  "description": "Component free-text label, fallback *_source_value." },
 
-        { "name": "component_value_code_system", "path": "valueCodeableConcept.coding.first().system",    "type": "uri",
-          "description": "When component.value[x] is CodeableConcept (PRAPARE answers, survey responses): system of first coding. → value_as_concept_id via cm.fhir_system_to_omop_vocab + Maps-to." },
-        { "name": "component_value_code",        "path": "valueCodeableConcept.coding.first().code",      "type": "code",
-          "description": "Coded answer code." },
-        { "name": "component_value_text",        "path": "valueCodeableConcept.text",                     "type": "string",
-          "description": "CodeableConcept .text or fallback display." },
-        { "name": "component_value_string",      "path": "valueString",                                    "type": "string",
-          "description": "When component.value[x] is plain valueString." }
+        { "name": "component_value_num",   "path": "valueQuantity.value",        "type": "decimal", "description": "Numeric value → value_as_number." },
+        { "name": "component_unit_code",   "path": "valueQuantity.code",         "type": "code",    "description": "UCUM unit code → unit_concept_id." },
+        { "name": "component_unit_text",   "path": "valueQuantity.unit",         "type": "string",  "description": "Human-readable unit → unit_source_value." },
+
+        { "name": "component_value_code_system", "path": "valueCodeableConcept.coding.first().system", "type": "uri",
+          "description": "When component.value[x] is CodeableConcept (PRAPARE answers, survey responses): system of first coding → value_as_concept_id via cm.fhir_system_to_omop_vocab + Maps-to." },
+        { "name": "component_value_code",        "path": "valueCodeableConcept.coding.first().code",   "type": "code",   "description": "Coded answer code." },
+        { "name": "component_value_text",        "path": "valueCodeableConcept.text",                  "type": "string", "description": "CodeableConcept .text or fallback display." },
+        { "name": "component_value_string",      "path": "valueString",                                 "type": "string", "description": "When component.value[x] is plain valueString." }
       ]
     }
   ]

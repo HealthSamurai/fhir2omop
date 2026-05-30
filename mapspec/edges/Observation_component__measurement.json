@@ -6,8 +6,8 @@
   "status": "implemented",
   "primary": false,
   "required": false,
-  "condition": "Observation has component[] — each component fans out into its own measurement row (e.g. blood pressure 85354-9 splits into 8480-6 systolic + 8462-4 diastolic).",
-  "narrative_md": "Sibling edge to `Observation__measurement` that expands `Observation.component[]`. The view does `forEach: component` so each component becomes one staging row; stage-2 derives `measurement_id` from `hash(Observation.id || component.code)` so each component has a deterministic, collision-resistant surrogate.\n\nWithout this edge, component data (the actual systolic/diastolic numbers of a BP reading) was silently dropped. Synthea emits ~2,650 Observations with `component`; this edge captures the inner measurements they carry.",
+  "condition": "component code Maps-to a standard concept with domain_id='Measurement' and the component carries a numeric value (e.g. blood pressure 85354-9 splits into 8480-6 systolic + 8462-4 diastolic).",
+  "narrative_md": "Sibling edge to `Observation__measurement` that expands `Observation.component[]`. The view does `forEach: component` so each component becomes one staging row in `staging.observation_component`; the shared `mapspec/etl/_resolve_observation_component.sql` pass walks the component code through `cm.fhir_system_to_omop_vocab` → Maps-to → standard concept once (no longer LOINC-hardcoded) and tags `std_domain`, so this edge is a trivial `WHERE std_domain='Measurement' AND component_value_num IS NOT NULL` filter. Surrogate `measurement_id = stringToId(Observation.id || '/' || component_code || '|' || std_concept_id)` keeps each (parent, component-code, standard concept) unique and distinct from top-level measurement ids.\n\nWithout this edge, component data (the actual systolic/diastolic numbers of a BP reading) was silently dropped. Synthea emits ~2,650 Observations with `component`; this edge captures the inner measurements they carry.",
   "fields": [
     {
       "omop_column": "measurement_id",

@@ -10,8 +10,8 @@ const JOBS: Array<{ view: string; source: string; target: string }> = [
     { view: "Practitioner__provider",         source: "fhir.practitioner",       target: "staging.practitioner_provider" },
     { view: "Encounter__visit_occurrence",    source: "fhir.encounter",          target: "staging.encounter_visit" },
     { view: "Condition__condition_occurrence",source: "fhir.condition",          target: "staging.condition_occurrence" },
-    { view: "Observation__measurement",       source: "fhir.observation",        target: "staging.obs_meas_view" },
-    { view: "Observation__observation",       source: "fhir.observation",        target: "staging.obs_obs_view" },
+    { view: "Observation__measurement",       source: "fhir.observation",        target: "staging.observation_coded" },
+    { view: "Observation_component__measurement", source: "fhir.observation",    target: "staging.observation_component" },
     { view: "DiagnosticReport__measurement",  source: "fhir.diagnostic_report",  target: "staging.dr_meas_view" },
 ];
 

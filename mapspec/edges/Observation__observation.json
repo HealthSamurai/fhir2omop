@@ -6,8 +6,8 @@
   "status": "implemented",
   "primary": false,
   "required": false,
-  "condition": "category is social-history, survey, or activity",
-  "narrative_md": "Qualitative clinical findings: social history, lifestyle factors, survey responses, activity data. One FHIR Observation (or one component) maps to one OMOP observation row. Also receives data from AllergyIntolerance and FamilyMemberHistory.",
+  "condition": "code coding Maps-to a standard concept with domain_id='Observation'",
+  "narrative_md": "Qualitative clinical findings: social history, lifestyle factors, survey responses, activity data. Sibling to `Observation__measurement` — both read the single shared `staging.observation_resolved` table built by `mapspec/etl/_resolve_observation.sql` (per-coding fan-out + Maps-to walked once); this edge is a trivial `WHERE std_domain='Observation'` filter. Routing is by the resolved concept's `domain_id`, not FHIR `category`. Surrogate `observation_id = stringToId(Observation.id || '|' || std_concept_id)`. The OMOP `observation` table also receives appends from `Observation_component__observation`, `AllergyIntolerance`, `DiagnosticReport`, and `Condition`.",
   "concept_maps": [
     "interpretation"
   ],

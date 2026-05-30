@@ -14,11 +14,16 @@ const STAGING_TO_VIEW: Record<string, string> = {
     // When N edges share a staging table, the canonical view (column
     // superset). Keep in sync with script/etl-all.ts.
     "staging.patient_person":                          "Patient__person",
-    "staging.obs_meas_view":                           "Observation__measurement",
-    "staging.obs_obs_view":                            "Observation__observation",
+    "staging.observation_coded":                       "Observation__measurement",
     "staging.dr_meas_view":                            "DiagnosticReport__measurement",
-    "staging.observation_component_measurement":       "Observation_component__measurement",
+    "staging.observation_component":                   "Observation_component__measurement",
     "staging.condition_occurrence":                    "Condition__condition_occurrence",
+    // observation_resolved / observation_component_resolved are derived
+    // staging tables (built by _resolve_observation*.sql); the resolve-fed
+    // siblings use alias `r` so the linter's `FROM staging.X v` matcher skips
+    // them — these entries document the source-view superset for parity.
+    "staging.observation_resolved":                    "Observation__measurement",
+    "staging.observation_component_resolved":          "Observation_component__measurement",
     // condition_resolved is a derived staging table (built by
     // _resolve_condition.sql); its columns are the resolved superset
     // of Condition__condition_occurrence view + std_concept_id,

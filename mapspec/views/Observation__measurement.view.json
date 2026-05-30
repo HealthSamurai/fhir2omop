@@ -1,146 +1,54 @@
 {
   "resourceType": "ViewDefinition",
-  "id": "omop-observation-measurement",
-  "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-observation-measurement",
-  "name": "OmopObservationMeasurementView",
-  "title": "Observation → measurement (FHIR-flat, stage 1)",
-  "version": "0.3.0",
+  "id": "omop-observation-coded",
+  "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-observation-coded",
+  "name": "OmopObservationCodedView",
+  "title": "Observation → measurement / observation (FHIR-flat, stage 1; per-coding fan-out)",
+  "version": "0.4.0",
   "status": "draft",
   "experimental": true,
   "extension": [
-    {
-      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table",
-      "valueString": "measurement"
-    },
-    {
-      "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",
-      "valueString": "Observation__measurement"
-    }
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-target-table", "valueString": "measurement" },
+    { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",        "valueString": "Observation__measurement" }
   ],
   "resource": "Observation",
-  "description": "Labs and vitals with numeric/coded results.\n\nStage 1 of FHIR→OMOP: produce a flat row, one per FHIR Observation, preserving raw FHIR values. Code→concept_id resolution happens in stage 2 by joining the (code_system, code_value) pair against vocab.concept.\n\nKept compact: one column per concept-position (not one per vocabulary). The runtime resolver in stage 2 uses mapspec/profiles/system-aliases.json to map FHIR system URLs to OMOP vocabulary_id.",
+  "description": "Stage 1 of FHIR→OMOP. One staging row per `Observation.code.coding[]` entry (per-coding fan-out) instead of one row per Observation. Carries the UNION of measurement + observation value-slots so a single canonical staging table (staging.observation_coded) feeds both sibling edges.\n\nStage 2 resolves each coding through cm.fhir_system_to_omop_vocab + Maps-to ONCE in mapspec/etl/_resolve_observation.sql, dedups when two codings of the same Observation resolve to the same standard concept_id, and routes by std.domain_id to the appropriate OMOP table (measurement / observation). The sibling stage-2 SQLs (Observation__measurement / Observation__observation) are then trivial `WHERE std_domain='…'` filters over staging.observation_resolved — same shape as the Condition family.\n\nDiff page caveat: the reference Synthea CSV (cdm.* oracle) carries one CODE per observation row, so per-coding fan-out can add rows our side. Diff joins on observation_source_value (the raw LOINC code) so it stays meaningful.",
   "select": [
     {
       "column": [
-        {
-          "name": "id",
-          "path": "id",
-          "type": "id",
-          "description": "FHIR Observation.id; → surrogate measurement_id (hash/sequence in stage 2)."
-        },
-        {
-          "name": "status",
-          "path": "status",
-          "type": "code",
-          "description": "Stage-2 filters 'entered-in-error', 'cancelled', 'unknown'."
-        },
-        {
-          "name": "subject_id",
-          "path": "subject.getReferenceKey()",
-          "type": "string",
-          "description": "FHIR reference string ('Patient/<id>' or 'urn:uuid:<id>'). Resolve to person_id by trailing segment."
-        },
-        {
-          "name": "encounter_id",
-          "path": "encounter.getReferenceKey()",
-          "type": "string",
-          "description": "FHIR encounter reference. → visit_occurrence_id."
-        },
-        {
-          "name": "performer_id",
-          "path": "performer.first().getReferenceKey()",
-          "type": "string",
-          "description": "First performer reference. → provider_id (Practitioner/PractitionerRole)."
-        },
+        { "name": "id",            "path": "id",                                   "type": "id",       "description": "FHIR Observation.id; → surrogate via stringToId(id || '|' || std_concept_id) in stage 2 (fan-out safe)." },
+        { "name": "status",        "path": "status",                               "type": "code",     "description": "Stage-2 filters 'entered-in-error', 'cancelled', 'unknown'." },
+        { "name": "subject_id",    "path": "subject.getReferenceKey()",            "type": "string",   "description": "FHIR subject reference → person_id." },
+        { "name": "encounter_id",  "path": "encounter.getReferenceKey()",          "type": "string",   "description": "FHIR encounter reference → visit_occurrence_id." },
+        { "name": "performer_id",  "path": "performer.first().getReferenceKey()",  "type": "string",   "description": "First performer reference → provider_id." },
 
-        {
-          "name": "code_system",
-          "path": "code.coding.first().system",
-          "type": "uri",
-          "description": "Code system URL of the first coding (typically http://loinc.org). Mapped to OMOP vocabulary_id via system-aliases."
-        },
-        {
-          "name": "code_value",
-          "path": "code.coding.first().code",
-          "type": "code",
-          "description": "Source code → measurement_concept_id (after Maps-to). Also kept verbatim as measurement_source_value."
-        },
-        {
-          "name": "code_text",
-          "path": "code.text",
-          "type": "string",
-          "description": "Free-text label → fallback measurement_source_value when code_value is missing."
-        },
+        { "name": "code_text",     "path": "code.text",                            "type": "string",   "description": "Free-text label → fallback *_source_value when no coding resolves." },
 
-        {
-          "name": "effective_dt",
-          "path": "effective.ofType(dateTime)",
-          "type": "dateTime",
-          "description": "effectiveDateTime branch of effective[x]. → measurement_date / measurement_datetime."
-        },
-        {
-          "name": "effective_period_start",
-          "path": "effective.ofType(Period).start",
-          "type": "dateTime",
-          "description": "effectivePeriod.start branch. Used if effective_dt is absent."
-        },
+        { "name": "effective_dt",            "path": "effective.ofType(dateTime)",     "type": "dateTime", "description": "effectiveDateTime → *_date / *_datetime." },
+        { "name": "effective_period_start",  "path": "effective.ofType(Period).start", "type": "dateTime", "description": "effectivePeriod.start fallback." },
 
-        {
-          "name": "value_number",
-          "path": "valueQuantity.value",
-          "type": "decimal",
-          "description": "Numeric value. → value_as_number."
-        },
-        {
-          "name": "value_comparator",
-          "path": "valueQuantity.comparator",
-          "type": "code",
-          "description": "Quantity comparator (<, <=, >=, >). → operator_concept_id via tiny lookup."
-        },
-        {
-          "name": "value_unit_code",
-          "path": "valueQuantity.code",
-          "type": "code",
-          "description": "UCUM unit code. → unit_concept_id (joined as system='http://unitsofmeasure.org')."
-        },
-        {
-          "name": "value_unit_text",
-          "path": "valueQuantity.unit",
-          "type": "string",
-          "description": "Human-readable unit. → unit_source_value."
-        },
+        { "name": "value_number",     "path": "valueQuantity.value",       "type": "decimal", "description": "Numeric value → value_as_number." },
+        { "name": "value_string",     "path": "valueString",               "type": "string",  "description": "Plain string value (OMOP observation only) → value_as_string." },
+        { "name": "value_comparator", "path": "valueQuantity.comparator",  "type": "code",    "description": "Quantity comparator (<, <=, >=, >) → operator_concept_id (measurement only)." },
+        { "name": "value_unit_code",  "path": "valueQuantity.code",        "type": "code",    "description": "UCUM unit code → unit_concept_id." },
+        { "name": "value_unit_text",  "path": "valueQuantity.unit",        "type": "string",  "description": "Human-readable unit → unit_source_value." },
 
-        {
-          "name": "value_code_system",
-          "path": "valueCodeableConcept.coding.first().system",
-          "type": "uri",
-          "description": "When value[x] is a CodeableConcept: system URL of first coding. → maps with code_value to value_as_concept_id."
-        },
-        {
-          "name": "value_code",
-          "path": "valueCodeableConcept.coding.first().code",
-          "type": "code",
-          "description": "Coded value. → value_as_concept_id (after Maps-to)."
-        },
-        {
-          "name": "value_text",
-          "path": "valueCodeableConcept.text",
-          "type": "string",
-          "description": "Free-text answer. → value_source_value."
-        },
+        { "name": "value_code_system", "path": "valueCodeableConcept.coding.first().system", "type": "uri",    "description": "When value[x] is a CodeableConcept: system of first coding → value_as_concept_id via Maps-to." },
+        { "name": "value_code",        "path": "valueCodeableConcept.coding.first().code",   "type": "code",   "description": "Coded answer → value_as_concept_id." },
+        { "name": "value_text",        "path": "valueCodeableConcept.text",                  "type": "string", "description": "Free-text answer → value_source_value." },
 
-        {
-          "name": "range_low",
-          "path": "referenceRange.first().low.value",
-          "type": "decimal",
-          "description": "First reference range lower bound. → range_low."
-        },
-        {
-          "name": "range_high",
-          "path": "referenceRange.first().high.value",
-          "type": "decimal",
-          "description": "First reference range upper bound. → range_high."
-        }
+        { "name": "qualifier_code", "path": "interpretation.first().coding.first().code", "type": "code", "description": "Interpretation code (H/L/N/A/AA/…) → qualifier_source_value (observation only)." },
+
+        { "name": "range_low",  "path": "referenceRange.first().low.value",  "type": "decimal", "description": "First reference range lower bound → range_low (measurement only)." },
+        { "name": "range_high", "path": "referenceRange.first().high.value", "type": "decimal", "description": "First reference range upper bound → range_high (measurement only)." }
+      ]
+    },
+    {
+      "forEach": "code.coding",
+      "column": [
+        { "name": "code_system",  "path": "system",  "type": "uri",    "description": "Coding.system → Athena vocabulary_id via cm.fhir_system_to_omop_vocab." },
+        { "name": "code_value",   "path": "code",    "type": "code",   "description": "Coding.code → matched against vocab.concept.concept_code; verbatim → *_source_value." },
+        { "name": "code_display", "path": "display", "type": "string", "description": "Coding.display." }
       ]
     }
   ]

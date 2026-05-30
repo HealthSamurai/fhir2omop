@@ -6,8 +6,8 @@
   "status": "implemented",
   "primary": true,
   "required": false,
-  "condition": "category is laboratory or vital-signs (or absent/unknown -- default)",
-  "narrative_md": "Labs and vitals with numeric/coded results. Domain routing based on Observation.category: laboratory and vital-signs route here. Observations with components (e.g. blood pressure) are expanded -- each component produces its own measurement row.",
+  "condition": "code coding Maps-to a standard concept with domain_id='Measurement'",
+  "narrative_md": "Labs and vitals with numeric/coded results. Routing is by the resolved concept's `domain_id`, not by FHIR `category`: each `code.coding[]` entry is fanned out (per-coding) and walked through `cm.fhir_system_to_omop_vocab` → Maps-to → standard concept exactly once in the shared `mapspec/etl/_resolve_observation.sql` pass; rows whose standard concept lands in the Measurement domain are written here, those in the Observation domain by the `Observation__observation` sibling. This stage-2 SQL is therefore a trivial `WHERE std_domain='Measurement'` filter over `staging.observation_resolved` — the same shape as the Condition family. Surrogate `measurement_id = stringToId(Observation.id || '|' || std_concept_id)` so per-coding fan-out stays unique. Panel parents (e.g. blood pressure 85354-9) carry no own value and are dropped here; their inner numbers are fanned out by `Observation_component__measurement`.",
   "fields": [
     {
       "omop_column": "measurement_id",

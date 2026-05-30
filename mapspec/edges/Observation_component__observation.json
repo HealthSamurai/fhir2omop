@@ -6,8 +6,8 @@
   "status": "implemented",
   "primary": false,
   "required": false,
-  "condition": "Observation has component[] whose LOINC code resolves to a standard concept with domain_id='Observation' (e.g. PRAPARE survey questions, social-history panels — components ARE the questions, parent is the panel).",
-  "narrative_md": "Sibling to `Observation_component__measurement`. Reuses the SAME `staging.observation_component_measurement` table (mis-named but contains all components) and routes by `std.domain_id='Observation'` instead. Closes a major data loss path: without this edge, PRAPARE survey responses and other questionnaire-style components emitted by Synthea as `Observation.component[]` are silently dropped (the parent panel Observation is written, but the component answers — the actual data — are not).\n\nMeasured impact on 100-patient Synthea cohort: +17625 observation rows (6755 → 24380), closing 97% of the 17730-row gap vs reference cdm.observation.",
+  "condition": "component code Maps-to a standard concept with domain_id='Observation' (e.g. PRAPARE survey questions, social-history panels — components ARE the questions, parent is the panel).",
+  "narrative_md": "Sibling to `Observation_component__measurement`. Both read the single shared `staging.observation_component_resolved` table built by `mapspec/etl/_resolve_observation_component.sql` (per-component fan-out + Maps-to walked once, generalised beyond LOINC); this edge is a trivial `WHERE std_domain='Observation'` filter. Surrogate `observation_id = stringToId(Observation.id || '/o/' || component_code || '|' || std_concept_id)` — the `/o/` infix keeps component-observation ids distinct from component-measurement ids. Closes a major data loss path: without this edge, PRAPARE survey responses and other questionnaire-style components emitted by Synthea as `Observation.component[]` are silently dropped (the parent panel Observation is written, but the component answers — the actual data — are not).\n\nMeasured impact on the 100-patient Synthea cohort: ~17.6k component-derived observation rows.",
   "fields": [
     {
       "omop_column": "observation_id",
