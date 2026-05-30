@@ -32,7 +32,13 @@ SELECT
     NULL::bigint                                                            AS visit_occurrence_id,
     NULL::bigint                                                            AS visit_detail_id,
     left(v.code_snomed, 50)                                                 AS device_source_value,
-    src.concept_id                                                          AS device_source_concept_id
+    src.concept_id                                                          AS device_source_concept_id,
+    -- Devices carry no unit; project the 3 trailing OMOP columns explicitly
+    -- so the SELECT matches device_exposure's full 19-column order (the
+    -- positional INSERT contract — don't rely on Postgres default-filling).
+    NULL::integer                                                           AS unit_concept_id,
+    NULL::varchar                                                           AS unit_source_value,
+    NULL::integer                                                           AS unit_source_concept_id
 
 FROM staging.device_device_exposure v
 JOIN vocab.concept src
