@@ -10,7 +10,7 @@ export default async function (ctx: Context, opts: { case: any }): Promise<strin
         // FHIR input — one highlighted JSON block per resource.
         const fhirCards = await Promise.all((v.fhir ?? []).map(async (r: any) => {
             const head = `${r.resourceType ?? "?"}${r.id ? ` <span class="font-mono text-sky-700">#${esc(r.id)}</span>` : ""}`;
-            const hl = await ctx.fns.markdown.render(ctx, { source: "```json\n" + JSON.stringify(r, null, 2) + "\n```" });
+            const hl = await ctx.fns.markdown.render(ctx, { source: "```yaml\n" + Bun.YAML.stringify(r, null, 2) + "\n```" });
             return `<div class="border border-gray-200 rounded-lg overflow-hidden">
   <div class="px-3 py-1.5 bg-sky-50 border-b border-gray-200 text-xs font-semibold text-sky-900">${head}</div>
   <div class="px-1">${hl}</div>
