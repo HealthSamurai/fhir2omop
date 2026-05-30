@@ -3,11 +3,11 @@
   "fhir_resource": "DiagnosticReport",
   "omop_table": "measurement",
   "direction": "fhir-to-omop",
-  "status": "documented",
+  "status": "implemented",
   "primary": false,
   "required": false,
-  "condition": "DiagnosticReport.code (LOINC) resolves to OMOP concept with domain_id = Measurement",
-  "narrative_md": "When a DiagnosticReport's LOINC code resolves to an OMOP concept with domain_id = Measurement, the report itself produces one or more measurement rows. Each conclusionCode entry generates a separate row. This is independent of the Observation results referenced by DiagnosticReport.result[], which are mapped by the Observation mapper. Lab panel codes (e.g. 24323-8 Comprehensive metabolic panel) are the primary Measurement-domain codes.",
+  "condition": "DiagnosticReport.code coding Maps-to a standard concept with domain_id='Measurement'",
+  "narrative_md": "When a DiagnosticReport's code resolves to a standard concept in the Measurement domain, the report itself produces measurement rows (lab panel codes like 24323-8 Comprehensive metabolic panel). Each `code.coding[]` entry is fanned out and walked through `cm.fhir_system_to_omop_vocab` → Maps-to → standard concept exactly once in the shared `mapspec/etl/_resolve_diagnosticreport.sql` pass, shared with the `__observation` / `__procedure_occurrence` siblings; this stage-2 SQL is a trivial `WHERE std_domain='Measurement'` filter over `staging.diagnosticreport_resolved` — same shape as the Condition and Observation families. Surrogate `measurement_id = stringToId(DR.id || '|' || std_concept_id)` keeps per-coding fan-out unique. Independent of the result lines in DiagnosticReport.result[], which come through Observation→measurement; the report's free-text body is handled by the per-report DiagnosticReport__note edge.",
   "fields": [
     {
       "omop_column": "measurement_id",

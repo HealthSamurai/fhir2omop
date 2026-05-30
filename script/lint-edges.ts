@@ -15,7 +15,8 @@ const STAGING_TO_VIEW: Record<string, string> = {
     // superset). Keep in sync with script/etl-all.ts.
     "staging.patient_person":                          "Patient__person",
     "staging.observation_coded":                       "Observation__measurement",
-    "staging.dr_meas_view":                            "DiagnosticReport__measurement",
+    "staging.diagnosticreport_coded":                  "DiagnosticReport__measurement",
+    "staging.diagnosticreport_resolved":               "DiagnosticReport__measurement",
     "staging.observation_component":                   "Observation_component__measurement",
     "staging.condition_occurrence":                    "Condition__condition_occurrence",
     // observation_resolved / observation_component_resolved are derived

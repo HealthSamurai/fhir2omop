@@ -3,11 +3,11 @@
   "fhir_resource": "DiagnosticReport",
   "omop_table": "procedure_occurrence",
   "direction": "fhir-to-omop",
-  "status": "documented",
+  "status": "implemented",
   "primary": false,
   "required": false,
-  "condition": "DiagnosticReport.code (LOINC) resolves to OMOP concept with domain_id = Procedure",
-  "narrative_md": "When a DiagnosticReport's LOINC code resolves to an OMOP concept with domain_id = Procedure, the report produces one or more procedure_occurrence rows. This occurs primarily for imaging studies (radiology, nuclear medicine), pathology procedures, and certain clinical assessments whose LOINC codes are classified in the Procedure domain by the OMOP vocabulary. Each conclusionCode entry generates a separate row. This is independent of the Observation results referenced by DiagnosticReport.result[], which are mapped by the Observation mapper.",
+  "condition": "DiagnosticReport.code coding Maps-to a standard concept with domain_id='Procedure'",
+  "narrative_md": "When a DiagnosticReport's code resolves to a standard concept in the Procedure domain, the report produces procedure_occurrence rows — primarily imaging studies (radiology, nuclear medicine) and pathology procedures whose codes the OMOP vocabulary classifies as Procedure. Sibling to `DiagnosticReport__measurement` — both read the single shared `staging.diagnosticreport_resolved` table built by `mapspec/etl/_resolve_diagnosticreport.sql` (per-coding fan-out + Maps-to walked once); this edge is a trivial `WHERE std_domain='Procedure'` filter. Surrogate `procedure_occurrence_id = stringToId(DR.id || '|' || std_concept_id)`. (Synthea's DiagnosticReport codes don't reach the Procedure domain, so this edge yields 0 rows on the demo cohort, but it is wired for real-world data.)",
   "fields": [
     {
       "omop_column": "procedure_occurrence_id",

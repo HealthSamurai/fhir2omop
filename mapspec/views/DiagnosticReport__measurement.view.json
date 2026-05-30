@@ -1,10 +1,10 @@
 {
   "resourceType": "ViewDefinition",
-  "id": "omop-diagnosticreport-measurement",
-  "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-diagnosticreport-measurement",
-  "name": "OmopDiagnosticReportMeasurementView",
-  "title": "DiagnosticReport → measurement (FHIR-flat, stage 1)",
-  "version": "0.3.0",
+  "id": "omop-diagnosticreport-coded",
+  "url": "https://fhir2omop.health-samurai.io/ViewDefinition/omop-diagnosticreport-coded",
+  "name": "OmopDiagnosticReportCodedView",
+  "title": "DiagnosticReport → measurement / observation / procedure_occurrence (FHIR-flat, stage 1; per-coding fan-out)",
+  "version": "0.4.0",
   "status": "draft",
   "experimental": true,
   "extension": [
@@ -12,25 +12,25 @@
     { "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-edge",        "valueString": "DiagnosticReport__measurement" }
   ],
   "resource": "DiagnosticReport",
-  "description": "DR's own code (typically a LOINC panel like '24323-8 Comp Metabolic Panel') routed to measurement domain. Individual result lines come through Observation→measurement separately.",
-  "constant": [
-    { "name": "loincSystem",  "valueString": "http://loinc.org" },
-    { "name": "snomedSystem", "valueString": "http://snomed.info/sct" }
-  ],
+  "description": "Stage 1 of FHIR→OMOP. One staging row per `DiagnosticReport.code.coding[]` entry (per-coding fan-out) instead of one row per report. This single canonical staging table (staging.diagnosticreport_coded) feeds all three domain-routed sibling edges (measurement / observation / procedure_occurrence).\n\nStage 2 resolves each coding through cm.fhir_system_to_omop_vocab + Maps-to ONCE in mapspec/etl/_resolve_diagnosticreport.sql, dedups when two codings of the same report resolve to the same standard concept_id, and routes by std.domain_id. The sibling stage-2 SQLs are then trivial `WHERE std_domain='…'` filters over staging.diagnosticreport_resolved — same shape as the Condition and Observation families.\n\nThe DR's free-text body (presentedForm / conclusion) is handled separately by the DiagnosticReport__note edge, which is per-report (not per-coding) and keeps its own view.",
   "select": [
     {
       "column": [
-        { "name": "id",            "path": "id",                                                      "type": "id" },
-        { "name": "status",        "path": "status",                                                  "type": "code", "description": "Stage-2 filters 'entered-in-error', 'cancelled', 'unknown'." },
-        { "name": "subject_ref",   "path": "subject.getReferenceKey()",                                "type": "string" },
-        { "name": "encounter_ref", "path": "encounter.getReferenceKey()",                              "type": "string" },
-        { "name": "performer_ref",              "path": "performer.first().getReferenceKey()",                                                  "type": "string", "description": "DEPRECATED untyped first performer — kept for compatibility but mixes Practitioner and Organization references. Use the typed siblings below." },
-        { "name": "performer_practitioner_ref", "path": "performer.where(reference.startsWith('Practitioner/')).first().getReferenceKey()",   "type": "string", "description": "First Practitioner-typed performer. → provider_id." },
-        { "name": "performer_organization_ref", "path": "performer.where(reference.startsWith('Organization/')).first().getReferenceKey()",   "type": "string", "description": "First Organization-typed performer (lab/facility — Synthea labs land here). Not consumed by stage-2 (measurement has no care_site_id column); preserved for traceability and so provider_id stays clean." },
-        { "name": "code_loinc",    "path": "code.coding.where(system=%loincSystem).code.first()",      "type": "code" },
-        { "name": "code_snomed",   "path": "code.coding.where(system=%snomedSystem).code.first()",     "type": "code" },
-        { "name": "code_text",     "path": "code.text",                                                "type": "string" },
-        { "name": "effective_dt",  "path": "effective.ofType(dateTime)",                               "type": "dateTime" }
+        { "name": "id",            "path": "id",                                  "type": "id",       "description": "DR.id; → surrogate via stringToId(id || '|' || std_concept_id) in stage 2 (fan-out safe)." },
+        { "name": "status",        "path": "status",                              "type": "code",     "description": "Stage-2 filters 'entered-in-error', 'cancelled', 'unknown'." },
+        { "name": "subject_ref",   "path": "subject.getReferenceKey()",            "type": "string",   "description": "Patient → person_id." },
+        { "name": "encounter_ref", "path": "encounter.getReferenceKey()",          "type": "string",   "description": "Encounter → visit_occurrence_id." },
+        { "name": "performer_practitioner_ref", "path": "performer.where(reference.startsWith('Practitioner/')).first().getReferenceKey()", "type": "string", "description": "First Practitioner-typed performer → provider_id. Organization performers (labs) are intentionally not written — OMOP measurement/observation/procedure have no care_site_id, and the lab is already implicit via the visit's care_site." },
+        { "name": "code_text",     "path": "code.text",                            "type": "string",   "description": "Free-text label → *_source_value fallback / observation value_source_value." },
+        { "name": "effective_dt",  "path": "effective.ofType(dateTime)",           "type": "dateTime", "description": "effectiveDateTime → *_date / *_datetime." }
+      ]
+    },
+    {
+      "forEach": "code.coding",
+      "column": [
+        { "name": "code_system",  "path": "system",  "type": "uri",    "description": "Coding.system → Athena vocabulary_id via cm.fhir_system_to_omop_vocab." },
+        { "name": "code_value",   "path": "code",    "type": "code",   "description": "Coding.code → vocab.concept.concept_code; verbatim → *_source_value." },
+        { "name": "code_display", "path": "display", "type": "string", "description": "Coding.display." }
       ]
     }
   ]

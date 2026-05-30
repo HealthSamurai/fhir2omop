@@ -3,11 +3,11 @@
   "fhir_resource": "DiagnosticReport",
   "omop_table": "observation",
   "direction": "fhir-to-omop",
-  "status": "documented",
+  "status": "implemented",
   "primary": false,
   "required": false,
-  "condition": "DiagnosticReport.code (LOINC) resolves to OMOP concept with domain_id = Observation",
-  "narrative_md": "When a DiagnosticReport's LOINC code resolves to an OMOP concept with domain_id = Observation, the report produces one or more observation rows. This applies primarily to clinical document types -- history and physical notes, discharge summaries, evaluation and plan notes, consultation notes -- where the LOINC code represents a document class rather than a quantitative measurement or procedure. Each conclusionCode entry generates a separate row. This is the most frequently hit domain for DiagnosticReport resources in real-world EHR data (clinical notes are far more common than lab panel-level reports).",
+  "condition": "DiagnosticReport.code coding Maps-to a standard concept with domain_id='Observation'",
+  "narrative_md": "When a DiagnosticReport's code resolves to a standard concept in the Observation domain, the report produces observation rows — primarily clinical document classes (history & physical, discharge summary, consultation note) where the code represents a document type rather than a quantitative result. Sibling to `DiagnosticReport__measurement` — both read the single shared `staging.diagnosticreport_resolved` table built by `mapspec/etl/_resolve_diagnosticreport.sql` (per-coding fan-out + Maps-to walked once); this edge is a trivial `WHERE std_domain='Observation'` filter. Surrogate `observation_id = stringToId(DR.id || '|' || std_concept_id)`.",
   "fields": [
     {
       "omop_column": "observation_id",

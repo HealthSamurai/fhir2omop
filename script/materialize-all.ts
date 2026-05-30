@@ -12,7 +12,7 @@ const JOBS: Array<{ view: string; source: string; target: string }> = [
     { view: "Condition__condition_occurrence",source: "fhir.condition",          target: "staging.condition_occurrence" },
     { view: "Observation__measurement",       source: "fhir.observation",        target: "staging.observation_coded" },
     { view: "Observation_component__measurement", source: "fhir.observation",    target: "staging.observation_component" },
-    { view: "DiagnosticReport__measurement",  source: "fhir.diagnostic_report",  target: "staging.dr_meas_view" },
+    { view: "DiagnosticReport__measurement",  source: "fhir.diagnostic_report",  target: "staging.diagnosticreport_coded" },
 ];
 
 const ctx = { env: process.env, fns: {} as any } as any;
