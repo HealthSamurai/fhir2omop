@@ -1,0 +1,55 @@
+{
+  "title": "Patient → observation_period (derived from visits)",
+  "notes": "Patient__observation_period has no FHIR field for the period bounds — they are derived in stage-2 from MIN(visit_start_date) / MAX(visit_end_date) over cdm_ours_fhir.visit_occurrence for the person (period_type_concept_id 44814724 'Period covering healthcare encounters'). This is the one cross-table edge: it reads visit_occurrence, so the case supplies the Encounters too and asserts BOTH tables. The runner runs Encounter__visit_occurrence first (PLAN order), then Patient__observation_period reads the just-produced visit_occurrence in the isolated schema.\n\nobservation_period_id == person_id == referenceToId(Patient.id) (both are hash(Patient.id)); the PK is derived and not asserted.",
+  "cases": [
+    {
+      "desc": "two encounters (2015-03-10, 2018-07-22) → one observation_period spanning min start .. max end",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1980-02-02" },
+        {
+          "resourceType": "Encounter", "id": "enc-1", "status": "finished",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
+          "subject": { "reference": "Patient/patient-1" },
+          "period": { "start": "2015-03-10T09:00:00Z", "end": "2015-03-10T09:30:00Z" }
+        },
+        {
+          "resourceType": "Encounter", "id": "enc-2", "status": "finished",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
+          "subject": { "reference": "Patient/patient-1" },
+          "period": { "start": "2018-07-22T14:00:00Z", "end": "2018-07-22T14:20:00Z" }
+        }
+      ],
+      "omop": {
+        "visit_occurrence": [
+          {
+            "person_id": "ref:patient-1",
+            "visit_concept_id": 9202, "visit_concept_id__name": "Outpatient Visit",
+            "visit_start_date": "2015-03-10", "visit_start_datetime": "2015-03-10T09:00:00",
+            "visit_end_date": "2015-03-10", "visit_end_datetime": "2015-03-10T09:30:00",
+            "visit_type_concept_id": 32827, "visit_type_concept_id__name": "EHR encounter record",
+            "visit_source_value": "enc-1", "visit_source_concept_id": 0,
+            "admitted_from_concept_id": 0, "discharged_to_concept_id": 0
+          },
+          {
+            "person_id": "ref:patient-1",
+            "visit_concept_id": 9202, "visit_concept_id__name": "Outpatient Visit",
+            "visit_start_date": "2018-07-22", "visit_start_datetime": "2018-07-22T14:00:00",
+            "visit_end_date": "2018-07-22", "visit_end_datetime": "2018-07-22T14:20:00",
+            "visit_type_concept_id": 32827, "visit_type_concept_id__name": "EHR encounter record",
+            "visit_source_value": "enc-2", "visit_source_concept_id": 0,
+            "admitted_from_concept_id": 0, "discharged_to_concept_id": 0
+          }
+        ],
+        "observation_period": [
+          {
+            "person_id": "ref:patient-1",
+            "observation_period_start_date": "2015-03-10",
+            "observation_period_end_date": "2018-07-22",
+            "period_type_concept_id": 44814724,
+            "period_type_concept_id__name": "Period covering healthcare encounters"
+          }
+        ]
+      }
+    }
+  ]
+}

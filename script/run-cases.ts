@@ -40,7 +40,11 @@ ctx.fns.viewdef = { materialize: (await import("../src/viewdef/materialize")).de
 
 const snake = (rt: string) => rt.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase();
 const tbl = (q: string) => q.split(".")[1]!;
-const subStaging = (body: string) => body.replaceAll("staging.", T.staging + ".");
+// Redirect both pipeline schemas to the isolated test schemas: staging.* (the
+// stage-1 materializations) and cdm_ours_fhir.* (cross-table reads like
+// Patient__observation_period JOIN visit_occurrence, and the PractitionerRole
+// UPDATE target). vocab.* / cm.* (full Athena) stay shared, read-only.
+const subSchemas = (body: string) => body.replaceAll("staging.", T.staging + ".").replaceAll("cdm_ours_fhir.", T.cdm + ".");
 const resolveFiles = readdirSync("mapspec/etl").filter((f) => f.startsWith("_resolve_") && f.endsWith(".sql")).sort();
 
 async function runScript(sqlText: string): Promise<void> {
@@ -120,7 +124,7 @@ async function runPipeline(present: Set<string>, slug: string, expectedTables: S
 
     // 2. resolve passes (skip silently when their input staging is absent)
     for (const f of resolveFiles) {
-        try { await runScript(subStaging(await Bun.file(`mapspec/etl/${f}`).text())); } catch { /* resource not in this case */ }
+        try { await runScript(subSchemas(await Bun.file(`mapspec/etl/${f}`).text())); } catch { /* resource not in this case */ }
     }
 
     // 3. stage-2 edges → t_cdm (truncate first writer per target, then append)
@@ -134,7 +138,7 @@ async function runPipeline(present: Set<string>, slug: string, expectedTables: S
             await runScript(`CREATE TABLE ${target} (LIKE ${p.target} INCLUDING DEFAULTS);`);
             created.add(target);
         }
-        const body = subStaging(await Bun.file(sf).text());
+        const body = subSchemas(await Bun.file(sf).text());
         const stmt = p.mode === "update" ? body : `INSERT INTO ${target}\n${body}`;
         try { await runScript(stmt); produced.add(tbl(p.target)); }
         catch (e: any) { if (verbose) console.log(`    [stage2 ${p.edge}] ${e.message}`); }
