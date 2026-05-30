@@ -1,0 +1,108 @@
+{
+  "title": "Device · core (status filter, SNOMED type, manufacture/expiration dates, UDI/lot)",
+  "notes": "Branch dimension: how Device__device_exposure (mapspec/etl/Device__device_exposure.sql + mapspec/views/Device__device_exposure.view.json) emits one device_exposure row per Device, and which Devices are dropped.\n\nColumn derivation (verified against the live cdm_ours_fhir.device_exposure row for fhir.device a884ee77-5b13-7783-ceb8-2a1aee76b940):\n  device_exposure_id              = referenceToId(Device.id)\n  person_id                       = referenceToId(Device.patient.getReferenceKey())\n  device_concept_id               = std.concept_id  (SNOMED type code --Maps to--> standard Device-domain concept)\n  device_exposure_start_date      = Device.manufactureDate::date\n  device_exposure_start_datetime  = Device.manufactureDate::timestamp  (WALL-CLOCK; the FHIR +00:00 offset is dropped by ::timestamp)\n  device_exposure_end_date        = Device.expirationDate::date\n  device_exposure_end_datetime    = Device.expirationDate::timestamp\n  device_type_concept_id          = 32817  (constant)\n  unique_device_id                = left(Device.udiCarrier.first().deviceIdentifier, 255)\n  production_id                   = left(Device.lotNumber, 255)\n  device_source_value             = left(SNOMED type code, 50)\n  device_source_concept_id        = src.concept_id  (the SNOMED concept itself)\n  quantity, provider_id, visit_occurrence_id, visit_detail_id, unit_concept_id, unit_source_value, unit_source_concept_id  = NULL (always)\n\nSTATUS FILTER (the load-bearing branch): the stage-2 SQL ends with `WHERE v.status_code IN ('active','inactive')`. So:\n  - status='active'   -> emitted\n  - status='inactive' -> emitted (still a real exposure)\n  - status='entered-in-error' / 'unknown' / anything else -> NO row (Device dropped). Asserted via \"omop\": {} (device_exposure produced-but-empty).\n\nSNOMED-MAPS-TO REQUIREMENT: the SELECT INNER-JOINs vocab.concept (SNOMED, by concept_code) -> concept_relationship 'Maps to' (invalid_reason IS NULL) -> standard Device-domain concept. A Device whose type.coding lacks a SNOMED system code, or whose code has no standard Device mapping, produces no row. All three Synthea device codes used here map to THEMSELVES as standard Device concepts (170615005=4015740 'Home nebulizer', 337414009=4224372 'Glucometer', 228869008=4045112 'Manual wheelchair'), so device_concept_id == device_source_concept_id for each.\n\nVALUES IN THE ACTIVE VARIANT ARE COPIED VERBATIM from the live pipeline (cdm_ours_fhir.device_exposure for device a884ee77-...): device_concept_id 4015740, start 1989-10-29 20:26:17, end 2014-11-13 20:26:17, unique_device_id 43856429819831, production_id 1106. status='inactive' and the filtered status are SYNTHETIC (Synthea only emits status='active'), constructed to exercise the WHERE branch; their concept/date values are still verified against vocab.concept and the SQL casts.\n\nEach Device is self-contained — no Patient/Encounter resource is required (person_id is just referenceToId of the patient reference key, no FK lookup into another t_cdm table), so every variant isolates cleanly.",
+  "cases": [
+    {
+      "desc": "status=active, SNOMED type + manufactureDate + expirationDate + UDI + lotNumber -> full device_exposure row (values copied from live cdm_ours_fhir for device a884ee77-...)",
+      "fhir": [
+        {
+          "resourceType": "Device",
+          "id": "device-1",
+          "status": "active",
+          "patient": { "reference": "urn:uuid:patient-1" },
+          "type": {
+            "text": "Home nebulizer (physical object)",
+            "coding": [
+              { "system": "http://snomed.info/sct", "code": "170615005", "display": "Home nebulizer (physical object)" }
+            ]
+          },
+          "lotNumber": "1106",
+          "udiCarrier": [
+            { "deviceIdentifier": "43856429819831", "carrierHRF": "(01)43856429819831(11)891029(17)141113(10)1106(21)2602796356" }
+          ],
+          "manufactureDate": "1989-10-29T20:26:17+00:00",
+          "expirationDate": "2014-11-13T20:26:17+00:00"
+        }
+      ],
+      "omop": {
+        "device_exposure": [
+          {
+            "person_id": "ref:patient-1",
+            "device_concept_id": 4015740,
+            "device_concept_id__name": "Home nebulizer",
+            "device_exposure_start_date": "1989-10-29",
+            "device_exposure_start_datetime": "1989-10-29T20:26:17",
+            "device_exposure_end_date": "2014-11-13",
+            "device_exposure_end_datetime": "2014-11-13T20:26:17",
+            "device_type_concept_id": 32817,
+            "device_type_concept_id__name": "EHR",
+            "unique_device_id": "43856429819831",
+            "production_id": "1106",
+            "device_source_value": "170615005",
+            "device_source_concept_id": 4015740,
+            "device_source_concept_id__name": "Home nebulizer"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "status=inactive is STILL emitted (WHERE status_code IN ('active','inactive')); SNOMED 337414009 Glucometer, manufacture/expiration dates only, no UDI/lot -> unique_device_id & production_id NULL",
+      "fhir": [
+        {
+          "resourceType": "Device",
+          "id": "device-2",
+          "status": "inactive",
+          "patient": { "reference": "urn:uuid:patient-2" },
+          "type": {
+            "text": "Blood glucose meter (physical object)",
+            "coding": [
+              { "system": "http://snomed.info/sct", "code": "337414009", "display": "Blood glucose meter (physical object)" }
+            ]
+          },
+          "manufactureDate": "2001-03-15T08:00:00+00:00",
+          "expirationDate": "2009-03-15T08:00:00+00:00"
+        }
+      ],
+      "omop": {
+        "device_exposure": [
+          {
+            "person_id": "ref:patient-2",
+            "device_concept_id": 4224372,
+            "device_concept_id__name": "Glucometer",
+            "device_exposure_start_date": "2001-03-15",
+            "device_exposure_start_datetime": "2001-03-15T08:00:00",
+            "device_exposure_end_date": "2009-03-15",
+            "device_exposure_end_datetime": "2009-03-15T08:00:00",
+            "device_type_concept_id": 32817,
+            "device_type_concept_id__name": "EHR",
+            "device_source_value": "337414009",
+            "device_source_concept_id": 4224372,
+            "device_source_concept_id__name": "Glucometer"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "status=entered-in-error is FILTERED OUT (not in ('active','inactive')) -> zero device_exposure rows, even though the SNOMED 228869008 Manual wheelchair maps cleanly",
+      "fhir": [
+        {
+          "resourceType": "Device",
+          "id": "device-3",
+          "status": "entered-in-error",
+          "patient": { "reference": "urn:uuid:patient-3" },
+          "type": {
+            "text": "Manual wheelchair (physical object)",
+            "coding": [
+              { "system": "http://snomed.info/sct", "code": "228869008", "display": "Manual wheelchair (physical object)" }
+            ]
+          },
+          "lotNumber": "9999",
+          "udiCarrier": [ { "deviceIdentifier": "11111111111111" } ],
+          "manufactureDate": "2010-01-01T00:00:00+00:00",
+          "expirationDate": "2020-01-01T00:00:00+00:00"
+        }
+      ],
+      "omop": {}
+    }
+  ]
+}

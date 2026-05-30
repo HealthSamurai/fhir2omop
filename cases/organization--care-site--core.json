@@ -1,0 +1,201 @@
+{
+  "title": "Organization · care_site core mapping",
+  "notes": "Branch dimension: how the Organization__care_site edge derives every produced care_site column from Organization.name + Organization.type.\n\nGrounded in mapspec/views/Organization__care_site.view.json (stage 1) + mapspec/etl/Organization__care_site.sql (stage 2). Produced columns, in target order (care_site_id surrogate PK omitted from assertions):\n\n  care_site_id                = hashtextextended(Organization.id, 0)::bigint   (== referenceToId(Organization.id), so asserted via ref:<id>)\n  care_site_name              = Organization.name\n  place_of_service_concept_id = CASE Organization.type[0].coding[0].code\n                                  'prov' -> 8940    (Office)\n                                  'dept' -> 4318944 (Hospital)\n                                  'edu'  -> 4030303 (Hospital AND/OR institution)\n                                  'govt' -> 4195901 (Government hospital)\n                                  'team' -> 4217012 (Health maintenance organization)\n                                  ELSE   -> 0\n  location_id                 = NULL (always — the Organization edge never sets a care_site location; Location__care_site is a separate append edge)\n  care_site_source_value      = Organization.id (the UUID — Encounter.serviceProvider references this directly)\n  place_of_service_source_value = Organization.type[0].coding[0].code (raw HL7 organization-type code, NULL when type absent)\n\nKEY MECHANICS:\n- The view reads type via Organization.type.first().coding.first().code. So only the FIRST coding of the FIRST type element drives place_of_service; additional codings/types are ignored.\n- place_of_service_concept_id is a pure inline CASE in stage-2 SQL (no ConceptMap / cm.* table for this edge). An unrecognized or absent type_code falls to ELSE 0; place_of_service_source_value still carries whatever raw code was present (or NULL when type[] is absent entirely).\n- care_site_source_value is the Organization UUID — a traceability anchor back to the source record, NOT a clinical identifier (per project-wide *_source_value semantics). It is intentionally the raw v.id, never an Organization.identifier value.\n- location_id is hard NULL in this edge regardless of any Organization.address — addresses are not consumed here.\n\nIsolation note: the runner builds cdm_ours_fhir.care_site from BOTH Organization__care_site (truncate) and Location__care_site (append). These cases supply only Organization resources (no Location), so the Location edge contributes zero rows and care_site is asserted to contain exactly the Organization-derived rows.\n\nConcept names verified live in vocab.concept (May 2026 Athena bundle): 8940 Office (domain Visit), 4318944 Hospital, 4030303 'Hospital AND/OR institution', 4195901 'Government hospital', 4217012 'Health maintenance organization' (the last four domain Observation). NOTE: the concept_name strings differ from the inline comments in the SQL (e.g. 4318944 is 'Hospital', not 'Department'); the __name siblings below use the real Athena concept_name.\n\nThe 'prov' variant uses a REAL Synthea Organization (NURSE ON CALL, 17a4bae5-...) and copies values straight from the live cdm_ours_fhir.care_site row (care_site_id -1961152856439230159 == referenceToId of that UUID). All 261 Synthea orgs are type 'prov'; the dept/edu/govt/team/other/no-type variants are synthetic (those org types never appear in Synthea) but exercise every CASE branch of the live SQL.",
+  "cases": [
+    {
+      "desc": "prov organization (real Synthea NURSE ON CALL) → place_of_service_concept_id 8940 Office; care_site_source_value = Org UUID; location_id NULL",
+      "fhir": [
+        {
+          "resourceType": "Organization",
+          "id": "17a4bae5-8b64-34d7-8144-b428be027bd0",
+          "name": "NURSE ON CALL",
+          "type": [
+            {
+              "coding": [
+                { "system": "http://terminology.hl7.org/CodeSystem/organization-type", "code": "prov", "display": "Healthcare Provider" }
+              ]
+            }
+          ]
+        }
+      ],
+      "omop": {
+        "care_site": [
+          {
+            "care_site_id": "ref:17a4bae5-8b64-34d7-8144-b428be027bd0",
+            "care_site_name": "NURSE ON CALL",
+            "place_of_service_concept_id": 8940,
+            "place_of_service_concept_id__name": "Office",
+            "care_site_source_value": "17a4bae5-8b64-34d7-8144-b428be027bd0",
+            "place_of_service_source_value": "prov"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "dept organization → place_of_service_concept_id 4318944 (Hospital); raw code 'dept' kept in place_of_service_source_value",
+      "fhir": [
+        {
+          "resourceType": "Organization",
+          "id": "org-1",
+          "name": "Cardiology Department",
+          "type": [
+            {
+              "coding": [
+                { "system": "http://terminology.hl7.org/CodeSystem/organization-type", "code": "dept", "display": "Hospital Department" }
+              ]
+            }
+          ]
+        }
+      ],
+      "omop": {
+        "care_site": [
+          {
+            "care_site_id": "ref:org-1",
+            "care_site_name": "Cardiology Department",
+            "place_of_service_concept_id": 4318944,
+            "place_of_service_concept_id__name": "Hospital",
+            "care_site_source_value": "org-1",
+            "place_of_service_source_value": "dept"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "edu organization → 4030303 (Hospital AND/OR institution); exercises the 'edu' CASE branch",
+      "fhir": [
+        {
+          "resourceType": "Organization",
+          "id": "org-1",
+          "name": "State University Health Sciences",
+          "type": [
+            {
+              "coding": [
+                { "system": "http://terminology.hl7.org/CodeSystem/organization-type", "code": "edu", "display": "Educational Institute" }
+              ]
+            }
+          ]
+        }
+      ],
+      "omop": {
+        "care_site": [
+          {
+            "care_site_id": "ref:org-1",
+            "care_site_name": "State University Health Sciences",
+            "place_of_service_concept_id": 4030303,
+            "place_of_service_concept_id__name": "Hospital AND/OR institution",
+            "care_site_source_value": "org-1",
+            "place_of_service_source_value": "edu"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "govt organization → 4195901 (Government hospital)",
+      "fhir": [
+        {
+          "resourceType": "Organization",
+          "id": "org-1",
+          "name": "County Public Health Authority",
+          "type": [
+            {
+              "coding": [
+                { "system": "http://terminology.hl7.org/CodeSystem/organization-type", "code": "govt", "display": "Government" }
+              ]
+            }
+          ]
+        }
+      ],
+      "omop": {
+        "care_site": [
+          {
+            "care_site_id": "ref:org-1",
+            "care_site_name": "County Public Health Authority",
+            "place_of_service_concept_id": 4195901,
+            "place_of_service_concept_id__name": "Government hospital",
+            "care_site_source_value": "org-1",
+            "place_of_service_source_value": "govt"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "team organization → 4217012 (Health maintenance organization)",
+      "fhir": [
+        {
+          "resourceType": "Organization",
+          "id": "org-1",
+          "name": "Mobile Crisis Response Team",
+          "type": [
+            {
+              "coding": [
+                { "system": "http://terminology.hl7.org/CodeSystem/organization-type", "code": "team", "display": "Organizational team" }
+              ]
+            }
+          ]
+        }
+      ],
+      "omop": {
+        "care_site": [
+          {
+            "care_site_id": "ref:org-1",
+            "care_site_name": "Mobile Crisis Response Team",
+            "place_of_service_concept_id": 4217012,
+            "place_of_service_concept_id__name": "Health maintenance organization",
+            "care_site_source_value": "org-1",
+            "place_of_service_source_value": "team"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "unrecognized type code 'ins' → CASE ELSE 0 for place_of_service_concept_id, but raw 'ins' is still preserved in place_of_service_source_value",
+      "fhir": [
+        {
+          "resourceType": "Organization",
+          "id": "org-1",
+          "name": "Acme Health Insurer",
+          "type": [
+            {
+              "coding": [
+                { "system": "http://terminology.hl7.org/CodeSystem/organization-type", "code": "ins", "display": "Insurance Company" }
+              ]
+            }
+          ]
+        }
+      ],
+      "omop": {
+        "care_site": [
+          {
+            "care_site_id": "ref:org-1",
+            "care_site_name": "Acme Health Insurer",
+            "place_of_service_concept_id": 0,
+            "place_of_service_concept_id__name": "No matching concept",
+            "care_site_source_value": "org-1",
+            "place_of_service_source_value": "ins"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "organization with NAME but NO type[] → place_of_service_concept_id 0 AND place_of_service_source_value NULL (type_code is NULL → CASE ELSE 0); care_site_name + source_value still produced",
+      "fhir": [
+        {
+          "resourceType": "Organization",
+          "id": "org-1",
+          "name": "Standalone Clinic LLC"
+        }
+      ],
+      "omop": {
+        "care_site": [
+          {
+            "care_site_id": "ref:org-1",
+            "care_site_name": "Standalone Clinic LLC",
+            "place_of_service_concept_id": 0,
+            "place_of_service_concept_id__name": "No matching concept",
+            "care_site_source_value": "org-1"
+          }
+        ]
+      }
+    }
+  ]
+}

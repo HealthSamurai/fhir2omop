@@ -1,0 +1,243 @@
+{
+  "title": "Encounter · class → visit_concept_id",
+  "notes": "Branch dimension: how the Encounter__visit_occurrence edge derives `visit_concept_id` from `Encounter.class.code` (HL7 v3 ActEncounterCode), plus the core columns of the visit_occurrence FK hub.\n\nGrounded in mapspec/etl/Encounter__visit_occurrence.sql + mapspec/views/Encounter__visit_occurrence.view.json + cm.encounter_class_to_omop (materialized from mapspec/profiles/encounter-class-to-omop.cm.json):\n\n  visit_occurrence_id    = referenceToId(Encounter.id)            -- surrogate PK, not asserted\n  person_id              = referenceToId(subject.getReferenceKey())\n  visit_concept_id       = COALESCE(cls.concept_id, 0)            -- cls = cm.encounter_class_to_omop ON source_code = class.code\n  visit_start_date       = (period.start ::timestamptz AT TIME ZONE 'UTC')::date\n  visit_start_datetime   = (period.start ::timestamptz AT TIME ZONE 'UTC')\n  visit_end_date         = (COALESCE(period.end, period.start)::timestamptz AT TIME ZONE 'UTC')::date\n  visit_end_datetime     = (COALESCE(period.end, period.start)::timestamptz AT TIME ZONE 'UTC')\n  visit_type_concept_id  = 32827  (constant — 'EHR encounter record')\n  provider_id            = referenceToId(participant.first().individual.getReferenceKey())\n  care_site_id           = referenceToId(serviceProvider.getReferenceKey())\n  visit_source_value     = Encounter.id (FHIR resource UUID, traceability anchor)\n  visit_source_concept_id        = 0 (constant)\n  admitted_from_concept_id       = 0 (constant); admitted_from_source_value   = hospitalization.admitSource.coding.first().code (Synthea omits → NULL)\n  discharged_to_concept_id       = 0 (constant); discharged_to_source_value   = hospitalization.dischargeDisposition.coding.first().code (Synthea omits → NULL)\n  preceding_visit_occurrence_id  = referenceToId(partOf.getReferenceKey()) (no partOf → NULL)\n\nCLASS → CONCEPT (cm.encounter_class_to_omop, v3-ActCode group, all verified standard 'S' Visit concepts in vocab.concept):\n  AMB  → 9202 Outpatient Visit\n  EMER → 9203 Emergency Room Visit\n  IMP  → 9201 Inpatient Visit\n  VR   → 722455 Telehealth\n  HH   → 581476 Home Visit\n  (unmapped class code) → no cm row → COALESCE(...,0) = 0\nSynthea only ever emits AMB / EMER / VR / IMP / HH classes; AMB dominates (6072/6388). The unmapped-class and no-end and status-filter variants below are synthetic — Synthea ships every encounter status='finished' with both period.start and period.end — but they exercise the COALESCE(class)→0 fallback, the COALESCE(period.end, period.start) end-fallback, and the status WHERE filter directly.\n\nTIMEZONE NORMALIZATION (load-bearing): Synthea FHIR stamps period in the generator's local TZ ('…+01:00'); the SQL re-anchors to UTC via `::timestamptz AT TIME ZONE 'UTC'` so the diff against cdm.visit_occurrence (UTC) matches. All timestamps below carry an explicit 'Z' (==+00:00) offset so the produced wall-clock equals the literal input — no shift. (Verified against real rows: a '+00:00' encounter keeps its wall-clock; a '+01:00' encounter shifts -1h.)\n\nSTATUS FILTER: stage-2 WHERE drops status IN ('entered-in-error','cancelled','planned','unknown') so non-events never become a visit row. An 'entered-in-error' encounter therefore produces zero rows (negative case, omop: {}).\n\nISOLATION: for fhir.encounter the only PLAN edge is Encounter__visit_occurrence → visit_occurrence, so the runner produces only that table. The Patient (patient-1) and Practitioner/Organization stubs are present ONLY to anchor reference resolution (their own edges are NOT run because person/provider/care_site are not asserted tables) — person_id/provider_id/care_site_id are just referenceToId() of the bare logical ids.\n\nNON-VARYING CONTEXT held constant so only class/period vary: single Patient subject patient-1, one Practitioner prac-1 (provider_id), one Organization org-1 (care_site_id); no partOf (preceding_visit_occurrence_id NULL); no hospitalization (admitted_from / discharged_to source values NULL, concept_ids 0).",
+  "cases": [
+    {
+      "desc": "(a) AMB ambulatory/outpatient → visit_concept_id 9202; full row with provider_id (prac-1) + care_site_id (org-1), start+end same day",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "male", "birthDate": "1986-07-04" },
+        { "resourceType": "Practitioner", "id": "prac-1" },
+        { "resourceType": "Organization", "id": "org-1" },
+        {
+          "resourceType": "Encounter",
+          "id": "enc-1",
+          "status": "finished",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
+          "subject": { "reference": "Patient/patient-1" },
+          "participant": [{ "individual": { "reference": "Practitioner/prac-1" } }],
+          "serviceProvider": { "reference": "Organization/org-1" },
+          "period": { "start": "2003-12-18T11:48:44Z", "end": "2003-12-18T12:03:44Z" }
+        }
+      ],
+      "omop": {
+        "visit_occurrence": [
+          {
+            "person_id": "ref:patient-1",
+            "visit_concept_id": 9202,
+            "visit_concept_id__name": "Outpatient Visit",
+            "visit_start_date": "2003-12-18",
+            "visit_start_datetime": "2003-12-18T11:48:44",
+            "visit_end_date": "2003-12-18",
+            "visit_end_datetime": "2003-12-18T12:03:44",
+            "visit_type_concept_id": 32827,
+            "visit_type_concept_id__name": "EHR encounter record",
+            "provider_id": "ref:prac-1",
+            "care_site_id": "ref:org-1",
+            "visit_source_value": "enc-1",
+            "visit_source_concept_id": 0,
+            "admitted_from_concept_id": 0,
+            "discharged_to_concept_id": 0
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(b) EMER emergency → visit_concept_id 9203 (Emergency Room Visit)",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1986-07-04" },
+        { "resourceType": "Practitioner", "id": "prac-1" },
+        { "resourceType": "Organization", "id": "org-1" },
+        {
+          "resourceType": "Encounter",
+          "id": "enc-1",
+          "status": "finished",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "EMER" },
+          "subject": { "reference": "Patient/patient-1" },
+          "participant": [{ "individual": { "reference": "Practitioner/prac-1" } }],
+          "serviceProvider": { "reference": "Organization/org-1" },
+          "period": { "start": "2018-05-09T03:15:00Z", "end": "2018-05-09T07:42:00Z" }
+        }
+      ],
+      "omop": {
+        "visit_occurrence": [
+          {
+            "person_id": "ref:patient-1",
+            "visit_concept_id": 9203,
+            "visit_concept_id__name": "Emergency Room Visit",
+            "visit_start_date": "2018-05-09",
+            "visit_start_datetime": "2018-05-09T03:15:00",
+            "visit_end_date": "2018-05-09",
+            "visit_end_datetime": "2018-05-09T07:42:00",
+            "visit_type_concept_id": 32827,
+            "visit_type_concept_id__name": "EHR encounter record",
+            "provider_id": "ref:prac-1",
+            "care_site_id": "ref:org-1",
+            "visit_source_value": "enc-1",
+            "visit_source_concept_id": 0,
+            "admitted_from_concept_id": 0,
+            "discharged_to_concept_id": 0
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(c) IMP inpatient → visit_concept_id 9201 (Inpatient Visit); multi-day stay, start≠end date",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "male", "birthDate": "1986-07-04" },
+        { "resourceType": "Practitioner", "id": "prac-1" },
+        { "resourceType": "Organization", "id": "org-1" },
+        {
+          "resourceType": "Encounter",
+          "id": "enc-1",
+          "status": "finished",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "IMP" },
+          "subject": { "reference": "Patient/patient-1" },
+          "participant": [{ "individual": { "reference": "Practitioner/prac-1" } }],
+          "serviceProvider": { "reference": "Organization/org-1" },
+          "period": { "start": "2011-07-25T21:58:50Z", "end": "2011-08-10T22:13:50Z" }
+        }
+      ],
+      "omop": {
+        "visit_occurrence": [
+          {
+            "person_id": "ref:patient-1",
+            "visit_concept_id": 9201,
+            "visit_concept_id__name": "Inpatient Visit",
+            "visit_start_date": "2011-07-25",
+            "visit_start_datetime": "2011-07-25T21:58:50",
+            "visit_end_date": "2011-08-10",
+            "visit_end_datetime": "2011-08-10T22:13:50",
+            "visit_type_concept_id": 32827,
+            "visit_type_concept_id__name": "EHR encounter record",
+            "provider_id": "ref:prac-1",
+            "care_site_id": "ref:org-1",
+            "visit_source_value": "enc-1",
+            "visit_source_concept_id": 0,
+            "admitted_from_concept_id": 0,
+            "discharged_to_concept_id": 0
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(d) VR virtual → visit_concept_id 722455 (Telehealth) — real Synthea class; no provider/serviceProvider so provider_id + care_site_id NULL",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1986-07-04" },
+        {
+          "resourceType": "Encounter",
+          "id": "enc-1",
+          "status": "finished",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "VR" },
+          "subject": { "reference": "Patient/patient-1" },
+          "period": { "start": "2020-04-01T14:00:00Z", "end": "2020-04-01T14:20:00Z" }
+        }
+      ],
+      "omop": {
+        "visit_occurrence": [
+          {
+            "person_id": "ref:patient-1",
+            "visit_concept_id": 722455,
+            "visit_concept_id__name": "Telehealth",
+            "visit_start_date": "2020-04-01",
+            "visit_start_datetime": "2020-04-01T14:00:00",
+            "visit_end_date": "2020-04-01",
+            "visit_end_datetime": "2020-04-01T14:20:00",
+            "visit_type_concept_id": 32827,
+            "visit_type_concept_id__name": "EHR encounter record",
+            "visit_source_value": "enc-1",
+            "visit_source_concept_id": 0,
+            "admitted_from_concept_id": 0,
+            "discharged_to_concept_id": 0
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(e) ongoing encounter — period.start present, period.end ABSENT → COALESCE(period.end, period.start) makes visit_end_date/datetime fall back to the start instant",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "male", "birthDate": "1986-07-04" },
+        { "resourceType": "Practitioner", "id": "prac-1" },
+        { "resourceType": "Organization", "id": "org-1" },
+        {
+          "resourceType": "Encounter",
+          "id": "enc-1",
+          "status": "in-progress",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
+          "subject": { "reference": "Patient/patient-1" },
+          "participant": [{ "individual": { "reference": "Practitioner/prac-1" } }],
+          "serviceProvider": { "reference": "Organization/org-1" },
+          "period": { "start": "2021-09-30T08:05:00Z" }
+        }
+      ],
+      "omop": {
+        "visit_occurrence": [
+          {
+            "person_id": "ref:patient-1",
+            "visit_concept_id": 9202,
+            "visit_concept_id__name": "Outpatient Visit",
+            "visit_start_date": "2021-09-30",
+            "visit_start_datetime": "2021-09-30T08:05:00",
+            "visit_end_date": "2021-09-30",
+            "visit_end_datetime": "2021-09-30T08:05:00",
+            "visit_type_concept_id": 32827,
+            "visit_type_concept_id__name": "EHR encounter record",
+            "provider_id": "ref:prac-1",
+            "care_site_id": "ref:org-1",
+            "visit_source_value": "enc-1",
+            "visit_source_concept_id": 0,
+            "admitted_from_concept_id": 0,
+            "discharged_to_concept_id": 0
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(f) unmapped class code (e.g. 'NAMB' — not in cm.encounter_class_to_omop) → COALESCE(cls.concept_id, 0) = visit_concept_id 0; row still emitted",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "male", "birthDate": "1986-07-04" },
+        {
+          "resourceType": "Encounter",
+          "id": "enc-1",
+          "status": "finished",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "NAMB" },
+          "subject": { "reference": "Patient/patient-1" },
+          "period": { "start": "2019-02-14T09:00:00Z", "end": "2019-02-14T09:30:00Z" }
+        }
+      ],
+      "omop": {
+        "visit_occurrence": [
+          {
+            "person_id": "ref:patient-1",
+            "visit_concept_id": 0,
+            "visit_concept_id__name": "No matching concept",
+            "visit_start_date": "2019-02-14",
+            "visit_start_datetime": "2019-02-14T09:00:00",
+            "visit_end_date": "2019-02-14",
+            "visit_end_datetime": "2019-02-14T09:30:00",
+            "visit_type_concept_id": 32827,
+            "visit_type_concept_id__name": "EHR encounter record",
+            "visit_source_value": "enc-1",
+            "visit_source_concept_id": 0,
+            "admitted_from_concept_id": 0,
+            "discharged_to_concept_id": 0
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(g) status='entered-in-error' → dropped by the stage-2 WHERE filter → ZERO visit_occurrence rows (negative case)",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "male", "birthDate": "1986-07-04" },
+        {
+          "resourceType": "Encounter",
+          "id": "enc-1",
+          "status": "entered-in-error",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
+          "subject": { "reference": "Patient/patient-1" },
+          "period": { "start": "2017-06-01T10:00:00Z", "end": "2017-06-01T10:15:00Z" }
+        }
+      ],
+      "omop": {}
+    }
+  ]
+}

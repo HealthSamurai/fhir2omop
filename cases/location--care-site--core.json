@@ -1,0 +1,133 @@
+{
+  "title": "Location · care_site (core)",
+  "notes": "Branch dimension: how the Location__care_site edge derives a `care_site` row per FHIR Location, keyed by Location.id (separate from, and APPENDED after, the Organization-derived care_sites keyed by Organization.id).\n\nGrounded in mapspec/views/Location__care_site.view.json (stage-1 flatten) + mapspec/etl/Location__care_site.sql (stage-2). The stage-1 view extracts exactly three fields:\n  id        = Location.id\n  name      = Location.name\n  type_code = Location.type.first().coding.where(system='http://snomed.info/sct').code.first()\n\nStage-2 SQL (positional → care_site column order care_site_id, care_site_name, place_of_service_concept_id, location_id, care_site_source_value, place_of_service_source_value):\n  care_site_id                  = referenceToId(id)        -- hashtextextended(Location.id, 0)::bigint\n  care_site_name                = left(name, 255)\n  place_of_service_concept_id   = 0                         -- HARDCODED constant (no ConceptMap; Location.type SNOMED is not resolved to a Place-of-Service concept here)\n  location_id                   = referenceToId(id)        -- SAME hash as care_site_id (Location is its own colocated location row)\n  care_site_source_value        = id                        -- raw Location.id (traceability anchor, not truncated by left() — col is varchar(50) and Synthea ids fit)\n  place_of_service_source_value = left(type_code, 50)       -- the raw SNOMED location-type code, or NULL\n\nKEY MECHANICS, verified against the live DB:\n  - referenceToId is null-aware hashtextextended(ref,0)::bigint. The runner resolves the case's \"ref:loc-1\" tokens through the SAME referenceToId('loc-1'), so care_site_id and location_id both bind to it. Verified on a real Synthea Location: referenceToId('06b0ed08-32f9-3944-838c-894e1025d70d') = 4956710933036450434, which equals BOTH care_site_id and location_id of the produced row (care_site_name 'OUTER CAPE HEALTH SERVICES INC', care_site_source_value = the same uuid).\n  - place_of_service_concept_id is ALWAYS 0 ('No matching concept', verified vocab.concept WHERE concept_id=0). The Location.type SNOMED code is carried only into place_of_service_source_value (the source-value traceability column); it is NOT mapped to a standard Place-of-Service concept by this edge.\n  - SYNTHEA REALITY: every Synthea Location carries a `name` and a `managingOrganization` but NO `type` element (verified: 0/262 locations have `type`). So in the real cohort place_of_service_source_value is uniformly NULL. managingOrganization is NOT read by the view at all — it drives nothing here (the Organization↔care_site link lives in the Organization__care_site edge, not this one).\n\nISOLATION: filename primary target is care_site, so the runner runs only edges whose target ∈ {care_site} ∪ listed-tables. Location also feeds Location__location (target=location), but that edge is skipped because `location` is never listed in any variant's omop — keeping every variant a pure care_site assertion.\n\nVARIANTS:\n  (a) Synthea-shaped: name + managingOrganization, no type → place_of_service_source_value NULL (mirrors the real cohort).\n  (b) minimal: only Location.id → name NULL, type NULL → both care_site_name and place_of_service_source_value NULL; place_of_service_concept_id still 0.\n  (c) with a SNOMED type coding → place_of_service_source_value = the SNOMED code (view-driven; synthetic shape Synthea doesn't emit, exercises the type_code path).\n  (d) type with a non-SNOMED coding only → where(system=snomed) finds nothing → type_code NULL → place_of_service_source_value NULL (confirms the system filter).\n  (e) name > 255 chars → care_site_name truncated to exactly 255 via left(name,255).",
+  "cases": [
+    {
+      "desc": "(a) Synthea-shaped Location: name + managingOrganization, no type → one care_site row; place_of_service_source_value NULL (managingOrganization drives nothing in this edge)",
+      "fhir": [
+        {
+          "resourceType": "Location",
+          "id": "loc-1",
+          "name": "OUTER CAPE HEALTH SERVICES INC",
+          "managingOrganization": {
+            "identifier": { "system": "https://github.com/synthetichealth/synthea", "value": "org-1" },
+            "display": "OUTER CAPE HEALTH SERVICES INC"
+          }
+        }
+      ],
+      "omop": {
+        "care_site": [
+          {
+            "care_site_id": "ref:loc-1",
+            "care_site_name": "OUTER CAPE HEALTH SERVICES INC",
+            "place_of_service_concept_id": 0,
+            "place_of_service_concept_id__name": "No matching concept",
+            "location_id": "ref:loc-1",
+            "care_site_source_value": "loc-1"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(b) minimal Location: only id → care_site_name NULL, place_of_service_source_value NULL, place_of_service_concept_id 0; care_site_id = location_id = referenceToId(id)",
+      "fhir": [
+        {
+          "resourceType": "Location",
+          "id": "loc-1"
+        }
+      ],
+      "omop": {
+        "care_site": [
+          {
+            "care_site_id": "ref:loc-1",
+            "place_of_service_concept_id": 0,
+            "place_of_service_concept_id__name": "No matching concept",
+            "location_id": "ref:loc-1",
+            "care_site_source_value": "loc-1"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(c) Location with a SNOMED type coding → place_of_service_source_value = the SNOMED code (raw, not concept-mapped); place_of_service_concept_id still hardcoded 0",
+      "fhir": [
+        {
+          "resourceType": "Location",
+          "id": "loc-1",
+          "name": "Springfield Urgent Care",
+          "type": [
+            {
+              "coding": [
+                { "system": "http://snomed.info/sct", "code": "702514001", "display": "On-campus-ambulatory site" }
+              ]
+            }
+          ]
+        }
+      ],
+      "omop": {
+        "care_site": [
+          {
+            "care_site_id": "ref:loc-1",
+            "care_site_name": "Springfield Urgent Care",
+            "place_of_service_concept_id": 0,
+            "place_of_service_concept_id__name": "No matching concept",
+            "location_id": "ref:loc-1",
+            "care_site_source_value": "loc-1",
+            "place_of_service_source_value": "702514001"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(d) Location.type with only a NON-SNOMED coding → where(system=snomed) empty → type_code NULL → place_of_service_source_value NULL",
+      "fhir": [
+        {
+          "resourceType": "Location",
+          "id": "loc-1",
+          "name": "Springfield Clinic",
+          "type": [
+            {
+              "coding": [
+                { "system": "http://terminology.hl7.org/CodeSystem/v3-RoleCode", "code": "OF", "display": "Outpatient facility" }
+              ]
+            }
+          ]
+        }
+      ],
+      "omop": {
+        "care_site": [
+          {
+            "care_site_id": "ref:loc-1",
+            "care_site_name": "Springfield Clinic",
+            "place_of_service_concept_id": 0,
+            "place_of_service_concept_id__name": "No matching concept",
+            "location_id": "ref:loc-1",
+            "care_site_source_value": "loc-1"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(e) name longer than 255 chars → care_site_name truncated to exactly 255 via left(name,255)",
+      "fhir": [
+        {
+          "resourceType": "Location",
+          "id": "loc-1",
+          "name": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+        }
+      ],
+      "omop": {
+        "care_site": [
+          {
+            "care_site_id": "ref:loc-1",
+            "care_site_name": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "place_of_service_concept_id": 0,
+            "place_of_service_concept_id__name": "No matching concept",
+            "location_id": "ref:loc-1",
+            "care_site_source_value": "loc-1"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "title": "Location · core (FHIR Location resource → OMOP location)",
+  "notes": "Edge Location__location: the standalone FHIR Location *resource* → cdm_ours_fhir.location. DISTINCT from Patient__location, which derives a location row from Patient.address; this edge maps a first-class Location resource via its own address + position.\n\nColumn mapping, grounded in mapspec/views/Location__location.view.json (stage-1 flatten) + mapspec/etl/Location__location.sql (stage-2):\n\n  location_id           = referenceToId(Location.id)            -- surrogate PK, NOT asserted (derived from the resource id)\n  address_1             = left(address.line.join(' '), 50)\n  address_2             = NULL                                  -- hardcoded NULL in the SQL\n  city                  = left(address.city, 50)\n  state                 = NULL                                  -- hardcoded NULL in the SQL (NOT address.state!)\n  zip                   = left(address.postalCode, 9)\n  county                = NULL                                  -- hardcoded NULL\n  location_source_value = left(address.state, 50)               -- NB: FHIR address.state lands HERE, not in `state`\n  country_concept_id    = COALESCE(cm.country_iso_to_omop.concept_id, 0)\n  country_source_value  = left(address.country, 80)\n  latitude              = position.latitude::numeric\n  longitude             = position.longitude::numeric\n\nKEY GOTCHA verified against the live cdm_ours_fhir.location for the real Synthea Location a61711be-... (CAREWELL URGENT CARE): FHIR address.state='MA' flows to location_source_value='MA', while the OMOP `state` column stays NULL (the stage-2 SQL writes NULL::varchar to `state` and left(v.state,50) to `location_source_value`). This looks backwards but is the actual pipeline behavior — covered explicitly in variant (a).\n\ncm.country_iso_to_omop (5 rows in the live DB: AU/CA/DE/GB/US): US → concept_id 4330442 'United States of America' (vocab.concept 4330442, domain Geography, vocabulary SNOMED — verified). Any country NOT in the 5-row map (or absent) → COALESCE(...,0) → country_concept_id 0 ('No matching concept').\n\nVariants:\n  (a) full address + position, country US — the real CAREWELL Synthea Location, values copied verbatim from cdm_ours_fhir.location.\n  (b) minimal Location: no address, no position (the real 'Patient's Home' kind Location bb1ad573-...) → every column NULL except the surrogate PK and country_concept_id=0; values copied from the live row.\n  (c) full address but an UNMAPPED country (FR not in cm.country_iso_to_omop) → country_concept_id 0 yet country_source_value='FR' preserved (the source value is kept even when the concept doesn't resolve).\n\nEach Location emits exactly ONE location row and nothing else. The location_id surrogate PK = referenceToId(Location.id) is not asserted (derived). The sibling edge Location__care_site does not run here because no care_site target is listed (the runner filters edges to expected ∪ primary targets), and Patient__location does not run because no Patient resource is present.",
+  "cases": [
+    {
+      "desc": "(a) full address + position, country US — real CAREWELL Synthea Location: address.state 'MA' → location_source_value (NOT `state`, which stays NULL), country US → country_concept_id 4330442",
+      "fhir": [
+        {
+          "resourceType": "Location",
+          "id": "loc-1",
+          "status": "active",
+          "name": "CAREWELL URGENT CARE CENTERS OF MA, PC",
+          "address": {
+            "line": ["484 RTE 134"],
+            "city": "WORCESTER",
+            "state": "MA",
+            "postalCode": "016071728",
+            "country": "US"
+          },
+          "position": {
+            "latitude": 42.2625621,
+            "longitude": -71.8018877
+          }
+        }
+      ],
+      "omop": {
+        "location": [
+          {
+            "address_1": "484 RTE 134",
+            "city": "WORCESTER",
+            "zip": "016071728",
+            "location_source_value": "MA",
+            "country_concept_id": 4330442,
+            "country_concept_id__name": "United States of America",
+            "country_source_value": "US",
+            "latitude": 42.2625621,
+            "longitude": -71.8018877
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(b) minimal Location: no address, no position (real 'Patient's Home' kind Location) → every column NULL except surrogate PK and country_concept_id 0",
+      "fhir": [
+        {
+          "resourceType": "Location",
+          "id": "loc-1",
+          "status": "active",
+          "mode": "kind",
+          "description": "Patient's Home"
+        }
+      ],
+      "omop": {
+        "location": [
+          {
+            "country_concept_id": 0,
+            "country_concept_id__name": "No matching concept"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(c) full address but UNMAPPED country (FR not in cm.country_iso_to_omop) → country_concept_id 0, but country_source_value 'FR' preserved",
+      "fhir": [
+        {
+          "resourceType": "Location",
+          "id": "loc-1",
+          "status": "active",
+          "name": "Hôpital Saint-Louis",
+          "address": {
+            "line": ["1 Avenue Claude Vellefaux"],
+            "city": "Paris",
+            "state": "Ile-de-France",
+            "postalCode": "75010",
+            "country": "FR"
+          },
+          "position": {
+            "latitude": 48.8742,
+            "longitude": 2.3697
+          }
+        }
+      ],
+      "omop": {
+        "location": [
+          {
+            "address_1": "1 Avenue Claude Vellefaux",
+            "city": "Paris",
+            "zip": "75010",
+            "location_source_value": "Ile-de-France",
+            "country_concept_id": 0,
+            "country_concept_id__name": "No matching concept",
+            "country_source_value": "FR",
+            "latitude": 48.8742,
+            "longitude": 2.3697
+          }
+        ]
+      }
+    }
+  ]
+}
