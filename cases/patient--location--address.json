@@ -1,0 +1,180 @@
+{
+  "title": "Patient → person + location (multi-table)",
+  "notes": "The MULTI-TABLE branch: one Patient resource fans out to BOTH the `person` table (Patient__person.sql) AND the `location` table (Patient__location.sql). The varying input dimension across these variants is the **address** — everything else (gender=male/birthsex M → 8507; US Core OMB race 2054-5 → 8516 Black or African American; OMB ethnicity 2186-5 → 38003564 Not Hispanic or Latino; birthDate 1992-01-25) is held CONSTANT so the only diff is address presence.\n\nThe location_id link is the load-bearing cross-table fact. It is NOT hash(Patient.id): both edges compute `stringToId(concat_ws('|', location_line, location_city, location_state, location_zip))` over the patient's own address composite, so `person.location_id` == `location.location_id`. Two patients at the same address would share this key (OMOP CDM v5.4 LOCATION ETL convention: \"Each instance of a Location in the source data should be assigned this unique key\"). There is no separate FHIR Location resource — the synthetic ref `ref:patient-1-location` denotes this address-derived composite key; the runner resolves it to `stringToId(line|city|state|zip)`, not to a fhir entry.\n\nStage-1 caveat (Patient__person.view.json): the address subselect uses `forEachOrNull: \"(address.where(use='official') | address).first()\"`, so a Patient with NO address still emits one staging row with all `location_*` columns NULL. Then:\n  - person.location_id = stringToId(concat_ws('|', NULL,NULL,NULL,NULL)) = stringToId('') = NULL (stringToId returns NULL for empty input, see mapspec/etl/_functions.sql).\n  - Patient__location.sql has `WHERE location_city/state/zip/line IS NOT NULL` — with all four NULL the row is filtered out, so the location table is EMPTY for that patient (variant b).\n\nLocation columns (Patient__location.sql, target column order location_id, address_1, address_2, city, state, zip, county, location_source_value, country_concept_id, country_source_value, latitude, longitude):\n  - address_1 ← line.join(' ') (stage-1 location_line). Synthea emits one line entry here.\n  - address_2 ← NULL::varchar (hardcoded NULL in the SQL — second line is never populated).\n  - city/state/zip ← Address.city/state/postalCode verbatim. Synthea zip keeps the leading-zero '00000'.\n  - county ← Address.district — Synthea omits district in its FHIR export, so county is NULL (verified empty in live cdm_ours_fhir.location).\n  - location_source_value ← left(concat_ws(', ', line, city, state, zip), 50): the comma-joined composite, capped at 50 chars. For '564 Connelly Esplanade, Chelmsford, MA, 00000' (45 chars) no truncation.\n  - country_concept_id ← cm.country_iso_to_omop on country='US' → 4330442 (vocab.concept: 4330442 'United States of America', domain Geography, vocabulary SNOMED, standard 'S'). country_source_value = 'US' verbatim.\n  - latitude/longitude ← geolocation extension valueDecimal on the Address (numeric cast).\n\nperson columns are identical to the single-table Patient→person happy path (case 01): gender_concept_id 8507 MALE via cm.gender_to_omop on birthsex 'M' (which also carries source_concept_id 8507, the HL7 v3 uppercase code loaded in Athena's Gender vocab); race_concept_id 8516; ethnicity_concept_id 38003564; race/ethnicity source_concept_id 0 (OMB codes are not loaded as concept_code under any Athena race/ethnicity vocabulary, per CLAUDE.md). provider_id and care_site_id are NULL (no generalPractitioner / managingOrganization).",
+  "cases": [
+    {
+      "desc": "Patient WITH a full home address → fans out to person + location; person.location_id == location.location_id (address-composite hash)",
+      "fhir": [
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "gender": "male",
+          "birthDate": "1992-01-25",
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+              "extension": [
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "2054-5",
+                    "display": "Black or African American"
+                  }
+                },
+                { "url": "text", "valueString": "Black or African American" }
+              ]
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+              "extension": [
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "2186-5",
+                    "display": "Not Hispanic or Latino"
+                  }
+                },
+                { "url": "text", "valueString": "Not Hispanic or Latino" }
+              ]
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+              "valueCode": "M"
+            }
+          ],
+          "address": [
+            {
+              "line": ["564 Connelly Esplanade"],
+              "city": "Chelmsford",
+              "state": "MA",
+              "postalCode": "00000",
+              "country": "US",
+              "extension": [
+                {
+                  "url": "http://hl7.org/fhir/StructureDefinition/geolocation",
+                  "extension": [
+                    { "url": "latitude", "valueDecimal": 42.6166074711701 },
+                    { "url": "longitude", "valueDecimal": -71.32422800775815 }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "omop": {
+        "person": [
+          {
+            "person_id": "ref:patient-1",
+            "gender_concept_id": 8507,
+            "gender_concept_id__name": "MALE",
+            "year_of_birth": 1992,
+            "month_of_birth": 1,
+            "day_of_birth": 25,
+            "birth_datetime": "1992-01-25T00:00:00",
+            "race_concept_id": 8516,
+            "race_concept_id__name": "Black or African American",
+            "ethnicity_concept_id": 38003564,
+            "ethnicity_concept_id__name": "Not Hispanic or Latino",
+            "location_id": "ref:patient-1-location",
+            "person_source_value": "patient-1",
+            "gender_source_value": "M",
+            "gender_source_concept_id": 8507,
+            "gender_source_concept_id__name": "MALE",
+            "race_source_value": "Black or African American",
+            "race_source_concept_id": 0,
+            "ethnicity_source_value": "Not Hispanic or Latino",
+            "ethnicity_source_concept_id": 0
+          }
+        ],
+        "location": [
+          {
+            "location_id": "ref:patient-1-location",
+            "address_1": "564 Connelly Esplanade",
+            "city": "Chelmsford",
+            "state": "MA",
+            "zip": "00000",
+            "location_source_value": "564 Connelly Esplanade, Chelmsford, MA, 00000",
+            "country_concept_id": 4330442,
+            "country_concept_id__name": "United States of America",
+            "country_source_value": "US",
+            "latitude": 42.6166074711701,
+            "longitude": -71.32422800775815
+          }
+        ]
+      }
+    },
+    {
+      "desc": "Patient with NO address → person row only (location_id NULL); location table EMPTY (Patient__location WHERE filter drops the all-NULL address row)",
+      "fhir": [
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "gender": "male",
+          "birthDate": "1992-01-25",
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+              "extension": [
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "2054-5",
+                    "display": "Black or African American"
+                  }
+                },
+                { "url": "text", "valueString": "Black or African American" }
+              ]
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+              "extension": [
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "2186-5",
+                    "display": "Not Hispanic or Latino"
+                  }
+                },
+                { "url": "text", "valueString": "Not Hispanic or Latino" }
+              ]
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+              "valueCode": "M"
+            }
+          ]
+        }
+      ],
+      "omop": {
+        "person": [
+          {
+            "person_id": "ref:patient-1",
+            "gender_concept_id": 8507,
+            "gender_concept_id__name": "MALE",
+            "year_of_birth": 1992,
+            "month_of_birth": 1,
+            "day_of_birth": 25,
+            "birth_datetime": "1992-01-25T00:00:00",
+            "race_concept_id": 8516,
+            "race_concept_id__name": "Black or African American",
+            "ethnicity_concept_id": 38003564,
+            "ethnicity_concept_id__name": "Not Hispanic or Latino",
+            "person_source_value": "patient-1",
+            "gender_source_value": "M",
+            "gender_source_concept_id": 8507,
+            "gender_source_concept_id__name": "MALE",
+            "race_source_value": "Black or African American",
+            "race_source_concept_id": 0,
+            "ethnicity_source_value": "Not Hispanic or Latino",
+            "ethnicity_source_concept_id": 0
+          }
+        ]
+      }
+    }
+  ]
+}

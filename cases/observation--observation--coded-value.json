@@ -1,0 +1,208 @@
+{
+  "title": "Observation → observation",
+  "notes": "Top-level FHIR `Observation.code` whose resolved STANDARD concept lives in the **Observation** domain routes to the OMOP `observation` table (the sibling `Observation__measurement` edge takes the rows whose domain resolves to `Measurement`). Routing is purely by the resolved concept's `domain_id` — `category` (`social-history`/`survey`) is NOT read.\n\nPipeline: stage-1 view `mapspec/views/Observation__measurement.view.json` fans out one staging row per `code.coding[]` and carries the UNION of measurement+observation value-slots into `staging.observation_coded`. Stage-2 `mapspec/etl/_resolve_observation.sql` walks each coding `system→vocabulary_id` (cm.fhir_system_to_omop_vocab) → source `vocab.concept` → `Maps to` → standard `vocab.concept` ONCE (DISTINCT ON id,std_concept_id; LOINC preferred over SNOMED in the tie-break ORDER BY), resolves value/unit alongside, then `Observation__observation.sql` filters `std_domain='Observation'` and projects the observation schema.\n\nColumn behavior exercised by this branch (all per `Observation__observation.sql`):\n- `observation_concept_id` = standard concept; `observation_source_value` = raw code (`left(src_code,50)`); `observation_source_concept_id` = SOURCE concept_id.\n- `value_as_concept_id` ← `valueCodeableConcept.coding.first()` resolved via Maps-to; on a 1→N Maps-to the value LATERAL picks the LOWEST `concept_id` (`ORDER BY vstd.concept_id LIMIT 1`). `value_source_value` ← `valueCodeableConcept.text` (`left(...,50)`).\n- `value_as_string` ← `valueString` ONLY (`left(...,60)`); a CodeableConcept answer does NOT feed it, and a plain string does NOT feed value_as_concept_id.\n- `qualifier_source_value` ← `interpretation.first().coding.first().code` verbatim (`left(...,50)`); `qualifier_concept_id` is hardcoded NULL by the current impl (resolving it is a documented follow-up).\n- `observation_type_concept_id` = 32817 (EHR), constant for every Observation-sourced row.\n- `observation_date`/`observation_datetime` from `effectiveDateTime` cast `::date`/`::timestamp` (wall-clock kept, offset dropped — NOT UTC-converted).\n- `person_id` ← subject; `visit_occurrence_id` ← encounter; `provider_id` ← performer.first() (NULL when absent).\n- Status filter: `entered-in-error`/`cancelled`/`unknown` dropped; value-presence filter requires one of value_number/value_string/value_code/value_text.\n\nNon-varying across variants (so the value/qualifier/domain diffs are crisp): one Patient (male, born 1980-01-01), one finished AMB Encounter, status `final`, single LOINC `code.coding`, no performer. The VARYING dimension is the value representation + interpretation + which LOINC's domain drives routing.\n\nAll concept_ids verified against vocab.concept in the live DB (v20260227 bundle).",
+  "cases": [
+    {
+      "desc": "(a) valueCodeableConcept (SNOMED answer) → value_as_concept_id with lowest-Maps-to tie-break; value_source_value = text",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "male", "birthDate": "1980-01-01" },
+        {
+          "resourceType": "Encounter",
+          "id": "enc-1",
+          "status": "finished",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
+          "subject": { "reference": "Patient/patient-1" }
+        },
+        {
+          "resourceType": "Observation",
+          "id": "obs-1",
+          "status": "final",
+          "category": [
+            { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "social-history", "display": "Social history" } ] }
+          ],
+          "code": {
+            "text": "Tobacco smoking status",
+            "coding": [ { "system": "http://loinc.org", "code": "72166-2", "display": "Tobacco smoking status" } ]
+          },
+          "subject": { "reference": "Patient/patient-1" },
+          "encounter": { "reference": "Encounter/enc-1" },
+          "effectiveDateTime": "2020-02-06T00:26:05+00:00",
+          "valueCodeableConcept": {
+            "text": "Ex-smoker (finding)",
+            "coding": [ { "system": "http://snomed.info/sct", "code": "8517006", "display": "Ex-smoker (finding)" } ]
+          }
+        }
+      ],
+      "omop": {
+        "observation": [
+          {
+            "person_id": "ref:patient-1",
+            "observation_concept_id": 43054909,
+            "observation_concept_id__name": "Tobacco smoking status",
+            "observation_date": "2020-02-06",
+            "observation_datetime": "2020-02-06T00:26:05",
+            "observation_type_concept_id": 32817,
+            "observation_type_concept_id__name": "EHR",
+            "value_as_concept_id": 903651,
+            "value_as_concept_id__name": "Currently doesn't use tobacco or its derivatives",
+            "visit_occurrence_id": "ref:enc-1",
+            "observation_source_value": "72166-2",
+            "observation_source_concept_id": 43054909,
+            "observation_source_concept_id__name": "Tobacco smoking status",
+            "value_source_value": "Ex-smoker (finding)"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(b) valueString → value_as_string only (value_as_concept_id stays NULL; plain string never maps to a concept)",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "male", "birthDate": "1980-01-01" },
+        {
+          "resourceType": "Encounter",
+          "id": "enc-1",
+          "status": "finished",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
+          "subject": { "reference": "Patient/patient-1" }
+        },
+        {
+          "resourceType": "Observation",
+          "id": "obs-1",
+          "status": "final",
+          "category": [
+            { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "survey", "display": "Survey" } ] }
+          ],
+          "code": {
+            "text": "HIV status",
+            "coding": [ { "system": "http://loinc.org", "code": "55277-8", "display": "HIV status" } ]
+          },
+          "subject": { "reference": "Patient/patient-1" },
+          "encounter": { "reference": "Encounter/enc-1" },
+          "effectiveDateTime": "2023-04-16T23:53:02+01:00",
+          "valueString": "not HIV positive"
+        }
+      ],
+      "omop": {
+        "observation": [
+          {
+            "person_id": "ref:patient-1",
+            "observation_concept_id": 40758406,
+            "observation_concept_id__name": "HIV status",
+            "observation_date": "2023-04-16",
+            "observation_datetime": "2023-04-16T23:53:02",
+            "observation_type_concept_id": 32817,
+            "observation_type_concept_id__name": "EHR",
+            "value_as_string": "not HIV positive",
+            "visit_occurrence_id": "ref:enc-1",
+            "observation_source_value": "55277-8",
+            "observation_source_concept_id": 40758406,
+            "observation_source_concept_id__name": "HIV status"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(c) interpretation coding → qualifier_source_value (verbatim code); qualifier_concept_id stays NULL by current impl",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "male", "birthDate": "1980-01-01" },
+        {
+          "resourceType": "Encounter",
+          "id": "enc-1",
+          "status": "finished",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
+          "subject": { "reference": "Patient/patient-1" }
+        },
+        {
+          "resourceType": "Observation",
+          "id": "obs-1",
+          "status": "final",
+          "category": [
+            { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "survey", "display": "Survey" } ] }
+          ],
+          "code": {
+            "text": "HIV status",
+            "coding": [ { "system": "http://loinc.org", "code": "55277-8", "display": "HIV status" } ]
+          },
+          "subject": { "reference": "Patient/patient-1" },
+          "encounter": { "reference": "Encounter/enc-1" },
+          "effectiveDateTime": "2023-04-16T23:53:02+01:00",
+          "valueString": "HIV positive",
+          "interpretation": [
+            { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation", "code": "POS", "display": "Positive" } ] }
+          ]
+        }
+      ],
+      "omop": {
+        "observation": [
+          {
+            "person_id": "ref:patient-1",
+            "observation_concept_id": 40758406,
+            "observation_concept_id__name": "HIV status",
+            "observation_date": "2023-04-16",
+            "observation_datetime": "2023-04-16T23:53:02",
+            "observation_type_concept_id": 32817,
+            "observation_type_concept_id__name": "EHR",
+            "value_as_string": "HIV positive",
+            "visit_occurrence_id": "ref:enc-1",
+            "observation_source_value": "55277-8",
+            "observation_source_concept_id": 40758406,
+            "observation_source_concept_id__name": "HIV status",
+            "qualifier_source_value": "POS"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(d) another Observation-domain LOINC (Housing status) with a coded answer → domain routing to observation; value_as_concept_id self-map",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "male", "birthDate": "1980-01-01" },
+        {
+          "resourceType": "Encounter",
+          "id": "enc-1",
+          "status": "finished",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
+          "subject": { "reference": "Patient/patient-1" }
+        },
+        {
+          "resourceType": "Observation",
+          "id": "obs-1",
+          "status": "final",
+          "category": [
+            { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "survey", "display": "Survey" } ] }
+          ],
+          "code": {
+            "text": "Housing status",
+            "coding": [ { "system": "http://loinc.org", "code": "71802-3", "display": "Housing status" } ]
+          },
+          "subject": { "reference": "Patient/patient-1" },
+          "encounter": { "reference": "Encounter/enc-1" },
+          "effectiveDateTime": "2022-10-18T23:53:02+01:00",
+          "valueCodeableConcept": {
+            "text": "I have housing",
+            "coding": [ { "system": "http://loinc.org", "code": "LA30189-7", "display": "I have housing" } ]
+          }
+        }
+      ],
+      "omop": {
+        "observation": [
+          {
+            "person_id": "ref:patient-1",
+            "observation_concept_id": 42869557,
+            "observation_concept_id__name": "Housing status",
+            "observation_date": "2022-10-18",
+            "observation_datetime": "2022-10-18T23:53:02",
+            "observation_type_concept_id": 32817,
+            "observation_type_concept_id__name": "EHR",
+            "value_as_concept_id": 37079501,
+            "value_as_concept_id__name": "I have housing",
+            "visit_occurrence_id": "ref:enc-1",
+            "observation_source_value": "71802-3",
+            "observation_source_concept_id": 42869557,
+            "observation_source_concept_id__name": "Housing status",
+            "value_source_value": "I have housing"
+          }
+        ]
+      }
+    }
+  ]
+}

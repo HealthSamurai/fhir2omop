@@ -1,0 +1,77 @@
+{
+  "title": "Patient → death (deceased)",
+  "notes": "Branch = the Patient deceased[x] dimension that decides whether a `death` row exists and what date it carries. Edge `Patient__death` (mapspec/etl/Patient__death.sql + mapspec/views/Patient__death.view.json).\n\nThe stage-1 view extracts a single column `death_dt` from `deceased.ofType(dateTime)` (i.e. deceasedDateTime only — a deceasedBoolean does NOT match `ofType(dateTime)`, so it yields null). Stage-2 SQL then emits AT MOST ONE death row per person and only `WHERE death_dt IS NOT NULL`:\n  person_id              = referenceToId(Patient.id)\n  death_date             = death_dt::date          (calendar date, offset irrelevant)\n  death_datetime         = death_dt::timestamp      (wall-clock kept, timezone OFFSET DROPPED — NOT converted to UTC)\n  death_type_concept_id  = 32817 constant           (vocab.concept 32817 'EHR', domain Type Concept, standard 'S')\n  cause_concept_id       = NULL                      (SQL emits NULL::integer; Patient has no cause-of-death field)\n  cause_source_value     = NULL                      (NULL::varchar)\n  cause_source_concept_id= NULL                      (NULL::integer)\n\nIMPORTANT — the SQL emits NULL (not 0) for cause_concept_id / cause_source_concept_id even though edge.json declares constant 0; the row matcher asserts the actually-produced row, so these are asserted NULL (omitted). The `death` table has no surrogate PK — person_id IS the PK — but here person_id is the (asserted) FK to person, written as ref:.\n\nThis branch scopes the omop expectation to the `death` table ONLY. The `person` row is produced by a different edge (Patient__person) and is out of scope here; every variant therefore lists either {death:[...]} or {} (and a listed-but-absent `death` table means it must be empty). The Patient resources below keep enough for both edges to run but only death is asserted.\n\nGrounding: variant (a) and (d) are real-Synthea-grounded — deceasedDateTime values and the exact cdm_ours_fhir.death output were read from the live DB (patients 5e861fa8… '2024-08-26T10:06:03+01:00' → death_datetime '2024-08-26 10:06:03', and c55a2ed2… '2005-02-10T07:23:04+00:00' → '2005-02-10 07:23:04'). Variant (b) is grounded by the 100 living Synthea patients that produce 0 death rows. Variant (c) deceasedBoolean=true is a hand-constructed corner case (Synthea emits 0 of these) whose empty expectation is DERIVED from `deceased.ofType(dateTime)` yielding null + `WHERE death_dt IS NOT NULL`.",
+  "cases": [
+    {
+      "desc": "(a) deceasedDateTime present (offset +01:00) → one death row; offset dropped, wall-clock kept",
+      "fhir": [
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "gender": "female",
+          "birthDate": "1949-03-14",
+          "deceasedDateTime": "2024-08-26T10:06:03+01:00"
+        }
+      ],
+      "omop": {
+        "death": [
+          {
+            "person_id": "ref:patient-1",
+            "death_date": "2024-08-26",
+            "death_datetime": "2024-08-26T10:06:03",
+            "death_type_concept_id": 32817,
+            "death_type_concept_id__name": "EHR"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(d) deceasedDateTime present (offset +00:00, UTC) → one death row; cast is ::timestamp, NOT UTC-converted (here already UTC so identical)",
+      "fhir": [
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "gender": "female",
+          "birthDate": "1949-03-14",
+          "deceasedDateTime": "2005-02-10T07:23:04+00:00"
+        }
+      ],
+      "omop": {
+        "death": [
+          {
+            "person_id": "ref:patient-1",
+            "death_date": "2005-02-10",
+            "death_datetime": "2005-02-10T07:23:04",
+            "death_type_concept_id": 32817,
+            "death_type_concept_id__name": "EHR"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(b) no deceased[x] (living patient) → zero death rows (death_dt null → filtered by WHERE death_dt IS NOT NULL)",
+      "fhir": [
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "gender": "female",
+          "birthDate": "1949-03-14"
+        }
+      ],
+      "omop": {}
+    },
+    {
+      "desc": "(c) deceasedBoolean=true ONLY, no deceasedDateTime → zero death rows (deceased.ofType(dateTime) yields null; death_date is NOT NULL so no row can be created)",
+      "fhir": [
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "gender": "female",
+          "birthDate": "1949-03-14",
+          "deceasedBoolean": true
+        }
+      ],
+      "omop": {}
+    }
+  ]
+}

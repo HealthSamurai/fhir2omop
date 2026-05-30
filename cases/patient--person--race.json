@@ -1,0 +1,497 @@
+{
+  "title": "Patient · race (US Core / OMB)",
+  "notes": "Branch under test: the RACE resolution path of the Patient→person edge (mapspec/edges/Patient__person.json, stage-1 view mapspec/views/Patient__person.view.json, stage-2 mapspec/etl/Patient__person.sql).\n\nResolution priority for race_concept_id (stage-2 COALESCE, top wins):\n  1. omop-race extension (Athena concept_id verbatim): NULLIF(v.omop_race_code,'')::int\n     — url = https://fhir2omop.health-samurai.io/StructureDefinition/omop-race, a FLAT valueCoding whose .code is the Athena Race concept_id as a string.\n  2. Synthea Other-recovery: when US Core ombCategory = 'UNK' AND text resolves via cm.race_text_synthea_to_omop ('Other' → 8522).\n  3. US Core OMB ombCategory → cm.race_omb_to_omop (2106-3→8527, 2054-5→8516, 2028-9→8515, 1002-5→8657, 2076-8→8557, UNK→8552).\n  4. 0 (no matching concept) when no race extension at all.\n\nThe stage-1 view reads `extension(%usCoreRace).extension('ombCategory').valueCoding.code.first()` — so with MULTIPLE ombCategory slices the FIRST one wins (variant g). US Core permits multiple ombCategory for mixed race, but OMOP person.race_concept_id is a single integer column.\n\nrace_source_value = COALESCE(v.omop_race_display, v.race_text): the omop-race extension's display wins; otherwise the US Core race 'text' sub-extension. NOTE: it does NOT fall back to the ombCategory.display — only to the US Core `text` valueString. So a US Core race with an ombCategory but no `text` sub-extension yields race_source_value NULL while race_concept_id is still resolved (see variant a, which includes text, vs. the rule).\n\nrace_source_concept_id is ALWAYS 0 across every variant: OMB race codes (2106-3, 2054-5, 2028-9, 1002-5, 2076-8) are NOT loaded as concept_code under any race vocabulary in Athena — OMOP's Race vocab uses integer codes. cm.race_omb_to_omop carries source_concept_id=0 for every row, and the stage-2 SQL emits COALESCE(r.source_concept_id, 0). This matches OMOP CDM v5.4 user_guidance ('Due to the small number of options, this tends to be zero') and the project rule in CLAUDE.md.\n\nHeld CONSTANT across all variants so the race diffs are crisp:\n  - gender: Patient.gender='female' + us-core-birthsex='F'. Stage-2 prefers birthsex (COALESCE(us_core_birthsex, gender)='F') → gender_concept_id=8532 (vocab.concept: 8532 'FEMALE', domain Gender, standard S). gender_source_value='F'; gender_source_concept_id=8532 (uppercase HL7 v3 code 'F' is itself loaded in Athena's Gender vocab — cm.gender_to_omop row source_code='F' carries source_concept_id=8532).\n  - birthDate '1985-06-15' → year_of_birth=1985, month_of_birth=6, day_of_birth=15 (EXTRACT). birth_datetime falls back to birthDate at midnight ('1985-06-15T00:00:00') — no patient-birthTime extension.\n  - ethnicity: US Core us-core-ethnicity ombCategory '2186-5' → cm.ethnicity_omb_to_omop → ethnicity_concept_id=38003564 (vocab.concept: 38003564 'Not Hispanic or Latino', domain Ethnicity, standard S). ethnicity_source_value='Not Hispanic or Latino' (US Core text); ethnicity_source_concept_id=0.\n  - no address → location_id NULL; no generalPractitioner → provider_id NULL; no managingOrganization → care_site_id NULL.\n\nperson_source_value = Patient.id (FHIR resource UUID), the OMOP traceability anchor — never a PHI identifier.\n\nGrounding: variants (a) White, (b) Black, (c) Asian and (f) appear in the live 105-patient Synthea cohort (cdm_ours_fhir.person distribution: 8527×86, 8516×11, 8515×5, 8522×2, 8557×1); their concept_ids and cm.* rows were read from the live DB. Variants (d) American Indian/Alaska Native, (e) omop-race priority override, and (g) multiple ombCategory are hand-constructed minimal FHIR — not emitted verbatim by this Synthea seed — with expected rows DERIVED from the stage-2 SQL + cm.* tables + verified vocab.concept rows. Every concept_id below was verified present in vocab.concept (name/domain/standard).",
+  "cases": [
+    {
+      "desc": "(a) US Core OMB White 2106-3 → race_concept_id 8527 (real Synthea race; happy path)",
+      "fhir": [
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "gender": "female",
+          "birthDate": "1985-06-15",
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+              "extension": [
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "2106-3",
+                    "display": "White"
+                  }
+                },
+                { "url": "text", "valueString": "White" }
+              ]
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+              "extension": [
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "2186-5",
+                    "display": "Not Hispanic or Latino"
+                  }
+                },
+                { "url": "text", "valueString": "Not Hispanic or Latino" }
+              ]
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+              "valueCode": "F"
+            }
+          ]
+        }
+      ],
+      "omop": {
+        "person": [
+          {
+            "person_id": "ref:patient-1",
+            "gender_concept_id": 8532,
+            "gender_concept_id__name": "FEMALE",
+            "year_of_birth": 1985,
+            "month_of_birth": 6,
+            "day_of_birth": 15,
+            "birth_datetime": "1985-06-15T00:00:00",
+            "race_concept_id": 8527,
+            "race_concept_id__name": "White",
+            "ethnicity_concept_id": 38003564,
+            "ethnicity_concept_id__name": "Not Hispanic or Latino",
+            "person_source_value": "patient-1",
+            "gender_source_value": "F",
+            "gender_source_concept_id": 8532,
+            "gender_source_concept_id__name": "FEMALE",
+            "race_source_value": "White",
+            "race_source_concept_id": 0,
+            "ethnicity_source_value": "Not Hispanic or Latino",
+            "ethnicity_source_concept_id": 0
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(b) US Core OMB Black or African American 2054-5 → race_concept_id 8516 (real Synthea race)",
+      "fhir": [
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "gender": "female",
+          "birthDate": "1985-06-15",
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+              "extension": [
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "2054-5",
+                    "display": "Black or African American"
+                  }
+                },
+                { "url": "text", "valueString": "Black or African American" }
+              ]
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+              "extension": [
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "2186-5",
+                    "display": "Not Hispanic or Latino"
+                  }
+                },
+                { "url": "text", "valueString": "Not Hispanic or Latino" }
+              ]
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+              "valueCode": "F"
+            }
+          ]
+        }
+      ],
+      "omop": {
+        "person": [
+          {
+            "person_id": "ref:patient-1",
+            "gender_concept_id": 8532,
+            "gender_concept_id__name": "FEMALE",
+            "year_of_birth": 1985,
+            "month_of_birth": 6,
+            "day_of_birth": 15,
+            "birth_datetime": "1985-06-15T00:00:00",
+            "race_concept_id": 8516,
+            "race_concept_id__name": "Black or African American",
+            "ethnicity_concept_id": 38003564,
+            "ethnicity_concept_id__name": "Not Hispanic or Latino",
+            "person_source_value": "patient-1",
+            "gender_source_value": "F",
+            "gender_source_concept_id": 8532,
+            "gender_source_concept_id__name": "FEMALE",
+            "race_source_value": "Black or African American",
+            "race_source_concept_id": 0,
+            "ethnicity_source_value": "Not Hispanic or Latino",
+            "ethnicity_source_concept_id": 0
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(c) US Core OMB Asian 2028-9 → race_concept_id 8515 (real Synthea race; concept verified)",
+      "fhir": [
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "gender": "female",
+          "birthDate": "1985-06-15",
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+              "extension": [
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "2028-9",
+                    "display": "Asian"
+                  }
+                },
+                { "url": "text", "valueString": "Asian" }
+              ]
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+              "extension": [
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "2186-5",
+                    "display": "Not Hispanic or Latino"
+                  }
+                },
+                { "url": "text", "valueString": "Not Hispanic or Latino" }
+              ]
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+              "valueCode": "F"
+            }
+          ]
+        }
+      ],
+      "omop": {
+        "person": [
+          {
+            "person_id": "ref:patient-1",
+            "gender_concept_id": 8532,
+            "gender_concept_id__name": "FEMALE",
+            "year_of_birth": 1985,
+            "month_of_birth": 6,
+            "day_of_birth": 15,
+            "birth_datetime": "1985-06-15T00:00:00",
+            "race_concept_id": 8515,
+            "race_concept_id__name": "Asian",
+            "ethnicity_concept_id": 38003564,
+            "ethnicity_concept_id__name": "Not Hispanic or Latino",
+            "person_source_value": "patient-1",
+            "gender_source_value": "F",
+            "gender_source_concept_id": 8532,
+            "gender_source_concept_id__name": "FEMALE",
+            "race_source_value": "Asian",
+            "race_source_concept_id": 0,
+            "ethnicity_source_value": "Not Hispanic or Latino",
+            "ethnicity_source_concept_id": 0
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(d) US Core OMB American Indian or Alaska Native 1002-5 → race_concept_id 8657 (constructed corner case; concept + cm row verified)",
+      "fhir": [
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "gender": "female",
+          "birthDate": "1985-06-15",
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+              "extension": [
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "1002-5",
+                    "display": "American Indian or Alaska Native"
+                  }
+                },
+                { "url": "text", "valueString": "American Indian or Alaska Native" }
+              ]
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+              "extension": [
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "2186-5",
+                    "display": "Not Hispanic or Latino"
+                  }
+                },
+                { "url": "text", "valueString": "Not Hispanic or Latino" }
+              ]
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+              "valueCode": "F"
+            }
+          ]
+        }
+      ],
+      "omop": {
+        "person": [
+          {
+            "person_id": "ref:patient-1",
+            "gender_concept_id": 8532,
+            "gender_concept_id__name": "FEMALE",
+            "year_of_birth": 1985,
+            "month_of_birth": 6,
+            "day_of_birth": 15,
+            "birth_datetime": "1985-06-15T00:00:00",
+            "race_concept_id": 8657,
+            "race_concept_id__name": "American Indian or Alaska Native",
+            "ethnicity_concept_id": 38003564,
+            "ethnicity_concept_id__name": "Not Hispanic or Latino",
+            "person_source_value": "patient-1",
+            "gender_source_value": "F",
+            "gender_source_concept_id": 8532,
+            "gender_source_concept_id__name": "FEMALE",
+            "race_source_value": "American Indian or Alaska Native",
+            "race_source_concept_id": 0,
+            "ethnicity_source_value": "Not Hispanic or Latino",
+            "ethnicity_source_concept_id": 0
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(e) omop-race extension PRESENT (code='8657') + conflicting US Core OMB White 2106-3 → extension wins: race_concept_id 8657, race_source_value from omop_race_display (constructed)",
+      "fhir": [
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "gender": "female",
+          "birthDate": "1985-06-15",
+          "extension": [
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-race",
+              "valueCoding": {
+                "system": "http://athena.ohdsi.org/concept",
+                "code": "8657",
+                "display": "American Indian or Alaska Native (OMOP)"
+              }
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+              "extension": [
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "2106-3",
+                    "display": "White"
+                  }
+                },
+                { "url": "text", "valueString": "White" }
+              ]
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+              "extension": [
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "2186-5",
+                    "display": "Not Hispanic or Latino"
+                  }
+                },
+                { "url": "text", "valueString": "Not Hispanic or Latino" }
+              ]
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+              "valueCode": "F"
+            }
+          ]
+        }
+      ],
+      "omop": {
+        "person": [
+          {
+            "person_id": "ref:patient-1",
+            "gender_concept_id": 8532,
+            "gender_concept_id__name": "FEMALE",
+            "year_of_birth": 1985,
+            "month_of_birth": 6,
+            "day_of_birth": 15,
+            "birth_datetime": "1985-06-15T00:00:00",
+            "race_concept_id": 8657,
+            "race_concept_id__name": "American Indian or Alaska Native",
+            "ethnicity_concept_id": 38003564,
+            "ethnicity_concept_id__name": "Not Hispanic or Latino",
+            "person_source_value": "patient-1",
+            "gender_source_value": "F",
+            "gender_source_concept_id": 8532,
+            "gender_source_concept_id__name": "FEMALE",
+            "race_source_value": "American Indian or Alaska Native (OMOP)",
+            "race_source_concept_id": 0,
+            "ethnicity_source_value": "Not Hispanic or Latino",
+            "ethnicity_source_concept_id": 0
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(f) NO race extension at all → race_concept_id 0, race_source_value NULL (negative; real Synthea cohort has none, derived from COALESCE → 0 / NULL)",
+      "fhir": [
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "gender": "female",
+          "birthDate": "1985-06-15",
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+              "extension": [
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "2186-5",
+                    "display": "Not Hispanic or Latino"
+                  }
+                },
+                { "url": "text", "valueString": "Not Hispanic or Latino" }
+              ]
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+              "valueCode": "F"
+            }
+          ]
+        }
+      ],
+      "omop": {
+        "person": [
+          {
+            "person_id": "ref:patient-1",
+            "gender_concept_id": 8532,
+            "gender_concept_id__name": "FEMALE",
+            "year_of_birth": 1985,
+            "month_of_birth": 6,
+            "day_of_birth": 15,
+            "birth_datetime": "1985-06-15T00:00:00",
+            "race_concept_id": 0,
+            "race_concept_id__name": "No matching concept",
+            "ethnicity_concept_id": 38003564,
+            "ethnicity_concept_id__name": "Not Hispanic or Latino",
+            "person_source_value": "patient-1",
+            "gender_source_value": "F",
+            "gender_source_concept_id": 8532,
+            "gender_source_concept_id__name": "FEMALE",
+            "race_source_concept_id": 0,
+            "ethnicity_source_value": "Not Hispanic or Latino",
+            "ethnicity_source_concept_id": 0
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(g) Multiple ombCategory slices (Asian 2028-9 first, then White 2106-3) → .first() wins: race_concept_id 8515 (Asian) (constructed; mixed-race US Core into single OMOP column)",
+      "fhir": [
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "gender": "female",
+          "birthDate": "1985-06-15",
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+              "extension": [
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "2028-9",
+                    "display": "Asian"
+                  }
+                },
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "2106-3",
+                    "display": "White"
+                  }
+                },
+                { "url": "text", "valueString": "Asian and White" }
+              ]
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+              "extension": [
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "2186-5",
+                    "display": "Not Hispanic or Latino"
+                  }
+                },
+                { "url": "text", "valueString": "Not Hispanic or Latino" }
+              ]
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+              "valueCode": "F"
+            }
+          ]
+        }
+      ],
+      "omop": {
+        "person": [
+          {
+            "person_id": "ref:patient-1",
+            "gender_concept_id": 8532,
+            "gender_concept_id__name": "FEMALE",
+            "year_of_birth": 1985,
+            "month_of_birth": 6,
+            "day_of_birth": 15,
+            "birth_datetime": "1985-06-15T00:00:00",
+            "race_concept_id": 8515,
+            "race_concept_id__name": "Asian",
+            "ethnicity_concept_id": 38003564,
+            "ethnicity_concept_id__name": "Not Hispanic or Latino",
+            "person_source_value": "patient-1",
+            "gender_source_value": "F",
+            "gender_source_concept_id": 8532,
+            "gender_source_concept_id__name": "FEMALE",
+            "race_source_value": "Asian and White",
+            "race_source_concept_id": 0,
+            "ethnicity_source_value": "Not Hispanic or Latino",
+            "ethnicity_source_concept_id": 0
+          }
+        ]
+      }
+    }
+  ]
+}

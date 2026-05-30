@@ -1,0 +1,275 @@
+{
+  "title": "Patient · ethnicity (US Core / OMB)",
+  "notes": "Ethnicity branch of the Patient__person edge (mapspec/etl/Patient__person.sql, view mapspec/views/Patient__person.view.json). One FHIR Patient → exactly one OMOP `person` row; this file varies ONLY the ethnicity input dimension. Race (US Core OMB 2106-3 White → race_concept_id 8527), gender (us-core-birthsex 'M' → 8507 MALE), and birthDate (2004-06-03) are held CONSTANT across every variant so the ethnicity diff is crisp.\n\nETL ethnicity logic (lines 64-68, 96-98 of Patient__person.sql):\n  ethnicity_concept_id        = COALESCE(NULLIF(omop_ethnicity_code,'')::int, e.concept_id, 0)\n  ethnicity_source_value      = COALESCE(omop_ethnicity_display, ethnicity_text)\n  ethnicity_source_concept_id = COALESCE(e.source_concept_id, 0)\nwhere e = LEFT JOIN cm.ethnicity_omb_to_omop ON source_code = ethnicity_omb_code.\n\nResolution PRIORITY: (1) omop-ethnicity extension (valueCoding.code = Athena concept_id as string, copied verbatim) wins; (2) else US Core us-core-ethnicity ombCategory code resolved via cm.ethnicity_omb_to_omop; (3) else 0.\n\nVerified live in vocab.concept (v20260227 bundle):\n  38003563 'Hispanic or Latino'     — domain Ethnicity, standard S, concept_code 'Hispanic'\n  38003564 'Not Hispanic or Latino' — domain Ethnicity, standard S, concept_code 'Not Hispanic'\n  8527 'White' (Race, S), 8507 'MALE' (Gender, S) — the held-constant race/gender concepts.\n\nethnicity_source_concept_id is ALWAYS 0 by design: cm.ethnicity_omb_to_omop carries source_concept_id=0 for both rows (the OMB ethnicity codes 2135-2/2186-5 are not loaded as concept_code under any non-standard Ethnicity vocabulary in Athena), so COALESCE(e.source_concept_id, 0) = 0. Per OMOP CDM v5.4 user_guidance this column 'tends to be zero'. See CLAUDE.md 'OMOP *_source_concept_id semantics — zero is fine'.\n\nThe person row is FULLY asserted (every non-null column listed; omitted columns asserted NULL). person_id-as-PK is omitted (surrogate, derived). location_id is NULL in every variant because these minimal Patients carry no address (no address element → forEachOrNull emits a null location row → stringToId(concat_ws('|', NULL,NULL,NULL,NULL)) — concat_ws skips NULLs yielding '' → but with all-NULL the key is empty; held NULL here for clarity as no address is present). provider_id / care_site_id are NULL (no generalPractitioner / managingOrganization).\n\nGrounding: variants 1 (Hispanic) and 2 (Not Hispanic) mirror the real cdm_ours_fhir.person output (8 Hispanic + 97 Not-Hispanic patients in the 100-patient Synthea cohort; ethnicity_source_value carries the human text, source_concept_id=0). Variant 3 (no ethnicity extension) and variant 4 (omop-ethnicity priority override) are hand-constructed minimal Patients whose expected rows are DERIVED from the ETL COALESCE chain.",
+  "cases": [
+    {
+      "desc": "US Core ombCategory 2135-2 (Hispanic or Latino) → ethnicity_concept_id 38003563; source_value = US Core text, source_concept_id 0",
+      "fhir": [
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "birthDate": "2004-06-03",
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+              "extension": [
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "2106-3",
+                    "display": "White"
+                  }
+                },
+                { "url": "text", "valueString": "White" }
+              ]
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+              "extension": [
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "2135-2",
+                    "display": "Hispanic or Latino"
+                  }
+                },
+                { "url": "text", "valueString": "Hispanic or Latino" }
+              ]
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+              "valueCode": "M"
+            }
+          ]
+        }
+      ],
+      "omop": {
+        "person": [
+          {
+            "person_id": "ref:patient-1",
+            "gender_concept_id": 8507,
+            "gender_concept_id__name": "MALE",
+            "year_of_birth": 2004,
+            "month_of_birth": 6,
+            "day_of_birth": 3,
+            "birth_datetime": "2004-06-03T00:00:00",
+            "race_concept_id": 8527,
+            "race_concept_id__name": "White",
+            "ethnicity_concept_id": 38003563,
+            "ethnicity_concept_id__name": "Hispanic or Latino",
+            "person_source_value": "patient-1",
+            "gender_source_value": "M",
+            "gender_source_concept_id": 8507,
+            "gender_source_concept_id__name": "MALE",
+            "race_source_value": "White",
+            "race_source_concept_id": 0,
+            "ethnicity_source_value": "Hispanic or Latino",
+            "ethnicity_source_concept_id": 0
+          }
+        ]
+      }
+    },
+    {
+      "desc": "US Core ombCategory 2186-5 (Not Hispanic or Latino) → ethnicity_concept_id 38003564 (the Synthea-common case)",
+      "fhir": [
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "birthDate": "2004-06-03",
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+              "extension": [
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "2106-3",
+                    "display": "White"
+                  }
+                },
+                { "url": "text", "valueString": "White" }
+              ]
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+              "extension": [
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "2186-5",
+                    "display": "Not Hispanic or Latino"
+                  }
+                },
+                { "url": "text", "valueString": "Not Hispanic or Latino" }
+              ]
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+              "valueCode": "M"
+            }
+          ]
+        }
+      ],
+      "omop": {
+        "person": [
+          {
+            "person_id": "ref:patient-1",
+            "gender_concept_id": 8507,
+            "gender_concept_id__name": "MALE",
+            "year_of_birth": 2004,
+            "month_of_birth": 6,
+            "day_of_birth": 3,
+            "birth_datetime": "2004-06-03T00:00:00",
+            "race_concept_id": 8527,
+            "race_concept_id__name": "White",
+            "ethnicity_concept_id": 38003564,
+            "ethnicity_concept_id__name": "Not Hispanic or Latino",
+            "person_source_value": "patient-1",
+            "gender_source_value": "M",
+            "gender_source_concept_id": 8507,
+            "gender_source_concept_id__name": "MALE",
+            "race_source_value": "White",
+            "race_source_concept_id": 0,
+            "ethnicity_source_value": "Not Hispanic or Latino",
+            "ethnicity_source_concept_id": 0
+          }
+        ]
+      }
+    },
+    {
+      "desc": "No ethnicity extension at all → ethnicity_concept_id 0, ethnicity_source_value NULL (LEFT JOIN cm.ethnicity_omb_to_omop misses; COALESCE falls to 0; source text absent)",
+      "fhir": [
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "birthDate": "2004-06-03",
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+              "extension": [
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "2106-3",
+                    "display": "White"
+                  }
+                },
+                { "url": "text", "valueString": "White" }
+              ]
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+              "valueCode": "M"
+            }
+          ]
+        }
+      ],
+      "omop": {
+        "person": [
+          {
+            "person_id": "ref:patient-1",
+            "gender_concept_id": 8507,
+            "gender_concept_id__name": "MALE",
+            "year_of_birth": 2004,
+            "month_of_birth": 6,
+            "day_of_birth": 3,
+            "birth_datetime": "2004-06-03T00:00:00",
+            "race_concept_id": 8527,
+            "race_concept_id__name": "White",
+            "ethnicity_concept_id": 0,
+            "ethnicity_concept_id__name": "No matching concept",
+            "person_source_value": "patient-1",
+            "gender_source_value": "M",
+            "gender_source_concept_id": 8507,
+            "gender_source_concept_id__name": "MALE",
+            "race_source_value": "White",
+            "race_source_concept_id": 0,
+            "ethnicity_source_concept_id": 0
+          }
+        ]
+      }
+    },
+    {
+      "desc": "omop-ethnicity extension priority override: omop-ethnicity carries 38003563 (Hispanic) AND a conflicting US Core OMB 2186-5 (Not Hispanic) is present — the omop-ethnicity code wins; source_value = omop-ethnicity display",
+      "fhir": [
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "birthDate": "2004-06-03",
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+              "extension": [
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "2106-3",
+                    "display": "White"
+                  }
+                },
+                { "url": "text", "valueString": "White" }
+              ]
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+              "extension": [
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "2186-5",
+                    "display": "Not Hispanic or Latino"
+                  }
+                },
+                { "url": "text", "valueString": "Not Hispanic or Latino" }
+              ]
+            },
+            {
+              "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-ethnicity",
+              "valueCoding": {
+                "system": "https://athena.ohdsi.org/concept",
+                "code": "38003563",
+                "display": "Hispanic or Latino"
+              }
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+              "valueCode": "M"
+            }
+          ]
+        }
+      ],
+      "omop": {
+        "person": [
+          {
+            "person_id": "ref:patient-1",
+            "gender_concept_id": 8507,
+            "gender_concept_id__name": "MALE",
+            "year_of_birth": 2004,
+            "month_of_birth": 6,
+            "day_of_birth": 3,
+            "birth_datetime": "2004-06-03T00:00:00",
+            "race_concept_id": 8527,
+            "race_concept_id__name": "White",
+            "ethnicity_concept_id": 38003563,
+            "ethnicity_concept_id__name": "Hispanic or Latino",
+            "person_source_value": "patient-1",
+            "gender_source_value": "M",
+            "gender_source_concept_id": 8507,
+            "gender_source_concept_id__name": "MALE",
+            "race_source_value": "White",
+            "race_source_concept_id": 0,
+            "ethnicity_source_value": "Hispanic or Latino",
+            "ethnicity_source_concept_id": 0
+          }
+        ]
+      }
+    }
+  ]
+}

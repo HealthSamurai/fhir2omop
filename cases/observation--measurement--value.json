@@ -1,0 +1,226 @@
+{
+  "title": "Observation → measurement",
+  "notes": "Measurement branch of the Observation family. Stage 1 (`mapspec/views/Observation__measurement.view.json`) fans out one `staging.observation_coded` row per `Observation.code.coding[]`. Stage 2's shared resolve pass (`mapspec/etl/_resolve_observation.sql`) walks each coding `http://loinc.org` → LOINC (via `cm.fhir_system_to_omop_vocab`) → `vocab.concept` (source) → `Maps to` → `vocab.concept` (standard `S`), DISTINCT ON (id, std.concept_id), and routes by `std.domain_id`. Rows with `std_domain='Measurement'` are projected by `mapspec/etl/Observation__measurement.sql`.\n\nAll variants hold the carrier code constant — LOINC **2339-0 'Glucose [Mass/volume] in Blood'** (source concept_id 3000483; already standard, so std == src == 3000483, domain `Measurement`, verified in `vocab.concept`) — and the same Patient/Encounter, so each diff isolates exactly ONE input dimension: value+unit, then comparator, then referenceRange, then status, then value-presence.\n\nProjection (Observation__measurement.sql): `measurement_concept_id`=std (3000483); `measurement_source_value`=raw code '2339-0'; `measurement_source_concept_id`=src (3000483); `measurement_type_concept_id`=constant **32817 'EHR'**; `value_as_number`=valueQuantity.value; `unit_concept_id`=UCUM standard concept resolved from valueQuantity.code (**8840 'milligram per deciliter'** for 'mg/dL'); `unit_source_value`=valueQuantity.unit; `operator_concept_id` from valueQuantity.comparator via VALUES('<',4171756),('<=',4171754),('>=',4171755),('>',4172704); `range_low`/`range_high` from referenceRange.first().low/high.value; `measurement_date`/`_datetime`=effective.ofType(dateTime) cast `::date` / `::timestamp` (offset dropped, wall-clock kept); `visit_occurrence_id`=referenceToId(encounter); no performer ⇒ `provider_id` NULL.\n\nValue-presence WHERE in the resolve pass keeps the row only if `value_number|value_string|value_code|value_text` is non-NULL — a panel-parent Observation with no top-level value[x] is dropped (its data lives in the component family). Status WHERE drops `entered-in-error`/`cancelled`/`unknown`. Both negative cases ⇒ `omop: {}` (zero rows; measurement and every other target table asserted empty). The glucose+mg/dL happy path and its produced row are grounded in real Synthea `cdm_ours_fhir.measurement` output (3000483 / 32817 / 8840 / source '2339-0'); the comparator, referenceRange, entered-in-error and panel-parent variants are hand-constructed (Synthea emits none of them) and their expected rows are derived from the SQL + verified `vocab.concept` rows.",
+  "cases": [
+    {
+      "desc": "(a) LOINC lab valueQuantity + UCUM unit (glucose) → one measurement with value_as_number + unit_concept_id",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1980-01-01" },
+        {
+          "resourceType": "Encounter",
+          "id": "enc-1",
+          "status": "finished",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
+          "subject": { "reference": "Patient/patient-1" }
+        },
+        {
+          "resourceType": "Observation",
+          "id": "obs-1",
+          "status": "final",
+          "category": [
+            { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "laboratory", "display": "Laboratory" } ] }
+          ],
+          "code": {
+            "text": "Glucose [Mass/volume] in Blood",
+            "coding": [ { "system": "http://loinc.org", "code": "2339-0", "display": "Glucose [Mass/volume] in Blood" } ]
+          },
+          "subject": { "reference": "Patient/patient-1" },
+          "encounter": { "reference": "Encounter/enc-1" },
+          "effectiveDateTime": "2016-07-13T11:58:43+01:00",
+          "valueQuantity": { "value": 91.84, "unit": "mg/dL", "system": "http://unitsofmeasure.org", "code": "mg/dL" }
+        }
+      ],
+      "omop": {
+        "measurement": [
+          {
+            "person_id": "ref:patient-1",
+            "measurement_concept_id": 3000483,
+            "measurement_concept_id__name": "Glucose [Mass/volume] in Blood",
+            "measurement_date": "2016-07-13",
+            "measurement_datetime": "2016-07-13T11:58:43",
+            "measurement_type_concept_id": 32817,
+            "measurement_type_concept_id__name": "EHR",
+            "value_as_number": 91.84,
+            "unit_concept_id": 8840,
+            "unit_concept_id__name": "milligram per deciliter",
+            "visit_occurrence_id": "ref:enc-1",
+            "measurement_source_value": "2339-0",
+            "measurement_source_concept_id": 3000483,
+            "measurement_source_concept_id__name": "Glucose [Mass/volume] in Blood",
+            "unit_source_value": "mg/dL"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(b) valueQuantity.comparator '<' → operator_concept_id 4171756 (verify the 4171756/4172704 mapping; value still recorded)",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1980-01-01" },
+        {
+          "resourceType": "Encounter",
+          "id": "enc-1",
+          "status": "finished",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
+          "subject": { "reference": "Patient/patient-1" }
+        },
+        {
+          "resourceType": "Observation",
+          "id": "obs-1",
+          "status": "final",
+          "category": [
+            { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "laboratory", "display": "Laboratory" } ] }
+          ],
+          "code": {
+            "text": "Glucose [Mass/volume] in Blood",
+            "coding": [ { "system": "http://loinc.org", "code": "2339-0", "display": "Glucose [Mass/volume] in Blood" } ]
+          },
+          "subject": { "reference": "Patient/patient-1" },
+          "encounter": { "reference": "Encounter/enc-1" },
+          "effectiveDateTime": "2016-07-13T11:58:43+01:00",
+          "valueQuantity": { "value": 5, "comparator": "<", "unit": "mg/dL", "system": "http://unitsofmeasure.org", "code": "mg/dL" }
+        }
+      ],
+      "omop": {
+        "measurement": [
+          {
+            "person_id": "ref:patient-1",
+            "measurement_concept_id": 3000483,
+            "measurement_concept_id__name": "Glucose [Mass/volume] in Blood",
+            "measurement_date": "2016-07-13",
+            "measurement_datetime": "2016-07-13T11:58:43",
+            "measurement_type_concept_id": 32817,
+            "measurement_type_concept_id__name": "EHR",
+            "operator_concept_id": 4171756,
+            "operator_concept_id__name": "<",
+            "value_as_number": 5,
+            "unit_concept_id": 8840,
+            "unit_concept_id__name": "milligram per deciliter",
+            "visit_occurrence_id": "ref:enc-1",
+            "measurement_source_value": "2339-0",
+            "measurement_source_concept_id": 3000483,
+            "measurement_source_concept_id__name": "Glucose [Mass/volume] in Blood",
+            "unit_source_value": "mg/dL"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(c) referenceRange.low + .high → range_low / range_high (first referenceRange only)",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1980-01-01" },
+        {
+          "resourceType": "Encounter",
+          "id": "enc-1",
+          "status": "finished",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
+          "subject": { "reference": "Patient/patient-1" }
+        },
+        {
+          "resourceType": "Observation",
+          "id": "obs-1",
+          "status": "final",
+          "category": [
+            { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "laboratory", "display": "Laboratory" } ] }
+          ],
+          "code": {
+            "text": "Glucose [Mass/volume] in Blood",
+            "coding": [ { "system": "http://loinc.org", "code": "2339-0", "display": "Glucose [Mass/volume] in Blood" } ]
+          },
+          "subject": { "reference": "Patient/patient-1" },
+          "encounter": { "reference": "Encounter/enc-1" },
+          "effectiveDateTime": "2016-07-13T11:58:43+01:00",
+          "valueQuantity": { "value": 91.84, "unit": "mg/dL", "system": "http://unitsofmeasure.org", "code": "mg/dL" },
+          "referenceRange": [
+            {
+              "low":  { "value": 70, "unit": "mg/dL", "system": "http://unitsofmeasure.org", "code": "mg/dL" },
+              "high": { "value": 100, "unit": "mg/dL", "system": "http://unitsofmeasure.org", "code": "mg/dL" }
+            }
+          ]
+        }
+      ],
+      "omop": {
+        "measurement": [
+          {
+            "person_id": "ref:patient-1",
+            "measurement_concept_id": 3000483,
+            "measurement_concept_id__name": "Glucose [Mass/volume] in Blood",
+            "measurement_date": "2016-07-13",
+            "measurement_datetime": "2016-07-13T11:58:43",
+            "measurement_type_concept_id": 32817,
+            "measurement_type_concept_id__name": "EHR",
+            "value_as_number": 91.84,
+            "unit_concept_id": 8840,
+            "unit_concept_id__name": "milligram per deciliter",
+            "range_low": 70,
+            "range_high": 100,
+            "visit_occurrence_id": "ref:enc-1",
+            "measurement_source_value": "2339-0",
+            "measurement_source_concept_id": 3000483,
+            "measurement_source_concept_id__name": "Glucose [Mass/volume] in Blood",
+            "unit_source_value": "mg/dL"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(d) status 'entered-in-error' → omop {} (status filter drops the row before projection)",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1980-01-01" },
+        {
+          "resourceType": "Encounter",
+          "id": "enc-1",
+          "status": "finished",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
+          "subject": { "reference": "Patient/patient-1" }
+        },
+        {
+          "resourceType": "Observation",
+          "id": "obs-1",
+          "status": "entered-in-error",
+          "category": [
+            { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "laboratory", "display": "Laboratory" } ] }
+          ],
+          "code": {
+            "text": "Glucose [Mass/volume] in Blood",
+            "coding": [ { "system": "http://loinc.org", "code": "2339-0", "display": "Glucose [Mass/volume] in Blood" } ]
+          },
+          "subject": { "reference": "Patient/patient-1" },
+          "encounter": { "reference": "Encounter/enc-1" },
+          "effectiveDateTime": "2016-07-13T11:58:43+01:00",
+          "valueQuantity": { "value": 91.84, "unit": "mg/dL", "system": "http://unitsofmeasure.org", "code": "mg/dL" }
+        }
+      ],
+      "omop": {}
+    },
+    {
+      "desc": "(e) panel-parent — code resolves to Measurement but Observation carries NO top-level value[x] → omop {} (value-presence filter; data lives in components)",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1980-01-01" },
+        {
+          "resourceType": "Encounter",
+          "id": "enc-1",
+          "status": "finished",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
+          "subject": { "reference": "Patient/patient-1" }
+        },
+        {
+          "resourceType": "Observation",
+          "id": "obs-1",
+          "status": "final",
+          "category": [
+            { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "laboratory", "display": "Laboratory" } ] }
+          ],
+          "code": {
+            "text": "Blood pressure panel",
+            "coding": [ { "system": "http://loinc.org", "code": "85354-9", "display": "Blood pressure panel with all children optional" } ]
+          },
+          "subject": { "reference": "Patient/patient-1" },
+          "encounter": { "reference": "Encounter/enc-1" },
+          "effectiveDateTime": "2016-07-13T11:58:43+01:00",
+          "hasMember": [ { "reference": "Observation/obs-systolic" }, { "reference": "Observation/obs-diastolic" } ]
+        }
+      ],
+      "omop": {}
+    }
+  ]
+}

@@ -1,0 +1,223 @@
+{
+  "title": "Patient · gender & birthsex",
+  "notes": "Branch dimension: how the Patient__person edge derives `gender_concept_id`, `gender_source_value`, and `gender_source_concept_id` from `Patient.gender` (administrative-gender) and the US Core `us-core-birthsex` extension.\n\nKey mechanics, grounded in mapspec/etl/Patient__person.sql + cm.gender_to_omop (the materialized two-group ConceptMap mapspec/profiles/gender-to-omop.cm.json):\n\n  gender_concept_id        = COALESCE(g.concept_id, 0)\n  gender_source_value      = COALESCE(us_core_birthsex, gender)\n  gender_source_concept_id = COALESCE(g.source_concept_id, 0)\n  where g = cm.gender_to_omop  ON  source_code = COALESCE(us_core_birthsex, gender)\n\nBIRTHSEX OVERRIDES Patient.gender: the join key is COALESCE(us_core_birthsex, gender), so whenever the US Core birthsex extension is present it wins for ALL THREE gender columns; Patient.gender is used only as the fallback. The view (mapspec/views/Patient__person.view.json) extracts birthsex via extension(%usCoreBirthsex).valueCode.first().\n\ncm.gender_to_omop is flattened from TWO groups, both verified against the live table:\n  source_code | concept_id | source_concept_id | (group)\n  ------------+------------+-------------------+---------------------------\n  M           |       8507 |              8507 | v3-AdministrativeGender (birthsex)\n  F           |       8532 |              8532 | v3-AdministrativeGender (birthsex)\n  OTH         |       8521 |                 0 | v3-AdministrativeGender\n  UNK         |       8551 |                 0 | v3-AdministrativeGender\n  male        |       8507 |                 0 | administrative-gender (Patient.gender)\n  female      |       8532 |                 0 | administrative-gender\n  other       |       8521 |                 0 | administrative-gender\n  unknown     |       8551 |                 0 | administrative-gender\n\nWHY source_concept_id differs by case: the v3-AdministrativeGender group declares the `omop-source-vocabulary='Gender'` extension, so the materializer looks each source_code up in vocab.concept WHERE vocabulary_id='Gender'. Athena's Gender vocabulary uses single-letter concept_codes (M=8507, F=8532, O=8521, U=8551). So uppercase 'M'/'F' match a real Gender concept_code and carry source_concept_id 8507/8532; 'OTH'/'UNK' do NOT match any concept_code and stay 0. The lowercase administrative-gender group has NO omop-source-vocabulary extension at all, so every Patient.gender value keeps source_concept_id 0. (Verified: vocab.concept 8507 MALE / 8532 FEMALE / 8521 OTHER / 8551 UNKNOWN, all domain_id='Gender'; 8507 & 8532 standard_concept='S', 8521 & 8551 non-standard.)\n\nABSENT vs UNKNOWN: a literal Patient.gender='unknown' DOES map (cm row → 8551). Only a TRULY ABSENT gender (no birthsex AND no gender) leaves the join key NULL, finds no cm row, and COALESCE(...,0) yields 0 for all three columns. Both behaviors are covered as distinct variants — they are not the same thing.\n\nBirth date is held CONSTANT at '1986-07-04' across every variant so the gender diff is the only thing that moves. EXTRACT(YEAR/MONTH/DAY FROM birth_date::date) → year_of_birth=1986, month_of_birth=7, day_of_birth=4. birth_datetime falls back to birthDate-at-midnight ('1986-07-04T00:00:00') because no patient-birthTime extension is present (Synthea never emits one).\n\nNON-VARYING CONTEXT (held minimal & constant so only gender varies): no us-core-race / us-core-ethnicity / omop-race / omop-ethnicity extensions → race_concept_id=0, ethnicity_concept_id=0, race_source_value=NULL, ethnicity_source_value=NULL, race_source_concept_id=0, ethnicity_source_concept_id=0. No address → location_id=NULL. No generalPractitioner / managingOrganization → provider_id=NULL, care_site_id=NULL. person_source_value = Patient.id (FHIR resource UUID, a traceability anchor — never a PHI identifier).\n\nEvery variant emits exactly ONE person row and nothing else.",
+  "cases": [
+    {
+      "desc": "us-core-birthsex 'M' → gender_concept_id 8507 AND gender_source_concept_id 8507 (uppercase M is an Athena Gender concept_code)",
+      "fhir": [
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "gender": "male",
+          "birthDate": "1986-07-04",
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+              "valueCode": "M"
+            }
+          ]
+        }
+      ],
+      "omop": {
+        "person": [
+          {
+            "person_id": "ref:patient-1",
+            "gender_concept_id": 8507,
+            "gender_concept_id__name": "MALE",
+            "year_of_birth": 1986,
+            "month_of_birth": 7,
+            "day_of_birth": 4,
+            "birth_datetime": "1986-07-04T00:00:00",
+            "race_concept_id": 0,
+            "race_concept_id__name": "No matching concept",
+            "ethnicity_concept_id": 0,
+            "ethnicity_concept_id__name": "No matching concept",
+            "person_source_value": "patient-1",
+            "gender_source_value": "M",
+            "gender_source_concept_id": 8507,
+            "gender_source_concept_id__name": "MALE",
+            "race_source_concept_id": 0,
+            "ethnicity_source_concept_id": 0
+          }
+        ]
+      }
+    },
+    {
+      "desc": "us-core-birthsex 'F' → gender_concept_id 8532 AND gender_source_concept_id 8532 (uppercase F is an Athena Gender concept_code)",
+      "fhir": [
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "gender": "female",
+          "birthDate": "1986-07-04",
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+              "valueCode": "F"
+            }
+          ]
+        }
+      ],
+      "omop": {
+        "person": [
+          {
+            "person_id": "ref:patient-1",
+            "gender_concept_id": 8532,
+            "gender_concept_id__name": "FEMALE",
+            "year_of_birth": 1986,
+            "month_of_birth": 7,
+            "day_of_birth": 4,
+            "birth_datetime": "1986-07-04T00:00:00",
+            "race_concept_id": 0,
+            "race_concept_id__name": "No matching concept",
+            "ethnicity_concept_id": 0,
+            "ethnicity_concept_id__name": "No matching concept",
+            "person_source_value": "patient-1",
+            "gender_source_value": "F",
+            "gender_source_concept_id": 8532,
+            "gender_source_concept_id__name": "FEMALE",
+            "race_source_concept_id": 0,
+            "ethnicity_source_concept_id": 0
+          }
+        ]
+      }
+    },
+    {
+      "desc": "birthsex PRESENT overrides Patient.gender: gender=male + birthsex=F → 8532 (F wins via COALESCE(us_core_birthsex, gender))",
+      "fhir": [
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "gender": "male",
+          "birthDate": "1986-07-04",
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+              "valueCode": "F"
+            }
+          ]
+        }
+      ],
+      "omop": {
+        "person": [
+          {
+            "person_id": "ref:patient-1",
+            "gender_concept_id": 8532,
+            "gender_concept_id__name": "FEMALE",
+            "year_of_birth": 1986,
+            "month_of_birth": 7,
+            "day_of_birth": 4,
+            "birth_datetime": "1986-07-04T00:00:00",
+            "race_concept_id": 0,
+            "race_concept_id__name": "No matching concept",
+            "ethnicity_concept_id": 0,
+            "ethnicity_concept_id__name": "No matching concept",
+            "person_source_value": "patient-1",
+            "gender_source_value": "F",
+            "gender_source_concept_id": 8532,
+            "gender_source_concept_id__name": "FEMALE",
+            "race_source_concept_id": 0,
+            "ethnicity_source_concept_id": 0
+          }
+        ]
+      }
+    },
+    {
+      "desc": "only Patient.gender 'female', NO birthsex → gender_concept_id 8532 BUT gender_source_concept_id 0 (lowercase administrative-gender group has no omop-source-vocabulary)",
+      "fhir": [
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "gender": "female",
+          "birthDate": "1986-07-04"
+        }
+      ],
+      "omop": {
+        "person": [
+          {
+            "person_id": "ref:patient-1",
+            "gender_concept_id": 8532,
+            "gender_concept_id__name": "FEMALE",
+            "year_of_birth": 1986,
+            "month_of_birth": 7,
+            "day_of_birth": 4,
+            "birth_datetime": "1986-07-04T00:00:00",
+            "race_concept_id": 0,
+            "race_concept_id__name": "No matching concept",
+            "ethnicity_concept_id": 0,
+            "ethnicity_concept_id__name": "No matching concept",
+            "person_source_value": "patient-1",
+            "gender_source_value": "female",
+            "gender_source_concept_id": 0,
+            "race_source_concept_id": 0,
+            "ethnicity_source_concept_id": 0
+          }
+        ]
+      }
+    },
+    {
+      "desc": "Patient.gender 'unknown', no birthsex → gender_concept_id 8551 (cm.gender_to_omop maps 'unknown'→8551; NOT 0), gender_source_concept_id 0",
+      "fhir": [
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "gender": "unknown",
+          "birthDate": "1986-07-04"
+        }
+      ],
+      "omop": {
+        "person": [
+          {
+            "person_id": "ref:patient-1",
+            "gender_concept_id": 8551,
+            "gender_concept_id__name": "UNKNOWN",
+            "year_of_birth": 1986,
+            "month_of_birth": 7,
+            "day_of_birth": 4,
+            "birth_datetime": "1986-07-04T00:00:00",
+            "race_concept_id": 0,
+            "race_concept_id__name": "No matching concept",
+            "ethnicity_concept_id": 0,
+            "ethnicity_concept_id__name": "No matching concept",
+            "person_source_value": "patient-1",
+            "gender_source_value": "unknown",
+            "gender_source_concept_id": 0,
+            "race_source_concept_id": 0,
+            "ethnicity_source_concept_id": 0
+          }
+        ]
+      }
+    },
+    {
+      "desc": "gender ABSENT (no Patient.gender, no birthsex) → join key NULL, no cm row → gender_concept_id 0, gender_source_value NULL, gender_source_concept_id 0",
+      "fhir": [
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "birthDate": "1986-07-04"
+        }
+      ],
+      "omop": {
+        "person": [
+          {
+            "person_id": "ref:patient-1",
+            "gender_concept_id": 0,
+            "gender_concept_id__name": "No matching concept",
+            "year_of_birth": 1986,
+            "month_of_birth": 7,
+            "day_of_birth": 4,
+            "birth_datetime": "1986-07-04T00:00:00",
+            "race_concept_id": 0,
+            "race_concept_id__name": "No matching concept",
+            "ethnicity_concept_id": 0,
+            "ethnicity_concept_id__name": "No matching concept",
+            "person_source_value": "patient-1",
+            "gender_source_concept_id": 0,
+            "race_source_concept_id": 0,
+            "ethnicity_source_concept_id": 0
+          }
+        ]
+      }
+    }
+  ]
+}
