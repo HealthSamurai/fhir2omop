@@ -103,6 +103,28 @@
         }
       ],
       "omop": {}
+    },
+    {
+      "desc": "status=active but the SNOMED type code has NO standard Device mapping -> INNER JOIN to standard Device-domain concept fails -> zero device_exposure rows (the SNOMED-Maps-To requirement, independent of the status filter)",
+      "fhir": [
+        {
+          "resourceType": "Device",
+          "id": "device-4",
+          "status": "active",
+          "patient": { "reference": "urn:uuid:patient-4" },
+          "type": {
+            "text": "Type 2 diabetes mellitus (not a device — Condition-domain SNOMED)",
+            "coding": [
+              { "system": "http://snomed.info/sct", "code": "44054006", "display": "Type 2 diabetes mellitus" }
+            ]
+          },
+          "lotNumber": "5555",
+          "udiCarrier": [ { "deviceIdentifier": "22222222222222" } ],
+          "manufactureDate": "2015-01-01T00:00:00+00:00",
+          "expirationDate": "2025-01-01T00:00:00+00:00"
+        }
+      ],
+      "omop": {}
     }
   ]
 }

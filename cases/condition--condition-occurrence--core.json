@@ -300,6 +300,345 @@
           }
         ]
       }
+    },
+    {
+      "desc": "(i) category = 'health-concern' → condition_type_concept_id 32817 (EHR) via cm row (distinct category branch, not the COALESCE default path)",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1965-04-12" },
+        {
+          "resourceType": "Encounter", "id": "enc-1", "status": "finished",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
+          "subject": { "reference": "Patient/patient-1" }
+        },
+        {
+          "resourceType": "Condition", "id": "cond-1",
+          "clinicalStatus": { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/condition-clinical", "code": "active" } ] },
+          "verificationStatus": { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status", "code": "confirmed" } ] },
+          "category": [ { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/condition-category", "code": "health-concern", "display": "Health Concern" } ] } ],
+          "code": { "text": "Essential hypertension (disorder)", "coding": [ { "system": "http://snomed.info/sct", "code": "59621000", "display": "Essential hypertension (disorder)" } ] },
+          "subject": { "reference": "Patient/patient-1" },
+          "encounter": { "reference": "Encounter/enc-1" },
+          "onsetDateTime": "2003-07-14T10:00:00+00:00",
+          "recordedDate": "2003-07-14T10:00:00+00:00"
+        }
+      ],
+      "omop": {
+        "condition_occurrence": [
+          {
+            "person_id": "ref:patient-1",
+            "condition_concept_id": 320128,
+            "condition_concept_id__name": "Essential hypertension",
+            "condition_start_date": "2003-07-14",
+            "condition_start_datetime": "2003-07-14T10:00:00",
+            "condition_type_concept_id": 32817,
+            "condition_type_concept_id__name": "EHR",
+            "condition_status_concept_id": 32893,
+            "condition_status_concept_id__name": "Confirmed diagnosis",
+            "visit_occurrence_id": "ref:enc-1",
+            "condition_source_value": "Essential hypertension (disorder)",
+            "condition_source_concept_id": 320128,
+            "condition_source_concept_id__name": "Essential hypertension",
+            "condition_status_source_value": "active"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(j) no category element → condition_type_concept_id falls back to COALESCE default 32817 (cat.concept_id is NULL, distinct from the health-concern cm-row path)",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1965-04-12" },
+        {
+          "resourceType": "Encounter", "id": "enc-1", "status": "finished",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
+          "subject": { "reference": "Patient/patient-1" }
+        },
+        {
+          "resourceType": "Condition", "id": "cond-1",
+          "clinicalStatus": { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/condition-clinical", "code": "active" } ] },
+          "verificationStatus": { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status", "code": "confirmed" } ] },
+          "code": { "text": "Essential hypertension (disorder)", "coding": [ { "system": "http://snomed.info/sct", "code": "59621000", "display": "Essential hypertension (disorder)" } ] },
+          "subject": { "reference": "Patient/patient-1" },
+          "encounter": { "reference": "Encounter/enc-1" },
+          "onsetDateTime": "2004-09-01T08:30:00+00:00",
+          "recordedDate": "2004-09-01T08:30:00+00:00"
+        }
+      ],
+      "omop": {
+        "condition_occurrence": [
+          {
+            "person_id": "ref:patient-1",
+            "condition_concept_id": 320128,
+            "condition_concept_id__name": "Essential hypertension",
+            "condition_start_date": "2004-09-01",
+            "condition_start_datetime": "2004-09-01T08:30:00",
+            "condition_type_concept_id": 32817,
+            "condition_type_concept_id__name": "EHR",
+            "condition_status_concept_id": 32893,
+            "condition_status_concept_id__name": "Confirmed diagnosis",
+            "visit_occurrence_id": "ref:enc-1",
+            "condition_source_value": "Essential hypertension (disorder)",
+            "condition_source_concept_id": 320128,
+            "condition_source_concept_id__name": "Essential hypertension",
+            "condition_status_source_value": "active"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(k) verificationStatus = 'provisional' → condition_status_concept_id 32899 (Preliminary diagnosis), NOT excluded",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1965-04-12" },
+        {
+          "resourceType": "Encounter", "id": "enc-1", "status": "finished",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
+          "subject": { "reference": "Patient/patient-1" }
+        },
+        {
+          "resourceType": "Condition", "id": "cond-1",
+          "clinicalStatus": { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/condition-clinical", "code": "active" } ] },
+          "verificationStatus": { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status", "code": "provisional" } ] },
+          "category": [ { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/condition-category", "code": "encounter-diagnosis", "display": "Encounter Diagnosis" } ] } ],
+          "code": { "text": "Essential hypertension (disorder)", "coding": [ { "system": "http://snomed.info/sct", "code": "59621000", "display": "Essential hypertension (disorder)" } ] },
+          "subject": { "reference": "Patient/patient-1" },
+          "encounter": { "reference": "Encounter/enc-1" },
+          "onsetDateTime": "2006-05-20T11:00:00+00:00",
+          "recordedDate": "2006-05-20T11:00:00+00:00"
+        }
+      ],
+      "omop": {
+        "condition_occurrence": [
+          {
+            "person_id": "ref:patient-1",
+            "condition_concept_id": 320128,
+            "condition_concept_id__name": "Essential hypertension",
+            "condition_start_date": "2006-05-20",
+            "condition_start_datetime": "2006-05-20T11:00:00",
+            "condition_type_concept_id": 32827,
+            "condition_type_concept_id__name": "EHR encounter record",
+            "condition_status_concept_id": 32899,
+            "condition_status_concept_id__name": "Preliminary diagnosis",
+            "visit_occurrence_id": "ref:enc-1",
+            "condition_source_value": "Essential hypertension (disorder)",
+            "condition_source_concept_id": 320128,
+            "condition_source_concept_id__name": "Essential hypertension",
+            "condition_status_source_value": "active"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(l) verificationStatus='unconfirmed' (maps to 0, NOT excluded) + clinicalStatus='resolved' → NULLIF drops the 0, condition_status falls through to clinicalStatus 32906",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1965-04-12" },
+        {
+          "resourceType": "Encounter", "id": "enc-1", "status": "finished",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
+          "subject": { "reference": "Patient/patient-1" }
+        },
+        {
+          "resourceType": "Condition", "id": "cond-1",
+          "clinicalStatus": { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/condition-clinical", "code": "resolved" } ] },
+          "verificationStatus": { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status", "code": "unconfirmed" } ] },
+          "category": [ { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/condition-category", "code": "encounter-diagnosis", "display": "Encounter Diagnosis" } ] } ],
+          "code": { "text": "Essential hypertension (disorder)", "coding": [ { "system": "http://snomed.info/sct", "code": "59621000", "display": "Essential hypertension (disorder)" } ] },
+          "subject": { "reference": "Patient/patient-1" },
+          "encounter": { "reference": "Encounter/enc-1" },
+          "onsetDateTime": "2007-02-02T09:00:00+00:00",
+          "recordedDate": "2007-02-02T09:00:00+00:00"
+        }
+      ],
+      "omop": {
+        "condition_occurrence": [
+          {
+            "person_id": "ref:patient-1",
+            "condition_concept_id": 320128,
+            "condition_concept_id__name": "Essential hypertension",
+            "condition_start_date": "2007-02-02",
+            "condition_start_datetime": "2007-02-02T09:00:00",
+            "condition_type_concept_id": 32827,
+            "condition_type_concept_id__name": "EHR encounter record",
+            "condition_status_concept_id": 32906,
+            "condition_status_concept_id__name": "Resolved condition",
+            "visit_occurrence_id": "ref:enc-1",
+            "condition_source_value": "Essential hypertension (disorder)",
+            "condition_source_concept_id": 320128,
+            "condition_source_concept_id__name": "Essential hypertension",
+            "condition_status_source_value": "resolved"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(m) onset as Period (no onsetDateTime) → start date from onsetPeriod.start (onset_period_start branch of the date COALESCE)",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1965-04-12" },
+        {
+          "resourceType": "Encounter", "id": "enc-1", "status": "finished",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
+          "subject": { "reference": "Patient/patient-1" }
+        },
+        {
+          "resourceType": "Condition", "id": "cond-1",
+          "clinicalStatus": { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/condition-clinical", "code": "active" } ] },
+          "verificationStatus": { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status", "code": "confirmed" } ] },
+          "category": [ { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/condition-category", "code": "encounter-diagnosis", "display": "Encounter Diagnosis" } ] } ],
+          "code": { "text": "Essential hypertension (disorder)", "coding": [ { "system": "http://snomed.info/sct", "code": "59621000", "display": "Essential hypertension (disorder)" } ] },
+          "subject": { "reference": "Patient/patient-1" },
+          "encounter": { "reference": "Encounter/enc-1" },
+          "onsetPeriod": { "start": "2008-04-18T07:45:00+00:00" },
+          "recordedDate": "2010-01-01T00:00:00+00:00"
+        }
+      ],
+      "omop": {
+        "condition_occurrence": [
+          {
+            "person_id": "ref:patient-1",
+            "condition_concept_id": 320128,
+            "condition_concept_id__name": "Essential hypertension",
+            "condition_start_date": "2008-04-18",
+            "condition_start_datetime": "2008-04-18T07:45:00",
+            "condition_type_concept_id": 32827,
+            "condition_type_concept_id__name": "EHR encounter record",
+            "condition_status_concept_id": 32893,
+            "condition_status_concept_id__name": "Confirmed diagnosis",
+            "visit_occurrence_id": "ref:enc-1",
+            "condition_source_value": "Essential hypertension (disorder)",
+            "condition_source_concept_id": 320128,
+            "condition_source_concept_id__name": "Essential hypertension",
+            "condition_status_source_value": "active"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(n) no onset at all → start date falls through to recordedDate (recorded_date branch of the date COALESCE)",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1965-04-12" },
+        {
+          "resourceType": "Encounter", "id": "enc-1", "status": "finished",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
+          "subject": { "reference": "Patient/patient-1" }
+        },
+        {
+          "resourceType": "Condition", "id": "cond-1",
+          "clinicalStatus": { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/condition-clinical", "code": "active" } ] },
+          "verificationStatus": { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status", "code": "confirmed" } ] },
+          "category": [ { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/condition-category", "code": "encounter-diagnosis", "display": "Encounter Diagnosis" } ] } ],
+          "code": { "text": "Essential hypertension (disorder)", "coding": [ { "system": "http://snomed.info/sct", "code": "59621000", "display": "Essential hypertension (disorder)" } ] },
+          "subject": { "reference": "Patient/patient-1" },
+          "encounter": { "reference": "Encounter/enc-1" },
+          "recordedDate": "2011-10-09T13:20:00+00:00"
+        }
+      ],
+      "omop": {
+        "condition_occurrence": [
+          {
+            "person_id": "ref:patient-1",
+            "condition_concept_id": 320128,
+            "condition_concept_id__name": "Essential hypertension",
+            "condition_start_date": "2011-10-09",
+            "condition_start_datetime": "2011-10-09T13:20:00",
+            "condition_type_concept_id": 32827,
+            "condition_type_concept_id__name": "EHR encounter record",
+            "condition_status_concept_id": 32893,
+            "condition_status_concept_id__name": "Confirmed diagnosis",
+            "visit_occurrence_id": "ref:enc-1",
+            "condition_source_value": "Essential hypertension (disorder)",
+            "condition_source_concept_id": 320128,
+            "condition_source_concept_id__name": "Essential hypertension",
+            "condition_status_source_value": "active"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(o) abatement as Period (no abatementDateTime) → end dates from abatementPeriod.end (abatement_period_end branch)",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1965-04-12" },
+        {
+          "resourceType": "Encounter", "id": "enc-1", "status": "finished",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
+          "subject": { "reference": "Patient/patient-1" }
+        },
+        {
+          "resourceType": "Condition", "id": "cond-1",
+          "clinicalStatus": { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/condition-clinical", "code": "resolved" } ] },
+          "verificationStatus": { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status", "code": "confirmed" } ] },
+          "category": [ { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/condition-category", "code": "encounter-diagnosis", "display": "Encounter Diagnosis" } ] } ],
+          "code": { "text": "Essential hypertension (disorder)", "coding": [ { "system": "http://snomed.info/sct", "code": "59621000", "display": "Essential hypertension (disorder)" } ] },
+          "subject": { "reference": "Patient/patient-1" },
+          "encounter": { "reference": "Encounter/enc-1" },
+          "onsetDateTime": "2013-03-11T09:00:00+00:00",
+          "abatementPeriod": { "start": "2013-03-11T09:00:00+00:00", "end": "2014-07-30T16:00:00+00:00" },
+          "recordedDate": "2013-03-11T09:00:00+00:00"
+        }
+      ],
+      "omop": {
+        "condition_occurrence": [
+          {
+            "person_id": "ref:patient-1",
+            "condition_concept_id": 320128,
+            "condition_concept_id__name": "Essential hypertension",
+            "condition_start_date": "2013-03-11",
+            "condition_start_datetime": "2013-03-11T09:00:00",
+            "condition_end_date": "2014-07-30",
+            "condition_end_datetime": "2014-07-30T16:00:00",
+            "condition_type_concept_id": 32827,
+            "condition_type_concept_id__name": "EHR encounter record",
+            "condition_status_concept_id": 32893,
+            "condition_status_concept_id__name": "Confirmed diagnosis",
+            "visit_occurrence_id": "ref:enc-1",
+            "condition_source_value": "Essential hypertension (disorder)",
+            "condition_source_concept_id": 320128,
+            "condition_source_concept_id__name": "Essential hypertension",
+            "condition_status_source_value": "resolved"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(p) abatement as string → stop_reason = left(abatementString,20); no abatement date so condition_end_date stays NULL",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1965-04-12" },
+        {
+          "resourceType": "Encounter", "id": "enc-1", "status": "finished",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
+          "subject": { "reference": "Patient/patient-1" }
+        },
+        {
+          "resourceType": "Condition", "id": "cond-1",
+          "clinicalStatus": { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/condition-clinical", "code": "resolved" } ] },
+          "verificationStatus": { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status", "code": "confirmed" } ] },
+          "category": [ { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/condition-category", "code": "encounter-diagnosis", "display": "Encounter Diagnosis" } ] } ],
+          "code": { "text": "Essential hypertension (disorder)", "coding": [ { "system": "http://snomed.info/sct", "code": "59621000", "display": "Essential hypertension (disorder)" } ] },
+          "subject": { "reference": "Patient/patient-1" },
+          "encounter": { "reference": "Encounter/enc-1" },
+          "onsetDateTime": "2016-06-06T09:00:00+00:00",
+          "abatementString": "Resolved after treatment",
+          "recordedDate": "2016-06-06T09:00:00+00:00"
+        }
+      ],
+      "omop": {
+        "condition_occurrence": [
+          {
+            "person_id": "ref:patient-1",
+            "condition_concept_id": 320128,
+            "condition_concept_id__name": "Essential hypertension",
+            "condition_start_date": "2016-06-06",
+            "condition_start_datetime": "2016-06-06T09:00:00",
+            "condition_type_concept_id": 32827,
+            "condition_type_concept_id__name": "EHR encounter record",
+            "condition_status_concept_id": 32893,
+            "condition_status_concept_id__name": "Confirmed diagnosis",
+            "stop_reason": "Resolved after treat",
+            "visit_occurrence_id": "ref:enc-1",
+            "condition_source_value": "Essential hypertension (disorder)",
+            "condition_source_concept_id": 320128,
+            "condition_source_concept_id__name": "Essential hypertension",
+            "condition_status_source_value": "resolved"
+          }
+        ]
+      }
     }
   ]
 }

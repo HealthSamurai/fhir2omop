@@ -163,6 +163,108 @@
       }
     },
     {
+      "desc": "(f) valueQuantity.comparator '>' → operator_concept_id 4172704 (the OTHER end of the VALUES map vs (b)'s '<' 4171756; value still recorded)",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1980-01-01" },
+        {
+          "resourceType": "Encounter",
+          "id": "enc-1",
+          "status": "finished",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
+          "subject": { "reference": "Patient/patient-1" }
+        },
+        {
+          "resourceType": "Observation",
+          "id": "obs-1",
+          "status": "final",
+          "category": [
+            { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "laboratory", "display": "Laboratory" } ] }
+          ],
+          "code": {
+            "text": "Glucose [Mass/volume] in Blood",
+            "coding": [ { "system": "http://loinc.org", "code": "2339-0", "display": "Glucose [Mass/volume] in Blood" } ]
+          },
+          "subject": { "reference": "Patient/patient-1" },
+          "encounter": { "reference": "Encounter/enc-1" },
+          "effectiveDateTime": "2016-07-13T11:58:43+01:00",
+          "valueQuantity": { "value": 500, "comparator": ">", "unit": "mg/dL", "system": "http://unitsofmeasure.org", "code": "mg/dL" }
+        }
+      ],
+      "omop": {
+        "measurement": [
+          {
+            "person_id": "ref:patient-1",
+            "measurement_concept_id": 3000483,
+            "measurement_concept_id__name": "Glucose [Mass/volume] in Blood",
+            "measurement_date": "2016-07-13",
+            "measurement_datetime": "2016-07-13T11:58:43",
+            "measurement_type_concept_id": 32817,
+            "measurement_type_concept_id__name": "EHR",
+            "operator_concept_id": 4172704,
+            "operator_concept_id__name": ">",
+            "value_as_number": 500,
+            "unit_concept_id": 8840,
+            "unit_concept_id__name": "milligram per deciliter",
+            "visit_occurrence_id": "ref:enc-1",
+            "measurement_source_value": "2339-0",
+            "measurement_source_concept_id": 3000483,
+            "measurement_source_concept_id__name": "Glucose [Mass/volume] in Blood",
+            "unit_source_value": "mg/dL"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(g) two codings (LOINC 35088-4 + SNOMED 506111000000104) that BOTH Maps-to std 3032652 → DISTINCT ON (id, std_concept_id) collapses to ONE measurement row; tie-break ORDER BY prefers LOINC so the surviving src_* come from the LOINC coding (source_value '35088-4', source_concept 3032652, NOT the SNOMED 3529853)",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1980-01-01" },
+        {
+          "resourceType": "Encounter",
+          "id": "enc-1",
+          "status": "finished",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
+          "subject": { "reference": "Patient/patient-1" }
+        },
+        {
+          "resourceType": "Observation",
+          "id": "obs-1",
+          "status": "final",
+          "category": [
+            { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "exam", "display": "Exam" } ] }
+          ],
+          "code": {
+            "text": "Glasgow coma scale",
+            "coding": [
+              { "system": "http://snomed.info/sct", "code": "506111000000104", "display": "Glasgow coma score, original version" },
+              { "system": "http://loinc.org", "code": "35088-4", "display": "Glasgow coma scale" }
+            ]
+          },
+          "subject": { "reference": "Patient/patient-1" },
+          "encounter": { "reference": "Encounter/enc-1" },
+          "effectiveDateTime": "2016-07-13T11:58:43+01:00",
+          "valueQuantity": { "value": 15 }
+        }
+      ],
+      "omop": {
+        "measurement": [
+          {
+            "person_id": "ref:patient-1",
+            "measurement_concept_id": 3032652,
+            "measurement_concept_id__name": "Glasgow coma scale",
+            "measurement_date": "2016-07-13",
+            "measurement_datetime": "2016-07-13T11:58:43",
+            "measurement_type_concept_id": 32817,
+            "measurement_type_concept_id__name": "EHR",
+            "value_as_number": 15,
+            "visit_occurrence_id": "ref:enc-1",
+            "measurement_source_value": "35088-4",
+            "measurement_source_concept_id": 3032652,
+            "measurement_source_concept_id__name": "Glasgow coma scale"
+          }
+        ]
+      }
+    },
+    {
       "desc": "(d) status 'entered-in-error' → omop {} (status filter drops the row before projection)",
       "fhir": [
         { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1980-01-01" },

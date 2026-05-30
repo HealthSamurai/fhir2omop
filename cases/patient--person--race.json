@@ -607,6 +607,82 @@
           }
         ]
       }
+    },
+    {
+      "desc": "(i) Synthea Other-recovery: US Core ombCategory 'UNK' + text 'Other' → race_concept_id 8522 (Other Race) via cm.race_text_synthea_to_omop. Exercises stage-2 line 60 CASE WHEN race_omb_code='UNK' THEN rt.concept_id — the Synthea narrative-recovery branch that priorities 1 (omop-race) and 2 (race_omb_code≠'UNK' → cm.race_omb_to_omop) skip. race_omb_code='UNK' alone would map via cm.race_omb_to_omop to 8552 Unknown (variant rule), but the CASE intercepts UNK first and routes through race_text. race_source_value = COALESCE(omop_race_display, race_text) = 'Other'; race_source_concept_id stays 0 (no source vocab). (constructed minimal FHIR; concept 8522 'Other Race' and cm.race_text_synthea_to_omop source_code='Other' verified in DB)",
+      "fhir": [
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "gender": "female",
+          "birthDate": "1985-06-15",
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+              "extension": [
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "UNK",
+                    "display": "Unknown"
+                  }
+                },
+                {
+                  "url": "text",
+                  "valueString": "Other"
+                }
+              ]
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+              "extension": [
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "2186-5",
+                    "display": "Not Hispanic or Latino"
+                  }
+                },
+                {
+                  "url": "text",
+                  "valueString": "Not Hispanic or Latino"
+                }
+              ]
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+              "valueCode": "F"
+            }
+          ]
+        }
+      ],
+      "omop": {
+        "person": [
+          {
+            "person_id": "ref:patient-1",
+            "gender_concept_id": 8532,
+            "gender_concept_id__name": "FEMALE",
+            "year_of_birth": 1985,
+            "month_of_birth": 6,
+            "day_of_birth": 15,
+            "birth_datetime": "1985-06-15T00:00:00",
+            "race_concept_id": 8522,
+            "race_concept_id__name": "Other Race",
+            "ethnicity_concept_id": 38003564,
+            "ethnicity_concept_id__name": "Not Hispanic or Latino",
+            "person_source_value": "patient-1",
+            "gender_source_value": "F",
+            "gender_source_concept_id": 8532,
+            "gender_source_concept_id__name": "FEMALE",
+            "race_source_value": "Other",
+            "race_source_concept_id": 0,
+            "ethnicity_source_value": "Not Hispanic or Latino",
+            "ethnicity_source_concept_id": 0
+          }
+        ]
+      }
     }
   ]
 }

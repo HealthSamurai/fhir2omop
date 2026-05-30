@@ -163,6 +163,76 @@
         }
       ],
       "omop": {}
+    },
+    {
+      "desc": "(f) Immunization with BOTH CVX and RxNorm codings -> prio-1 CVX wins the DISTINCT ON/ORDER BY prio; CVX has no crosswalk so drug_concept_id 0 even though the RxNorm coding would crosswalk to 528323 (proves CVX precedence, not just CVX-only)",
+      "fhir": [
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "gender": "male",
+          "birthDate": "2010-01-01"
+        },
+        {
+          "resourceType": "Encounter",
+          "id": "enc-1",
+          "status": "finished",
+          "class": {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+            "code": "AMB"
+          },
+          "subject": {
+            "reference": "Patient/patient-1"
+          }
+        },
+        {
+          "resourceType": "Immunization",
+          "id": "imm-1",
+          "status": "completed",
+          "primarySource": true,
+          "patient": {
+            "reference": "Patient/patient-1"
+          },
+          "encounter": {
+            "reference": "Encounter/enc-1"
+          },
+          "vaccineCode": {
+            "text": "Hep B, adolescent or pediatric",
+            "coding": [
+              {
+                "system": "http://hl7.org/fhir/sid/cvx",
+                "code": "08",
+                "display": "Hep B, adolescent or pediatric"
+              },
+              {
+                "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                "code": "797752",
+                "display": "hepatitis B surface antigen vaccine"
+              }
+            ]
+          },
+          "occurrenceDateTime": "2017-12-05T10:40:30+00:00"
+        }
+      ],
+      "omop": {
+        "drug_exposure": [
+          {
+            "person_id": "ref:patient-1",
+            "drug_concept_id": 0,
+            "drug_concept_id__name": "No matching concept (CVX wins prio, no crosswalk)",
+            "drug_exposure_start_date": "2017-12-05",
+            "drug_exposure_start_datetime": "2017-12-05T10:40:30",
+            "drug_exposure_end_date": "2017-12-05",
+            "drug_exposure_end_datetime": "2017-12-05T10:40:30",
+            "drug_type_concept_id": 32827,
+            "drug_type_concept_id__name": "EHR encounter record",
+            "visit_occurrence_id": "ref:enc-1",
+            "drug_source_value": "08",
+            "drug_source_concept_id": 2000000029,
+            "drug_source_concept_id__name": "hepatitis B vaccine, pediatric or pediatric/adolescent dosage"
+          }
+        ]
+      }
     }
   ]
 }

@@ -203,6 +203,54 @@
           }
         ]
       }
+    },
+    {
+      "desc": "(e) Observation-domain LOINC with a NUMERIC valueQuantity (PHQ-2 total score, '{score}' unit) → value_as_number populated, value_as_string/value_as_concept_id stay NULL; '{score}' is not a UCUM standard concept so unit_concept_id is NULL but unit_source_value keeps the raw unit. Grounded in real cdm_ours_fhir.observation (40758879, value 1, unit '{score}').",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-1", "gender": "male", "birthDate": "1980-01-01" },
+        {
+          "resourceType": "Encounter",
+          "id": "enc-1",
+          "status": "finished",
+          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
+          "subject": { "reference": "Patient/patient-1" }
+        },
+        {
+          "resourceType": "Observation",
+          "id": "obs-1",
+          "status": "final",
+          "category": [
+            { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "survey", "display": "Survey" } ] }
+          ],
+          "code": {
+            "text": "Patient Health Questionnaire 2 item (PHQ-2) total score [Reported]",
+            "coding": [ { "system": "http://loinc.org", "code": "55758-7", "display": "Patient Health Questionnaire 2 item (PHQ-2) total score [Reported]" } ]
+          },
+          "subject": { "reference": "Patient/patient-1" },
+          "encounter": { "reference": "Encounter/enc-1" },
+          "effectiveDateTime": "2017-07-20T05:09:43+01:00",
+          "valueQuantity": { "value": 1, "unit": "{score}", "system": "http://unitsofmeasure.org", "code": "{score}" }
+        }
+      ],
+      "omop": {
+        "observation": [
+          {
+            "person_id": "ref:patient-1",
+            "observation_concept_id": 40758879,
+            "observation_concept_id__name": "Patient Health Questionnaire 2 item (PHQ-2) total score [Reported]",
+            "observation_date": "2017-07-20",
+            "observation_datetime": "2017-07-20T05:09:43",
+            "observation_type_concept_id": 32817,
+            "observation_type_concept_id__name": "EHR",
+            "value_as_number": 1,
+            "visit_occurrence_id": "ref:enc-1",
+            "observation_source_value": "55758-7",
+            "observation_source_concept_id": 40758879,
+            "observation_source_concept_id__name": "Patient Health Questionnaire 2 item (PHQ-2) total score [Reported]",
+            "unit_source_value": "{score}"
+          }
+        ]
+      }
     }
   ]
 }
