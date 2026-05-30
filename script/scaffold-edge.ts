@@ -70,9 +70,9 @@ const header = [
 
 const items = (edge.fields ?? []).map(lineFor);
 // Compute alignment for `expr  AS  col,  -- comment` so the SQL is readable.
-const exprPad = Math.max(0, ...items.map((i) => i.expr.length));
-const colPad  = Math.max(0, ...items.map((i) => i.col.length));
-const rendered = items.map((i, idx) => {
+const exprPad = Math.max(0, ...items.map((i: any) => i.expr.length));
+const colPad  = Math.max(0, ...items.map((i: any) => i.col.length));
+const rendered = items.map((i: any, idx: number) => {
     const trailingComma = idx === items.length - 1 ? " " : ",";
     const base = `    ${i.expr.padEnd(exprPad)} AS ${i.col.padEnd(colPad)}${trailingComma}`;
     return i.comment ? `${base} -- ${i.comment}` : base;

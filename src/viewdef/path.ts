@@ -27,7 +27,7 @@ function getReferenceKey(nodes: any[], opts?: { name?: string }): any[] {
             const key = ref.slice(ref.lastIndexOf(":") + 1);
             return resource ? [] : [key];
         }
-        const parts = ref.replaceAll("//", "").split("/_history")[0].split("/");
+        const parts = ref.replaceAll("//", "").split("/_history")[0]!.split("/");
         const type = parts[parts.length - 2];
         const key = parts[parts.length - 1];
         if (!resource) return [key];
@@ -71,7 +71,7 @@ function process_constants(constants: any[]): Record<string, any> {
 }
 
 export function evaluate(data: any, path: string, constants: any[] = []): any[] {
-    return fhirpath.evaluate(data, rewrite_path(path), process_constants(constants), null, FHIRPATH_OPTS);
+    return fhirpath.evaluate(data, rewrite_path(path), process_constants(constants), undefined, FHIRPATH_OPTS);
 }
 
 // Function entrypoint registered as ctx.fns.viewdef.path

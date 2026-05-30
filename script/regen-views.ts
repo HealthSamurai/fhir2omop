@@ -208,7 +208,7 @@ function vocabTransform(vocab: Vocab): string {
 function flatFhirPath(p: string | null | undefined): string | undefined {
     if (!p) return undefined;
     // edge fhir_path often contains alternatives joined by " | "; take the first as primary
-    return p.split("|")[0].trim();
+    return (p.split("|")[0] ?? "").trim();
 }
 
 function pkColumn(edge: Edge): { name: string; path: string; type: string; description: string; omop: string } {
@@ -222,8 +222,8 @@ function pkColumn(edge: Edge): { name: string; path: string; type: string; descr
 }
 
 function renameNonCoded(omopColumn: string): string {
-    if (omopColumn in NON_CODED_RENAMES) return NON_CODED_RENAMES[omopColumn];
-    if (omopColumn in SOURCE_VALUE_RENAMES) return SOURCE_VALUE_RENAMES[omopColumn];
+    if (omopColumn in NON_CODED_RENAMES) return NON_CODED_RENAMES[omopColumn]!;
+    if (omopColumn in SOURCE_VALUE_RENAMES) return SOURCE_VALUE_RENAMES[omopColumn]!;
     // strip _concept_id when caller decided not to fan-out (fallback)
     let base = omopColumn.replace(/_concept_id$/, "").replace(/_source_value$/, "_text");
     // strip leading <table>_ if it matches resource table

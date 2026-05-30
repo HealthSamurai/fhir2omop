@@ -48,7 +48,7 @@ function refsInSql(sql: string): { col: string; line: number }[] {
     const out: { col: string; line: number }[] = [];
     const lines = sql.split("\n");
     for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
+        const line = lines[i]!;
         if (line.trim().startsWith("--")) continue;
         for (const m of line.matchAll(/\bv\.([a-z_][a-z0-9_]*)\b/g)) {
             out.push({ col: m[1]!, line: i + 1 });

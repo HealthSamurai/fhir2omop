@@ -397,18 +397,20 @@ function _unused_renderGraph(
     // Draw resource labels
     for (let i = 0; i < resources.length; i++) {
         const y = resY(i);
-        lines.push(`<a href="/mapspec/${enc(resources[i])}">`);
+        const resName = resources[i]!;
+        lines.push(`<a href="/mapspec/${enc(resName)}">`);
         lines.push(`<rect x="10" y="${y - 10}" width="${leftCol - 20}" height="20" rx="4" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>`);
-        lines.push(`<text x="${leftCol / 2}" y="${y + 4}" text-anchor="middle" class="text-xs font-medium" fill="#1e40af">${esc(resources[i])}</text>`);
+        lines.push(`<text x="${leftCol / 2}" y="${y + 4}" text-anchor="middle" class="text-xs font-medium" fill="#1e40af">${esc(resName)}</text>`);
         lines.push(`</a>`);
     }
 
     // Draw table labels
     for (let i = 0; i < tables.length; i++) {
         const y = tblY(i);
-        lines.push(`<a href="/table/${enc(tables[i])}">`);
+        const tblName = tables[i]!;
+        lines.push(`<a href="/table/${enc(tblName)}">`);
         lines.push(`<rect x="${rightCol}" y="${y - 10}" width="${svgW - rightCol - 10}" height="20" rx="4" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>`);
-        lines.push(`<text x="${rightCol + (svgW - rightCol - 10) / 2}" y="${y + 4}" text-anchor="middle" class="text-xs font-medium" fill="#166534">${esc(tables[i])}</text>`);
+        lines.push(`<text x="${rightCol + (svgW - rightCol - 10) / 2}" y="${y + 4}" text-anchor="middle" class="text-xs font-medium" fill="#166534">${esc(tblName)}</text>`);
         lines.push(`</a>`);
     }
 
