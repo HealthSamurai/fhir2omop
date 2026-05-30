@@ -41,6 +41,15 @@ export default async function (ctx: Context): Promise<any[]> {
         return [];
     }
 
+    // Last `bun script/run-cases.ts` results, if any → per-variant pass/fail.
+    let runResults: Record<string, any> = {};
+    let ranAt: string | null = null;
+    try {
+        const rr = JSON.parse(await Bun.file(".hyper/_runtime/case-results.json").text());
+        runResults = rr.files ?? {};
+        ranAt = rr.ranAt ?? null;
+    } catch { /* not run yet */ }
+
     const out: any[] = [];
     for (const f of files) {
         const slug = f.replace(/\.json$/, "");
@@ -50,6 +59,13 @@ export default async function (ctx: Context): Promise<any[]> {
                 ? raw.cases
                 : [{ desc: raw.title ?? slug, fhir: raw.fhir, omop: raw.omop }];
             const cases = rawCases.map(variantMeta);
+            // attach run results by variant index
+            const fileRes = runResults[slug]?.variants ?? [];
+            cases.forEach((c: any, i: number) => { c.result = fileRes[i] ?? null; });
+            const ran = cases.filter((c: any) => c.result);
+            const status = ran.length === 0 ? "unrun"
+                : ran.every((c: any) => c.result.pass) ? "pass" : "fail";
+            const passCount = ran.filter((c: any) => c.result.pass).length;
             const fhirTypes = [...new Set(cases.flatMap((c: any) => c.fhirTypes))];
             const omopTables = [...new Set(cases.flatMap((c: any) => c.omopTables))];
             out.push({
@@ -58,6 +74,7 @@ export default async function (ctx: Context): Promise<any[]> {
                 notes: raw.notes ?? "",
                 cases, fhirTypes, omopTables,
                 variantCount: cases.length,
+                status, passCount, ranCount: ran.length, ranAt,
             });
         } catch (e: any) {
             out.push({

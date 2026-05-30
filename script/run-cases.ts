@@ -255,10 +255,13 @@ async function assertVariant(variant: any): Promise<string[]> {
 const files = readdirSync("cases").filter((f) => f.endsWith(".json") && (!filter || f.includes(filter))).sort();
 let pass = 0, fail = 0;
 const failedCases: string[] = [];
+const results: Record<string, { variants: { desc: string; pass: boolean; failures: string[] }[] }> = {};
 
 for (const f of files) {
+    const slug = f.replace(/\.json$/, "");
     const file = JSON.parse(await Bun.file(`cases/${f}`).text());
     const cases = Array.isArray(file.cases) ? file.cases : [{ desc: file.title, fhir: file.fhir, omop: file.omop }];
+    results[slug] = { variants: [] };
     console.log(`\n${f}`);
     for (let i = 0; i < cases.length; i++) {
         const v = cases[i];
@@ -266,23 +269,35 @@ for (const f of files) {
         const omopByTable: Record<string, any[]> = Array.isArray(v.omop)
             ? v.omop.reduce((o: any, r: any) => { const { table, ...rest } = r; (o[table] ??= []).push(rest); return o; }, {})
             : (v.omop ?? {});
+        let vFailures: string[] = [];
         try {
             await resetSchemas();
             const present = await loadFhir(v.fhir ?? []);
-            const produced = await runPipeline(present, f.replace(/\.json$/, ""), new Set(Object.keys(omopByTable)));
-            const failures = await assertVariant({ omopByTable, __produced: produced });
-            if (failures.length === 0) { pass++; console.log(`  ✓ [${i + 1}] ${v.desc}`); }
-            else {
-                fail++; failedCases.push(`${f} #${i + 1}`);
-                console.log(`  ✗ [${i + 1}] ${v.desc}`);
-                for (const x of failures) console.log(`        ${x}`);
-            }
+            const produced = await runPipeline(present, slug, new Set(Object.keys(omopByTable)));
+            vFailures = await assertVariant({ omopByTable, __produced: produced });
         } catch (e: any) {
+            vFailures = [`ERROR: ${e.message}`];
+        }
+        const okv = vFailures.length === 0;
+        results[slug].variants.push({ desc: v.desc ?? `variant ${i + 1}`, pass: okv, failures: vFailures });
+        if (okv) { pass++; console.log(`  ✓ [${i + 1}] ${v.desc}`); }
+        else {
             fail++; failedCases.push(`${f} #${i + 1}`);
-            console.log(`  ✗ [${i + 1}] ${v.desc}\n        ERROR: ${e.message}`);
+            console.log(`  ✗ [${i + 1}] ${v.desc}`);
+            for (const x of vFailures) console.log(`        ${x}`);
         }
     }
 }
+
+// Write results to the runtime dir (merge with prior runs so a filtered run
+// only updates the files it ran). The /cases UI reads this for pass/fail badges.
+try {
+    const path = ".hyper/_runtime/case-results.json";
+    let prior: any = { files: {} };
+    try { prior = JSON.parse(await Bun.file(path).text()); } catch { /* none yet */ }
+    const merged = { ranAt: new Date().toISOString(), files: { ...(prior.files ?? {}), ...results } };
+    await Bun.write(path, JSON.stringify(merged, null, 2));
+} catch (e: any) { console.log(`(could not write results file: ${e.message})`); }
 
 console.log(`\n${"=".repeat(50)}\n${pass} passed, ${fail} failed  (of ${pass + fail})`);
 if (fail) console.log("failed: " + failedCases.join(", "));

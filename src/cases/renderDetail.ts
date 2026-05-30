@@ -42,13 +42,26 @@ export default async function (ctx: Context, opts: { case: any }): Promise<strin
         }
 
         const vFlow = renderFlow(v.fhirTypes, v.omopTables);
-        return `<details open data-k="case-${esc(file.slug)}-${i}" class="border border-gray-200 rounded-lg overflow-hidden">
+        const res = v.result;
+        const dot = !res ? `<span class="px-1.5 py-0.5 rounded text-[11px] font-medium bg-gray-100 text-gray-400 shrink-0">not run</span>`
+            : res.pass ? `<span class="px-1.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800 shrink-0">✓ pass</span>`
+                : `<span class="px-1.5 py-0.5 rounded text-[11px] font-semibold bg-rose-100 text-rose-800 shrink-0">✗ fail</span>`;
+        const failBlock = res && !res.pass && res.failures?.length
+            ? `<div class="not-prose mb-3 border border-rose-200 bg-rose-50 rounded-lg p-3">
+    <div class="text-xs font-semibold text-rose-800 mb-1">Assertion failures</div>
+    <ul class="text-[12px] text-rose-700 font-mono space-y-0.5">${res.failures.map((x: string) => `<li>${esc(x)}</li>`).join("")}</ul>
+  </div>` : "";
+        const cls = res ? (res.pass ? "border-emerald-200" : "border-rose-300") : "border-gray-200";
+        return `<details open data-k="case-${esc(file.slug)}-${i}" class="border ${cls} rounded-lg overflow-hidden">
   <summary class="px-4 py-2.5 bg-gray-50 hover:bg-gray-100 flex items-center gap-3">
     <span class="text-gray-400 text-xs font-mono">#${i + 1}</span>
+    ${dot}
     <span class="font-medium text-gray-900 flex-1">${esc(v.desc ?? `variant ${i + 1}`)}</span>
     ${vFlow}
   </summary>
-  <div class="not-prose grid lg:grid-cols-2 gap-5 p-4">
+  <div class="p-4">
+  ${failBlock}
+  <div class="not-prose grid lg:grid-cols-2 gap-5">
     <div>
       <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">FHIR input</div>
       <div class="space-y-3">${fhirCards.join("")}</div>
@@ -57,6 +70,7 @@ export default async function (ctx: Context, opts: { case: any }): Promise<strin
       <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Expected OMOP</div>
       ${omopHtml}
     </div>
+  </div>
   </div>
 </details>`;
     }));
