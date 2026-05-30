@@ -22,7 +22,10 @@
                     "display": "Black or African American"
                   }
                 },
-                { "url": "text", "valueString": "Black or African American" }
+                {
+                  "url": "text",
+                  "valueString": "Black or African American"
+                }
               ]
             },
             {
@@ -36,7 +39,10 @@
                     "display": "Not Hispanic or Latino"
                   }
                 },
-                { "url": "text", "valueString": "Not Hispanic or Latino" }
+                {
+                  "url": "text",
+                  "valueString": "Not Hispanic or Latino"
+                }
               ]
             },
             {
@@ -46,7 +52,9 @@
           ],
           "address": [
             {
-              "line": ["564 Connelly Esplanade"],
+              "line": [
+                "564 Connelly Esplanade"
+              ],
               "city": "Chelmsford",
               "state": "MA",
               "postalCode": "00000",
@@ -55,8 +63,14 @@
                 {
                   "url": "http://hl7.org/fhir/StructureDefinition/geolocation",
                   "extension": [
-                    { "url": "latitude", "valueDecimal": 42.6166074711701 },
-                    { "url": "longitude", "valueDecimal": -71.32422800775815 }
+                    {
+                      "url": "latitude",
+                      "valueDecimal": 42.6166074711701
+                    },
+                    {
+                      "url": "longitude",
+                      "valueDecimal": -71.32422800775815
+                    }
                   ]
                 }
               ]
@@ -78,7 +92,7 @@
             "race_concept_id__name": "Black or African American",
             "ethnicity_concept_id": 38003564,
             "ethnicity_concept_id__name": "Not Hispanic or Latino",
-            "location_id": "ref:patient-1-location",
+            "location_id": "id:loc1",
             "person_source_value": "patient-1",
             "gender_source_value": "M",
             "gender_source_concept_id": 8507,
@@ -91,7 +105,7 @@
         ],
         "location": [
           {
-            "location_id": "ref:patient-1-location",
+            "location_id": "id:loc1",
             "address_1": "564 Connelly Esplanade",
             "city": "Chelmsford",
             "state": "MA",
@@ -126,7 +140,10 @@
                     "display": "Black or African American"
                   }
                 },
-                { "url": "text", "valueString": "Black or African American" }
+                {
+                  "url": "text",
+                  "valueString": "Black or African American"
+                }
               ]
             },
             {
@@ -140,7 +157,10 @@
                     "display": "Not Hispanic or Latino"
                   }
                 },
-                { "url": "text", "valueString": "Not Hispanic or Latino" }
+                {
+                  "url": "text",
+                  "valueString": "Not Hispanic or Latino"
+                }
               ]
             },
             {

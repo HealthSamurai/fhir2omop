@@ -82,27 +82,46 @@ Examples: `patient--person--race.json`, `observation--measurement--components.js
 - **FK columns** reference fhir resources symbolically: `"person_id":"ref:patient-1"`,
   `"visit_occurrence_id":"ref:enc-1"`. Never a raw hash. The runner resolves
   `ref:<id>` → `referenceToId('<id>')`.
+- **`id:<token>`** is a symbolic binding for derived surrogate keys that are
+  *not* a `referenceToId` of any fhir resource (e.g. `location_id =
+  stringToId(address-composite)`) and for cross-row equality. The token takes
+  the actual value the first time it's matched and must stay consistent across
+  all rows. Example: `person.location_id` and `location.location_id` both set
+  to `"id:loc1"` asserts they're equal without pinning the hash.
 - For each `*_concept_id`, add a sibling `"<col>__name":"<concept_name>"` —
   ignored by the matcher, shown in the UI.
 - Dates `"YYYY-MM-DD"`; datetimes per the edge's actual cast.
 
-## Intended matcher semantics (runner — TODO)
+## Running the cases
 
-Run the **whole pipeline** on a variant's `fhir[]` in an isolated schema set;
-for each listed table assert the produced rows for the case's subject equal the
-expected set (unordered); assert every unlisted target table is empty. A row
-passes iff every listed column equals and every unlisted column is NULL;
-`ref:` resolves via `referenceToId`; `__name` siblings are ignored.
+```sh
+bun script/run-cases.ts                 # run all (59 variants), assert against the real pipeline
+bun script/run-cases.ts patient         # only files matching a substring
+bun script/run-cases.ts -v              # verbose: print stage-2 errors
+```
 
-### Accepted exceptions / gotchas the runner must know
-1. **`ref:<id>-location`** — OMOP `location_id` is `stringToId(line|city|state|zip)`
-   over the Patient's own address; there is no separate FHIR Location resource.
-   Resolve this synthetic ref to the address-composite hash, not a fhir entry.
-2. **Timezone**: most edges cast `::timestamp` (offset dropped, wall-clock kept);
+The runner (`script/run-cases.ts`) executes each variant's `fhir[]` through the
+**real Postgres pipeline** in isolated `t_fhir` / `t_staging` / `t_cdm` schemas
+(materialize view → `_resolve_*.sql` → stage-2, reusing `script/etl-plan.ts`),
+with full `vocab.*` + `cm.*` shared read-only, then asserts: per listed table
+the produced rows equal the expected set (unordered); every unlisted target
+table is empty; a row passes iff every listed column equals and every unlisted
+column is NULL; `ref:`→`referenceToId`, `id:` bindings consistent, the row's own
+surrogate PK and `__name` siblings ignored. Exit 1 on any failure.
+
+For resolve families (Condition / Observation / DiagnosticReport) all sibling
+edges run, so mis-routing to a table the case didn't list is caught. Non-resolve
+resources run only the edge(s) for the expected + primary tables (avoids pulling
+in cross-table-dependent edges like Patient→observation_period).
+
+### Gotchas baked into the cases
+1. **Timezone**: most edges cast `::timestamp` (offset dropped, wall-clock kept);
    the **Procedure** edge uses `::timestamptz AT TIME ZONE 'UTC'`. Expected
    datetimes follow the edge's actual behavior.
-3. **`observation_type_concept_id`** differs by source edge: `32817` for
+2. **`observation_type_concept_id`** differs by source edge: `32817` for
    Observation-sourced rows, `32827` for Condition-sourced rows.
+3. **`location_id`** is `stringToId(line|city|state|zip)` (not a fhir-resource
+   ref) — expressed with the `id:<token>` binding (see above).
 
 ## Branches (14 files, 58 variants)
 
