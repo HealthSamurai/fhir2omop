@@ -6,6 +6,11 @@ declare global {
         _test_hashline_edit: {
         nearby: typeof import("../.hyper/_test_hashline_edit/nearby").default;
         };
+        cases: {
+        load: typeof import("./cases/load").default;
+        renderDetail: typeof import("./cases/renderDetail").default;
+        renderList: typeof import("./cases/renderList").default;
+        };
         compare: {
         renderSideBySide: typeof import("./compare/renderSideBySide").default;
         };
@@ -65,6 +70,7 @@ declare global {
         };
         profiles: {
         byId: typeof import("./profiles/byId").default;
+        compile: typeof import("./profiles/compile").default;
         load: typeof import("./profiles/load").default;
         profileForEdge: typeof import("./profiles/profileForEdge").default;
         valueSetByUrl: typeof import("./profiles/valueSetByUrl").default;
