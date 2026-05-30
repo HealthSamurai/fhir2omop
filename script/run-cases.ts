@@ -44,7 +44,15 @@ const tbl = (q: string) => q.split(".")[1]!;
 // stage-1 materializations) and cdm_ours_fhir.* (cross-table reads like
 // Patient__observation_period JOIN visit_occurrence, and the PractitionerRole
 // UPDATE target). vocab.* / cm.* (full Athena) stay shared, read-only.
-const subSchemas = (body: string) => body.replaceAll("staging.", T.staging + ".").replaceAll("cdm_ours_fhir.", T.cdm + ".");
+// RC_VOCAB redirects vocab.* to a subset schema (hermetic runs from the seed);
+// unset = use full Athena vocab.*. cm.* (profile-derived, Athena-independent)
+// always stays as-is.
+const VOCAB = process.env.RC_VOCAB;
+const subSchemas = (body: string) => {
+    let b = body.replaceAll("staging.", T.staging + ".").replaceAll("cdm_ours_fhir.", T.cdm + ".");
+    if (VOCAB) b = b.replaceAll("vocab.", VOCAB + ".");
+    return b;
+};
 const resolveFiles = readdirSync("mapspec/etl").filter((f) => f.startsWith("_resolve_") && f.endsWith(".sql")).sort();
 
 async function runScript(sqlText: string): Promise<void> {
@@ -255,7 +263,84 @@ async function assertVariant(variant: any): Promise<string[]> {
     return failures;
 }
 
+// ── seed collection (DUMP_SEED=1) ────────────────────────────────────────────
+// Accumulate every concept_id the pipeline actually touched (output rows +
+// resolve intermediates) so we can dump the minimal vocab subset the cases need.
+async function collectConcepts(set: Set<string>) {
+    for (const schema of [T.cdm, T.staging]) {
+        const tabs = await sql`SELECT table_name FROM information_schema.tables WHERE table_schema = ${schema}`;
+        for (const { table_name } of tabs) {
+            const cols = await sql`SELECT column_name FROM information_schema.columns
+                WHERE table_schema = ${schema} AND table_name = ${table_name} AND column_name LIKE '%concept_id'`;
+            for (const { column_name } of cols) {
+                const rows = await sql.unsafe(`SELECT DISTINCT "${column_name}"::text AS v FROM ${schema}.${table_name} WHERE "${column_name}" IS NOT NULL AND "${column_name}" <> 0`);
+                for (const r of rows) if (r.v) set.add(r.v);
+            }
+        }
+    }
+}
+
+// Source concepts are looked up by (system, code) inside the resolve and never
+// appear in an output column (e.g. the SNOMED *value* concept behind
+// value_as_concept_id). Seed them by resolving every coding in the cases' FHIR
+// through cm.fhir_system_to_omop_vocab → vocab.concept, plus UCUM units.
+async function seedFromCaseCodes(set: Set<string>) {
+    const codings = new Set<string>();
+    const walk = (o: any) => {
+        if (!o || typeof o !== "object") return;
+        if (Array.isArray(o)) { o.forEach(walk); return; }
+        if (typeof o.code === "string") codings.add(`${o.system ?? ""}|${o.code}`);
+        for (const v of Object.values(o)) walk(v);
+    };
+    for (const f of readdirSync("cases").filter((x) => x.endsWith(".json"))) {
+        const c = JSON.parse(await Bun.file(`cases/${f}`).text());
+        for (const v of (c.cases ?? [c])) for (const r of (v.fhir ?? [])) walk(r);
+    }
+    for (const sc of codings) {
+        const [system, code] = sc.split("|");
+        const viaCm = await sql`SELECT c.concept_id::text v FROM cm.fhir_system_to_omop_vocab sa
+            JOIN vocab.concept c ON c.vocabulary_id = sa.target_code AND c.concept_code = ${code} WHERE sa.source_code = ${system}`;
+        for (const r of viaCm) set.add(r.v);
+        const ucum = await sql`SELECT concept_id::text v FROM vocab.concept WHERE vocabulary_id = 'UCUM' AND concept_code = ${code}`;
+        for (const r of ucum) set.add(r.v);
+    }
+}
+
+async function dumpSeed(ids: Set<string>) {
+    if (!ids.size) { console.log("(no concepts collected — nothing to seed)"); return; }
+    const lit = (v: any) => (v === null || v === undefined ? "NULL" : `'${String(v).replaceAll("'", "''")}'`);
+    // Expand with Maps-to targets so every resolve JOIN lands inside the seed.
+    const tgt = await sql.unsafe(`SELECT DISTINCT concept_id_2::text AS v FROM vocab.concept_relationship
+        WHERE relationship_id = 'Maps to' AND invalid_reason IS NULL AND concept_id_1 IN (${[...ids].join(",")})`);
+    for (const r of tgt) ids.add(r.v);
+    const idList = [...ids].join(",");
+    const concepts = await sql.unsafe(`SELECT concept_id::text c1, concept_name c2, domain_id c3, vocabulary_id c4,
+        concept_class_id c5, standard_concept c6, concept_code c7, valid_start_date::text c8, valid_end_date::text c9, invalid_reason c10
+        FROM vocab.concept WHERE concept_id IN (${idList}) ORDER BY concept_id`);
+    const rels = await sql.unsafe(`SELECT concept_id_1::text c1, concept_id_2::text c2, relationship_id c3,
+        valid_start_date::text c4, valid_end_date::text c5, invalid_reason c6
+        FROM vocab.concept_relationship WHERE relationship_id = 'Maps to' AND invalid_reason IS NULL
+        AND concept_id_1 IN (${idList}) AND concept_id_2 IN (${idList}) ORDER BY concept_id_1, concept_id_2`);
+    let out = `-- Minimal vocab subset for the FHIR->OMOP golden test cases (cases/*.json).
+-- Generated: DUMP_SEED=1 bun script/run-cases.ts   (do not edit by hand)
+-- ${concepts.length} concepts, ${rels.length} 'Maps to' relationships.
+-- Lets the cases run without the full ~928MB Athena bundle: load this into a
+-- fresh Postgres 'vocab' schema, build cm.* from mapspec/profiles/*.cm.json,
+-- then run the cases. See cases/README.md.
+
+CREATE SCHEMA IF NOT EXISTS vocab;
+CREATE TABLE IF NOT EXISTS vocab.concept (concept_id integer PRIMARY KEY, concept_name text, domain_id text, vocabulary_id text, concept_class_id text, standard_concept text, concept_code text, valid_start_date date, valid_end_date date, invalid_reason text);
+CREATE TABLE IF NOT EXISTS vocab.concept_relationship (concept_id_1 integer, concept_id_2 integer, relationship_id text, valid_start_date date, valid_end_date date, invalid_reason text);
+TRUNCATE vocab.concept, vocab.concept_relationship;
+`;
+    for (const c of concepts) out += `INSERT INTO vocab.concept VALUES (${[c.c1, c.c2, c.c3, c.c4, c.c5, c.c6, c.c7, c.c8, c.c9, c.c10].map(lit).join(", ")});\n`;
+    for (const r of rels) out += `INSERT INTO vocab.concept_relationship VALUES (${[r.c1, r.c2, r.c3, r.c4, r.c5, r.c6].map(lit).join(", ")});\n`;
+    await Bun.write("cases/_vocab_seed.sql", out);
+    console.log(`\nwrote cases/_vocab_seed.sql — ${concepts.length} concepts, ${rels.length} relationships`);
+}
+
 // ── main ───────────────────────────────────────────────────────────────────
+const seedSet = new Set<string>();
 const files = readdirSync("cases").filter((f) => f.endsWith(".json") && (!filter || f.includes(filter))).sort();
 let pass = 0, fail = 0;
 const failedCases: string[] = [];
@@ -279,6 +364,7 @@ for (const f of files) {
             const present = await loadFhir(v.fhir ?? []);
             const produced = await runPipeline(present, slug, new Set(Object.keys(omopByTable)));
             vFailures = await assertVariant({ omopByTable, __produced: produced });
+            if (process.env.DUMP_SEED) await collectConcepts(seedSet); // before next reset drops the schemas
         } catch (e: any) {
             vFailures = [`ERROR: ${e.message}`];
         }
@@ -302,6 +388,8 @@ try {
     const merged = { ranAt: new Date().toISOString(), files: { ...(prior.files ?? {}), ...results } };
     await Bun.write(path, JSON.stringify(merged, null, 2));
 } catch (e: any) { console.log(`(could not write results file: ${e.message})`); }
+
+if (process.env.DUMP_SEED) { await seedFromCaseCodes(seedSet); await dumpSeed(seedSet); }
 
 console.log(`\n${"=".repeat(50)}\n${pass} passed, ${fail} failed  (of ${pass + fail})`);
 if (fail) console.log("failed: " + failedCases.join(", "));

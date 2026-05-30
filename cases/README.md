@@ -111,8 +111,29 @@ surrogate PK and `__name` siblings ignored. Exit 1 on any failure.
 
 For resolve families (Condition / Observation / DiagnosticReport) all sibling
 edges run, so mis-routing to a table the case didn't list is caught. Non-resolve
-resources run only the edge(s) for the expected + primary tables (avoids pulling
-in cross-table-dependent edges like Patient→observation_period).
+resources run only the edge(s) for the expected + primary tables. The two
+cross-table edges work because the runner redirects `cdm_ours_fhir.`→`t_cdm.`
+too: Patient→observation_period reads the case's own visit_occurrence (produced
+first by Encounter→visit_occurrence), and PractitionerRole→provider UPDATEs the
+isolated t_cdm.provider.
+
+### Hermetic run (no full Athena)
+
+The cases only touch a few hundred vocabulary rows, captured in the committed
+`cases/_vocab_seed.sql` (a minimal `vocab.concept` + `concept_relationship`
+subset — ~65 concepts). Regenerate it after adding codes:
+
+```sh
+DUMP_SEED=1 bun script/run-cases.ts        # rewrites cases/_vocab_seed.sql
+bun script/run-cases-hermetic.ts           # prove the suite passes against ONLY the seed
+```
+
+`run-cases-hermetic.ts` loads the seed into a throwaway `vocab_seed` schema and
+runs every case with `RC_VOCAB=vocab_seed` (verified 91/91) — `cm.*` (built from
+`mapspec/profiles/*.cm.json`, the seed covers its `omop-source-vocabulary`
+lookups) is reused. In an Athena-free CI the same seed loads into a fresh
+Postgres `vocab` schema, `cm.*` is built from profiles, then `bun
+script/run-cases.ts` — no 928MB bundle needed.
 
 ### Gotchas baked into the cases
 1. **Timezone**: most edges cast `::timestamp` (offset dropped, wall-clock kept);
