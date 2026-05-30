@@ -41,8 +41,8 @@ reference CSV pipeline gives you a row-level diff oracle for validation.
 | SQL-on-FHIR ViewDefinitions (`mapspec/views/`) — Stage 1 flatteners | ✅ 29 |
 | OMOP Athena vocabularies loaded into Postgres (`vocab.*`) | ✅ 6.4M concepts |
 | Stage 2 SQL ETLs (`mapspec/etl/`, OMOP-shaped, vocab joins via `cm.*`) | ✅ 24 / 29 edges (5 stubs: Coverage, Specimen, Medication, MedicationDispense, MedicationStatement — views present, no Synthea source data) |
-| Reference ETL from Synthea CSV → `cdm.*` (oracle for diffing) | ✅ 9 tables |
-| Side-by-side diff UI: `cdm.*` (CSV oracle) vs `cdm_ours_fhir.*` (FHIR pipeline) | ✅ per-row mismatch cards |
+| Golden FHIR→OMOP test cases (`cases/`, run by `script/run-cases.ts`) — the correctness gate | ✅ 136 variants / 23 branches |
+| Hermetic case runner in CI (minimal vocab subset, no full Athena bundle) | ✅ GitHub Actions |
 | FHIR-instance validator (profile → SQL `WHERE`) | 🚧 design |
 
 Known gaps and remediation are tracked in [`mapspec/GAPS.md`](mapspec/GAPS.md).
@@ -65,11 +65,11 @@ docker compose up -d
 bun script/init-athena.ts   # ~5 min: gcloud cp + unzip + load
 psql -f script/init-vocab-indexes.sql "$ATHENA_DSN"   # ~30s; needed for sub-second stage-2
 
-# 5. Generate Synthea data + load both pipelines
+# 5. Generate Synthea FHIR data + run the pipeline
 bun script/gen-synthea.ts --patients=100
-bun script/load-cdm-reference.ts                       # CSV → cdm.*       (oracle)
-bun script/load-fhir-bundles.ts                        # Bundle → fhir.*   (raw)
+bun script/load-fhir.ts synthea/output/fhir            # Bundle → fhir.*   (raw)
 bun script/etl-all.ts                                  # fhir.* → cdm_ours_fhir.* (full pipeline, ~30s)
+bun script/run-cases.ts                                # golden cases → assert against the real pipeline
 
 # 6. Start the UI/dev server (http://localhost:3000)
 bun src/$main.ts
@@ -78,8 +78,9 @@ bun src/$main.ts
 Then visit:
 - `/` — Resource × Table mapping matrix + Sankey
 - `/profiles` — Profiles, ViewDefinitions, ValueSets, ConceptMaps
-- `/mapspec/<Resource>/<table>` — per-edge detail (field map + profile + view + stage-2 SQL + references + sample/diff cards)
-- `/table/<omop_table>` — OMOP table page (`cdm.*` vs `cdm_ours_fhir.*` row counts, side-by-side row diff)
+- `/mapspec/<Resource>/<table>` — per-edge detail (field map + profile + view + stage-2 SQL + references + sample-rows card)
+- `/cases` — golden FHIR→OMOP test cases, with pass/fail badges from the last run
+- `/table/<omop_table>` — OMOP table page (FHIR sources feeding the table)
 
 Hot-reload after edits via REPL (`bun script/repl.ts 'await ctx.fns.repl.load(ctx, { name: "profiles" })'`) — see [CLAUDE.md](CLAUDE.md).
 
@@ -99,10 +100,11 @@ script/
   init-athena.ts           Bootstrap Athena bundle from GCS into Postgres
   load-athena.ts           CSV-bundle → vocab.* loader
   init-vocab-indexes.sql   Performance-critical vocab indexes (Maps-to partial idx, etc.)
-  gen-synthea.ts           Synthea generator wrapper (CSV + FHIR Bundle from one seed)
-  load-cdm-reference.ts    Synthea CSV → cdm.* (oracle pipeline)
-  load-fhir-bundles.ts     Synthea Bundle → fhir.* (raw FHIR storage)
+  gen-synthea.ts           Synthea generator wrapper (FHIR Bundle from one seed)
+  load-fhir.ts             Synthea Bundle → fhir.* (raw FHIR storage)
   etl-all.ts               Full pipeline: cm.* → staging.* → cdm_ours_fhir.* (orchestrator)
+  run-cases.ts             Run cases/*.json through the pipeline + assert (correctness gate)
+  build-cm.ts              Materialize cm.* from profiles (used by the hermetic case runner)
   lint-edges.ts            View ↔ stage-2 SQL column-name validator (runs in CI)
   regen-views.ts           Regenerate ViewDefinitions from edges/
   repl.ts                  REPL client for the running server
@@ -137,10 +139,10 @@ What you get here today:
   (`cm.*`) and pre-indexed `vocab.concept_relationship` Maps-to edges to
   produce OMOP-shaped rows. Full 100-patient Synthea pipeline runs in
   ~30 seconds end-to-end.
-- A side-by-side diff UI that compares our FHIR-based output
-  (`cdm_ours_fhir.*`) against the Synthea CSV reference (`cdm.*`) row
-  by row — so the *correctness* of each mapping is observable, not just
-  asserted.
+- A golden test-case suite (`cases/`) that runs each case's FHIR through the
+  real pipeline in isolated schemas and asserts the **exact** OMOP rows — the
+  *correctness* gate, branch by branch (`bun script/run-cases.ts`; also runs
+  hermetically in CI from a committed vocab subset, no full Athena bundle).
 - A loaded `vocab.*` schema you can query independently.
 
 ## Contributing

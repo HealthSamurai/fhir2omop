@@ -114,13 +114,14 @@ curl -L -o synthea-with-dependencies.jar \
 java -jar synthea-with-dependencies.jar -s 1779010226473 -c settings.conf -p 100
 cd ..
 
-# 7. Run the Patient → person pipeline end-to-end (~2s on 100 patients)
+# 7. Run the FHIR→OMOP pipeline end-to-end (~30s on 100 patients)
 PGPASSWORD=athena psql -h localhost -p 54392 -U athena -d athena -v ON_ERROR_STOP=1 \
-  -f mapspec/etl/_functions.sql                            # referenceToId() helper
+  -f mapspec/etl/_functions.sql                            # referenceToId()/stringToId() helpers
 bun script/load-fhir.ts synthea/output/fhir                # → fhir.* (105 patient rows + others)
-bun script/load-cdm-reference.ts                              # Synthea CSV → cdm.* (reference oracle)
-# (cm.* / staging.* / cdm_ours_fhir.* are built by the server on first edge view, or
-#  via REPL — see "Patient → person pipeline" below.)
+bun script/etl-all.ts                                      # cm.* → staging.* → cdm_ours_fhir.* (full pipeline)
+
+# Correctness gate — golden FHIR→OMOP test cases (see cases/README.md):
+bun script/run-cases.ts                                    # run cases/*.json against the real pipeline
 
 # 8. Start the UI/dev server (writes its port to .hyper/_runtime/port, default 3000)
 bun src/\$main.ts                                          # http://localhost:3000
@@ -229,16 +230,21 @@ if you need them.
 ### Synthea dataset (`synthea/`)
 
 Local Synthea generator — a single jar + settings file, no docker, no R-ETL
-build. Reference oracle (`cdm.*`) is built directly from the CSV output by
-our own loader instead of the OHDSI R-based ETL — much faster (~40 ms vs
-~30 min) and the mapping is transparent SQL (see `script/load-cdm-reference.ts`).
+build. Synthea is the **source FHIR dataset** for the pipeline.
+
+> The former Synthea-CSV → OMOP **reference oracle** (`cdm.*`, built by the now-
+> deleted `script/load-cdm-reference.ts` + `script/load-cdm/*.sql`, with `/diff`
+> and `/compare` UI cards) has been **retired**. It was a parallel approximation
+> whose row-level diff was dominated by representation noise. The golden test
+> cases under `cases/` (run by `script/run-cases.ts` against the real pipeline)
+> are now the correctness gate — exact, branch-by-branch. See `cases/README.md`.
 
 ```
 synthea/
 ├── synthea-with-dependencies.jar   # gitignored — wget from synthetichealth/synthea v3.2.0 release
 ├── settings.conf                   # exporter.fhir.use_us_core_ig = true
 ├── output/                         # gitignored
-│   ├── csv/   patients.csv, encounters.csv, …  # → cdm.* via load-cdm-reference.ts
+│   ├── csv/   patients.csv, encounters.csv, …  # Synthea CSV (oracle that consumed it is retired)
 │   └── fhir/  *.json (one bundle per patient + hospital + practitioner)  # → fhir.*
 └── generate.log
 ```
@@ -255,31 +261,25 @@ US Core IG is **enabled** in `settings.conf` so Patient resources carry
 `us-core-race` / `us-core-ethnicity` / `us-core-birthsex` extensions that
 the stage-1 view extracts.
 
-Pipeline (FHIR → OMOP, ours) vs reference (Synthea CSV → OMOP, oracle):
+Pipeline (FHIR → OMOP) + golden-case gate:
 
 ```
 [Synthea seed=1779010226473, 100 living patients (~105 total)]
         │
-        ├──→ synthea/output/csv/    ──► bun script/load-cdm-reference.ts  ──► cdm.*           (reference oracle)
-        │                                                                                  │
-        └──→ synthea/output/fhir/   ──► bun script/load-fhir.ts        ──► fhir.*          │
-                                                                          │                │
-                                                                          ▼ stage-1 (SoF)  │
-                                                                       staging.*           │
-                                                                          │                │
-                                                                          ▼ stage-2 SQL    │
-                                                                       cdm_ours_fhir.*  ◄──┘
-                                                                          │
-                                                                          ▼ diff per person_source_value
-                                                                       cdm vs cdm_ours_fhir
+        └──→ synthea/output/fhir/   ──► bun script/load-fhir.ts  ──► fhir.*
+                                                                     │
+                                                                     ▼ stage-1 (SQL-on-FHIR)
+                                                                  staging.*
+                                                                     │
+                                                                     ▼ stage-2 SQL (JOIN cm.* + vocab.*)
+                                                                  cdm_ours_fhir.*
+
+  Correctness gate: cases/*.json  ──► bun script/run-cases.ts ──► run each case's
+  fhir[] through the real pipeline in isolated schemas, assert the exact OMOP rows.
 ```
 
-The Synthea Patient UUID is the universal join key:
-`patients.csv:Id` = `Patient.id` = `cdm.person.person_source_value`
-= `cdm_ours_fhir.person.person_source_value`. Both sides hash this UUID
-with `hashtextextended(uuid, 0)::bigint` so the surrogate `person_id`s
-match across `cdm.*` and `cdm_ours_fhir.*` — JOINs in the diff page are
-direct (no surrogate-id remap).
+`Patient.id` (the Synthea UUID) → `cdm_ours_fhir.person.person_source_value`;
+references hash to surrogate ids via `referenceToId()` = `hashtextextended(uuid, 0)::bigint`.
 
 ### Schemas in one DB
 
@@ -287,10 +287,11 @@ direct (no surrogate-id remap).
 |---|---|---|---|
 | `vocab.*`           | Athena bundle | `bun script/init-athena.ts` | Standardized vocabularies — read-only |
 | `cm.*`              | `mapspec/profiles/*.cm.json` | `ctx.fns.conceptmap.materialize` | Source-code → OMOP concept_id lookup tables (one per ConceptMap) |
-| `cdm.*`             | `synthea/output/csv/`        | `bun script/load-cdm-reference.ts` | **Reference OMOP** (oracle), Synthea CSV → CDM v5.4 |
 | `fhir.*`            | `synthea/output/fhir/`       | `bun script/load-fhir.ts`       | Raw FHIR resources (jsonb staging) |
 | `staging.*`         | `fhir.*` + view JSONs        | `ctx.fns.viewdef.materialize`   | Stage-1 FHIR-flat materializations (one per ViewDefinition) |
-| `cdm_ours_fhir.*`   | `staging.*` + `cm.*`         | `mapspec/etl/<R>__<T>.sql`      | Our FHIR→OMOP pipeline target (diff against `cdm.*`) |
+| `cdm_ours_fhir.*`   | `staging.*` + `cm.*`         | `mapspec/etl/<R>__<T>.sql`      | Our FHIR→OMOP pipeline target (validated by `cases/` via `script/run-cases.ts`) |
+
+(The `cdm.*` reference-oracle schema was retired together with `script/load-cdm*`.)
 
 The FHIR↔OMOP join key is **always** the Synthea UUID:
 
@@ -298,16 +299,15 @@ The FHIR↔OMOP join key is **always** the Synthea UUID:
 -- The bridge query: link every FHIR resource back to its OMOP row.
 SELECT op.person_id, fp.id, fp.resource->>'gender'
 FROM fhir.patient fp
-JOIN cdm.person   op ON op.person_source_value = fp.id;
+JOIN cdm_ours_fhir.person op ON op.person_source_value = fp.id;
 ```
 
-### Server-side COPY via bind mount
+### Server-side COPY via bind mount (vestigial)
 
-`docker-compose.yml` bind-mounts `./synthea/output:/synthea:ro` so Postgres
-can `COPY … FROM '/synthea/csv/patients.csv'` directly. The CSV path is
-relative to the server's filesystem, not the client. Used by
-`script/load-cdm-reference.ts` to load 100 patients in ~40 ms (single
-round-trip, no per-row JS encoding).
+`docker-compose.yml` bind-mounts `./synthea/output:/synthea:ro` so Postgres can
+`COPY … FROM '/synthea/csv/...'` server-side. Its only consumer was the retired
+`script/load-cdm-reference.ts`; the mount is now unused (stage-1 materialization
+streams a /tmp CSV via client-side psql `\copy`, see `src/viewdef/materialize.ts`).
 
 ### Bun.SQL gotchas
 
@@ -438,7 +438,7 @@ src/
   project/                 ctx.fns.project.* — scan / classify / roots
   repl/                    ctx.fns.repl.* — eval, load (hot-reload), POST /repl
   markdown/                ctx.fns.markdown.* — render, highlight, mermaid
-  mapspec/                 ctx.fns.mapspec.* — list (edges loader), render (per-edge UI), renderDiffCard
+  mapspec/                 ctx.fns.mapspec.* — list (edges loader), render (per-edge UI), loadEdges/byResource/byTable
   profiles/                ctx.fns.profiles.* — load (no cache), byId, viewForEdge, profileForEdge, valueSetByUrl
   db/                      ctx.fns.db.* — connect (shared Bun.SQL pool), query (REPL-friendly SQL)
   fhir/                    ctx.fns.fhir.* — init, ensureTable, loadBundle, loadDir (Bundle → fhir.*)
@@ -825,9 +825,9 @@ nearest one; don't invent a third shape.
 
    Why: routing by a materialized `std_domain` column collapses N redundant
    4-table vocab JOINs into one, and per-coding fan-out stops dropping codings
-   on multi-coded resources. The diff vs the `cdm.*` oracle joins on
-   `*_source_value` (the raw code), so the surrogate-id change is invisible
-   downstream.
+   on multi-coded resources. The surrogate-id scheme (`stringToId(id || '|' ||
+   std_concept_id)`) is internal — the golden cases under `cases/` assert on the
+   resolved concept + natural keys, not the surrogate.
 
 ### ConceptMaps (`cm.*` tables)
 

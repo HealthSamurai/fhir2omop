@@ -11,20 +11,12 @@ declare global {
         renderDetail: typeof import("./cases/renderDetail").default;
         renderList: typeof import("./cases/renderList").default;
         };
-        compare: {
-        renderSideBySide: typeof import("./compare/renderSideBySide").default;
-        };
         conceptmap: {
         materialize: typeof import("./conceptmap/materialize").default;
         };
         db: {
         connect: typeof import("./db/connect").default;
         query: typeof import("./db/query").default;
-        };
-        diff: {
-        compareTables: typeof import("./diff/compareTables").default;
-        createIndices: typeof import("./diff/createIndices").default;
-        report: typeof import("./diff/report").default;
         };
         etl_fhir: {
         runEdge: typeof import("./etl_fhir/runEdge").default;
@@ -58,7 +50,6 @@ declare global {
         list: typeof import("./mapspec/list").default;
         loadEdges: typeof import("./mapspec/loadEdges").default;
         render: typeof import("./mapspec/render").default;
-        renderDiffCard: typeof import("./mapspec/renderDiffCard").default;
         };
         markdown: {
         highlight: typeof import("./markdown/highlight").default;

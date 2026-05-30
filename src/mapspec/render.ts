@@ -329,46 +329,13 @@ async function renderEdge(ctx: Context, edge: Edge): Promise<string> {
 
     if (etlSql) parts.push(renderEtlSqlCard(etlSql, `${edge.fhir_resource}__${edge.omop_table}.sql`));
 
-    // Diff card — lazy-loaded via htmx so the page renders instantly and the
-    // heavy diff JOIN happens after first paint. The fragment endpoint
-    // (src/diff/$route_$resource_$table_GET.ts) returns the actual card.
-    // The layout sets hx-target="#main-content" + hx-select on <body> for
-    // page boosting. We must hx-disinherit so this lazy fragment replaces
-    // ITSELF (not the whole main content), and hx-select="unset" so the
-    // raw fragment is used as-is.
+    // Sample-rows card — lazy-loaded via htmx so the page renders instantly; the
+    // fragment endpoint (src/sample/$route_$resource_$table_GET.ts) returns the
+    // actual card. hx-disinherit so this lazy fragment replaces ITSELF (not the
+    // whole main content); hx-select="unset" so the raw fragment is used as-is.
+    // (The old cdm.* oracle diff / side-by-side cards were retired once the
+    // golden test cases under cases/ became the correctness gate.)
     parts.push(`
-<div hx-get="/diff/${encodeURIComponent(edge.fhir_resource)}/${encodeURIComponent(edge.omop_table)}"
-     hx-trigger="load"
-     hx-target="this"
-     hx-swap="outerHTML"
-     hx-select="unset"
-     hx-select-oob="unset"
-     hx-disinherit="*"
-     class="mb-6 border border-sky-200 rounded-lg overflow-hidden">
-  <div class="flex items-center justify-between px-4 py-2 bg-sky-50 border-b border-sky-200">
-    <div class="flex items-center gap-2 text-xs">
-      <span class="text-[10px] uppercase tracking-wider text-sky-800 font-semibold">Live diff</span>
-      <span class="text-[11px] text-sky-700 animate-pulse">loading…</span>
-    </div>
-    <span class="text-[10px] text-gray-500">deferred via htmx</span>
-  </div>
-</div>
-<div hx-get="/compare/${encodeURIComponent(edge.fhir_resource)}/${encodeURIComponent(edge.omop_table)}"
-     hx-trigger="load"
-     hx-target="this"
-     hx-swap="outerHTML"
-     hx-select="unset"
-     hx-select-oob="unset"
-     hx-disinherit="*"
-     class="mb-6 border border-amber-200 rounded-lg overflow-hidden">
-  <div class="flex items-center justify-between px-4 py-2 bg-amber-50 border-b border-amber-200">
-    <div class="flex items-center gap-2 text-xs">
-      <span class="text-[10px] uppercase tracking-wider text-amber-800 font-semibold">Side-by-side ETL diff</span>
-      <span class="text-[11px] text-amber-700 animate-pulse">loading…</span>
-    </div>
-    <span class="text-[10px] text-gray-500">deferred via htmx</span>
-  </div>
-</div>
 <div hx-get="/sample/${encodeURIComponent(edge.fhir_resource)}/${encodeURIComponent(edge.omop_table)}"
      hx-trigger="load"
      hx-target="this"
