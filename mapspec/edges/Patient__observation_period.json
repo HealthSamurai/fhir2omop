@@ -3,7 +3,7 @@
   "fhir_resource": "Patient",
   "omop_table": "observation_period",
   "direction": "fhir-to-omop",
-  "status": "documented",
+  "status": "implemented",
   "primary": false,
   "required": false,
   "condition": "Derived per-person from data availability, not directly from Patient fields",

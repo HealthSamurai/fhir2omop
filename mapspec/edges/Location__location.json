@@ -3,7 +3,7 @@
   "fhir_resource": "Location",
   "omop_table": "location",
   "direction": "fhir-to-omop",
-  "status": "documented",
+  "status": "implemented",
   "primary": true,
   "required": true,
   "narrative_md": "Each FHIR Location maps to one OMOP location row representing a physical address. Location.address fields map to address_1, address_2, city, state, zip, county, and country. Location.position maps to latitude/longitude. The location table is shared with Patient.address -- both populate the same table and rows should be deduplicated by address components to avoid duplicates.",

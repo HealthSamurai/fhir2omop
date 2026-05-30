@@ -3,7 +3,7 @@
   "fhir_resource": "Organization",
   "omop_table": "care_site",
   "direction": "fhir-to-omop",
-  "status": "documented",
+  "status": "implemented",
   "primary": true,
   "required": true,
   "narrative_md": "Each FHIR Organization maps to one OMOP care_site row representing a healthcare facility or department. Organization.name becomes care_site_name, Organization.type maps to place_of_service_concept_id via OrganizationType vocabulary, and Organization.address resolves to a location row linked via location_id. FHIR Location can also contribute care_site rows in some implementations (see Location__care_site edge). FHIR Organization.partOf hierarchy is flattened -- each level becomes a separate care_site row with no parent linkage.",

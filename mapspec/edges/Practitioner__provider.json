@@ -3,7 +3,7 @@
   "fhir_resource": "Practitioner",
   "omop_table": "provider",
   "direction": "fhir-to-omop",
-  "status": "documented",
+  "status": "implemented",
   "primary": true,
   "required": true,
   "narrative_md": "Individual healthcare provider. One FHIR Practitioner maps to one OMOP provider row. The provider table stores identity (name, NPI, gender, year_of_birth) from Practitioner; specialty and care_site are enriched by PractitionerRole. Clinical event tables carry provider_id FK back to this row.",

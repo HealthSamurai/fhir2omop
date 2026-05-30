@@ -3,7 +3,7 @@
   "fhir_resource": "Procedure",
   "omop_table": "procedure_occurrence",
   "direction": "fhir-to-omop",
-  "status": "documented",
+  "status": "implemented",
   "primary": true,
   "required": true,
   "condition": "status is completed (recommended); code domain_id is Procedure",

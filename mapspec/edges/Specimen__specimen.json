@@ -3,7 +3,7 @@
   "fhir_resource": "Specimen",
   "omop_table": "specimen",
   "direction": "fhir-to-omop",
-  "status": "documented",
+  "status": "stub",
   "primary": true,
   "required": true,
   "narrative_md": "One FHIR Specimen maps to exactly one OMOP specimen row. The specimen table captures biological samples collected from a person, including specimen type, collection date, quantity, anatomic site, and disease status. Specimen type (kind of material) maps to specimen_concept_id via SNOMED, while specimen_type_concept_id is a provenance metadata field (EHR = 32817). Collection date is required in OMOP but optional in FHIR.",

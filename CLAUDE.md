@@ -776,6 +776,58 @@ LEFT JOIN cm.race_omb_to_omop r ON r.source_code = v.race_omb_code;
 
 Shared helpers live in `mapspec/etl/_functions.sql` (apply once, idempotent):
 - `referenceToId(text) → bigint` — null-aware `hashtextextended(ref, 0)::bigint`
+- `stringToId(text) → bigint` — same hash for any composite key (used for
+  fan-out-safe surrogate ids, e.g. `stringToId(id || '|' || std_concept_id)`).
+
+#### Canonical stage-2 patterns — two reference templates
+
+Every stage-2 ETL should read like one of two committed templates. Match the
+nearest one; don't invent a third shape.
+
+1. **`Patient__person` style — clean single SELECT** (the default). One source
+   resource → one OMOP row. A flat projection over `staging.<src>` with
+   `LEFT JOIN cm.<id>` lookups for coded fields; no inline vocab cascade.
+   Use for single-target, single-event edges. When a source carries several
+   code systems for the *same* slot (RxNorm > NDC, SNOMED > CPT4 > HCPCS),
+   pick the best one with a small `codes`/`resolved` CTE + `DISTINCT ON
+   (staging_id) ORDER BY prio` — still one row out, the resolution stays local
+   and readable. Examples: `Patient__person`, `Encounter__visit_occurrence`,
+   `Medication*__drug_exposure`, `Immunization__drug_exposure`,
+   `Procedure__procedure_occurrence`, `Device__device_exposure`,
+   `AllergyIntolerance__observation`.
+
+2. **`Condition__condition_occurrence` style — shared resolve pass** (for
+   multi-target families). One source resource fans out to *several* OMOP
+   tables by the resolved concept's `domain_id`. Use this **only** when the
+   same vocab walk would otherwise run N times (once per sibling) or when a
+   single resource legitimately produces rows in multiple OMOP tables:
+
+   - **Stage-1 view** fans out `forEach: code.coding` (per-coding), carrying
+     the union of all siblings' value slots, into one canonical staging table
+     (`staging.<resource>_coded`). Sibling target tables share this one view —
+     the duplicate per-target views are deleted.
+   - **`mapspec/etl/_resolve_<resource>.sql`** walks
+     `code_system → cm.fhir_system_to_omop_vocab → vocab.concept (source) →
+     Maps-to → vocab.concept (standard)` exactly ONCE, `DISTINCT ON (id[,
+     sub-key], std_concept_id)` to dedup, tags `std_domain` (+ resolves value /
+     unit / operator alongside), and materializes `staging.<resource>_resolved`.
+     The orchestrator runs every `_resolve_*.sql` after staging materialization
+     and before stage-2 (see `script/etl-all.ts` §3b).
+   - **Each sibling stage-2 SQL** is then a trivial `WHERE std_domain='X'`
+     filter over the resolved table (alias `r`), with a fan-out-safe surrogate
+     `stringToId(id || '|' || std_concept_id)`.
+
+   Families on this pattern: **Condition** (→ condition_occurrence /
+   observation / measurement / procedure_occurrence), **Observation** (+
+   `Observation.component[]` via `_resolve_observation_component.sql`) and
+   **DiagnosticReport** (→ measurement / observation / procedure_occurrence;
+   `__note` stays a per-report single SELECT, style 1).
+
+   Why: routing by a materialized `std_domain` column collapses N redundant
+   4-table vocab JOINs into one, and per-coding fan-out stops dropping codings
+   on multi-coded resources. The diff vs the `cdm.*` oracle joins on
+   `*_source_value` (the raw code), so the surrogate-id change is invisible
+   downstream.
 
 ### ConceptMaps (`cm.*` tables)
 

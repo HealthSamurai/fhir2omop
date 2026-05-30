@@ -3,7 +3,7 @@
   "fhir_resource": "Medication",
   "omop_table": "drug_exposure",
   "direction": "fhir-to-omop",
-  "status": "documented",
+  "status": "stub",
   "primary": true,
   "required": false,
   "condition": "Medication does not directly produce drug_exposure rows. Its code/ingredient data flows into drug_exposure via event resources (MedicationRequest, MedicationDispense, MedicationAdministration, MedicationStatement) when they carry a medicationReference pointing to a Medication resource.",

@@ -3,7 +3,7 @@
   "fhir_resource": "PractitionerRole",
   "omop_table": "provider",
   "direction": "fhir-to-omop",
-  "status": "documented",
+  "status": "implemented",
   "primary": true,
   "required": false,
   "condition": "PractitionerRole.practitioner references an existing Practitioner with a provider row",

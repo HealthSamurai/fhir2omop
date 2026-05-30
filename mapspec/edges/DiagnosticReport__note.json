@@ -3,7 +3,7 @@
   "fhir_resource": "DiagnosticReport",
   "omop_table": "note",
   "direction": "fhir-to-omop",
-  "status": "documented",
+  "status": "implemented",
   "primary": false,
   "required": false,
   "condition": "DiagnosticReport.conclusion is non-empty or DiagnosticReport.presentedForm contains text-extractable attachments",

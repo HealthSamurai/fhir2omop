@@ -3,7 +3,7 @@
   "fhir_resource": "Immunization",
   "omop_table": "drug_exposure",
   "direction": "fhir-to-omop",
-  "status": "documented",
+  "status": "implemented",
   "primary": true,
   "required": true,
   "condition": "status = completed (skip entered-in-error and not-done)",

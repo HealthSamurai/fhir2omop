@@ -3,7 +3,7 @@
   "fhir_resource": "Coverage",
   "omop_table": "payer_plan_period",
   "direction": "fhir-to-omop",
-  "status": "documented",
+  "status": "stub",
   "primary": true,
   "required": true,
   "condition": "Coverage.status = 'active'",

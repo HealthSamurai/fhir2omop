@@ -3,7 +3,7 @@
   "fhir_resource": "Location",
   "omop_table": "care_site",
   "direction": "fhir-to-omop",
-  "status": "documented",
+  "status": "implemented",
   "primary": false,
   "required": false,
   "condition": "Location.managingOrganization is present",

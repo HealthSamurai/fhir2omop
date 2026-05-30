@@ -3,7 +3,7 @@
   "fhir_resource": "Patient",
   "omop_table": "location",
   "direction": "fhir-to-omop",
-  "status": "documented",
+  "status": "implemented",
   "primary": false,
   "required": false,
   "condition": "Patient.address is present with usable fields",

@@ -3,7 +3,7 @@
   "fhir_resource": "Device",
   "omop_table": "device_exposure",
   "direction": "fhir-to-omop",
-  "status": "documented",
+  "status": "implemented",
   "primary": true,
   "required": true,
   "narrative_md": "FHIR Device and DeviceUseStatement together map to one OMOP device_exposure row. Device carries identity (type, UDI, manufacturer, lot/serial); DeviceUseStatement records the clinical event (who, when, why). Alternatively, Procedure.usedCode can be a source. The mapper must resolve the two-resource join: DeviceUseStatement.device references a Device resource from which type, UDI, and production identifiers are extracted.",

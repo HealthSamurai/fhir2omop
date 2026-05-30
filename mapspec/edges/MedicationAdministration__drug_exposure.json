@@ -3,7 +3,7 @@
   "fhir_resource": "MedicationAdministration",
   "omop_table": "drug_exposure",
   "direction": "fhir-to-omop",
-  "status": "documented",
+  "status": "implemented",
   "primary": true,
   "required": true,
   "narrative_md": "Inpatient medication administration events. Each MedicationAdministration produces one drug_exposure row distinguished by drug_type_concept_id = 38000179 (Physician administered drug). MedicationAdministration carries the richest route and dose-event timing information of the four medication resources.",
