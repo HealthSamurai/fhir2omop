@@ -1,0 +1,66 @@
+{
+  "title": "LOINC lab Observation (glucose, valueQuantity + UCUM) -> one measurement row",
+  "notes": "A US-Core lab Observation coded with LOINC 2339-0 'Glucose [Mass/volume] in Blood' carrying valueQuantity 91.84 mg/dL (UCUM, system http://unitsofmeasure.org). Stage 1 (Observation__measurement.view.json) fans out one staging row per code.coding[]; here there is a single LOINC coding. _resolve_observation.sql walks the coding through cm.fhir_system_to_omop_vocab (http://loinc.org -> LOINC), finds vocab.concept (LOINC, 2339-0) = concept_id 3000483, follows 'Maps to' to a standard concept which is 3000483 itself (LOINC 2339-0 is already standard, standard_concept='S', domain_id='Measurement'), so src_concept_id == std_concept_id == 3000483. std.domain_id='Measurement' routes the row to the measurement table (NOT observation). Observation__measurement.sql projects: measurement_concept_id = std_concept_id 3000483 ('Glucose [Mass/volume] in Blood', verified Measurement domain, standard); measurement_source_value = the raw LOINC code '2339-0'; measurement_source_concept_id = src_concept_id 3000483. value_as_number = valueQuantity.value 91.84. unit_concept_id = 8840 ('milligram per deciliter', UCUM, standard) resolved from valueQuantity.code='mg/dL' against vocab.concept (vocabulary_id='UCUM', standard_concept='S'); unit_source_value = valueQuantity.unit 'mg/dL'. measurement_date / measurement_datetime come from effectiveDateTime 2016-07-13T11:58:43+01:00 (date 2016-07-13, datetime 2016-07-13 11:58:43; the view reads effective.ofType(dateTime), no timezone retained in the timestamp column). measurement_type_concept_id is the constant 32817 ('EHR', Type Concept, standard). visit_occurrence_id = referenceToId(encounter ref). No performer present -> provider_id NULL. No valueQuantity.comparator -> operator_concept_id NULL. No referenceRange -> range_low/range_high NULL. valueCodeableConcept absent -> value_as_concept_id / value_source_value NULL. status='final' passes the status filter (not entered-in-error/cancelled/unknown). value_number IS NOT NULL satisfies the value-presence WHERE, so the row is NOT dropped as a panel-parent. Exactly ONE measurement row (single coding, single distinct std concept; DISTINCT ON (id, std_concept_id) has nothing to collapse).",
+  "fhir": [
+    {
+      "resourceType": "Patient",
+      "id": "patient-1",
+      "gender": "female",
+      "birthDate": "1980-01-01"
+    },
+    {
+      "resourceType": "Encounter",
+      "id": "enc-1",
+      "status": "finished",
+      "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
+      "subject": { "reference": "Patient/patient-1" }
+    },
+    {
+      "resourceType": "Observation",
+      "id": "obs-1",
+      "status": "final",
+      "category": [
+        {
+          "coding": [
+            { "system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "laboratory", "display": "Laboratory" }
+          ]
+        }
+      ],
+      "code": {
+        "text": "Glucose [Mass/volume] in Blood",
+        "coding": [
+          { "system": "http://loinc.org", "code": "2339-0", "display": "Glucose [Mass/volume] in Blood" }
+        ]
+      },
+      "subject": { "reference": "Patient/patient-1" },
+      "encounter": { "reference": "Encounter/enc-1" },
+      "effectiveDateTime": "2016-07-13T11:58:43+01:00",
+      "valueQuantity": {
+        "value": 91.84,
+        "unit": "mg/dL",
+        "system": "http://unitsofmeasure.org",
+        "code": "mg/dL"
+      }
+    }
+  ],
+  "omop": [
+    {
+      "table": "measurement",
+      "person_id": "ref:patient-1",
+      "measurement_concept_id": 3000483,
+      "measurement_concept_id__name": "Glucose [Mass/volume] in Blood",
+      "measurement_date": "2016-07-13",
+      "measurement_datetime": "2016-07-13T11:58:43",
+      "measurement_type_concept_id": 32817,
+      "measurement_type_concept_id__name": "EHR",
+      "value_as_number": 91.84,
+      "unit_concept_id": 8840,
+      "unit_concept_id__name": "milligram per deciliter",
+      "visit_occurrence_id": "ref:enc-1",
+      "measurement_source_value": "2339-0",
+      "measurement_source_concept_id": 3000483,
+      "measurement_source_concept_id__name": "Glucose [Mass/volume] in Blood",
+      "unit_source_value": "mg/dL"
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "title": "Patient → person: Black/African American male with US Core race, ethnicity, birthsex",
+  "notes": "Derived from real fhir.patient e8b43f7b-55bb-23fc-ec97-4ff19ca70c3e (Synthea) and the exact cdm_ours_fhir.person row our pipeline produced for it.\n\nThe Patient__person edge emits exactly ONE person row.\n\nGender: stage-2 SQL prefers us-core-birthsex over Patient.gender (COALESCE(us_core_birthsex, gender)). Birthsex='M' resolves via cm.gender_to_omop → gender_concept_id=8507 (vocab.concept: 8507 'MALE', domain Gender, standard 'S'). gender_source_value copies the resolved input ('M'), and gender_source_concept_id=8507 because the cm.gender_to_omop row for source_code='M' carries source_concept_id=8507 (the uppercase HL7 v3 AdministrativeGender code 'M' is itself loaded in Athena's Gender vocabulary, unlike lowercase 'male' which yields 0).\n\nRace: resolution priority is omop-race extension > US Core OMB ombCategory > Synthea Other-recovery > 0. No omop-race extension here, so US Core ombCategory '2054-5' resolves via cm.race_omb_to_omop → race_concept_id=8516 (vocab.concept: 8516 'Black or African American', domain Race, standard 'S'). race_source_value = the US Core race text 'Black or African American' (omop_race_display absent, falls back to race_text). race_source_concept_id=0 — OMB race codes are not loaded as concept_code under any Athena race vocabulary (OMOP Race uses integer codes), so the honest source-concept mapping is 0 per CLAUDE.md.\n\nEthnicity: same priority. No omop-ethnicity extension, so OMB '2186-5' resolves via cm.ethnicity_omb_to_omop → ethnicity_concept_id=38003564 (vocab.concept: 38003564 'Not Hispanic or Latino', domain Ethnicity, standard 'S'). ethnicity_source_value = 'Not Hispanic or Latino' (US Core text). ethnicity_source_concept_id=0 (OMB ethnicity codes not loaded as a non-standard ethnicity vocab).\n\nBirth date: birthDate '1992-01-25' → year_of_birth=1992, month_of_birth=1, day_of_birth=25 via EXTRACT. birth_datetime falls back to birthDate at midnight ('1992-01-25T00:00:00') because Synthea emits no patient-birthTime extension on the birthDate element.\n\nperson_source_value = Patient.id (the FHIR resource UUID), a traceability anchor — NOT the SS/MR identifiers in Patient.identifier[] (those are PHI and excluded by design).\n\nlocation_id: NON-NULL. It is NOT hash(Patient.id); it is stringToId(concat_ws('|', line, city, state, zip)) = a hash of the address composite '564 Connelly Esplanade|Chelmsford|MA|00000'. Two patients at the same address share this key, per OMOP LOCATION ETL convention; Patient__location.sql writes the matching cdm.location row. It is represented here symbolically as ref:patient-1-location (the patient's own address-derived location), since there is no separate FHIR Location resource.\n\nprovider_id and care_site_id are NULL — this Patient has no generalPractitioner and no managingOrganization, so referenceToId(NULL) yields NULL.\n\ndeceasedDateTime is present on the source but the OMOP person table has no death column (death is a separate table outside this edge), so it does not affect the person row; kept on the input as faithful context but read by no person field.",
+  "fhir": [
+    {
+      "resourceType": "Patient",
+      "id": "patient-1",
+      "gender": "male",
+      "birthDate": "1992-01-25",
+      "deceasedDateTime": "2004-09-12T14:01:03+01:00",
+      "extension": [
+        {
+          "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+          "extension": [
+            {
+              "url": "ombCategory",
+              "valueCoding": {
+                "system": "urn:oid:2.16.840.1.113883.6.238",
+                "code": "2054-5",
+                "display": "Black or African American"
+              }
+            },
+            { "url": "text", "valueString": "Black or African American" }
+          ]
+        },
+        {
+          "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+          "extension": [
+            {
+              "url": "ombCategory",
+              "valueCoding": {
+                "system": "urn:oid:2.16.840.1.113883.6.238",
+                "code": "2186-5",
+                "display": "Not Hispanic or Latino"
+              }
+            },
+            { "url": "text", "valueString": "Not Hispanic or Latino" }
+          ]
+        },
+        {
+          "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+          "valueCode": "M"
+        }
+      ],
+      "address": [
+        {
+          "line": ["564 Connelly Esplanade"],
+          "city": "Chelmsford",
+          "state": "MA",
+          "postalCode": "00000",
+          "country": "US",
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/geolocation",
+              "extension": [
+                { "url": "latitude", "valueDecimal": 42.6166074711701 },
+                { "url": "longitude", "valueDecimal": -71.32422800775815 }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "omop": [
+    {
+      "table": "person",
+      "person_id": "ref:patient-1",
+      "gender_concept_id": 8507,
+      "gender_concept_id__name": "MALE",
+      "year_of_birth": 1992,
+      "month_of_birth": 1,
+      "day_of_birth": 25,
+      "birth_datetime": "1992-01-25T00:00:00",
+      "race_concept_id": 8516,
+      "race_concept_id__name": "Black or African American",
+      "ethnicity_concept_id": 38003564,
+      "ethnicity_concept_id__name": "Not Hispanic or Latino",
+      "location_id": "ref:patient-1-location",
+      "person_source_value": "patient-1",
+      "gender_source_value": "M",
+      "gender_source_concept_id": 8507,
+      "gender_source_concept_id__name": "MALE",
+      "race_source_value": "Black or African American",
+      "race_source_concept_id": 0,
+      "ethnicity_source_value": "Not Hispanic or Latino",
+      "ethnicity_source_concept_id": 0
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "title": "Blood-pressure panel Observation.component[] -> two measurement rows (panel parent filtered)",
+  "notes": "Real basis: fhir.observation id 28bbec1d-0cb4-830e-b8f5-23c8ff5c17fa (US Core blood-pressure panel). The outer Observation carries LOINC 85354-9 ('Blood pressure panel with all children optional') but NO own value[x] -- only its two components do. The component fan-out edge (Observation_component__measurement) emits ONE measurement row per component; the top-level Observation edge emits NOTHING for the parent.\n\nPanel-parent filtering: 85354-9 resolves to standard concept 36203185 (Measurement domain, standard='S'), so it is a recognized code. But staging.observation_coded carries the parent's own value slots, which are all empty here, and _resolve_observation.sql drops the parent via its value-presence WHERE ((value_number|value_string|value_code|value_text) IS NOT NULL). Verified live: zero rows in cdm_ours_fhir.measurement and zero in cdm_ours_fhir.observation for observation_source_value='85354-9' on this resource. The parent's clinical content lives entirely in the components.\n\nComponent rows (from _resolve_observation_component.sql + Observation_component__measurement.sql, both filter to std_domain='Measurement' and require component_value_num IS NOT NULL):\n  * Systolic component, code.coding LOINC 8480-6 -> source concept 3004249 ('Systolic blood pressure', Measurement, standard='S'). Since the LOINC source concept is itself standard it self-maps via 'Maps to', so measurement_concept_id = measurement_source_concept_id = 3004249. valueQuantity.value 112 -> value_as_number; UCUM 'mm[Hg]' -> unit_concept_id 8876 ('millimeter mercury column', UCUM, standard='S'); valueQuantity.unit 'mm[Hg]' -> unit_source_value.\n  * Diastolic component, code.coding LOINC 8462-4 -> source concept 3012888 ('Diastolic blood pressure', Measurement, standard='S'); self-maps so measurement_concept_id = measurement_source_concept_id = 3012888. valueQuantity.value 79 -> value_as_number; same unit_concept_id 8876.\n\nShared across both rows: measurement_type_concept_id = 32817 (constant in stage-2 SQL). measurement_source_value is the verbatim component LOINC code (8480-6 / 8462-4). measurement_date / measurement_datetime derive from the PARENT Observation.effectiveDateTime 2025-06-25T11:58:43+01:00 (the view reads effective off the outer resource, components inherit it) -> date 2025-06-25, datetime 2025-06-25 11:58:43. person_id from subject (Patient/patient-1); visit_occurrence_id from encounter (Encounter/enc-1). provider_id is NULL because the source Observation has no performer (performer.first() is empty). All other measurement columns are NULL: measurement_time, operator_concept_id, value_as_concept_id, range_low/high, visit_detail_id, unit_source_concept_id, value_source_value, measurement_event_id, meas_event_field_concept_id.\n\nCode systems: code.coding.system 'http://loinc.org' -> LOINC and valueQuantity.system 'http://unitsofmeasure.org' -> UCUM via cm.fhir_system_to_omop_vocab. status 'final' passes the entered-in-error/cancelled/unknown filter. Observation.category (vital-signs) and meta.profile are not read by this edge and are stripped.",
+  "fhir": [
+    {
+      "resourceType": "Patient",
+      "id": "patient-1",
+      "gender": "female",
+      "birthDate": "1980-01-01"
+    },
+    {
+      "resourceType": "Encounter",
+      "id": "enc-1",
+      "status": "finished",
+      "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
+      "subject": { "reference": "Patient/patient-1" }
+    },
+    {
+      "resourceType": "Observation",
+      "id": "obs-1",
+      "status": "final",
+      "code": {
+        "text": "Blood pressure panel with all children optional",
+        "coding": [
+          { "system": "http://loinc.org", "code": "85354-9", "display": "Blood pressure panel with all children optional" }
+        ]
+      },
+      "subject": { "reference": "Patient/patient-1" },
+      "encounter": { "reference": "Encounter/enc-1" },
+      "effectiveDateTime": "2025-06-25T11:58:43+01:00",
+      "component": [
+        {
+          "code": {
+            "text": "Systolic Blood Pressure",
+            "coding": [
+              { "system": "http://loinc.org", "code": "8480-6", "display": "Systolic Blood Pressure" }
+            ]
+          },
+          "valueQuantity": { "value": 112, "unit": "mm[Hg]", "system": "http://unitsofmeasure.org", "code": "mm[Hg]" }
+        },
+        {
+          "code": {
+            "text": "Diastolic Blood Pressure",
+            "coding": [
+              { "system": "http://loinc.org", "code": "8462-4", "display": "Diastolic Blood Pressure" }
+            ]
+          },
+          "valueQuantity": { "value": 79, "unit": "mm[Hg]", "system": "http://unitsofmeasure.org", "code": "mm[Hg]" }
+        }
+      ]
+    }
+  ],
+  "omop": [
+    {
+      "table": "measurement",
+      "person_id": "ref:patient-1",
+      "measurement_concept_id": 3004249,
+      "measurement_concept_id__name": "Systolic blood pressure",
+      "measurement_date": "2025-06-25",
+      "measurement_datetime": "2025-06-25T11:58:43",
+      "measurement_type_concept_id": 32817,
+      "measurement_type_concept_id__name": "EHR",
+      "value_as_number": 112,
+      "unit_concept_id": 8876,
+      "unit_concept_id__name": "millimeter mercury column",
+      "visit_occurrence_id": "ref:enc-1",
+      "measurement_source_value": "8480-6",
+      "measurement_source_concept_id": 3004249,
+      "measurement_source_concept_id__name": "Systolic blood pressure",
+      "unit_source_value": "mm[Hg]"
+    },
+    {
+      "table": "measurement",
+      "person_id": "ref:patient-1",
+      "measurement_concept_id": 3012888,
+      "measurement_concept_id__name": "Diastolic blood pressure",
+      "measurement_date": "2025-06-25",
+      "measurement_datetime": "2025-06-25T11:58:43",
+      "measurement_type_concept_id": 32817,
+      "measurement_type_concept_id__name": "EHR",
+      "value_as_number": 79,
+      "unit_concept_id": 8876,
+      "unit_concept_id__name": "millimeter mercury column",
+      "visit_occurrence_id": "ref:enc-1",
+      "measurement_source_value": "8462-4",
+      "measurement_source_concept_id": 3012888,
+      "measurement_source_concept_id__name": "Diastolic blood pressure",
+      "unit_source_value": "mm[Hg]"
+    }
+  ]
+}

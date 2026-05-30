@@ -167,6 +167,7 @@ function renderSidebar(
     return `<aside id="sidebar" hx-swap-oob="outerHTML" class="w-60 shrink-0 border-r border-gray-200 flex flex-col bg-gray-50 overflow-y-auto">
   <a href="/" class="block px-4 py-3 border-b border-gray-200 font-semibold text-gray-900 hover:bg-gray-100">fhir2omop</a>
   <a href="/profiles" class="block px-4 py-2 border-b border-gray-200 text-xs font-semibold uppercase tracking-wider text-purple-700 hover:bg-purple-50 ${current === "profiles" ? "bg-purple-50" : ""}">Profiles &amp; ValueSets</a>
+  <a href="/cases" class="block px-4 py-2 border-b border-gray-200 text-xs font-semibold uppercase tracking-wider text-emerald-700 hover:bg-emerald-50 ${current === "cases" ? "bg-emerald-50" : ""}">Test Cases</a>
   <details open data-k="nav-resources" class="border-b border-gray-200">
     <summary class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:bg-gray-100 flex items-center justify-between">
       FHIR Resources

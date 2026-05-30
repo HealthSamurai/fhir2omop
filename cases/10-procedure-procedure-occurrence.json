@@ -1,0 +1,59 @@
+{
+  "title": "Completed SNOMED Procedure -> one procedure_occurrence row",
+  "notes": "A FHIR Procedure with status='completed' and a single SNOMED CT code maps to exactly one procedure_occurrence row. The code is SNOMED 430193006 ('Medication Reconciliation (procedure)'). In the Athena vocabulary this code IS the standard concept: vocab.concept row concept_id=4326177 has vocabulary_id='SNOMED', concept_code='430193006', concept_name='Medication reconciliation', standard_concept='S', domain_id='Procedure'. The stage-2 SQL resolves the source code by joining vocab.concept (src) -> concept_relationship 'Maps to' (invalid_reason IS NULL) -> vocab.concept (std, standard_concept='S', domain_id='Procedure'). For an already-standard SNOMED Procedure code the 'Maps to' relationship is the self-loop 4326177 -> 4326177, so std_concept_id == src_concept_id == 4326177. Therefore procedure_concept_id=4326177 (standard target) AND procedure_source_concept_id=4326177 (the native-vocabulary source concept, which here coincides with the standard one because SNOMED is the OMOP Procedure standard vocab). procedure_source_value=430193006 (the raw code string). Domain routing keeps this row in procedure_occurrence because std.domain_id='Procedure'; a non-Procedure domain_id would have diverted it elsewhere and produced ZERO procedure_occurrence rows. Code priority is SNOMED > CPT4 > HCPCS > ICD10PCS via UNION ALL + DISTINCT ON (prio); only the SNOMED coding is present so prio=1 wins. procedure_type_concept_id is the hardcoded constant 32827 = 'EHR encounter record' (vocab.concept concept_id=32827, Type Concept domain, standard_concept='S'). Dates: performed[x] is a Period here (no performedDateTime), so the start drives procedure_date/procedure_datetime and the end drives procedure_end_date/procedure_end_datetime. Both timestamps are normalized to UTC: the SQL casts to timestamptz then 'AT TIME ZONE UTC'. The source instants carry a +00:00 offset, so after UTC normalization the wall-clock components are unchanged: start 2017-11-01T12:07:09 -> procedure_datetime 2017-11-01T12:07:09 and procedure_date 2017-11-01; end 2017-11-01T12:22:09 -> procedure_end_datetime 2017-11-01T12:22:09 and procedure_end_date 2017-11-01. provider_id is NULL: Synthea Procedures carry no performer[] array, so performer.first().actor.getReferenceKey() yields null and referenceToId(null) is null. visit_occurrence_id = referenceToId(encounter.getReferenceKey()) resolved from the Encounter reference. person_id = referenceToId(subject.getReferenceKey()). The status filter WHERE COALESCE(status,'completed') NOT IN ('entered-in-error','not-done','unknown') passes for 'completed'. modifier_concept_id, quantity, visit_detail_id, modifier_source_value are not populated by the SQL and stay NULL (no bodySite read in this edge's stage-2). Derived from real Synthea resource fhir.procedure id 16033dc9-5486-fcf0-2e83-6ae821893b73 and its actual cdm_ours_fhir.procedure_occurrence output row.",
+  "fhir": [
+    {
+      "resourceType": "Patient",
+      "id": "patient-1",
+      "gender": "female",
+      "birthDate": "1960-05-12"
+    },
+    {
+      "resourceType": "Encounter",
+      "id": "enc-1",
+      "status": "finished",
+      "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
+      "subject": { "reference": "Patient/patient-1" },
+      "period": { "start": "2017-11-01T12:07:09+00:00", "end": "2017-11-01T12:22:09+00:00" }
+    },
+    {
+      "resourceType": "Procedure",
+      "id": "proc-1",
+      "status": "completed",
+      "code": {
+        "text": "Medication Reconciliation (procedure)",
+        "coding": [
+          {
+            "system": "http://snomed.info/sct",
+            "code": "430193006",
+            "display": "Medication Reconciliation (procedure)"
+          }
+        ]
+      },
+      "subject": { "reference": "Patient/patient-1" },
+      "encounter": { "reference": "Encounter/enc-1" },
+      "performedPeriod": {
+        "start": "2017-11-01T12:07:09+00:00",
+        "end": "2017-11-01T12:22:09+00:00"
+      }
+    }
+  ],
+  "omop": [
+    {
+      "table": "procedure_occurrence",
+      "person_id": "ref:patient-1",
+      "procedure_concept_id": 4326177,
+      "procedure_concept_id__name": "Medication reconciliation",
+      "procedure_date": "2017-11-01",
+      "procedure_datetime": "2017-11-01T12:07:09",
+      "procedure_end_date": "2017-11-01",
+      "procedure_end_datetime": "2017-11-01T12:22:09",
+      "procedure_type_concept_id": 32827,
+      "procedure_type_concept_id__name": "EHR encounter record",
+      "visit_occurrence_id": "ref:enc-1",
+      "procedure_source_value": "430193006",
+      "procedure_source_concept_id": 4326177,
+      "procedure_source_concept_id__name": "Medication reconciliation"
+    }
+  ]
+}
