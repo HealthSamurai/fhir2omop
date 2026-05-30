@@ -22,7 +22,10 @@
                     "display": "White"
                   }
                 },
-                { "url": "text", "valueString": "White" }
+                {
+                  "url": "text",
+                  "valueString": "White"
+                }
               ]
             },
             {
@@ -36,7 +39,10 @@
                     "display": "Not Hispanic or Latino"
                   }
                 },
-                { "url": "text", "valueString": "Not Hispanic or Latino" }
+                {
+                  "url": "text",
+                  "valueString": "Not Hispanic or Latino"
+                }
               ]
             },
             {
@@ -92,7 +98,10 @@
                     "display": "Black or African American"
                   }
                 },
-                { "url": "text", "valueString": "Black or African American" }
+                {
+                  "url": "text",
+                  "valueString": "Black or African American"
+                }
               ]
             },
             {
@@ -106,7 +115,10 @@
                     "display": "Not Hispanic or Latino"
                   }
                 },
-                { "url": "text", "valueString": "Not Hispanic or Latino" }
+                {
+                  "url": "text",
+                  "valueString": "Not Hispanic or Latino"
+                }
               ]
             },
             {
@@ -162,7 +174,10 @@
                     "display": "Asian"
                   }
                 },
-                { "url": "text", "valueString": "Asian" }
+                {
+                  "url": "text",
+                  "valueString": "Asian"
+                }
               ]
             },
             {
@@ -176,7 +191,10 @@
                     "display": "Not Hispanic or Latino"
                   }
                 },
-                { "url": "text", "valueString": "Not Hispanic or Latino" }
+                {
+                  "url": "text",
+                  "valueString": "Not Hispanic or Latino"
+                }
               ]
             },
             {
@@ -232,7 +250,10 @@
                     "display": "American Indian or Alaska Native"
                   }
                 },
-                { "url": "text", "valueString": "American Indian or Alaska Native" }
+                {
+                  "url": "text",
+                  "valueString": "American Indian or Alaska Native"
+                }
               ]
             },
             {
@@ -246,7 +267,10 @@
                     "display": "Not Hispanic or Latino"
                   }
                 },
-                { "url": "text", "valueString": "Not Hispanic or Latino" }
+                {
+                  "url": "text",
+                  "valueString": "Not Hispanic or Latino"
+                }
               ]
             },
             {
@@ -294,7 +318,7 @@
             {
               "url": "https://fhir2omop.health-samurai.io/StructureDefinition/omop-race",
               "valueCoding": {
-                "system": "http://athena.ohdsi.org/concept",
+                "system": "https://athena.ohdsi.org/concept",
                 "code": "8657",
                 "display": "American Indian or Alaska Native (OMOP)"
               }
@@ -310,7 +334,10 @@
                     "display": "White"
                   }
                 },
-                { "url": "text", "valueString": "White" }
+                {
+                  "url": "text",
+                  "valueString": "White"
+                }
               ]
             },
             {
@@ -324,7 +351,10 @@
                     "display": "Not Hispanic or Latino"
                   }
                 },
-                { "url": "text", "valueString": "Not Hispanic or Latino" }
+                {
+                  "url": "text",
+                  "valueString": "Not Hispanic or Latino"
+                }
               ]
             },
             {
@@ -380,7 +410,10 @@
                     "display": "Not Hispanic or Latino"
                   }
                 },
-                { "url": "text", "valueString": "Not Hispanic or Latino" }
+                {
+                  "url": "text",
+                  "valueString": "Not Hispanic or Latino"
+                }
               ]
             },
             {
@@ -443,7 +476,10 @@
                     "display": "White"
                   }
                 },
-                { "url": "text", "valueString": "Asian and White" }
+                {
+                  "url": "text",
+                  "valueString": "Asian and White"
+                }
               ]
             },
             {
@@ -457,7 +493,10 @@
                     "display": "Not Hispanic or Latino"
                   }
                 },
-                { "url": "text", "valueString": "Not Hispanic or Latino" }
+                {
+                  "url": "text",
+                  "valueString": "Not Hispanic or Latino"
+                }
               ]
             },
             {
@@ -486,6 +525,82 @@
             "gender_source_concept_id": 8532,
             "gender_source_concept_id__name": "FEMALE",
             "race_source_value": "Asian and White",
+            "race_source_concept_id": 0,
+            "ethnicity_source_value": "Not Hispanic or Latino",
+            "ethnicity_source_concept_id": 0
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(h) US Core OMB Native Hawaiian or Other Pacific Islander 2076-8 → race_concept_id 8557",
+      "fhir": [
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "gender": "female",
+          "birthDate": "1985-06-15",
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+              "extension": [
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "2076-8",
+                    "display": "Native Hawaiian or Other Pacific Islander"
+                  }
+                },
+                {
+                  "url": "text",
+                  "valueString": "Native Hawaiian or Other Pacific Islander"
+                }
+              ]
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+              "extension": [
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "2186-5",
+                    "display": "Not Hispanic or Latino"
+                  }
+                },
+                {
+                  "url": "text",
+                  "valueString": "Not Hispanic or Latino"
+                }
+              ]
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+              "valueCode": "F"
+            }
+          ]
+        }
+      ],
+      "omop": {
+        "person": [
+          {
+            "person_id": "ref:patient-1",
+            "gender_concept_id": 8532,
+            "gender_concept_id__name": "FEMALE",
+            "year_of_birth": 1985,
+            "month_of_birth": 6,
+            "day_of_birth": 15,
+            "birth_datetime": "1985-06-15T00:00:00",
+            "race_concept_id": 8557,
+            "race_concept_id__name": "Native Hawaiian or Other Pacific Islander",
+            "ethnicity_concept_id": 38003564,
+            "ethnicity_concept_id__name": "Not Hispanic or Latino",
+            "person_source_value": "patient-1",
+            "gender_source_value": "F",
+            "gender_source_concept_id": 8532,
+            "gender_source_concept_id__name": "FEMALE",
+            "race_source_value": "Native Hawaiian or Other Pacific Islander",
             "race_source_concept_id": 0,
             "ethnicity_source_value": "Not Hispanic or Latino",
             "ethnicity_source_concept_id": 0
