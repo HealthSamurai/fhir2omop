@@ -9,16 +9,25 @@
           "resourceType": "Device",
           "id": "device-1",
           "status": "active",
-          "patient": { "reference": "urn:uuid:patient-1" },
+          "patient": {
+            "reference": "urn:uuid:patient-1"
+          },
           "type": {
             "text": "Home nebulizer (physical object)",
             "coding": [
-              { "system": "http://snomed.info/sct", "code": "170615005", "display": "Home nebulizer (physical object)" }
+              {
+                "system": "http://snomed.info/sct",
+                "code": "170615005",
+                "display": "Home nebulizer (physical object)"
+              }
             ]
           },
           "lotNumber": "1106",
           "udiCarrier": [
-            { "deviceIdentifier": "43856429819831", "carrierHRF": "(01)43856429819831(11)891029(17)141113(10)1106(21)2602796356" }
+            {
+              "deviceIdentifier": "43856429819831",
+              "carrierHRF": "(01)43856429819831(11)891029(17)141113(10)1106(21)2602796356"
+            }
           ],
           "manufactureDate": "1989-10-29T20:26:17+00:00",
           "expirationDate": "2014-11-13T20:26:17+00:00"
@@ -52,11 +61,17 @@
           "resourceType": "Device",
           "id": "device-2",
           "status": "inactive",
-          "patient": { "reference": "urn:uuid:patient-2" },
+          "patient": {
+            "reference": "urn:uuid:patient-2"
+          },
           "type": {
             "text": "Blood glucose meter (physical object)",
             "coding": [
-              { "system": "http://snomed.info/sct", "code": "337414009", "display": "Blood glucose meter (physical object)" }
+              {
+                "system": "http://snomed.info/sct",
+                "code": "337414009",
+                "display": "Blood glucose meter (physical object)"
+              }
             ]
           },
           "manufactureDate": "2001-03-15T08:00:00+00:00",
@@ -89,15 +104,25 @@
           "resourceType": "Device",
           "id": "device-3",
           "status": "entered-in-error",
-          "patient": { "reference": "urn:uuid:patient-3" },
+          "patient": {
+            "reference": "urn:uuid:patient-3"
+          },
           "type": {
             "text": "Manual wheelchair (physical object)",
             "coding": [
-              { "system": "http://snomed.info/sct", "code": "228869008", "display": "Manual wheelchair (physical object)" }
+              {
+                "system": "http://snomed.info/sct",
+                "code": "228869008",
+                "display": "Manual wheelchair (physical object)"
+              }
             ]
           },
           "lotNumber": "9999",
-          "udiCarrier": [ { "deviceIdentifier": "11111111111111" } ],
+          "udiCarrier": [
+            {
+              "deviceIdentifier": "11111111111111"
+            }
+          ],
           "manufactureDate": "2010-01-01T00:00:00+00:00",
           "expirationDate": "2020-01-01T00:00:00+00:00"
         }
@@ -109,17 +134,27 @@
       "fhir": [
         {
           "resourceType": "Device",
-          "id": "device-5",
+          "id": "device-4",
           "status": "active",
-          "patient": { "reference": "urn:uuid:patient-5" },
+          "patient": {
+            "reference": "urn:uuid:patient-5"
+          },
           "type": {
             "text": "Manual wheelchair (physical object)",
             "coding": [
-              { "system": "http://snomed.info/sct", "code": "228869008", "display": "Manual wheelchair (physical object)" }
+              {
+                "system": "http://snomed.info/sct",
+                "code": "228869008",
+                "display": "Manual wheelchair (physical object)"
+              }
             ]
           },
           "lotNumber": "7788",
-          "udiCarrier": [ { "deviceIdentifier": "33333333333333" } ],
+          "udiCarrier": [
+            {
+              "deviceIdentifier": "33333333333333"
+            }
+          ],
           "manufactureDate": "2012-06-01T00:00:00+00:00"
         }
       ],
@@ -149,17 +184,27 @@
       "fhir": [
         {
           "resourceType": "Device",
-          "id": "device-4",
+          "id": "device-5",
           "status": "active",
-          "patient": { "reference": "urn:uuid:patient-4" },
+          "patient": {
+            "reference": "urn:uuid:patient-4"
+          },
           "type": {
             "text": "Type 2 diabetes mellitus (not a device — Condition-domain SNOMED)",
             "coding": [
-              { "system": "http://snomed.info/sct", "code": "44054006", "display": "Type 2 diabetes mellitus" }
+              {
+                "system": "http://snomed.info/sct",
+                "code": "44054006",
+                "display": "Type 2 diabetes mellitus"
+              }
             ]
           },
           "lotNumber": "5555",
-          "udiCarrier": [ { "deviceIdentifier": "22222222222222" } ],
+          "udiCarrier": [
+            {
+              "deviceIdentifier": "22222222222222"
+            }
+          ],
           "manufactureDate": "2015-01-01T00:00:00+00:00",
           "expirationDate": "2025-01-01T00:00:00+00:00"
         }

@@ -10,10 +10,21 @@
           "id": "prac-1",
           "gender": "male",
           "name": [
-            { "family": "Ritchie586", "given": ["Carter549"], "prefix": ["Dr."] }
+            {
+              "family": "Ritchie586",
+              "given": [
+                "Carter549"
+              ],
+              "prefix": [
+                "Dr."
+              ]
+            }
           ],
           "identifier": [
-            { "system": "http://hl7.org/fhir/sid/us-npi", "value": "9999990192" }
+            {
+              "system": "http://hl7.org/fhir/sid/us-npi",
+              "value": "9999990192"
+            }
           ]
         }
       ],
@@ -42,27 +53,35 @@
       "fhir": [
         {
           "resourceType": "Practitioner",
-          "id": "prac-1",
+          "id": "prac-2",
           "gender": "female",
           "name": [
-            { "family": "Smith", "given": ["Jane"] }
+            {
+              "family": "Smith",
+              "given": [
+                "Jane"
+              ]
+            }
           ],
           "identifier": [
-            { "system": "http://hl7.org/fhir/sid/us-npi", "value": "1234567890" }
+            {
+              "system": "http://hl7.org/fhir/sid/us-npi",
+              "value": "1234567890"
+            }
           ]
         }
       ],
       "omop": {
         "provider": [
           {
-            "provider_id": "ref:prac-1",
+            "provider_id": "ref:prac-2",
             "provider_name": "Smith, Jane",
             "npi": "1234567890",
             "specialty_concept_id": 38004446,
             "specialty_concept_id__name": "General Practice",
             "gender_concept_id": 8532,
             "gender_concept_id__name": "FEMALE",
-            "provider_source_value": "prac-1",
+            "provider_source_value": "prac-2",
             "specialty_source_concept_id": 38004446,
             "specialty_source_concept_id__name": "General Practice",
             "gender_source_value": "female",
@@ -77,27 +96,35 @@
       "fhir": [
         {
           "resourceType": "Practitioner",
-          "id": "prac-1",
+          "id": "prac-3",
           "gender": "other",
           "name": [
-            { "family": "Doe", "given": ["Pat"] }
+            {
+              "family": "Doe",
+              "given": [
+                "Pat"
+              ]
+            }
           ],
           "identifier": [
-            { "system": "http://hl7.org/fhir/sid/us-npi", "value": "5550001111" }
+            {
+              "system": "http://hl7.org/fhir/sid/us-npi",
+              "value": "5550001111"
+            }
           ]
         }
       ],
       "omop": {
         "provider": [
           {
-            "provider_id": "ref:prac-1",
+            "provider_id": "ref:prac-3",
             "provider_name": "Doe, Pat",
             "npi": "5550001111",
             "specialty_concept_id": 38004446,
             "specialty_concept_id__name": "General Practice",
             "gender_concept_id": 8521,
             "gender_concept_id__name": "OTHER",
-            "provider_source_value": "prac-1",
+            "provider_source_value": "prac-3",
             "specialty_source_concept_id": 38004446,
             "specialty_source_concept_id__name": "General Practice",
             "gender_source_value": "other",
@@ -111,26 +138,34 @@
       "fhir": [
         {
           "resourceType": "Practitioner",
-          "id": "prac-1",
+          "id": "prac-4",
           "name": [
-            { "family": "Nogen", "given": ["Alex"] }
+            {
+              "family": "Nogen",
+              "given": [
+                "Alex"
+              ]
+            }
           ],
           "identifier": [
-            { "system": "http://hl7.org/fhir/sid/us-npi", "value": "7778889990" }
+            {
+              "system": "http://hl7.org/fhir/sid/us-npi",
+              "value": "7778889990"
+            }
           ]
         }
       ],
       "omop": {
         "provider": [
           {
-            "provider_id": "ref:prac-1",
+            "provider_id": "ref:prac-4",
             "provider_name": "Nogen, Alex",
             "npi": "7778889990",
             "specialty_concept_id": 38004446,
             "specialty_concept_id__name": "General Practice",
             "gender_concept_id": 0,
             "gender_concept_id__name": "No matching concept",
-            "provider_source_value": "prac-1",
+            "provider_source_value": "prac-4",
             "specialty_source_concept_id": 38004446,
             "specialty_source_concept_id__name": "General Practice",
             "gender_source_concept_id": 0
@@ -143,20 +178,20 @@
       "fhir": [
         {
           "resourceType": "Practitioner",
-          "id": "prac-1",
+          "id": "prac-5",
           "gender": "male"
         }
       ],
       "omop": {
         "provider": [
           {
-            "provider_id": "ref:prac-1",
+            "provider_id": "ref:prac-5",
             "provider_name": ", ",
             "specialty_concept_id": 38004446,
             "specialty_concept_id__name": "General Practice",
             "gender_concept_id": 8507,
             "gender_concept_id__name": "MALE",
-            "provider_source_value": "prac-1",
+            "provider_source_value": "prac-5",
             "specialty_source_concept_id": 38004446,
             "specialty_source_concept_id__name": "General Practice",
             "gender_source_value": "male",

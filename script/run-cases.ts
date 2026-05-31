@@ -205,13 +205,9 @@ async function fetchRows(schema: string, table: string): Promise<any[]> {
 //                      like location_id = stringToId(address) that aren't a
 //                      referenceToId of any fhir resource). proposed binds are
 //                      committed by the caller only when the whole row matches.
-function rowMatches(exp: any, act: any, pk: string | undefined, refMap: Map<string, string>, bindings: Map<string, any>, prefix = ""): { ok: boolean; col?: string; a?: any; e?: any; proposed?: Map<string, any> } {
+function rowMatches(exp: any, act: any, pk: string | undefined, refMap: Map<string, string>, bindings: Map<string, any>): { ok: boolean; col?: string; a?: any; e?: any; proposed?: Map<string, any> } {
     const ec = clean(exp);
     const proposed = new Map<string, any>();
-    // batch mode prefixes resource ids (v{i}_); that prefix leaks into *_source_value
-    // columns (which copy the raw FHIR id), so strip a leading prefix from actual
-    // string values before comparing to the (unprefixed) expected.
-    const unp = (v: any) => (typeof v === "string" && prefix && v.startsWith(prefix) ? v.slice(prefix.length) : v);
     for (const col of Object.keys(act)) {
         if (col === pk && !(col in ec)) continue; // derived surrogate PK, not asserted
         if (col in ec) {
@@ -228,35 +224,12 @@ function rowMatches(exp: any, act: any, pk: string | undefined, refMap: Map<stri
                 else proposed.set(tok, act[col]);
                 continue;
             }
-            if (!valEq(unp(act[col]), e)) return { ok: false, col, a: act[col], e };
+            if (!valEq(act[col], e)) return { ok: false, col, a: act[col], e };
         } else if (act[col] !== null) {
             return { ok: false, col, a: act[col], e: null };
         }
     }
     return { ok: true, proposed };
-}
-
-// Deep-clone a resource with all ids + Type/id references prefixed, so a whole
-// file's variants can be loaded together (each variant namespaced v{i}_) and
-// run through the pipeline in ONE pass without colliding.
-function prefixResource(r: any, p: string): any {
-    const clone = JSON.parse(JSON.stringify(r));
-    const walk = (o: any) => {
-        if (Array.isArray(o)) { o.forEach(walk); return; }
-        if (o && typeof o === "object") {
-            for (const [k, v] of Object.entries(o)) {
-                if (k === "reference" && typeof v === "string" && v.startsWith("urn:uuid:")) {
-                    o[k] = "urn:uuid:" + p + v.slice("urn:uuid:".length);
-                } else if (k === "reference" && typeof v === "string" && v.includes("/") && !v.startsWith("urn:")) {
-                    const i = v.indexOf("/");
-                    o[k] = v.slice(0, i + 1) + p + v.slice(i + 1);
-                } else walk(v);
-            }
-        }
-    };
-    walk(clone);
-    if (typeof clone.id === "string") clone.id = p + clone.id;
-    return clone;
 }
 
 const normalizeOmop = (omop: any): Record<string, any[]> =>
@@ -369,31 +342,32 @@ for (const f of files) {
     const vFail: string[][] = cases.map(() => []); // failures per variant
 
     try {
-        // ONE batch per file: each variant namespaced v{i}_ (fixtures cloned per
-        // variant), loaded together, run through the pipeline in a single pass.
+        // ONE batch per file: every variant's resources have file-unique ids
+        // (see script/rename-case-ids.ts), so fixtures ⊕ each variant's fhir[]
+        // load together and run through the pipeline in a single pass — no
+        // runtime namespacing needed.
         const allFhir: any[] = [];
-        const meta: Array<{ i: number; prefix: string; omopByTable: Record<string, any[]>; resourceIds: string[] }> = cases.map((v: any, i: number) => {
-            const prefix = `v${i}_`;
+        const meta: Array<{ i: number; omopByTable: Record<string, any[]>; resourceIds: string[] }> = cases.map((v: any, i: number) => {
             const merged = mergeFhir(GLOBAL_FIXTURES, fileFixtures, v.fhir);
-            allFhir.push(...merged.map((r) => prefixResource(r, prefix)));
-            return { i, prefix, omopByTable: normalizeOmop(v.omop), resourceIds: merged.map((r: any) => r.id).filter(Boolean) };
+            allFhir.push(...merged);
+            return { i, omopByTable: normalizeOmop(v.omop), resourceIds: merged.map((r: any) => r.id).filter(Boolean) };
         });
 
         await resetSchemas();
-        const present = await loadFhir(allFhir);
+        const present = await loadFhir(mergeFhir(allFhir)); // dedup shared fixtures across variants
         const expectedTables = new Set<string>(meta.flatMap((m) => Object.keys(m.omopByTable)));
         const produced = await runPipeline(present, slug, expectedTables);
         if (process.env.DUMP_SEED) await collectConcepts(seedSet);
 
-        // resolve every prefixed ref: target + resource id in one round-trip
+        // resolve every ref: target + resource id in one round-trip
         const ids = new Set<string>();
         for (const m of meta) {
-            for (const id of m.resourceIds) ids.add(m.prefix + id);
+            for (const id of m.resourceIds) ids.add(id);
             for (const rows of Object.values(m.omopByTable)) for (const row of rows) for (const val of Object.values(row))
-                if (typeof val === "string" && val.startsWith("ref:")) ids.add(m.prefix + val.slice(4));
+                if (typeof val === "string" && val.startsWith("ref:")) ids.add(val.slice(4));
         }
         const idMap = await batchRefToId([...ids]);
-        const owners = meta.map((m) => new Set(m.resourceIds.map((id) => idMap.get(m.prefix + id)).filter(Boolean)));
+        const owners = meta.map((m) => new Set(m.resourceIds.map((id) => idMap.get(id)).filter(Boolean)));
 
         // fetch each table's rows once; `used` is shared across variants so the
         // file-level total is enforced (no row double-counted, none left over).
@@ -408,7 +382,7 @@ for (const f of files) {
         for (const m of meta) {
             const refMap = new Map<string, string>();
             for (const rows of Object.values(m.omopByTable)) for (const row of rows) for (const val of Object.values(row))
-                if (typeof val === "string" && val.startsWith("ref:")) refMap.set(val.slice(4), idMap.get(m.prefix + val.slice(4)) ?? "__UNRESOLVED__");
+                if (typeof val === "string" && val.startsWith("ref:")) refMap.set(val.slice(4), idMap.get(val.slice(4)) ?? "__UNRESOLVED__");
             const bindings = new Map<string, any>();
             for (const [table, expRows] of Object.entries(m.omopByTable)) {
                 const actual = actualBy[table] ?? [], used = usedBy[table] ?? [];
@@ -418,7 +392,7 @@ for (const f of files) {
                     let found = -1, last: any = null, fp: Map<string, any> | undefined;
                     for (let j = 0; j < actual.length; j++) {
                         if (used[j]) continue;
-                        const r = rowMatches(exp, actual[j], pk, refMap, bindings, m.prefix);
+                        const r = rowMatches(exp, actual[j], pk, refMap, bindings);
                         if (r.ok) { found = j; fp = r.proposed; break; } else last = r;
                     }
                     if (found >= 0) { used[found] = true; if (fp) for (const [k, v] of fp) bindings.set(k, v); }

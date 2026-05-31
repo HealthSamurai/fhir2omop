@@ -92,7 +92,7 @@
       "fhir": [
         {
           "resourceType": "Observation",
-          "id": "obs-1",
+          "id": "obs-2",
           "status": "final",
           "category": [
             {
@@ -160,7 +160,7 @@
       "fhir": [
         {
           "resourceType": "Observation",
-          "id": "obs-1",
+          "id": "obs-3",
           "status": "final",
           "category": [
             {
@@ -243,7 +243,7 @@
       "fhir": [
         {
           "resourceType": "Observation",
-          "id": "obs-1",
+          "id": "obs-4",
           "status": "final",
           "category": [
             {
@@ -311,7 +311,7 @@
       "fhir": [
         {
           "resourceType": "Observation",
-          "id": "obs-1",
+          "id": "obs-5",
           "status": "final",
           "category": [
             {
@@ -375,7 +375,7 @@
       "fhir": [
         {
           "resourceType": "Observation",
-          "id": "obs-1",
+          "id": "obs-6",
           "status": "entered-in-error",
           "category": [
             {
@@ -420,7 +420,7 @@
       "fhir": [
         {
           "resourceType": "Observation",
-          "id": "obs-1",
+          "id": "obs-7",
           "status": "final",
           "category": [
             {
@@ -467,7 +467,7 @@
       "fhir": [
         {
           "resourceType": "Observation",
-          "id": "obs-1",
+          "id": "obs-8",
           "status": "final",
           "category": [
             {

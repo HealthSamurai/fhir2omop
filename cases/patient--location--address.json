@@ -125,7 +125,7 @@
       "fhir": [
         {
           "resourceType": "Patient",
-          "id": "patient-1",
+          "id": "patient-2",
           "gender": "male",
           "birthDate": "1992-01-25",
           "extension": [
@@ -173,7 +173,7 @@
       "omop": {
         "person": [
           {
-            "person_id": "ref:patient-1",
+            "person_id": "ref:patient-2",
             "gender_concept_id": 8507,
             "gender_concept_id__name": "MALE",
             "year_of_birth": 1992,
@@ -184,7 +184,7 @@
             "race_concept_id__name": "Black or African American",
             "ethnicity_concept_id": 38003564,
             "ethnicity_concept_id__name": "Not Hispanic or Latino",
-            "person_source_value": "patient-1",
+            "person_source_value": "patient-2",
             "gender_source_value": "M",
             "gender_source_concept_id": 8507,
             "gender_source_concept_id__name": "MALE",

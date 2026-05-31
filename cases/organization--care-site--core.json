@@ -7,12 +7,16 @@
       "fhir": [
         {
           "resourceType": "Organization",
-          "id": "17a4bae5-8b64-34d7-8144-b428be027bd0",
+          "id": "17a4bae5-8b64-34d7-8144-b428be027bd0-1",
           "name": "NURSE ON CALL",
           "type": [
             {
               "coding": [
-                { "system": "http://terminology.hl7.org/CodeSystem/organization-type", "code": "prov", "display": "Healthcare Provider" }
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/organization-type",
+                  "code": "prov",
+                  "display": "Healthcare Provider"
+                }
               ]
             }
           ]
@@ -21,11 +25,11 @@
       "omop": {
         "care_site": [
           {
-            "care_site_id": "ref:17a4bae5-8b64-34d7-8144-b428be027bd0",
+            "care_site_id": "ref:17a4bae5-8b64-34d7-8144-b428be027bd0-1",
             "care_site_name": "NURSE ON CALL",
             "place_of_service_concept_id": 8940,
             "place_of_service_concept_id__name": "Office",
-            "care_site_source_value": "17a4bae5-8b64-34d7-8144-b428be027bd0",
+            "care_site_source_value": "17a4bae5-8b64-34d7-8144-b428be027bd0-1",
             "place_of_service_source_value": "prov"
           }
         ]
@@ -41,7 +45,11 @@
           "type": [
             {
               "coding": [
-                { "system": "http://terminology.hl7.org/CodeSystem/organization-type", "code": "dept", "display": "Hospital Department" }
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/organization-type",
+                  "code": "dept",
+                  "display": "Hospital Department"
+                }
               ]
             }
           ]
@@ -65,12 +73,16 @@
       "fhir": [
         {
           "resourceType": "Organization",
-          "id": "org-1",
+          "id": "org-2",
           "name": "State University Health Sciences",
           "type": [
             {
               "coding": [
-                { "system": "http://terminology.hl7.org/CodeSystem/organization-type", "code": "edu", "display": "Educational Institute" }
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/organization-type",
+                  "code": "edu",
+                  "display": "Educational Institute"
+                }
               ]
             }
           ]
@@ -79,11 +91,11 @@
       "omop": {
         "care_site": [
           {
-            "care_site_id": "ref:org-1",
+            "care_site_id": "ref:org-2",
             "care_site_name": "State University Health Sciences",
             "place_of_service_concept_id": 4030303,
             "place_of_service_concept_id__name": "Hospital AND/OR institution",
-            "care_site_source_value": "org-1",
+            "care_site_source_value": "org-2",
             "place_of_service_source_value": "edu"
           }
         ]
@@ -94,12 +106,16 @@
       "fhir": [
         {
           "resourceType": "Organization",
-          "id": "org-1",
+          "id": "org-3",
           "name": "County Public Health Authority",
           "type": [
             {
               "coding": [
-                { "system": "http://terminology.hl7.org/CodeSystem/organization-type", "code": "govt", "display": "Government" }
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/organization-type",
+                  "code": "govt",
+                  "display": "Government"
+                }
               ]
             }
           ]
@@ -108,11 +124,11 @@
       "omop": {
         "care_site": [
           {
-            "care_site_id": "ref:org-1",
+            "care_site_id": "ref:org-3",
             "care_site_name": "County Public Health Authority",
             "place_of_service_concept_id": 4195901,
             "place_of_service_concept_id__name": "Government hospital",
-            "care_site_source_value": "org-1",
+            "care_site_source_value": "org-3",
             "place_of_service_source_value": "govt"
           }
         ]
@@ -123,12 +139,16 @@
       "fhir": [
         {
           "resourceType": "Organization",
-          "id": "org-1",
+          "id": "org-4",
           "name": "Mobile Crisis Response Team",
           "type": [
             {
               "coding": [
-                { "system": "http://terminology.hl7.org/CodeSystem/organization-type", "code": "team", "display": "Organizational team" }
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/organization-type",
+                  "code": "team",
+                  "display": "Organizational team"
+                }
               ]
             }
           ]
@@ -137,11 +157,11 @@
       "omop": {
         "care_site": [
           {
-            "care_site_id": "ref:org-1",
+            "care_site_id": "ref:org-4",
             "care_site_name": "Mobile Crisis Response Team",
             "place_of_service_concept_id": 4217012,
             "place_of_service_concept_id__name": "Health maintenance organization",
-            "care_site_source_value": "org-1",
+            "care_site_source_value": "org-4",
             "place_of_service_source_value": "team"
           }
         ]
@@ -152,12 +172,16 @@
       "fhir": [
         {
           "resourceType": "Organization",
-          "id": "org-1",
+          "id": "org-5",
           "name": "Acme Health Insurer",
           "type": [
             {
               "coding": [
-                { "system": "http://terminology.hl7.org/CodeSystem/organization-type", "code": "ins", "display": "Insurance Company" }
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/organization-type",
+                  "code": "ins",
+                  "display": "Insurance Company"
+                }
               ]
             }
           ]
@@ -166,11 +190,11 @@
       "omop": {
         "care_site": [
           {
-            "care_site_id": "ref:org-1",
+            "care_site_id": "ref:org-5",
             "care_site_name": "Acme Health Insurer",
             "place_of_service_concept_id": 0,
             "place_of_service_concept_id__name": "No matching concept",
-            "care_site_source_value": "org-1",
+            "care_site_source_value": "org-5",
             "place_of_service_source_value": "ins"
           }
         ]
@@ -181,18 +205,18 @@
       "fhir": [
         {
           "resourceType": "Organization",
-          "id": "org-1",
+          "id": "org-6",
           "name": "Standalone Clinic LLC"
         }
       ],
       "omop": {
         "care_site": [
           {
-            "care_site_id": "ref:org-1",
+            "care_site_id": "ref:org-6",
             "care_site_name": "Standalone Clinic LLC",
             "place_of_service_concept_id": 0,
             "place_of_service_concept_id__name": "No matching concept",
-            "care_site_source_value": "org-1"
+            "care_site_source_value": "org-6"
           }
         ]
       }

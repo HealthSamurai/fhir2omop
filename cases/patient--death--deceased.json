@@ -30,7 +30,7 @@
       "fhir": [
         {
           "resourceType": "Patient",
-          "id": "patient-1",
+          "id": "patient-2",
           "gender": "female",
           "birthDate": "1949-03-14",
           "deceasedDateTime": "2005-02-10T07:23:04+00:00"
@@ -39,7 +39,7 @@
       "omop": {
         "death": [
           {
-            "person_id": "ref:patient-1",
+            "person_id": "ref:patient-2",
             "death_date": "2005-02-10",
             "death_datetime": "2005-02-10T07:23:04",
             "death_type_concept_id": 32817,
@@ -53,7 +53,7 @@
       "fhir": [
         {
           "resourceType": "Patient",
-          "id": "patient-1",
+          "id": "patient-3",
           "gender": "female",
           "birthDate": "1949-03-14"
         }
@@ -65,7 +65,7 @@
       "fhir": [
         {
           "resourceType": "Patient",
-          "id": "patient-1",
+          "id": "patient-4",
           "gender": "female",
           "birthDate": "1949-03-14",
           "deceasedBoolean": true
@@ -78,7 +78,7 @@
       "fhir": [
         {
           "resourceType": "Patient",
-          "id": "patient-1",
+          "id": "patient-5",
           "gender": "female",
           "birthDate": "1949-03-14",
           "deceasedDateTime": "2024-08-26"
@@ -87,7 +87,7 @@
       "omop": {
         "death": [
           {
-            "person_id": "ref:patient-1",
+            "person_id": "ref:patient-5",
             "death_date": "2024-08-26",
             "death_datetime": "2024-08-26T00:00:00",
             "death_type_concept_id": 32817,

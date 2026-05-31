@@ -10,7 +10,10 @@
           "id": "loc-1",
           "name": "OUTER CAPE HEALTH SERVICES INC",
           "managingOrganization": {
-            "identifier": { "system": "https://github.com/synthetichealth/synthea", "value": "org-1" },
+            "identifier": {
+              "system": "https://github.com/synthetichealth/synthea",
+              "value": "org-1"
+            },
             "display": "OUTER CAPE HEALTH SERVICES INC"
           }
         }
@@ -33,17 +36,17 @@
       "fhir": [
         {
           "resourceType": "Location",
-          "id": "loc-1"
+          "id": "loc-2"
         }
       ],
       "omop": {
         "care_site": [
           {
-            "care_site_id": "ref:loc-1",
+            "care_site_id": "ref:loc-2",
             "place_of_service_concept_id": 0,
             "place_of_service_concept_id__name": "No matching concept",
-            "location_id": "ref:loc-1",
-            "care_site_source_value": "loc-1"
+            "location_id": "ref:loc-2",
+            "care_site_source_value": "loc-2"
           }
         ]
       }
@@ -53,12 +56,16 @@
       "fhir": [
         {
           "resourceType": "Location",
-          "id": "loc-1",
+          "id": "loc-3",
           "name": "Springfield Urgent Care",
           "type": [
             {
               "coding": [
-                { "system": "http://snomed.info/sct", "code": "702514001", "display": "On-campus-ambulatory site" }
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "702514001",
+                  "display": "On-campus-ambulatory site"
+                }
               ]
             }
           ]
@@ -67,12 +74,12 @@
       "omop": {
         "care_site": [
           {
-            "care_site_id": "ref:loc-1",
+            "care_site_id": "ref:loc-3",
             "care_site_name": "Springfield Urgent Care",
             "place_of_service_concept_id": 0,
             "place_of_service_concept_id__name": "No matching concept",
-            "location_id": "ref:loc-1",
-            "care_site_source_value": "loc-1",
+            "location_id": "ref:loc-3",
+            "care_site_source_value": "loc-3",
             "place_of_service_source_value": "702514001"
           }
         ]
@@ -83,12 +90,16 @@
       "fhir": [
         {
           "resourceType": "Location",
-          "id": "loc-1",
+          "id": "loc-4",
           "name": "Springfield Clinic",
           "type": [
             {
               "coding": [
-                { "system": "http://terminology.hl7.org/CodeSystem/v3-RoleCode", "code": "OF", "display": "Outpatient facility" }
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/v3-RoleCode",
+                  "code": "OF",
+                  "display": "Outpatient facility"
+                }
               ]
             }
           ]
@@ -97,12 +108,12 @@
       "omop": {
         "care_site": [
           {
-            "care_site_id": "ref:loc-1",
+            "care_site_id": "ref:loc-4",
             "care_site_name": "Springfield Clinic",
             "place_of_service_concept_id": 0,
             "place_of_service_concept_id__name": "No matching concept",
-            "location_id": "ref:loc-1",
-            "care_site_source_value": "loc-1"
+            "location_id": "ref:loc-4",
+            "care_site_source_value": "loc-4"
           }
         ]
       }
@@ -112,19 +123,19 @@
       "fhir": [
         {
           "resourceType": "Location",
-          "id": "loc-1",
+          "id": "loc-5",
           "name": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
         }
       ],
       "omop": {
         "care_site": [
           {
-            "care_site_id": "ref:loc-1",
+            "care_site_id": "ref:loc-5",
             "care_site_name": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
             "place_of_service_concept_id": 0,
             "place_of_service_concept_id__name": "No matching concept",
-            "location_id": "ref:loc-1",
-            "care_site_source_value": "loc-1"
+            "location_id": "ref:loc-5",
+            "care_site_source_value": "loc-5"
           }
         ]
       }

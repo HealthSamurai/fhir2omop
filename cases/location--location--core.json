@@ -11,7 +11,9 @@
           "status": "active",
           "name": "CAREWELL URGENT CARE CENTERS OF MA, PC",
           "address": {
-            "line": ["484 RTE 134"],
+            "line": [
+              "484 RTE 134"
+            ],
             "city": "WORCESTER",
             "state": "MA",
             "postalCode": "016071728",
@@ -44,7 +46,7 @@
       "fhir": [
         {
           "resourceType": "Location",
-          "id": "loc-1",
+          "id": "loc-2",
           "status": "active",
           "mode": "kind",
           "description": "Patient's Home"
@@ -64,11 +66,13 @@
       "fhir": [
         {
           "resourceType": "Location",
-          "id": "loc-1",
+          "id": "loc-3",
           "status": "active",
           "name": "Hôpital Saint-Louis",
           "address": {
-            "line": ["1 Avenue Claude Vellefaux"],
+            "line": [
+              "1 Avenue Claude Vellefaux"
+            ],
             "city": "Paris",
             "state": "Ile-de-France",
             "postalCode": "75010",

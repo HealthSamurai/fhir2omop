@@ -92,13 +92,13 @@
       "fhir": [
         {
           "resourceType": "Patient",
-          "id": "patient-1",
+          "id": "patient-2",
           "gender": "male",
           "birthDate": "1960-06-15"
         },
         {
           "resourceType": "Practitioner",
-          "id": "prac-1",
+          "id": "prac-2",
           "name": [
             {
               "family": "Doe",
@@ -110,29 +110,29 @@
         },
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-2",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
             "code": "AMB"
           },
           "subject": {
-            "reference": "Patient/patient-1"
+            "reference": "Patient/patient-2"
           }
         },
         {
           "resourceType": "MedicationRequest",
-          "id": "medreq-ndc",
+          "id": "medreq-ndc-1",
           "status": "active",
           "intent": "order",
           "subject": {
-            "reference": "Patient/patient-1"
+            "reference": "Patient/patient-2"
           },
           "encounter": {
-            "reference": "Encounter/enc-1"
+            "reference": "Encounter/enc-2"
           },
           "requester": {
-            "reference": "Practitioner/prac-1"
+            "reference": "Practitioner/prac-2"
           },
           "authoredOn": "2021-05-20T09:15:00+00:00",
           "medicationCodeableConcept": {
@@ -150,7 +150,7 @@
       "omop": {
         "drug_exposure": [
           {
-            "person_id": "ref:patient-1",
+            "person_id": "ref:patient-2",
             "drug_concept_id": 19096776,
             "drug_concept_id__name": "aripiprazole 15 MG Oral Tablet",
             "drug_exposure_start_date": "2021-05-20",
@@ -159,8 +159,8 @@
             "drug_exposure_end_datetime": "2021-05-20T09:15:00",
             "drug_type_concept_id": 38000177,
             "drug_type_concept_id__name": "Prescription written",
-            "provider_id": "ref:prac-1",
-            "visit_occurrence_id": "ref:enc-1",
+            "provider_id": "ref:prac-2",
+            "visit_occurrence_id": "ref:enc-2",
             "drug_source_value": "13668021990",
             "drug_source_concept_id": 46249776,
             "drug_source_concept_id__name": "aripiprazole 15 MG Oral Tablet (NDC source concept)"
@@ -173,17 +173,17 @@
       "fhir": [
         {
           "resourceType": "Patient",
-          "id": "patient-1",
+          "id": "patient-3",
           "gender": "male",
           "birthDate": "1950-01-01"
         },
         {
           "resourceType": "MedicationRequest",
-          "id": "medreq-1",
+          "id": "medreq-2",
           "status": "entered-in-error",
           "intent": "order",
           "subject": {
-            "reference": "Patient/patient-1"
+            "reference": "Patient/patient-3"
           },
           "authoredOn": "2005-01-13T07:23:04+00:00",
           "medicationCodeableConcept": {

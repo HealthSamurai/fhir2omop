@@ -105,7 +105,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-2",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -117,7 +117,7 @@
         },
         {
           "resourceType": "Condition",
-          "id": "cond-1",
+          "id": "cond-2",
           "clinicalStatus": {
             "coding": [
               {
@@ -159,7 +159,7 @@
             "reference": "Patient/patient-1"
           },
           "encounter": {
-            "reference": "Encounter/enc-1"
+            "reference": "Encounter/enc-2"
           },
           "onsetDateTime": "1998-01-01T21:26:17+00:00",
           "recordedDate": "1998-01-01T21:26:17+00:00"
@@ -172,7 +172,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-3",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -184,7 +184,7 @@
         },
         {
           "resourceType": "Condition",
-          "id": "cond-1",
+          "id": "cond-3",
           "clinicalStatus": {
             "coding": [
               {
@@ -226,7 +226,7 @@
             "reference": "Patient/patient-1"
           },
           "encounter": {
-            "reference": "Encounter/enc-1"
+            "reference": "Encounter/enc-3"
           },
           "onsetDateTime": "1998-01-01T21:26:17+00:00",
           "recordedDate": "1998-01-01T21:26:17+00:00"
@@ -239,7 +239,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-4",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -251,7 +251,7 @@
         },
         {
           "resourceType": "Condition",
-          "id": "cond-1",
+          "id": "cond-4",
           "clinicalStatus": {
             "coding": [
               {
@@ -293,7 +293,7 @@
             "reference": "Patient/patient-1"
           },
           "encounter": {
-            "reference": "Encounter/enc-1"
+            "reference": "Encounter/enc-4"
           },
           "onsetDateTime": "2020-06-16T12:01:40+01:00",
           "abatementDateTime": "2020-06-16T12:01:40+01:00",
@@ -310,7 +310,7 @@
             "observation_datetime": "2020-06-16T12:01:40",
             "observation_type_concept_id": 32827,
             "observation_type_concept_id__name": "EHR encounter record",
-            "visit_occurrence_id": "ref:enc-1",
+            "visit_occurrence_id": "ref:enc-4",
             "observation_source_value": "Medication review due (situation)",
             "observation_source_concept_id": 4199788,
             "observation_source_concept_id__name": "Medication review due"
@@ -323,7 +323,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-5",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -335,7 +335,7 @@
         },
         {
           "resourceType": "Condition",
-          "id": "cond-1",
+          "id": "cond-5",
           "clinicalStatus": {
             "coding": [
               {
@@ -382,7 +382,7 @@
             "reference": "Patient/patient-1"
           },
           "encounter": {
-            "reference": "Encounter/enc-1"
+            "reference": "Encounter/enc-5"
           },
           "onsetDateTime": "2001-03-05T09:15:00+00:00",
           "recordedDate": "2001-03-05T09:15:00+00:00"
@@ -400,7 +400,7 @@
             "condition_type_concept_id__name": "EHR encounter record",
             "condition_status_concept_id": 32893,
             "condition_status_concept_id__name": "Confirmed diagnosis",
-            "visit_occurrence_id": "ref:enc-1",
+            "visit_occurrence_id": "ref:enc-5",
             "condition_source_value": "Essential hypertension (disorder)",
             "condition_source_concept_id": 320128,
             "condition_source_concept_id__name": "Essential hypertension",
@@ -414,7 +414,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-6",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -426,7 +426,7 @@
         },
         {
           "resourceType": "Condition",
-          "id": "cond-1",
+          "id": "cond-6",
           "clinicalStatus": {
             "coding": [
               {
@@ -460,7 +460,7 @@
             "reference": "Patient/patient-1"
           },
           "encounter": {
-            "reference": "Encounter/enc-1"
+            "reference": "Encounter/enc-6"
           },
           "onsetDateTime": "2005-02-10T08:00:00+00:00",
           "abatementDateTime": "2009-11-22T10:30:00+00:00",
@@ -481,7 +481,7 @@
             "condition_type_concept_id__name": "EHR problem list",
             "condition_status_concept_id": 32906,
             "condition_status_concept_id__name": "Resolved condition",
-            "visit_occurrence_id": "ref:enc-1",
+            "visit_occurrence_id": "ref:enc-6",
             "condition_source_value": "Essential hypertension (disorder)",
             "condition_source_concept_id": 320128,
             "condition_source_concept_id__name": "Essential hypertension",
@@ -495,7 +495,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-7",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -507,7 +507,7 @@
         },
         {
           "resourceType": "Condition",
-          "id": "cond-1",
+          "id": "cond-7",
           "clinicalStatus": {
             "coding": [
               {
@@ -549,7 +549,7 @@
             "reference": "Patient/patient-1"
           },
           "encounter": {
-            "reference": "Encounter/enc-1"
+            "reference": "Encounter/enc-7"
           },
           "onsetDateTime": "2012-08-19T14:00:00+00:00",
           "recordedDate": "2012-08-19T14:00:00+00:00"
@@ -565,7 +565,7 @@
             "measurement_datetime": "2012-08-19T14:00:00",
             "measurement_type_concept_id": 32827,
             "measurement_type_concept_id__name": "EHR encounter record",
-            "visit_occurrence_id": "ref:enc-1",
+            "visit_occurrence_id": "ref:enc-7",
             "measurement_source_value": "Glutathione measurement",
             "measurement_source_concept_id": 4188222,
             "measurement_source_concept_id__name": "Glutathione measurement"
@@ -578,7 +578,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-8",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -590,7 +590,7 @@
         },
         {
           "resourceType": "Condition",
-          "id": "cond-1",
+          "id": "cond-8",
           "clinicalStatus": {
             "coding": [
               {
@@ -632,7 +632,7 @@
             "reference": "Patient/patient-1"
           },
           "encounter": {
-            "reference": "Encounter/enc-1"
+            "reference": "Encounter/enc-8"
           },
           "onsetDateTime": "2015-11-03T08:45:00+00:00",
           "recordedDate": "2015-11-03T08:45:00+00:00"
@@ -648,7 +648,7 @@
             "procedure_datetime": "2015-11-03T08:45:00",
             "procedure_type_concept_id": 32827,
             "procedure_type_concept_id__name": "EHR encounter record",
-            "visit_occurrence_id": "ref:enc-1",
+            "visit_occurrence_id": "ref:enc-8",
             "procedure_source_value": "Excision of lesion of patella",
             "procedure_source_concept_id": 4016092,
             "procedure_source_concept_id__name": "Excision of lesion of patella"
@@ -661,7 +661,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-9",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -673,7 +673,7 @@
         },
         {
           "resourceType": "Condition",
-          "id": "cond-1",
+          "id": "cond-9",
           "clinicalStatus": {
             "coding": [
               {
@@ -715,7 +715,7 @@
             "reference": "Patient/patient-1"
           },
           "encounter": {
-            "reference": "Encounter/enc-1"
+            "reference": "Encounter/enc-9"
           },
           "onsetDateTime": "2003-07-14T10:00:00+00:00",
           "recordedDate": "2003-07-14T10:00:00+00:00"
@@ -733,7 +733,7 @@
             "condition_type_concept_id__name": "EHR",
             "condition_status_concept_id": 32893,
             "condition_status_concept_id__name": "Confirmed diagnosis",
-            "visit_occurrence_id": "ref:enc-1",
+            "visit_occurrence_id": "ref:enc-9",
             "condition_source_value": "Essential hypertension (disorder)",
             "condition_source_concept_id": 320128,
             "condition_source_concept_id__name": "Essential hypertension",
@@ -747,7 +747,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-10",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -759,7 +759,7 @@
         },
         {
           "resourceType": "Condition",
-          "id": "cond-1",
+          "id": "cond-10",
           "clinicalStatus": {
             "coding": [
               {
@@ -790,7 +790,7 @@
             "reference": "Patient/patient-1"
           },
           "encounter": {
-            "reference": "Encounter/enc-1"
+            "reference": "Encounter/enc-10"
           },
           "onsetDateTime": "2004-09-01T08:30:00+00:00",
           "recordedDate": "2004-09-01T08:30:00+00:00"
@@ -808,7 +808,7 @@
             "condition_type_concept_id__name": "EHR",
             "condition_status_concept_id": 32893,
             "condition_status_concept_id__name": "Confirmed diagnosis",
-            "visit_occurrence_id": "ref:enc-1",
+            "visit_occurrence_id": "ref:enc-10",
             "condition_source_value": "Essential hypertension (disorder)",
             "condition_source_concept_id": 320128,
             "condition_source_concept_id__name": "Essential hypertension",
@@ -822,7 +822,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-11",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -834,7 +834,7 @@
         },
         {
           "resourceType": "Condition",
-          "id": "cond-1",
+          "id": "cond-11",
           "clinicalStatus": {
             "coding": [
               {
@@ -876,7 +876,7 @@
             "reference": "Patient/patient-1"
           },
           "encounter": {
-            "reference": "Encounter/enc-1"
+            "reference": "Encounter/enc-11"
           },
           "onsetDateTime": "2006-05-20T11:00:00+00:00",
           "recordedDate": "2006-05-20T11:00:00+00:00"
@@ -894,7 +894,7 @@
             "condition_type_concept_id__name": "EHR encounter record",
             "condition_status_concept_id": 32899,
             "condition_status_concept_id__name": "Preliminary diagnosis",
-            "visit_occurrence_id": "ref:enc-1",
+            "visit_occurrence_id": "ref:enc-11",
             "condition_source_value": "Essential hypertension (disorder)",
             "condition_source_concept_id": 320128,
             "condition_source_concept_id__name": "Essential hypertension",
@@ -908,7 +908,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-12",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -920,7 +920,7 @@
         },
         {
           "resourceType": "Condition",
-          "id": "cond-1",
+          "id": "cond-12",
           "clinicalStatus": {
             "coding": [
               {
@@ -962,7 +962,7 @@
             "reference": "Patient/patient-1"
           },
           "encounter": {
-            "reference": "Encounter/enc-1"
+            "reference": "Encounter/enc-12"
           },
           "onsetDateTime": "2007-02-02T09:00:00+00:00",
           "recordedDate": "2007-02-02T09:00:00+00:00"
@@ -980,7 +980,7 @@
             "condition_type_concept_id__name": "EHR encounter record",
             "condition_status_concept_id": 32906,
             "condition_status_concept_id__name": "Resolved condition",
-            "visit_occurrence_id": "ref:enc-1",
+            "visit_occurrence_id": "ref:enc-12",
             "condition_source_value": "Essential hypertension (disorder)",
             "condition_source_concept_id": 320128,
             "condition_source_concept_id__name": "Essential hypertension",
@@ -994,7 +994,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-13",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -1006,7 +1006,7 @@
         },
         {
           "resourceType": "Condition",
-          "id": "cond-1",
+          "id": "cond-13",
           "clinicalStatus": {
             "coding": [
               {
@@ -1048,7 +1048,7 @@
             "reference": "Patient/patient-1"
           },
           "encounter": {
-            "reference": "Encounter/enc-1"
+            "reference": "Encounter/enc-13"
           },
           "onsetPeriod": {
             "start": "2008-04-18T07:45:00+00:00"
@@ -1068,7 +1068,7 @@
             "condition_type_concept_id__name": "EHR encounter record",
             "condition_status_concept_id": 32893,
             "condition_status_concept_id__name": "Confirmed diagnosis",
-            "visit_occurrence_id": "ref:enc-1",
+            "visit_occurrence_id": "ref:enc-13",
             "condition_source_value": "Essential hypertension (disorder)",
             "condition_source_concept_id": 320128,
             "condition_source_concept_id__name": "Essential hypertension",
@@ -1082,7 +1082,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-14",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -1094,7 +1094,7 @@
         },
         {
           "resourceType": "Condition",
-          "id": "cond-1",
+          "id": "cond-14",
           "clinicalStatus": {
             "coding": [
               {
@@ -1136,7 +1136,7 @@
             "reference": "Patient/patient-1"
           },
           "encounter": {
-            "reference": "Encounter/enc-1"
+            "reference": "Encounter/enc-14"
           },
           "recordedDate": "2011-10-09T13:20:00+00:00"
         }
@@ -1153,7 +1153,7 @@
             "condition_type_concept_id__name": "EHR encounter record",
             "condition_status_concept_id": 32893,
             "condition_status_concept_id__name": "Confirmed diagnosis",
-            "visit_occurrence_id": "ref:enc-1",
+            "visit_occurrence_id": "ref:enc-14",
             "condition_source_value": "Essential hypertension (disorder)",
             "condition_source_concept_id": 320128,
             "condition_source_concept_id__name": "Essential hypertension",
@@ -1167,7 +1167,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-15",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -1179,7 +1179,7 @@
         },
         {
           "resourceType": "Condition",
-          "id": "cond-1",
+          "id": "cond-15",
           "clinicalStatus": {
             "coding": [
               {
@@ -1221,7 +1221,7 @@
             "reference": "Patient/patient-1"
           },
           "encounter": {
-            "reference": "Encounter/enc-1"
+            "reference": "Encounter/enc-15"
           },
           "onsetDateTime": "2013-03-11T09:00:00+00:00",
           "abatementPeriod": {
@@ -1245,7 +1245,7 @@
             "condition_type_concept_id__name": "EHR encounter record",
             "condition_status_concept_id": 32893,
             "condition_status_concept_id__name": "Confirmed diagnosis",
-            "visit_occurrence_id": "ref:enc-1",
+            "visit_occurrence_id": "ref:enc-15",
             "condition_source_value": "Essential hypertension (disorder)",
             "condition_source_concept_id": 320128,
             "condition_source_concept_id__name": "Essential hypertension",
@@ -1259,7 +1259,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-16",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -1271,7 +1271,7 @@
         },
         {
           "resourceType": "Condition",
-          "id": "cond-1",
+          "id": "cond-16",
           "clinicalStatus": {
             "coding": [
               {
@@ -1313,7 +1313,7 @@
             "reference": "Patient/patient-1"
           },
           "encounter": {
-            "reference": "Encounter/enc-1"
+            "reference": "Encounter/enc-16"
           },
           "onsetDateTime": "2016-06-06T09:00:00+00:00",
           "abatementString": "Resolved after treatment",
@@ -1333,7 +1333,7 @@
             "condition_status_concept_id": 32893,
             "condition_status_concept_id__name": "Confirmed diagnosis",
             "stop_reason": "Resolved after treat",
-            "visit_occurrence_id": "ref:enc-1",
+            "visit_occurrence_id": "ref:enc-16",
             "condition_source_value": "Essential hypertension (disorder)",
             "condition_source_concept_id": 320128,
             "condition_source_concept_id__name": "Essential hypertension",
@@ -1347,7 +1347,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-17",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -1359,7 +1359,7 @@
         },
         {
           "resourceType": "Condition",
-          "id": "cond-1",
+          "id": "cond-17",
           "clinicalStatus": {
             "coding": [
               {
@@ -1401,7 +1401,7 @@
             "reference": "Patient/patient-1"
           },
           "encounter": {
-            "reference": "Encounter/enc-1"
+            "reference": "Encounter/enc-17"
           },
           "onsetDateTime": "2018-09-12T10:00:00+00:00",
           "recordedDate": "2018-09-12T10:00:00+00:00"
@@ -1419,7 +1419,7 @@
             "condition_type_concept_id__name": "EHR encounter record",
             "condition_status_concept_id": 32893,
             "condition_status_concept_id__name": "Confirmed diagnosis",
-            "visit_occurrence_id": "ref:enc-1",
+            "visit_occurrence_id": "ref:enc-17",
             "condition_source_value": "Essential (primary) hypertension",
             "condition_source_concept_id": 35207668,
             "condition_source_concept_id__name": "Essential (primary) hypertension (ICD10CM)",

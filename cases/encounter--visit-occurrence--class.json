@@ -75,7 +75,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-2",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -114,7 +114,7 @@
             "visit_type_concept_id__name": "EHR encounter record",
             "provider_id": "ref:prac-1",
             "care_site_id": "ref:org-1",
-            "visit_source_value": "enc-1",
+            "visit_source_value": "enc-2",
             "visit_source_concept_id": 0,
             "admitted_from_concept_id": 0,
             "discharged_to_concept_id": 0
@@ -127,7 +127,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-3",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -166,7 +166,7 @@
             "visit_type_concept_id__name": "EHR encounter record",
             "provider_id": "ref:prac-1",
             "care_site_id": "ref:org-1",
-            "visit_source_value": "enc-1",
+            "visit_source_value": "enc-3",
             "visit_source_concept_id": 0,
             "admitted_from_concept_id": 0,
             "discharged_to_concept_id": 0
@@ -179,7 +179,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-4",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -206,7 +206,7 @@
             "visit_end_datetime": "2020-04-01T14:20:00",
             "visit_type_concept_id": 32827,
             "visit_type_concept_id__name": "EHR encounter record",
-            "visit_source_value": "enc-1",
+            "visit_source_value": "enc-4",
             "visit_source_concept_id": 0,
             "admitted_from_concept_id": 0,
             "discharged_to_concept_id": 0
@@ -219,7 +219,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-5",
           "status": "in-progress",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -257,7 +257,7 @@
             "visit_type_concept_id__name": "EHR encounter record",
             "provider_id": "ref:prac-1",
             "care_site_id": "ref:org-1",
-            "visit_source_value": "enc-1",
+            "visit_source_value": "enc-5",
             "visit_source_concept_id": 0,
             "admitted_from_concept_id": 0,
             "discharged_to_concept_id": 0
@@ -270,7 +270,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-6",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -297,7 +297,7 @@
             "visit_end_datetime": "2019-02-14T09:30:00",
             "visit_type_concept_id": 32827,
             "visit_type_concept_id__name": "EHR encounter record",
-            "visit_source_value": "enc-1",
+            "visit_source_value": "enc-6",
             "visit_source_concept_id": 0,
             "admitted_from_concept_id": 0,
             "discharged_to_concept_id": 0
@@ -310,7 +310,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-7",
           "status": "entered-in-error",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -332,7 +332,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-8",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -371,7 +371,7 @@
             "visit_type_concept_id__name": "EHR encounter record",
             "provider_id": "ref:prac-1",
             "care_site_id": "ref:org-1",
-            "visit_source_value": "enc-1",
+            "visit_source_value": "enc-8",
             "visit_source_concept_id": 0,
             "admitted_from_concept_id": 0,
             "discharged_to_concept_id": 0
@@ -384,7 +384,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-9",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -423,7 +423,7 @@
             "visit_type_concept_id__name": "EHR encounter record",
             "provider_id": "ref:prac-1",
             "care_site_id": "ref:org-1",
-            "visit_source_value": "enc-1",
+            "visit_source_value": "enc-9",
             "visit_source_concept_id": 0,
             "admitted_from_concept_id": 0,
             "discharged_to_concept_id": 0
@@ -436,7 +436,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-10",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -475,7 +475,7 @@
             "visit_type_concept_id__name": "EHR encounter record",
             "provider_id": "ref:prac-1",
             "care_site_id": "ref:org-1",
-            "visit_source_value": "enc-1",
+            "visit_source_value": "enc-10",
             "visit_source_concept_id": 0,
             "admitted_from_concept_id": 0,
             "discharged_to_concept_id": 0
@@ -488,7 +488,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-11",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -527,7 +527,7 @@
             "visit_type_concept_id__name": "EHR encounter record",
             "provider_id": "ref:prac-1",
             "care_site_id": "ref:org-1",
-            "visit_source_value": "enc-1",
+            "visit_source_value": "enc-11",
             "visit_source_concept_id": 0,
             "admitted_from_concept_id": 0,
             "discharged_to_concept_id": 0
@@ -540,7 +540,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-12",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -579,7 +579,7 @@
             "visit_type_concept_id__name": "EHR encounter record",
             "provider_id": "ref:prac-1",
             "care_site_id": "ref:org-1",
-            "visit_source_value": "enc-1",
+            "visit_source_value": "enc-12",
             "visit_source_concept_id": 0,
             "admitted_from_concept_id": 0,
             "discharged_to_concept_id": 0
@@ -592,7 +592,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-13",
           "status": "finished",
           "class": {
             "system": "https://synthetichealth.github.io/synthea/encounter-class",
@@ -631,7 +631,7 @@
             "visit_type_concept_id__name": "EHR encounter record",
             "provider_id": "ref:prac-1",
             "care_site_id": "ref:org-1",
-            "visit_source_value": "enc-1",
+            "visit_source_value": "enc-13",
             "visit_source_concept_id": 0,
             "admitted_from_concept_id": 0,
             "discharged_to_concept_id": 0
@@ -644,7 +644,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-14",
           "status": "finished",
           "class": {
             "system": "https://synthetichealth.github.io/synthea/encounter-class",
@@ -683,7 +683,7 @@
             "visit_type_concept_id__name": "EHR encounter record",
             "provider_id": "ref:prac-1",
             "care_site_id": "ref:org-1",
-            "visit_source_value": "enc-1",
+            "visit_source_value": "enc-14",
             "visit_source_concept_id": 0,
             "admitted_from_concept_id": 0,
             "discharged_to_concept_id": 0
@@ -696,7 +696,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-15",
           "status": "finished",
           "class": {
             "system": "https://synthetichealth.github.io/synthea/encounter-class",
@@ -735,7 +735,7 @@
             "visit_type_concept_id__name": "EHR encounter record",
             "provider_id": "ref:prac-1",
             "care_site_id": "ref:org-1",
-            "visit_source_value": "enc-1",
+            "visit_source_value": "enc-15",
             "visit_source_concept_id": 0,
             "admitted_from_concept_id": 0,
             "discharged_to_concept_id": 0
@@ -748,7 +748,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-16",
           "status": "finished",
           "class": {
             "system": "https://synthetichealth.github.io/synthea/encounter-class",
@@ -787,7 +787,7 @@
             "visit_type_concept_id__name": "EHR encounter record",
             "provider_id": "ref:prac-1",
             "care_site_id": "ref:org-1",
-            "visit_source_value": "enc-1",
+            "visit_source_value": "enc-16",
             "visit_source_concept_id": 0,
             "admitted_from_concept_id": 0,
             "discharged_to_concept_id": 0
@@ -800,7 +800,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-17",
           "status": "finished",
           "class": {
             "system": "https://synthetichealth.github.io/synthea/encounter-class",
@@ -839,7 +839,7 @@
             "visit_type_concept_id__name": "EHR encounter record",
             "provider_id": "ref:prac-1",
             "care_site_id": "ref:org-1",
-            "visit_source_value": "enc-1",
+            "visit_source_value": "enc-17",
             "visit_source_concept_id": 0,
             "admitted_from_concept_id": 0,
             "discharged_to_concept_id": 0
@@ -852,7 +852,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-18",
           "status": "finished",
           "class": {
             "system": "https://synthetichealth.github.io/synthea/encounter-class",
@@ -891,7 +891,7 @@
             "visit_type_concept_id__name": "EHR encounter record",
             "provider_id": "ref:prac-1",
             "care_site_id": "ref:org-1",
-            "visit_source_value": "enc-1",
+            "visit_source_value": "enc-18",
             "visit_source_concept_id": 0,
             "admitted_from_concept_id": 0,
             "discharged_to_concept_id": 0
@@ -904,7 +904,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-19",
           "status": "finished",
           "class": {
             "system": "https://synthetichealth.github.io/synthea/encounter-class",
@@ -931,7 +931,7 @@
             "visit_end_datetime": "2020-04-01T14:20:00",
             "visit_type_concept_id": 32827,
             "visit_type_concept_id__name": "EHR encounter record",
-            "visit_source_value": "enc-1",
+            "visit_source_value": "enc-19",
             "visit_source_concept_id": 0,
             "admitted_from_concept_id": 0,
             "discharged_to_concept_id": 0

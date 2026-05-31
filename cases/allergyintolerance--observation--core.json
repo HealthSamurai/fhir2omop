@@ -95,7 +95,7 @@
       "fhir": [
         {
           "resourceType": "AllergyIntolerance",
-          "id": "ai-1",
+          "id": "ai-2",
           "type": "allergy",
           "category": [
             "food"
@@ -158,7 +158,7 @@
       "fhir": [
         {
           "resourceType": "AllergyIntolerance",
-          "id": "ai-1",
+          "id": "ai-3",
           "type": "allergy",
           "category": [
             "medication"
@@ -221,7 +221,7 @@
       "fhir": [
         {
           "resourceType": "AllergyIntolerance",
-          "id": "ai-1",
+          "id": "ai-4",
           "type": "allergy",
           "category": [
             "environment"
@@ -265,7 +265,7 @@
       "fhir": [
         {
           "resourceType": "AllergyIntolerance",
-          "id": "ai-1",
+          "id": "ai-5",
           "type": "allergy",
           "category": [
             "environment"

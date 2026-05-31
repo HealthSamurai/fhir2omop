@@ -100,7 +100,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-2",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -116,7 +116,7 @@
         },
         {
           "resourceType": "Procedure",
-          "id": "proc-1",
+          "id": "proc-2",
           "status": "completed",
           "code": {
             "text": "Medication Reconciliation",
@@ -137,7 +137,7 @@
             "reference": "Patient/patient-1"
           },
           "encounter": {
-            "reference": "Encounter/enc-1"
+            "reference": "Encounter/enc-2"
           },
           "performedPeriod": {
             "start": "2017-11-01T12:07:09+00:00",
@@ -157,7 +157,7 @@
             "procedure_end_datetime": "2017-11-01T12:22:09",
             "procedure_type_concept_id": 32827,
             "procedure_type_concept_id__name": "EHR encounter record",
-            "visit_occurrence_id": "ref:enc-1",
+            "visit_occurrence_id": "ref:enc-2",
             "procedure_source_value": "430193006",
             "procedure_source_concept_id": 4326177,
             "procedure_source_concept_id__name": "Medication reconciliation"
@@ -170,7 +170,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-3",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -186,7 +186,7 @@
         },
         {
           "resourceType": "Procedure",
-          "id": "proc-1",
+          "id": "proc-3",
           "status": "completed",
           "code": {
             "text": "Medication Reconciliation",
@@ -207,7 +207,7 @@
             "reference": "Patient/patient-1"
           },
           "encounter": {
-            "reference": "Encounter/enc-1"
+            "reference": "Encounter/enc-3"
           },
           "performedPeriod": {
             "start": "2017-11-01T12:07:09+00:00",
@@ -227,7 +227,7 @@
             "procedure_end_datetime": "2017-11-01T12:22:09",
             "procedure_type_concept_id": 32827,
             "procedure_type_concept_id__name": "EHR encounter record",
-            "visit_occurrence_id": "ref:enc-1",
+            "visit_occurrence_id": "ref:enc-3",
             "procedure_source_value": "430193006",
             "procedure_source_concept_id": 4326177,
             "procedure_source_concept_id__name": "Medication reconciliation"
@@ -240,7 +240,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-4",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -256,7 +256,7 @@
         },
         {
           "resourceType": "Procedure",
-          "id": "proc-1",
+          "id": "proc-4",
           "status": "completed",
           "code": {
             "text": "Diabetes mellitus (miscoded as a Procedure)",
@@ -272,7 +272,7 @@
             "reference": "Patient/patient-1"
           },
           "encounter": {
-            "reference": "Encounter/enc-1"
+            "reference": "Encounter/enc-4"
           },
           "performedPeriod": {
             "start": "2017-11-01T12:07:09+00:00",
@@ -287,7 +287,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-5",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -303,7 +303,7 @@
         },
         {
           "resourceType": "Procedure",
-          "id": "proc-1",
+          "id": "proc-5",
           "status": "not-done",
           "code": {
             "text": "Medication Reconciliation (procedure)",
@@ -319,7 +319,7 @@
             "reference": "Patient/patient-1"
           },
           "encounter": {
-            "reference": "Encounter/enc-1"
+            "reference": "Encounter/enc-5"
           },
           "performedPeriod": {
             "start": "2017-11-01T12:07:09+00:00",
@@ -334,7 +334,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-6",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -350,7 +350,7 @@
         },
         {
           "resourceType": "Procedure",
-          "id": "proc-1",
+          "id": "proc-6",
           "status": "entered-in-error",
           "code": {
             "text": "Medication Reconciliation (procedure)",
@@ -366,7 +366,7 @@
             "reference": "Patient/patient-1"
           },
           "encounter": {
-            "reference": "Encounter/enc-1"
+            "reference": "Encounter/enc-6"
           },
           "performedPeriod": {
             "start": "2017-11-01T12:07:09+00:00",
@@ -381,7 +381,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-7",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -397,7 +397,7 @@
         },
         {
           "resourceType": "Procedure",
-          "id": "proc-1",
+          "id": "proc-7",
           "status": "completed",
           "code": {
             "text": "Medication Reconciliation (procedure)",
@@ -413,7 +413,7 @@
             "reference": "Patient/patient-1"
           },
           "encounter": {
-            "reference": "Encounter/enc-1"
+            "reference": "Encounter/enc-7"
           },
           "performedDateTime": "2017-11-02T03:30:00+05:00"
         }
@@ -428,7 +428,7 @@
             "procedure_datetime": "2017-11-01T22:30:00",
             "procedure_type_concept_id": 32827,
             "procedure_type_concept_id__name": "EHR encounter record",
-            "visit_occurrence_id": "ref:enc-1",
+            "visit_occurrence_id": "ref:enc-7",
             "procedure_source_value": "430193006",
             "procedure_source_concept_id": 4326177,
             "procedure_source_concept_id__name": "Medication reconciliation"
@@ -441,7 +441,7 @@
       "fhir": [
         {
           "resourceType": "Encounter",
-          "id": "enc-1",
+          "id": "enc-8",
           "status": "finished",
           "class": {
             "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -457,7 +457,7 @@
         },
         {
           "resourceType": "Procedure",
-          "id": "proc-1",
+          "id": "proc-8",
           "status": "completed",
           "code": {
             "text": "Topical anesthetic, for dialysis",
@@ -473,7 +473,7 @@
             "reference": "Patient/patient-1"
           },
           "encounter": {
-            "reference": "Encounter/enc-1"
+            "reference": "Encounter/enc-8"
           },
           "performedPeriod": {
             "start": "2017-11-01T12:07:09+00:00",
@@ -493,7 +493,7 @@
             "procedure_end_datetime": "2017-11-01T12:22:09",
             "procedure_type_concept_id": 32827,
             "procedure_type_concept_id__name": "EHR encounter record",
-            "visit_occurrence_id": "ref:enc-1",
+            "visit_occurrence_id": "ref:enc-8",
             "procedure_source_value": "A4736",
             "procedure_source_concept_id": 2614995,
             "procedure_source_concept_id__name": "Topical anesthetic, for dialysis, per gram"
