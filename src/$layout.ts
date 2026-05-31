@@ -67,6 +67,10 @@ export default function (
   .prose strong { color: #111827; }
   .prose a { color: #2563eb; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
   .prose a:hover { color: #1d4ed8; }
+  /* UI links inside not-prose blocks (lists, cards) are navigation, not document
+     prose — don't inherit the prose underline/blue. Same specificity as .prose a,
+     declared after, so it wins for links inside both wrappers. */
+  .not-prose a { color: inherit; text-decoration: none; }
   details summary { cursor: pointer; }
   details summary::-webkit-details-marker { display: none; }
   details summary::marker { display: none; content: ""; }

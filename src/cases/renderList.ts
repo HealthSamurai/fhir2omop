@@ -1,5 +1,6 @@
-// Render the /cases index as a simple list: one row per branch file —
-// title / slug, with a pass/fail check on the right. No cards.
+// Render the /cases index as a simple list, grouped by FHIR resource: a bold
+// resource header, then one row per branch — title + a short summary (from the
+// file's notes), with a pass/fail check on the right. No cards, no underlines.
 export default function (ctx: Context, opts: { cases: any[] }): string {
     const { cases } = opts;
 
@@ -14,15 +15,40 @@ export default function (ctx: Context, opts: { cases: any[] }): string {
         return `<span class="text-gray-300 text-sm" title="not run">○</span>`;
     };
 
-    const rows = cases.map((c) => {
+    // Primary FHIR resource of a branch — the slug's first segment, cased to the
+    // matching resourceType from the file's fhirTypes.
+    const resourceOf = (c: any): string => {
+        const part0 = (c.slug?.split("--")[0] ?? "");
+        return (c.fhirTypes ?? []).find((t: string) => t.toLowerCase() === part0) ?? part0;
+    };
+
+    const row = (c: any): string => {
         const err = c.error ? `<span class="ml-2 text-[11px] text-rose-600">parse error</span>` : "";
-        return `<a href="/cases/${enc(c.slug)}" class="flex items-center justify-between gap-3 px-4 py-2 no-underline hover:bg-gray-50 border-t border-gray-100 first:border-t-0">
+        const summary = summarize(c.notes) || (c.omopTables ?? []).join(", ") || "";
+        return `<a href="/cases/${enc(c.slug)}" class="flex items-center justify-between gap-3 px-4 py-2 hover:bg-gray-50 border-t border-gray-100 first:border-t-0">
   <div class="min-w-0 flex-1">
     <div class="text-[13px] text-gray-800 leading-snug">${esc(c.title)}${err}</div>
-    <div class="font-mono text-[11px] text-gray-400 truncate">${esc(c.slug)}</div>
+    ${summary ? `<div class="text-[11px] text-gray-500 leading-snug line-clamp-1">${esc(summary)}</div>` : ""}
   </div>
   ${check(c)}
 </a>`;
+    };
+
+    // Group by resource, preserving the (slug-sorted) order so each resource's
+    // files are already contiguous.
+    const order: string[] = [];
+    const groups = new Map<string, any[]>();
+    for (const c of cases) {
+        const r = resourceOf(c);
+        if (!groups.has(r)) { groups.set(r, []); order.push(r); }
+        groups.get(r)!.push(c);
+    }
+    const sections = order.map((r) => {
+        const items = groups.get(r)!;
+        return `<div class="mb-5">
+  <div class="not-prose text-[13px] font-semibold text-gray-800 mb-1.5">${esc(r)} <span class="text-gray-400 font-normal">· ${items.length} branch${items.length === 1 ? "" : "es"}</span></div>
+  <div class="not-prose border border-gray-200 rounded-lg overflow-hidden">${items.map(row).join("")}</div>
+</div>`;
     }).join("");
 
     const totalVariants = cases.reduce((n, c) => n + (c.variantCount ?? 0), 0);
@@ -33,8 +59,24 @@ export default function (ctx: Context, opts: { cases: any[] }): string {
         ? `Not run yet — <code>bun script/run-cases.ts</code> to execute against the real pipeline.`
         : `Last run: <strong class="${totPass === totRan ? "text-emerald-700" : "text-rose-700"}">${totPass}/${totRan} green</strong>${cases[0]?.ranAt ? ` · ${esc(String(cases[0].ranAt).slice(0, 19).replace("T", " "))}` : ""}.`;
     return `<h1>Test cases</h1>
-<p class="text-gray-600 -mt-1">Golden FHIR&nbsp;→&nbsp;OMOP fixtures, organized by implementation branch. Each file is a feature (race, ethnicity, domain-routing, …) holding variant cases that cover its corner cases. <strong>${cases.length}</strong> branches, <strong>${totalVariants}</strong> variants. ${runLine}</p>
-<div class="not-prose mt-4 border border-gray-200 rounded-lg overflow-hidden">${rows}</div>`;
+<p class="text-gray-600 -mt-1">Golden FHIR&nbsp;→&nbsp;OMOP fixtures, organized by source resource then implementation branch. <strong>${cases.length}</strong> branches across <strong>${order.length}</strong> resources, <strong>${totalVariants}</strong> variants. ${runLine}</p>
+<div class="mt-4">${sections}</div>`;
+}
+
+// One-line plain-text summary from a branch's (markdown) notes: strip light
+// markdown, take the first sentence, cap the length.
+function summarize(notes: string): string {
+    if (!notes) return "";
+    let s = String(notes)
+        .replace(/`([^`]+)`/g, "$1")
+        .replace(/\*\*?([^*]+)\*\*?/g, "$1")
+        .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+        .replace(/[#>]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    const m = s.match(/^(.{0,150}?[.!?])(\s|$)/);
+    if (m) return m[1]!;
+    return s.length > 150 ? s.slice(0, 150).replace(/\s+\S*$/, "") + "…" : s;
 }
 
 function esc(s: string) {
