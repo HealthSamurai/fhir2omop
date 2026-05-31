@@ -166,7 +166,7 @@ script/run-cases.ts` — no 928MB bundle needed.
 3. **`location_id`** is `stringToId(line|city|state|zip)` (not a fhir-resource
    ref) — expressed with the `id:<token>` binding (see above).
 
-## Branches (23 files, 149 variants)
+## Branches (27 files, 160 variants)
 
 | File | Variants | Tables | Corner cases |
 |---|---|---|---|
@@ -193,3 +193,7 @@ script/run-cases.ts` — no 928MB bundle needed.
 | immunization--drug-exposure--cvx | 4 | drug_exposure | CVX crosswalk, CVX no-crosswalk→drug_concept_id 0, not-done→{} |
 | medicationrequest--drug-exposure--rxnorm | 4 | drug_exposure | RxNorm active, status entered-in-error→{} |
 | medicationadministration--drug-exposure--rxnorm | 4 | drug_exposure | RxNorm/NDC/SNOMED cascade, administration |
+| medicationdispense--drug-exposure--rxnorm | 4 | drug_exposure | RxNorm>NDC priority, quantity/daysSupply, unresolvable→{} |
+| medicationstatement--drug-exposure--rxnorm | 3 | drug_exposure | effectivePeriod / effectiveDateTime, status entered-in-error→{} |
+| specimen--specimen--core | 2 | specimen | SNOMED type+bodySite Maps-to, collectedDateTime, no-date→{} |
+| coverage--payer-plan-period--core | 2 | payer_plan_period | period→dates, payer/plan names→source_value, no-period→{} |

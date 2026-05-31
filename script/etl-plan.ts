@@ -42,9 +42,13 @@ export const PLAN: Edge[] = [
     { edge: "MedicationRequest__drug_exposure",       src: "fhir.medication_request",    staging: "staging.medicationrequest_drug_exposure",      target: "cdm_ours_fhir.drug_exposure",        mode: "truncate" },
     { edge: "MedicationAdministration__drug_exposure",src: "fhir.medication_administration", staging: "staging.medicationadministration_drug_exposure", target: "cdm_ours_fhir.drug_exposure",   mode: "append" },
     { edge: "Immunization__drug_exposure",            src: "fhir.immunization",          staging: "staging.immunization_drug_exposure",           target: "cdm_ours_fhir.drug_exposure",        mode: "append" },
+    { edge: "MedicationDispense__drug_exposure",      src: "fhir.medication_dispense",   staging: "staging.medicationdispense_drug_exposure",     target: "cdm_ours_fhir.drug_exposure",        mode: "append" },
+    { edge: "MedicationStatement__drug_exposure",     src: "fhir.medication_statement",  staging: "staging.medicationstatement_drug_exposure",    target: "cdm_ours_fhir.drug_exposure",        mode: "append" },
 
     { edge: "Device__device_exposure",                src: "fhir.device",                staging: "staging.device_device_exposure",               target: "cdm_ours_fhir.device_exposure",      mode: "truncate" },
+    { edge: "Specimen__specimen",                     src: "fhir.specimen",              staging: "staging.specimen_specimen",                    target: "cdm_ours_fhir.specimen",             mode: "truncate" },
     { edge: "Patient__death",                         src: "fhir.patient",               staging: "staging.patient_death",                        target: "cdm_ours_fhir.death",                mode: "truncate" },
+    { edge: "Coverage__payer_plan_period",            src: "fhir.coverage",              staging: "staging.coverage_payer_plan_period",           target: "cdm_ours_fhir.payer_plan_period",    mode: "truncate" },
 
     // — derived (must run after visit_occurrence is populated) —
     { edge: "Patient__observation_period",            src: "fhir.patient",               staging: "staging.patient_observation_period",           target: "cdm_ours_fhir.observation_period",   mode: "truncate" },

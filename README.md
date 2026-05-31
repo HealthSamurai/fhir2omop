@@ -36,13 +36,13 @@ branch-by-branch (it replaced the earlier Synthea-CSV diff oracle, now retired).
 
 | Layer | State |
 |---|---|
-| Mapping spec (`mapspec/edges/`) — FHIR↔OMOP edges with field-level docs and reference-impl citations | ✅ 33 edges (29 implemented + 4 stub) |
+| Mapping spec (`mapspec/edges/`) — FHIR↔OMOP edges with field-level docs and reference-impl citations | ✅ 33 edges (32 implemented + 1 stub) |
 | FHIR profiles (`mapspec/profiles/`) — gating StructureDefinitions + ConceptMaps (`*.cm.json`) | ✅ 28 profiles + 10 ConceptMaps |
 | ValueSets — one per OMOP domain, with example concepts and authoritative SQL expansion | ✅ 10 |
 | SQL-on-FHIR ViewDefinitions (`mapspec/views/`) — Stage 1 flatteners | ✅ 26 |
 | OMOP Athena vocabularies loaded into Postgres (`vocab.*`) | ✅ 6.4M concepts |
-| Stage 2 SQL ETLs (`mapspec/etl/`, OMOP-shaped, vocab joins via `cm.*`) | ✅ 29 implemented + 4 stub (Coverage, Specimen, Medication, MedicationDispense — SQL present, emit rows only when their source resource is loaded) |
-| Golden FHIR→OMOP test cases (`cases/`, run by `script/run-cases.ts`) — the correctness gate | ✅ 149 variants / 23 branches |
+| Stage 2 SQL ETLs (`mapspec/etl/`, OMOP-shaped, vocab joins via `cm.*`) | ✅ 32 implemented + 1 stub (Medication — `WHERE FALSE` by design; it's a vocabulary resource, not a row producer). Coverage / Specimen / MedicationDispense / MedicationStatement are wired + golden-cased even though Synthea never emits them |
+| Golden FHIR→OMOP test cases (`cases/`, run by `script/run-cases.ts`) — the correctness gate | ✅ 160 variants / 27 branches (all 32 implemented edges covered) |
 | Hermetic case runner in CI (minimal vocab subset, no full Athena bundle, no source dataset) | ✅ GitHub Actions |
 | FHIR-instance validator (profile → SQL `WHERE`) | 🚧 design |
 
@@ -92,7 +92,7 @@ Hot-reload after edits via REPL (`bun script/repl.ts 'await ctx.fns.repl.load(ct
 
 ```
 mapspec/
-  edges/        33 *.json — field-level mapping per FHIR-resource → OMOP-table edge (29 implemented + 4 stub)
+  edges/        33 *.json — field-level mapping per FHIR-resource → OMOP-table edge (32 implemented + 1 stub)
   profiles/    StructureDefinitions (28) + ValueSets (10) + ConceptMaps (10 *.cm.json)
   views/       26 SQL-on-FHIR ViewDefinitions — Stage-1 flatteners
   etl/         33 *.sql — Stage-2 OMOP-shaped INSERT/UPDATE (+ 4 _resolve_*.sql + _functions.sql)

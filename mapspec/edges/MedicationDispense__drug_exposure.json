@@ -3,7 +3,7 @@
   "fhir_resource": "MedicationDispense",
   "omop_table": "drug_exposure",
   "direction": "fhir-to-omop",
-  "status": "stub",
+  "status": "implemented",
   "primary": true,
   "required": true,
   "condition": "status != 'entered-in-error' AND status != 'cancelled' AND status != 'declined' AND status != 'stopped'",

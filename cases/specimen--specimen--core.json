@@ -1,0 +1,64 @@
+{
+  "title": "Specimen → specimen (core)",
+  "notes": "Synthea emits no Specimen, so this branch is exercised only by synthetic cases. The standalone Specimen edge (mapspec/etl/Specimen__specimen.sql + mapspec/views/Specimen__specimen.view.json) emits one OMOP `specimen` row per FHIR Specimen, gated by `WHERE v.collection.collectedDateTime IS NOT NULL`.\n\nColumn derivation:\n  specimen_id              = referenceToId(Specimen.id)  (surrogate PK, omitted from assertions)\n  person_id                = referenceToId(Specimen.subject.getReferenceKey())\n  specimen_concept_id      = std.concept_id  (SNOMED type.coding code --Maps to--> standard Specimen-domain concept), else 0\n  specimen_type_concept_id = 32856  ('Lab', constant)\n  specimen_date            = collection.collectedDateTime::date\n  specimen_datetime        = collection.collectedDateTime::timestamp  (WALL-CLOCK; any FHIR offset is dropped by ::timestamp)\n  quantity                 = collection.quantity.value\n  anatomic_site_concept_id = site_std.concept_id  (SNOMED collection.bodySite code --Maps to--> any standard concept), else 0\n  specimen_source_value    = left(SNOMED type code, 50)\n  anatomic_site_source_value = left(SNOMED bodySite code, 50)\n  unit_concept_id, disease_status_concept_id, specimen_source_id, unit_source_value, disease_status_source_value = NULL (always)\n\nGROUNDED concepts (live vocab.concept / Maps-to, v20260227):\n  type   SNOMED 119297000 'Blood specimen' --Maps to--> 4001225 'Blood specimen' (domain Specimen, standard 'S')\n  site   SNOMED 368208006 'Left upper arm structure' --Maps to--> 4283159 'Left upper arm structure' (domain Spec Anatomic Site, standard 'S')\nEach maps 1:1, so no surrogate-id fan-out.",
+  "fixtures": [
+    { "resourceType": "Patient", "id": "pt-1", "gender": "female", "birthDate": "1980-02-02" }
+  ],
+  "cases": [
+    {
+      "desc": "(a) Specimen with collectedDateTime + SNOMED type + bodySite + quantity → one specimen row; type 119297000→4001225, site 368208006→4283159",
+      "fhir": [
+        {
+          "resourceType": "Specimen",
+          "id": "spec-1",
+          "subject": { "reference": "Patient/pt-1" },
+          "type": {
+            "coding": [ { "system": "http://snomed.info/sct", "code": "119297000", "display": "Blood specimen" } ]
+          },
+          "collection": {
+            "collectedDateTime": "2019-03-15T09:30:00+00:00",
+            "quantity": { "value": 5, "unit": "mL" },
+            "bodySite": {
+              "coding": [ { "system": "http://snomed.info/sct", "code": "368208006", "display": "Left upper arm structure" } ]
+            }
+          }
+        }
+      ],
+      "omop": {
+        "specimen": [
+          {
+            "person_id": "ref:pt-1",
+            "specimen_concept_id": 4001225,
+            "specimen_concept_id__name": "Blood specimen",
+            "specimen_type_concept_id": 32856,
+            "specimen_type_concept_id__name": "Lab",
+            "specimen_date": "2019-03-15",
+            "specimen_datetime": "2019-03-15T09:30:00",
+            "quantity": 5,
+            "anatomic_site_concept_id": 4283159,
+            "anatomic_site_concept_id__name": "Left upper arm structure",
+            "specimen_source_value": "119297000",
+            "anatomic_site_source_value": "368208006"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(b) Specimen with NO collection.collectedDateTime → dropped by WHERE v.collected_dt IS NOT NULL, zero rows",
+      "fhir": [
+        {
+          "resourceType": "Specimen",
+          "id": "spec-2",
+          "subject": { "reference": "Patient/pt-1" },
+          "type": {
+            "coding": [ { "system": "http://snomed.info/sct", "code": "119297000", "display": "Blood specimen" } ]
+          },
+          "collection": {
+            "quantity": { "value": 5, "unit": "mL" }
+          }
+        }
+      ],
+      "omop": {}
+    }
+  ]
+}

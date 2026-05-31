@@ -693,14 +693,15 @@ mapspec/
   Reference shape used per-field).
 
 Status (May 2026): 33 edges across 20 FHIR resources → 16 OMOP tables.
-29 edges are `status: implemented` (wired stage-2 SQL in
-`mapspec/etl/<R>__<T>.sql`); 4 are `status: stub` (Coverage, Specimen,
-Medication, MedicationDispense) — they carry full stage-2 SQL too, but emit
-rows only when their source resource is present in `fhir.*`. (Medication is
-`WHERE FALSE` by design — a vocabulary resource, not a row producer.) On a
-~105-patient FHIR cohort the full orchestrator (cm.* → staging.* →
-cdm_ours_fhir.*) finishes in ~22 seconds and populates 14 OMOP tables (~98k
-rows). `bun -e '...'` over the edge JSONs shows **136 / 478 fields** carry
+32 edges are `status: implemented` (wired stage-2 SQL in
+`mapspec/etl/<R>__<T>.sql`, all covered by golden cases); 1 is `status: stub`
+(Medication — `WHERE FALSE` by design, a vocabulary resource not a row
+producer). Coverage / Specimen / MedicationDispense / MedicationStatement are
+wired into the PLAN and golden-cased with synthetic FHIR even though a typical
+cohort (e.g. Synthea) never emits them, so they fire only when their source
+resource is present in `fhir.*`. On a ~105-patient FHIR cohort the full
+orchestrator (cm.* → staging.* → cdm_ours_fhir.*) finishes in ~22 seconds and
+populates 14 OMOP tables (~98k rows). `bun -e '...'` over the edge JSONs shows **136 / 478 fields** carry
 per-field `sources[]`, totalling **327 source-groups** with concrete
 file/line refs. The rest are trivial mappings (constants, single-impl,
 source-value direct copies) — no fabrication, no sources beyond what

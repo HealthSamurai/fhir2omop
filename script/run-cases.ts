@@ -32,6 +32,7 @@ const PK_BY_TABLE: Record<string, string> = {
     procedure_occurrence: "procedure_occurrence_id", measurement: "measurement_id", observation: "observation_id",
     note: "note_id", drug_exposure: "drug_exposure_id", device_exposure: "device_exposure_id",
     death: "person_id", observation_period: "observation_period_id",
+    specimen: "specimen_id", payer_plan_period: "payer_plan_period_id",
 };
 
 const ctx: any = { env: process.env, fns: {}, state: {} };

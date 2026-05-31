@@ -1,6 +1,6 @@
 -- Minimal vocab subset for the FHIR->OMOP golden test cases (cases/*.json).
 -- Generated: DUMP_SEED=1 bun script/run-cases.ts   (do not edit by hand)
--- 103 concepts, 90 'Maps to' relationships.
+-- 108 concepts, 93 'Maps to' relationships.
 -- Lets the cases run without the full ~928MB Athena bundle: load this into a
 -- fresh Postgres 'vocab' schema, build cm.* from mapspec/profiles/*.cm.json,
 -- then run the cases. See cases/README.md.
@@ -44,6 +44,7 @@ INSERT INTO vocab.concept VALUES ('581476', 'Home Visit', 'Visit', 'Visit', 'Vis
 INSERT INTO vocab.concept VALUES ('581477', 'Office Visit', 'Visit', 'Visit', 'Visit', 'S', 'OMOP4822458', '1970-01-01', '2099-12-31', NULL);
 INSERT INTO vocab.concept VALUES ('722455', 'Telehealth', 'Visit', 'Visit', 'Visit', 'S', 'OMOP5556618', '2024-07-23', '2099-12-31', NULL);
 INSERT INTO vocab.concept VALUES ('903651', 'Currently doesn''t use tobacco or its derivatives', 'Observation', 'OMOP Extension', 'Clinical Finding', 'S', 'OMOP5181833', '2023-01-05', '2099-12-31', NULL);
+INSERT INTO vocab.concept VALUES ('1127433', 'acetaminophen 325 MG Oral Tablet', 'Drug', 'RxNorm', 'Clinical Drug', 'S', '313782', '1970-01-01', '2099-12-31', NULL);
 INSERT INTO vocab.concept VALUES ('1340204', 'History of event', 'Observation', 'OMOP Extension', 'Context-dependent', 'S', 'OMOP5165859', '2022-05-06', '2099-12-31', NULL);
 INSERT INTO vocab.concept VALUES ('1559927', 'encorafenib 75 MG Oral Capsule', 'Drug', 'RxNorm', 'Clinical Drug', 'S', '2049119', '2018-08-06', '2099-12-31', NULL);
 INSERT INTO vocab.concept VALUES ('1729720', 'penicillin V', 'Drug', 'RxNorm', 'Ingredient', 'S', '7984', '1970-01-01', '2099-12-31', NULL);
@@ -59,6 +60,7 @@ INSERT INTO vocab.concept VALUES ('3032652', 'Glasgow coma scale', 'Measurement'
 INSERT INTO vocab.concept VALUES ('3041851', 'Evaluation + Plan note', 'Note', 'LOINC', 'Clinical Observation', 'S', '51847-2', '1970-01-01', '2099-12-31', NULL);
 INSERT INTO vocab.concept VALUES ('3049253', 'XR Pelvis AP', 'Procedure', 'LOINC', 'Clinical Observation', 'S', '37622-8', '1970-01-01', '2099-12-31', NULL);
 INSERT INTO vocab.concept VALUES ('3529853', 'Glasgow coma score, original version', 'Measurement', 'SNOMED', 'Observable Entity', NULL, '506111000000104', '2009-10-01', '2010-04-01', 'U');
+INSERT INTO vocab.concept VALUES ('4001225', 'Blood specimen', 'Specimen', 'SNOMED', 'Specimen', 'S', '119297000', '2002-01-31', '2099-12-31', NULL);
 INSERT INTO vocab.concept VALUES ('4015740', 'Home nebulizer', 'Device', 'SNOMED', 'Physical Object', 'S', '170615005', '2002-01-31', '2099-12-31', NULL);
 INSERT INTO vocab.concept VALUES ('4016092', 'Excision of lesion of patella', 'Procedure', 'SNOMED', 'Procedure', 'S', '104001', '2002-01-31', '2099-12-31', NULL);
 INSERT INTO vocab.concept VALUES ('4030303', 'Hospital AND/OR institution', 'Observation', 'SNOMED', 'Location', NULL, '108343000', '2002-01-31', '2022-11-30', 'D');
@@ -76,6 +78,7 @@ INSERT INTO vocab.concept VALUES ('4198267', 'Nitrite not detected in urine', 'M
 INSERT INTO vocab.concept VALUES ('4199788', 'Medication review due', 'Observation', 'SNOMED', 'Context-dependent', 'S', '314529007', '2002-01-31', '2099-12-31', NULL);
 INSERT INTO vocab.concept VALUES ('4217012', 'Health maintenance organization', 'Observation', 'SNOMED', 'Location', NULL, '72311000', '2002-01-31', '2099-12-31', NULL);
 INSERT INTO vocab.concept VALUES ('4224372', 'Glucometer', 'Device', 'SNOMED', 'Physical Object', 'S', '337414009', '2002-01-31', '2099-12-31', NULL);
+INSERT INTO vocab.concept VALUES ('4283159', 'Left upper arm structure', 'Spec Anatomic Site', 'SNOMED', 'Body Structure', 'S', '368208006', '2002-01-31', '2099-12-31', NULL);
 INSERT INTO vocab.concept VALUES ('4310250', 'Ex-smoker', 'Observation', 'SNOMED', 'Clinical Finding', NULL, '8517006', '2002-01-31', '2099-12-31', NULL);
 INSERT INTO vocab.concept VALUES ('4311765', 'Metastatic malignant neoplasm to colon', 'Condition', 'SNOMED', 'Disorder', NULL, '94260004', '2002-01-31', '2099-12-31', NULL);
 INSERT INTO vocab.concept VALUES ('4318944', 'Hospital', 'Observation', 'SNOMED', 'Location', NULL, '22232009', '2002-01-31', '2099-12-31', NULL);
@@ -90,7 +93,9 @@ INSERT INTO vocab.concept VALUES ('37021305', 'Protocol for Responding to and As
 INSERT INTO vocab.concept VALUES ('37079501', 'I have housing', 'Meas Value', 'LOINC', 'Answer', 'S', 'LA30189-7', '1970-01-01', '2099-12-31', NULL);
 INSERT INTO vocab.concept VALUES ('37152083', 'Encorafenib 75 mg oral capsule', 'Drug', 'SNOMED', 'Clinical Drug', NULL, '1172433007', '2021-09-30', '2099-12-31', NULL);
 INSERT INTO vocab.concept VALUES ('37153894', 'Family history of disability', 'Observation', 'SNOMED', 'Context-dependent', 'S', '1254722009', '2022-12-31', '2099-12-31', NULL);
+INSERT INTO vocab.concept VALUES ('38000176', 'Prescription dispensed through mail order', 'Type Concept', 'Drug Type', 'Drug Type', NULL, 'OMOP4822240', '1970-01-01', '2099-12-31', NULL);
 INSERT INTO vocab.concept VALUES ('38000177', 'Prescription written', 'Type Concept', 'Drug Type', 'Drug Type', NULL, 'OMOP4822241', '1970-01-01', '2099-12-31', NULL);
+INSERT INTO vocab.concept VALUES ('38000178', 'Medication list entry', 'Type Concept', 'Drug Type', 'Drug Type', NULL, 'OMOP4822242', '1970-01-01', '2099-12-31', NULL);
 INSERT INTO vocab.concept VALUES ('38000179', 'Physician administered drug (identified as procedure)', 'Type Concept', 'Drug Type', 'Drug Type', NULL, 'OMOP4822243', '1970-01-01', '2099-12-31', NULL);
 INSERT INTO vocab.concept VALUES ('38003563', 'Hispanic or Latino', 'Ethnicity', 'Ethnicity', 'Ethnicity', 'S', 'Hispanic', '1970-01-01', '2099-12-31', NULL);
 INSERT INTO vocab.concept VALUES ('38003564', 'Not Hispanic or Latino', 'Ethnicity', 'Ethnicity', 'Ethnicity', 'S', 'Not Hispanic', '1970-01-01', '2099-12-31', NULL);
@@ -144,6 +149,7 @@ INSERT INTO vocab.concept_relationship VALUES ('581476', '581476', 'Maps to', '1
 INSERT INTO vocab.concept_relationship VALUES ('581477', '581477', 'Maps to', '1970-01-01', '2099-12-31', NULL);
 INSERT INTO vocab.concept_relationship VALUES ('722455', '722455', 'Maps to', '2021-12-16', '2099-12-31', NULL);
 INSERT INTO vocab.concept_relationship VALUES ('903651', '903651', 'Maps to', '2023-01-10', '2099-12-31', NULL);
+INSERT INTO vocab.concept_relationship VALUES ('1127433', '1127433', 'Maps to', '1970-01-01', '2099-12-31', NULL);
 INSERT INTO vocab.concept_relationship VALUES ('1340204', '1340204', 'Maps to', '2022-05-08', '2099-12-31', NULL);
 INSERT INTO vocab.concept_relationship VALUES ('1559927', '1559927', 'Maps to', '2018-08-06', '2099-12-31', NULL);
 INSERT INTO vocab.concept_relationship VALUES ('1729720', '1729720', 'Maps to', '1970-01-01', '2099-12-31', NULL);
@@ -159,6 +165,7 @@ INSERT INTO vocab.concept_relationship VALUES ('3032652', '3032652', 'Maps to', 
 INSERT INTO vocab.concept_relationship VALUES ('3041851', '3041851', 'Maps to', '1970-01-01', '2099-12-31', NULL);
 INSERT INTO vocab.concept_relationship VALUES ('3049253', '3049253', 'Maps to', '1970-01-01', '2099-12-31', NULL);
 INSERT INTO vocab.concept_relationship VALUES ('3529853', '3032652', 'Maps to', '2024-02-08', '2099-12-31', NULL);
+INSERT INTO vocab.concept_relationship VALUES ('4001225', '4001225', 'Maps to', '1970-01-01', '2099-12-31', NULL);
 INSERT INTO vocab.concept_relationship VALUES ('4015740', '4015740', 'Maps to', '1970-01-01', '2099-12-31', NULL);
 INSERT INTO vocab.concept_relationship VALUES ('4016092', '4016092', 'Maps to', '1970-01-01', '2099-12-31', NULL);
 INSERT INTO vocab.concept_relationship VALUES ('4045112', '4045112', 'Maps to', '1970-01-01', '2099-12-31', NULL);
@@ -172,6 +179,7 @@ INSERT INTO vocab.concept_relationship VALUES ('4188222', '4188222', 'Maps to', 
 INSERT INTO vocab.concept_relationship VALUES ('4198267', '4198267', 'Maps to', '1970-01-01', '2099-12-31', NULL);
 INSERT INTO vocab.concept_relationship VALUES ('4199788', '4199788', 'Maps to', '1970-01-01', '2099-12-31', NULL);
 INSERT INTO vocab.concept_relationship VALUES ('4224372', '4224372', 'Maps to', '1970-01-01', '2099-12-31', NULL);
+INSERT INTO vocab.concept_relationship VALUES ('4283159', '4283159', 'Maps to', '1970-01-01', '2099-12-31', NULL);
 INSERT INTO vocab.concept_relationship VALUES ('4310250', '903651', 'Maps to', '2023-05-31', '2099-12-31', NULL);
 INSERT INTO vocab.concept_relationship VALUES ('4310250', '1340204', 'Maps to', '2023-05-31', '2099-12-31', NULL);
 INSERT INTO vocab.concept_relationship VALUES ('4326177', '4326177', 'Maps to', '2009-01-31', '2099-12-31', NULL);

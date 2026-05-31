@@ -1,0 +1,52 @@
+{
+  "title": "Coverage → payer_plan_period (core)",
+  "notes": "Synthea emits no Coverage, so this branch is exercised only by synthetic cases. The standalone Coverage edge is a **source-value-only** mapping today: `payer_concept_id` / `plan_concept_id` / `sponsor_concept_id` / `stop_reason_concept_id` are hardcoded `0` (no per-source ConceptMap), the payer/plan names land in `*_source_value`, and the period bounds (`COALESCE(start,end)..COALESCE(end,start)`) become the plan-period dates. A Coverage with no `period` is dropped (`WHERE period_start IS NOT NULL OR period_end IS NOT NULL`).",
+  "fixtures": [
+    { "resourceType": "Patient", "id": "pt-1", "gender": "female", "birthDate": "1980-02-02" }
+  ],
+  "cases": [
+    {
+      "desc": "(a) active Coverage with full period + payor display + type.text → one payer_plan_period row; concept_ids 0, names in *_source_value",
+      "fhir": [
+        {
+          "resourceType": "Coverage",
+          "id": "cov-1",
+          "status": "active",
+          "beneficiary": { "reference": "Patient/pt-1" },
+          "period": { "start": "2018-01-01", "end": "2018-12-31" },
+          "payor": [ { "display": "Aetna" } ],
+          "type": { "text": "PPO" }
+        }
+      ],
+      "omop": {
+        "payer_plan_period": [
+          {
+            "person_id": "ref:pt-1",
+            "payer_plan_period_start_date": "2018-01-01",
+            "payer_plan_period_end_date": "2018-12-31",
+            "payer_concept_id": 0,
+            "payer_source_value": "Aetna",
+            "plan_concept_id": 0,
+            "plan_source_value": "PPO",
+            "sponsor_concept_id": 0,
+            "stop_reason_concept_id": 0
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(b) Coverage with no period → dropped (WHERE filters it out), zero rows",
+      "fhir": [
+        {
+          "resourceType": "Coverage",
+          "id": "cov-2",
+          "status": "active",
+          "beneficiary": { "reference": "Patient/pt-1" },
+          "payor": [ { "display": "Aetna" } ],
+          "type": { "text": "PPO" }
+        }
+      ],
+      "omop": {}
+    }
+  ]
+}
