@@ -70,6 +70,9 @@ declare global {
         sample: {
         renderTable: typeof import("./sample/renderTable").default;
         };
+        ui_components: {
+        collapsiblePanel: typeof import("./ui_components/collapsiblePanel").default;
+        };
         viewdef: {
         columns: typeof import("./viewdef/columns").default;
         materialize: typeof import("./viewdef/materialize").default;

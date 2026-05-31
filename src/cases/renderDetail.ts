@@ -18,10 +18,12 @@ export default async function (ctx: Context, opts: { case: any }): Promise<strin
 
     const fixtures = file.fixtures ?? [];
     const fixturesHtml = fixtures.length
-        ? `<details data-k="fixtures-${esc(file.slug)}" class="not-prose mb-4 border border-emerald-200 rounded-lg">
-  <summary class="px-3 py-2 text-xs font-semibold text-emerald-700 uppercase tracking-wider hover:bg-emerald-50">Shared fixtures (${fixtures.length}) — merged into every variant</summary>
-  <div class="p-3 grid sm:grid-cols-2 gap-3">${(await Promise.all(fixtures.map(fhirCard))).join("")}</div>
-</details>`
+        ? ctx.fns.ui_components.collapsiblePanel(ctx, {
+            open: false, tone: "emerald", key: `fixtures-${esc(file.slug)}`, class: "mb-4",
+            summary: `<span class="text-xs font-semibold text-emerald-700 uppercase tracking-wider">Shared fixtures (${fixtures.length}) — merged into every variant</span>`,
+            body: (await Promise.all(fixtures.map(fhirCard))).join(""),
+            bodyClass: "p-3 grid sm:grid-cols-2 gap-3",
+        })
         : "";
 
     const variants = await Promise.all((file.cases ?? []).map(async (v: any, i: number) => {
@@ -61,16 +63,8 @@ export default async function (ctx: Context, opts: { case: any }): Promise<strin
     <div class="text-xs font-semibold text-rose-800 mb-1">Assertion failures</div>
     <ul class="text-[12px] text-rose-700 font-mono space-y-0.5">${res.failures.map((x: string) => `<li>${esc(x)}</li>`).join("")}</ul>
   </div>` : "";
-        const cls = res ? (res.pass ? "border-emerald-200" : "border-rose-300") : "border-gray-200";
-        return `<details open data-k="case-${esc(file.slug)}-${i}" class="border ${cls} rounded-lg overflow-hidden">
-  <summary class="px-4 py-2.5 bg-gray-50 hover:bg-gray-100 flex items-start justify-between gap-4">
-    <div class="min-w-0 flex-1 font-medium text-gray-900 leading-snug line-clamp-2">
-      <span class="text-gray-400 text-xs font-mono mr-1.5">#${i + 1}</span>${esc(v.desc ?? `variant ${i + 1}`)}
-    </div>
-    <div class="shrink-0 flex items-center flex-wrap justify-end gap-1.5">${dot}${vFlow}</div>
-  </summary>
-  <div class="p-4">
-  ${v.desc ? `<div class="not-prose text-[13px] text-gray-600 leading-relaxed mb-3">${esc(v.desc)}</div>` : ""}
+        const tone = res ? (res.pass ? "emerald" : "rose") : "gray";
+        const body = `${v.desc ? `<div class="not-prose text-[13px] text-gray-600 leading-relaxed mb-3">${esc(v.desc)}</div>` : ""}
   ${failBlock}
   <div class="not-prose grid lg:grid-cols-2 gap-5">
     <div>
@@ -81,20 +75,41 @@ export default async function (ctx: Context, opts: { case: any }): Promise<strin
       <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Expected OMOP</div>
       ${omopHtml}
     </div>
-  </div>
-  </div>
-</details>`;
+  </div>`;
+        return ctx.fns.ui_components.collapsiblePanel(ctx, {
+            open: false, tone, key: `case-${esc(file.slug)}-${i}`, class: "",
+            summary: `<div class="font-medium text-gray-900 leading-snug line-clamp-2"><span class="text-gray-400 text-xs font-mono mr-1.5">#${i + 1}</span>${esc(v.desc ?? `variant ${i + 1}`)}</div>`,
+            right: `${dot}${vFlow}`,
+            body,
+        });
     }));
+
+    const notesPanel = notesHtml
+        ? ctx.fns.ui_components.collapsiblePanel(ctx, {
+            open: false, tone: "gray", key: `notes-${esc(file.slug)}`, class: "mb-4",
+            summary: `<span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Notes</span>`,
+            body: notesHtml, bodyClass: "prose prose-sm max-w-none p-3",
+        })
+        : "";
+
+    // Variants are collapsed by default — expand/collapse-all toggles every
+    // case panel on this page (scoped to data-k="case-…").
+    const toggleAll = (open: boolean) =>
+        `document.querySelectorAll('details[data-k^=&quot;case-${esc(file.slug)}-&quot;]').forEach(function(d){d.open=${open}})`;
+    const controls = (file.cases ?? []).length > 1
+        ? `<div class="not-prose flex items-center gap-2 mb-3">
+    <p class="text-[11px] text-gray-400 flex-1">FK ids shown as <span class="font-mono">ref:&lt;logical-id&gt;</span>. Columns not listed ⇒ <span class="font-mono">NULL</span>; tables not listed ⇒ empty.</p>
+    <button type="button" onclick="${toggleAll(true)}" class="text-[11px] px-2 py-0.5 rounded border border-gray-200 text-gray-500 hover:bg-gray-50">Expand all</button>
+    <button type="button" onclick="${toggleAll(false)}" class="text-[11px] px-2 py-0.5 rounded border border-gray-200 text-gray-500 hover:bg-gray-50">Collapse all</button>
+  </div>`
+        : `<p class="not-prose text-[11px] text-gray-400 mb-3">FK ids shown as <span class="font-mono">ref:&lt;logical-id&gt;</span>. Per row, columns not listed are asserted <span class="font-mono">NULL</span>; tables not listed are asserted empty.</p>`;
 
     return `<h1>${esc(file.title)}</h1>
 <div class="-mt-1 mb-1">${flow}</div>
 <p class="font-mono text-[11px] text-gray-400 -mt-1">cases/${esc(file.file)} · ${file.variantCount} variant${file.variantCount === 1 ? "" : "s"}</p>
-${notesHtml ? `<details data-k="notes-${esc(file.slug)}" class="not-prose mb-4 border border-gray-200 rounded-lg">
-  <summary class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:bg-gray-50">Notes</summary>
-  <div class="prose prose-sm max-w-none px-3 pb-3">${notesHtml}</div>
-</details>` : ""}
+${notesPanel}
 ${fixturesHtml}
-<p class="not-prose text-[11px] text-gray-400 mb-3">FK ids shown as <span class="font-mono">ref:&lt;logical-id&gt;</span>. Per row, columns not listed are asserted <span class="font-mono">NULL</span>; tables not listed are asserted empty.</p>
+${controls}
 <div class="not-prose space-y-4">${variants.join("")}</div>`;
 }
 
