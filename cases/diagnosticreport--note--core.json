@@ -1,13 +1,45 @@
 {
   "title": "DiagnosticReport → note / measurement / observation",
   "notes": "TWO independent pipelines read every DiagnosticReport.\n\n1) DiagnosticReport__note (PER-REPORT, at most one row per DR). Stage-1 view `omop-diagnosticreport-note` flattens one row per report: code_loinc = `code.coding.where(system=loinc).code.first()`, code_text = `code.text`, effective_dt = `effective.ofType(dateTime)`, presented_data = `presentedForm.first().data`, conclusion = `conclusion`. Stage-2 (mapspec/etl/DiagnosticReport__note.sql) emits one row when `effective_dt IS NOT NULL` AND (presented_data OR conclusion OR code_text present) AND status NOT IN (entered-in-error, cancelled, unknown). Columns: note_type_concept_id = 32817 'EHR' (Type Concept, std S); note_class_concept_id = COALESCE(std.concept_id,0) where std = LOINC code_loinc → Maps-to → standard; note_title = left(code_text,250); note_text = COALESCE(convert_from(decode(presented_data,'base64'),'UTF-8'), conclusion, code_text, ''); encoding_concept_id = 32678 'UTF-8' (Metadata, std S); language_concept_id = 4180186 'English language' (SNOMED Language, std S); provider_id = first Practitioner-typed performer; visit_occurrence_id = encounter; note_date/_datetime from effective_dt (::date / ::timestamp — wall-clock, offset dropped); note_source_value = left(code_loinc,50).\n\n2) DiagnosticReport__measurement / __observation / __procedure_occurrence (PER-CODING fan-out via staging.diagnosticreport_resolved, built by mapspec/etl/_resolve_diagnosticreport.sql). The resolve pass walks EVERY `code.coding` entry through cm.fhir_system_to_omop_vocab (http://loinc.org→LOINC, http://snomed.info/sct→SNOMED, …) → vocab.concept(source) → Maps-to → vocab.concept(standard,'S'), DISTINCT ON (id, std.concept_id) preferring LOINC then SNOMED, and records std.domain_id. The three sibling stage-2 SQLs are trivial `WHERE std_domain='Measurement'|'Observation'|'Procedure'` filters; surrogate PK = stringToId(DR.id || '|' || std_concept_id). Note-domain codings (document-type LOINCs) stay in the resolved table but match none of the three routers — they are captured only by the per-report note edge (see _resolve_diagnosticreport.sql lines 17-20).\n\nGrounding: all concept_ids verified in live vocab.concept (32817 EHR, 32678 UTF-8, 4180186 English language, 32856 Lab, 3030023 History and physical note, 3041851 Evaluation + Plan note, 3026023 Comprehensive metabolic 2000 panel [Measurement], 40758878 PHQ-2 [Observation]). The measurement variant (24323-8→3026023) and observation variant (55757-9→40758878) are real Synthea reports cross-checked against cdm_ours_fhir.measurement / cdm_ours_fhir.observation actual output. Both LOINC codes are themselves standard so src_concept_id == std_concept_id. Synthea writes lab DRs with an Organization performer (provider_id NULL); variant (c) keeps the real Organization-performer shape, variant (a)/(e) add a Practitioner performer to exercise provider_id.\n\nTimezone: every column here casts ::timestamp / ::date, so a `+01:00` source keeps wall-clock local time (the offset is dropped, NOT converted to UTC).",
+  "fixtures": [
+    {
+      "resourceType": "Encounter",
+      "id": "enc-1",
+      "status": "finished",
+      "class": {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+        "code": "AMB"
+      },
+      "subject": {
+        "reference": "Patient/patient-1"
+      }
+    }
+  ],
   "cases": [
     {
       "desc": "(a) note-type LOINC + presentedForm.data (base64) → one note row, note_text base64-decoded, note_class from LOINC, note_title from code.text; zero routing rows",
       "fhir": [
-        { "resourceType": "Patient", "id": "patient-1", "gender": "male", "birthDate": "1995-05-26" },
-        { "resourceType": "Practitioner", "id": "prac-1", "name": [ { "family": "Predovic534", "given": ["Debra128"], "prefix": ["Dr."] } ] },
-        { "resourceType": "Encounter", "id": "enc-1", "status": "finished", "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" }, "subject": { "reference": "Patient/patient-1" } },
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "gender": "male",
+          "birthDate": "1995-05-26"
+        },
+        {
+          "resourceType": "Practitioner",
+          "id": "prac-1",
+          "name": [
+            {
+              "family": "Predovic534",
+              "given": [
+                "Debra128"
+              ],
+              "prefix": [
+                "Dr."
+              ]
+            }
+          ]
+        },
         {
           "resourceType": "DiagnosticReport",
           "id": "dr-1",
@@ -15,15 +47,37 @@
           "code": {
             "text": "History and physical note",
             "coding": [
-              { "system": "http://loinc.org", "code": "34117-2", "display": "History and physical note" },
-              { "system": "http://loinc.org", "code": "51847-2", "display": "Evaluation + Plan note" }
+              {
+                "system": "http://loinc.org",
+                "code": "34117-2",
+                "display": "History and physical note"
+              },
+              {
+                "system": "http://loinc.org",
+                "code": "51847-2",
+                "display": "Evaluation + Plan note"
+              }
             ]
           },
-          "subject": { "reference": "Patient/patient-1" },
-          "encounter": { "reference": "Encounter/enc-1" },
+          "subject": {
+            "reference": "Patient/patient-1"
+          },
+          "encounter": {
+            "reference": "Encounter/enc-1"
+          },
           "effectiveDateTime": "1995-10-26T03:00:51+01:00",
-          "performer": [ { "reference": "Practitioner/prac-1", "display": "Dr. Debra128 Predovic534" } ],
-          "presentedForm": [ { "contentType": "text/plain; charset=utf-8", "data": "SGlzdG9yeSBhbmQgcGh5c2ljYWwgbm90ZSBib2R5Lg==" } ]
+          "performer": [
+            {
+              "reference": "Practitioner/prac-1",
+              "display": "Dr. Debra128 Predovic534"
+            }
+          ],
+          "presentedForm": [
+            {
+              "contentType": "text/plain; charset=utf-8",
+              "data": "SGlzdG9yeSBhbmQgcGh5c2ljYWwgbm90ZSBib2R5Lg=="
+            }
+          ]
         }
       ],
       "omop": {
@@ -52,21 +106,54 @@
     {
       "desc": "(b) conclusion only, no presentedForm → note_text from conclusion (decode() of NULL data yields NULL, COALESCE falls through to conclusion)",
       "fhir": [
-        { "resourceType": "Patient", "id": "patient-1", "gender": "male", "birthDate": "1995-05-26" },
-        { "resourceType": "Practitioner", "id": "prac-1", "name": [ { "family": "Predovic534", "given": ["Debra128"], "prefix": ["Dr."] } ] },
-        { "resourceType": "Encounter", "id": "enc-1", "status": "finished", "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" }, "subject": { "reference": "Patient/patient-1" } },
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "gender": "male",
+          "birthDate": "1995-05-26"
+        },
+        {
+          "resourceType": "Practitioner",
+          "id": "prac-1",
+          "name": [
+            {
+              "family": "Predovic534",
+              "given": [
+                "Debra128"
+              ],
+              "prefix": [
+                "Dr."
+              ]
+            }
+          ]
+        },
         {
           "resourceType": "DiagnosticReport",
           "id": "dr-1",
           "status": "final",
           "code": {
             "text": "History and physical note",
-            "coding": [ { "system": "http://loinc.org", "code": "34117-2", "display": "History and physical note" } ]
+            "coding": [
+              {
+                "system": "http://loinc.org",
+                "code": "34117-2",
+                "display": "History and physical note"
+              }
+            ]
           },
-          "subject": { "reference": "Patient/patient-1" },
-          "encounter": { "reference": "Encounter/enc-1" },
+          "subject": {
+            "reference": "Patient/patient-1"
+          },
+          "encounter": {
+            "reference": "Encounter/enc-1"
+          },
           "effectiveDateTime": "1995-10-26T03:00:51+01:00",
-          "performer": [ { "reference": "Practitioner/prac-1", "display": "Dr. Debra128 Predovic534" } ],
+          "performer": [
+            {
+              "reference": "Practitioner/prac-1",
+              "display": "Dr. Debra128 Predovic534"
+            }
+          ],
           "conclusion": "Patient is well. No acute findings."
         }
       ],
@@ -96,21 +183,44 @@
     {
       "desc": "(c) DR code routes to Measurement domain (lab panel 24323-8, Organization performer) → one measurement row; note edge also fires (presentedForm absent, conclusion absent, but code.text present so note_text=code.text)",
       "fhir": [
-        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1980-03-15" },
-        { "resourceType": "Organization", "id": "org-1", "name": "MORTON HOSPITAL, A STEWARD FAMILY HOSPITAL, INC." },
-        { "resourceType": "Encounter", "id": "enc-1", "status": "finished", "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" }, "subject": { "reference": "Patient/patient-1" } },
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "gender": "female",
+          "birthDate": "1980-03-15"
+        },
+        {
+          "resourceType": "Organization",
+          "id": "org-1",
+          "name": "MORTON HOSPITAL, A STEWARD FAMILY HOSPITAL, INC."
+        },
         {
           "resourceType": "DiagnosticReport",
           "id": "dr-1",
           "status": "final",
           "code": {
             "text": "Comprehensive metabolic 2000 panel - Serum or Plasma",
-            "coding": [ { "system": "http://loinc.org", "code": "24323-8", "display": "Comprehensive metabolic 2000 panel - Serum or Plasma" } ]
+            "coding": [
+              {
+                "system": "http://loinc.org",
+                "code": "24323-8",
+                "display": "Comprehensive metabolic 2000 panel - Serum or Plasma"
+              }
+            ]
           },
-          "subject": { "reference": "Patient/patient-1" },
-          "encounter": { "reference": "Encounter/enc-1" },
+          "subject": {
+            "reference": "Patient/patient-1"
+          },
+          "encounter": {
+            "reference": "Encounter/enc-1"
+          },
           "effectiveDateTime": "2016-09-20T06:09:43+01:00",
-          "performer": [ { "reference": "Organization/org-1", "display": "MORTON HOSPITAL, A STEWARD FAMILY HOSPITAL, INC." } ]
+          "performer": [
+            {
+              "reference": "Organization/org-1",
+              "display": "MORTON HOSPITAL, A STEWARD FAMILY HOSPITAL, INC."
+            }
+          ]
         }
       ],
       "omop": {
@@ -153,21 +263,54 @@
     {
       "desc": "(d) DR code routes to Observation domain (PHQ-2 questionnaire 55757-9, Practitioner performer) → one observation row; note edge also fires with code.text body",
       "fhir": [
-        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1980-03-15" },
-        { "resourceType": "Practitioner", "id": "prac-1", "name": [ { "family": "Schmidt", "given": ["Anna"], "prefix": ["Dr."] } ] },
-        { "resourceType": "Encounter", "id": "enc-1", "status": "finished", "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" }, "subject": { "reference": "Patient/patient-1" } },
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "gender": "female",
+          "birthDate": "1980-03-15"
+        },
+        {
+          "resourceType": "Practitioner",
+          "id": "prac-1",
+          "name": [
+            {
+              "family": "Schmidt",
+              "given": [
+                "Anna"
+              ],
+              "prefix": [
+                "Dr."
+              ]
+            }
+          ]
+        },
         {
           "resourceType": "DiagnosticReport",
           "id": "dr-1",
           "status": "final",
           "code": {
             "text": "Patient Health Questionnaire 2 item (PHQ-2) [Reported]",
-            "coding": [ { "system": "http://loinc.org", "code": "55757-9", "display": "Patient Health Questionnaire 2 item (PHQ-2) [Reported]" } ]
+            "coding": [
+              {
+                "system": "http://loinc.org",
+                "code": "55757-9",
+                "display": "Patient Health Questionnaire 2 item (PHQ-2) [Reported]"
+              }
+            ]
           },
-          "subject": { "reference": "Patient/patient-1" },
-          "encounter": { "reference": "Encounter/enc-1" },
+          "subject": {
+            "reference": "Patient/patient-1"
+          },
+          "encounter": {
+            "reference": "Encounter/enc-1"
+          },
           "effectiveDateTime": "2024-07-20T00:30:14+01:00",
-          "performer": [ { "reference": "Practitioner/prac-1", "display": "Dr. Anna Schmidt" } ]
+          "performer": [
+            {
+              "reference": "Practitioner/prac-1",
+              "display": "Dr. Anna Schmidt"
+            }
+          ]
         }
       ],
       "omop": {
@@ -213,9 +356,27 @@
     {
       "desc": "(e) multi-coding DR: note-type document LOINC (34117-2, first) + measurement-routing panel LOINC (24323-8) + presentedForm → one note row (note_class from first LOINC) AND one measurement row (panel coding routes); the note coding does not route to any sibling",
       "fhir": [
-        { "resourceType": "Patient", "id": "patient-1", "gender": "male", "birthDate": "1995-05-26" },
-        { "resourceType": "Practitioner", "id": "prac-1", "name": [ { "family": "Predovic534", "given": ["Debra128"], "prefix": ["Dr."] } ] },
-        { "resourceType": "Encounter", "id": "enc-1", "status": "finished", "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" }, "subject": { "reference": "Patient/patient-1" } },
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "gender": "male",
+          "birthDate": "1995-05-26"
+        },
+        {
+          "resourceType": "Practitioner",
+          "id": "prac-1",
+          "name": [
+            {
+              "family": "Predovic534",
+              "given": [
+                "Debra128"
+              ],
+              "prefix": [
+                "Dr."
+              ]
+            }
+          ]
+        },
         {
           "resourceType": "DiagnosticReport",
           "id": "dr-1",
@@ -223,15 +384,37 @@
           "code": {
             "text": "History and physical note",
             "coding": [
-              { "system": "http://loinc.org", "code": "34117-2", "display": "History and physical note" },
-              { "system": "http://loinc.org", "code": "24323-8", "display": "Comprehensive metabolic 2000 panel - Serum or Plasma" }
+              {
+                "system": "http://loinc.org",
+                "code": "34117-2",
+                "display": "History and physical note"
+              },
+              {
+                "system": "http://loinc.org",
+                "code": "24323-8",
+                "display": "Comprehensive metabolic 2000 panel - Serum or Plasma"
+              }
             ]
           },
-          "subject": { "reference": "Patient/patient-1" },
-          "encounter": { "reference": "Encounter/enc-1" },
+          "subject": {
+            "reference": "Patient/patient-1"
+          },
+          "encounter": {
+            "reference": "Encounter/enc-1"
+          },
           "effectiveDateTime": "1995-10-26T03:00:51+01:00",
-          "performer": [ { "reference": "Practitioner/prac-1", "display": "Dr. Debra128 Predovic534" } ],
-          "presentedForm": [ { "contentType": "text/plain; charset=utf-8", "data": "SGlzdG9yeSBhbmQgcGh5c2ljYWwgbm90ZSBib2R5Lg==" } ]
+          "performer": [
+            {
+              "reference": "Practitioner/prac-1",
+              "display": "Dr. Debra128 Predovic534"
+            }
+          ],
+          "presentedForm": [
+            {
+              "contentType": "text/plain; charset=utf-8",
+              "data": "SGlzdG9yeSBhbmQgcGh5c2ljYWwgbm90ZSBib2R5Lg=="
+            }
+          ]
         }
       ],
       "omop": {
@@ -276,21 +459,54 @@
     {
       "desc": "(f) DR code routes to Procedure domain (imaging LOINC 37622-8 XR Pelvis AP, Practitioner performer) → one procedure_occurrence row; note edge also fires with code.text body, note_class from the LOINC Maps-to standard (3049253, self-standard so src==std)",
       "fhir": [
-        { "resourceType": "Patient", "id": "patient-1", "gender": "male", "birthDate": "1970-01-01" },
-        { "resourceType": "Practitioner", "id": "prac-1", "name": [ { "family": "Roentgen", "given": ["Wilhelm"], "prefix": ["Dr."] } ] },
-        { "resourceType": "Encounter", "id": "enc-1", "status": "finished", "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" }, "subject": { "reference": "Patient/patient-1" } },
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "gender": "male",
+          "birthDate": "1970-01-01"
+        },
+        {
+          "resourceType": "Practitioner",
+          "id": "prac-1",
+          "name": [
+            {
+              "family": "Roentgen",
+              "given": [
+                "Wilhelm"
+              ],
+              "prefix": [
+                "Dr."
+              ]
+            }
+          ]
+        },
         {
           "resourceType": "DiagnosticReport",
           "id": "dr-1",
           "status": "final",
           "code": {
             "text": "XR Pelvis AP",
-            "coding": [ { "system": "http://loinc.org", "code": "37622-8", "display": "XR Pelvis AP" } ]
+            "coding": [
+              {
+                "system": "http://loinc.org",
+                "code": "37622-8",
+                "display": "XR Pelvis AP"
+              }
+            ]
           },
-          "subject": { "reference": "Patient/patient-1" },
-          "encounter": { "reference": "Encounter/enc-1" },
+          "subject": {
+            "reference": "Patient/patient-1"
+          },
+          "encounter": {
+            "reference": "Encounter/enc-1"
+          },
           "effectiveDateTime": "2018-04-11T09:15:00+01:00",
-          "performer": [ { "reference": "Practitioner/prac-1", "display": "Dr. Wilhelm Roentgen" } ]
+          "performer": [
+            {
+              "reference": "Practitioner/prac-1",
+              "display": "Dr. Wilhelm Roentgen"
+            }
+          ]
         }
       ],
       "omop": {
@@ -335,18 +551,32 @@
     {
       "desc": "(g) status=entered-in-error → status filter excludes the DR from BOTH pipelines (note WHERE and _resolve_diagnosticreport WHERE both drop entered-in-error/cancelled/unknown) → zero rows in every produced table",
       "fhir": [
-        { "resourceType": "Patient", "id": "patient-1", "gender": "male", "birthDate": "1970-01-01" },
-        { "resourceType": "Encounter", "id": "enc-1", "status": "finished", "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" }, "subject": { "reference": "Patient/patient-1" } },
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "gender": "male",
+          "birthDate": "1970-01-01"
+        },
         {
           "resourceType": "DiagnosticReport",
           "id": "dr-1",
           "status": "entered-in-error",
           "code": {
             "text": "Comprehensive metabolic 2000 panel - Serum or Plasma",
-            "coding": [ { "system": "http://loinc.org", "code": "24323-8", "display": "Comprehensive metabolic 2000 panel - Serum or Plasma" } ]
+            "coding": [
+              {
+                "system": "http://loinc.org",
+                "code": "24323-8",
+                "display": "Comprehensive metabolic 2000 panel - Serum or Plasma"
+              }
+            ]
           },
-          "subject": { "reference": "Patient/patient-1" },
-          "encounter": { "reference": "Encounter/enc-1" },
+          "subject": {
+            "reference": "Patient/patient-1"
+          },
+          "encounter": {
+            "reference": "Encounter/enc-1"
+          },
           "effectiveDateTime": "2016-09-20T06:09:43+01:00",
           "conclusion": "Erroneous report - do not use."
         }
@@ -356,21 +586,54 @@
     {
       "desc": "(h) SNOMED-only DR (no LOINC coding) → note_class_concept_id=0 fallback (code_loinc is NULL so the LOINC→Maps-to join yields no std, COALESCE(std.concept_id,0)=0) and note_source_value NULL (left(NULL,50)); the SNOMED code 1254722009 itself routes to the Observation domain (37153894, self-standard so src==std). note_text from code.text",
       "fhir": [
-        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1985-06-12" },
-        { "resourceType": "Practitioner", "id": "prac-1", "name": [ { "family": "Snow", "given": ["John"], "prefix": ["Dr."] } ] },
-        { "resourceType": "Encounter", "id": "enc-1", "status": "finished", "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" }, "subject": { "reference": "Patient/patient-1" } },
+        {
+          "resourceType": "Patient",
+          "id": "patient-1",
+          "gender": "female",
+          "birthDate": "1985-06-12"
+        },
+        {
+          "resourceType": "Practitioner",
+          "id": "prac-1",
+          "name": [
+            {
+              "family": "Snow",
+              "given": [
+                "John"
+              ],
+              "prefix": [
+                "Dr."
+              ]
+            }
+          ]
+        },
         {
           "resourceType": "DiagnosticReport",
           "id": "dr-1",
           "status": "final",
           "code": {
             "text": "Family history of disability",
-            "coding": [ { "system": "http://snomed.info/sct", "code": "1254722009", "display": "Family history of disability" } ]
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "1254722009",
+                "display": "Family history of disability"
+              }
+            ]
           },
-          "subject": { "reference": "Patient/patient-1" },
-          "encounter": { "reference": "Encounter/enc-1" },
+          "subject": {
+            "reference": "Patient/patient-1"
+          },
+          "encounter": {
+            "reference": "Encounter/enc-1"
+          },
           "effectiveDateTime": "2021-11-03T14:00:00+01:00",
-          "performer": [ { "reference": "Practitioner/prac-1", "display": "Dr. John Snow" } ]
+          "performer": [
+            {
+              "reference": "Practitioner/prac-1",
+              "display": "Dr. John Snow"
+            }
+          ]
         }
       ],
       "omop": {

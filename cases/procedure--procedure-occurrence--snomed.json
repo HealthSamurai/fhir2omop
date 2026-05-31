@@ -1,23 +1,45 @@
 {
   "title": "Procedure → procedure_occurrence",
   "notes": "Branch: the Procedure edge (`mapspec/etl/Procedure__procedure_occurrence.sql`, stage-1 view `mapspec/views/Procedure__procedure_occurrence.view.json`). The varying input dimension across these variants is the **code vocabulary / domain routing / status / timezone** of a single Procedure; the Patient (`patient-1`, female, born 1960-05-12) and Encounter (`enc-1`) are held constant so the diffs are crisp.\n\nHow the edge works (read off the SQL):\n1. Stage-1 fans the `code.coding[]` out into four nullable columns by `system`: `code_snomed` (`http://snomed.info/sct`), `code_cpt4` (`http://www.ama-assn.org/go/cpt`), `code_hcpcs` (`https://www.cms.gov/Medicare/Coding/HCPCSReleaseCodeSets`), `code_icd10pcs` (`http://hl7.org/fhir/sid/icd-10-pcs`).\n2. Stage-2 re-UNIONs those into `(staging_id, prio, vocab, code)` rows with priority SNOMED=1 → CPT4=2 → HCPCS=3 → ICD10PCS=4, joins `vocab.concept (src) → concept_relationship 'Maps to' (invalid_reason IS NULL) → vocab.concept (std, standard_concept='S', domain_id='Procedure')`, then `DISTINCT ON (staging_id) ORDER BY prio` keeps the single highest-priority coding **that resolves to a Procedure-domain standard concept**.\n3. `procedure_concept_id` = std concept; `procedure_source_concept_id` = src concept; `procedure_source_value` = the raw code string of the winning coding.\n4. `procedure_type_concept_id` is the hardcoded constant 32827 ('EHR encounter record', Type Concept, standard).\n5. Dates: `COALESCE(performedDateTime, performedPeriod.start)` drives `procedure_date`/`procedure_datetime`; `performedPeriod.end` drives `procedure_end_*`. Every instant is cast `::timestamptz AT TIME ZONE 'UTC'` (procedures.csv stores UTC `Z`; FHIR may carry a local offset) — so a non-UTC offset shifts the wall-clock and can roll the calendar date.\n6. `provider_id` = hash of `performer.first().actor` reference; `visit_occurrence_id` = hash of `encounter`; `person_id` = hash of `subject`.\n7. Row filter: `WHERE COALESCE(status,'completed') NOT IN ('entered-in-error','not-done','unknown')`.\n8. `modifier_concept_id`, `quantity`, `visit_detail_id`, `modifier_source_value` are never populated by this edge (no bodySite read) → always NULL.\n\nGrounding (verified live in vocab.concept on the v20260227 bundle): SNOMED 430193006 → concept 4326177 'Medication reconciliation' (standard, Procedure; 'Maps to' is the self-loop 4326177→4326177, so std==src). HCPCS A4736 → concept 2614995 'Topical anesthetic, for dialysis, per gram' (standard, Procedure; self-map). SNOMED 73211009 → concept 201820 'Diabetes mellitus' (standard, **Condition** — used for the domain-filter negative case). Type concept 32827 'EHR encounter record' (Type Concept, standard). NOTE: **CPT4 is not loaded in this Athena bundle** (the licensed CPT4 names require the UMLS post-processing step `cpt.sh`, which was not run — `vocab.concept` has 0 CPT4 rows). So in variant (b) the CPT4 coding cannot resolve at all in-bundle; SNOMED still wins because its prio=1 short-circuits the DISTINCT ON regardless. Variant (b') re-proves the same priority mechanism with HCPCS as the loser, where the loser *would* resolve to a distinct Procedure concept (2614995) but is dropped by prio ordering — that is the strongly-grounded priority assertion.\n\nFK refs are symbolic: `ref:patient-1` = referenceToId(Patient/patient-1), `ref:enc-1` = referenceToId(Encounter/enc-1), `ref:prac-1` = referenceToId(Practitioner/prac-1). `omop: {}` means the pipeline emits ZERO rows for that variant.",
+  "fixtures": [
+    {
+      "resourceType": "Patient",
+      "id": "patient-1",
+      "gender": "female",
+      "birthDate": "1960-05-12"
+    }
+  ],
   "cases": [
     {
       "desc": "(a) Completed SNOMED procedure → one procedure_occurrence (type 32827, provider, visit, source concept = standard self-map)",
       "fhir": [
-        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1960-05-12" },
         {
           "resourceType": "Practitioner",
           "id": "prac-1",
-          "name": [ { "family": "Reilly", "given": [ "Anne" ] } ]
+          "name": [
+            {
+              "family": "Reilly",
+              "given": [
+                "Anne"
+              ]
+            }
+          ]
         },
         {
           "resourceType": "Encounter",
           "id": "enc-1",
           "status": "finished",
-          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
-          "subject": { "reference": "Patient/patient-1" },
-          "period": { "start": "2017-11-01T12:07:09+00:00", "end": "2017-11-01T12:22:09+00:00" }
+          "class": {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+            "code": "AMB"
+          },
+          "subject": {
+            "reference": "Patient/patient-1"
+          },
+          "period": {
+            "start": "2017-11-01T12:07:09+00:00",
+            "end": "2017-11-01T12:22:09+00:00"
+          }
         },
         {
           "resourceType": "Procedure",
@@ -25,12 +47,31 @@
           "status": "completed",
           "code": {
             "text": "Medication Reconciliation (procedure)",
-            "coding": [ { "system": "http://snomed.info/sct", "code": "430193006", "display": "Medication Reconciliation (procedure)" } ]
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "430193006",
+                "display": "Medication Reconciliation (procedure)"
+              }
+            ]
           },
-          "subject": { "reference": "Patient/patient-1" },
-          "encounter": { "reference": "Encounter/enc-1" },
-          "performer": [ { "actor": { "reference": "Practitioner/prac-1" } } ],
-          "performedPeriod": { "start": "2017-11-01T12:07:09+00:00", "end": "2017-11-01T12:22:09+00:00" }
+          "subject": {
+            "reference": "Patient/patient-1"
+          },
+          "encounter": {
+            "reference": "Encounter/enc-1"
+          },
+          "performer": [
+            {
+              "actor": {
+                "reference": "Practitioner/prac-1"
+              }
+            }
+          ],
+          "performedPeriod": {
+            "start": "2017-11-01T12:07:09+00:00",
+            "end": "2017-11-01T12:22:09+00:00"
+          }
         }
       ],
       "omop": {
@@ -57,14 +98,21 @@
     {
       "desc": "(b) Vocab priority: SNOMED + CPT4 codings both present → SNOMED (prio 1) wins; CPT4 (prio 2) ignored",
       "fhir": [
-        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1960-05-12" },
         {
           "resourceType": "Encounter",
           "id": "enc-1",
           "status": "finished",
-          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
-          "subject": { "reference": "Patient/patient-1" },
-          "period": { "start": "2017-11-01T12:07:09+00:00", "end": "2017-11-01T12:22:09+00:00" }
+          "class": {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+            "code": "AMB"
+          },
+          "subject": {
+            "reference": "Patient/patient-1"
+          },
+          "period": {
+            "start": "2017-11-01T12:07:09+00:00",
+            "end": "2017-11-01T12:22:09+00:00"
+          }
         },
         {
           "resourceType": "Procedure",
@@ -73,13 +121,28 @@
           "code": {
             "text": "Medication Reconciliation",
             "coding": [
-              { "system": "http://www.ama-assn.org/go/cpt", "code": "99213", "display": "Office or other outpatient visit (CPT, fallback prio 2)" },
-              { "system": "http://snomed.info/sct", "code": "430193006", "display": "Medication Reconciliation (procedure)" }
+              {
+                "system": "http://www.ama-assn.org/go/cpt",
+                "code": "99213",
+                "display": "Office or other outpatient visit (CPT, fallback prio 2)"
+              },
+              {
+                "system": "http://snomed.info/sct",
+                "code": "430193006",
+                "display": "Medication Reconciliation (procedure)"
+              }
             ]
           },
-          "subject": { "reference": "Patient/patient-1" },
-          "encounter": { "reference": "Encounter/enc-1" },
-          "performedPeriod": { "start": "2017-11-01T12:07:09+00:00", "end": "2017-11-01T12:22:09+00:00" }
+          "subject": {
+            "reference": "Patient/patient-1"
+          },
+          "encounter": {
+            "reference": "Encounter/enc-1"
+          },
+          "performedPeriod": {
+            "start": "2017-11-01T12:07:09+00:00",
+            "end": "2017-11-01T12:22:09+00:00"
+          }
         }
       ],
       "omop": {
@@ -105,14 +168,21 @@
     {
       "desc": "(b') Vocab priority, strongly grounded: SNOMED + HCPCS both resolve to DISTINCT Procedure concepts → SNOMED (prio 1) wins, HCPCS (prio 3) dropped by DISTINCT ON",
       "fhir": [
-        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1960-05-12" },
         {
           "resourceType": "Encounter",
           "id": "enc-1",
           "status": "finished",
-          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
-          "subject": { "reference": "Patient/patient-1" },
-          "period": { "start": "2017-11-01T12:07:09+00:00", "end": "2017-11-01T12:22:09+00:00" }
+          "class": {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+            "code": "AMB"
+          },
+          "subject": {
+            "reference": "Patient/patient-1"
+          },
+          "period": {
+            "start": "2017-11-01T12:07:09+00:00",
+            "end": "2017-11-01T12:22:09+00:00"
+          }
         },
         {
           "resourceType": "Procedure",
@@ -121,13 +191,28 @@
           "code": {
             "text": "Medication Reconciliation",
             "coding": [
-              { "system": "https://www.cms.gov/Medicare/Coding/HCPCSReleaseCodeSets", "code": "A4736", "display": "Topical anesthetic, for dialysis (HCPCS, fallback prio 3)" },
-              { "system": "http://snomed.info/sct", "code": "430193006", "display": "Medication Reconciliation (procedure)" }
+              {
+                "system": "https://www.cms.gov/Medicare/Coding/HCPCSReleaseCodeSets",
+                "code": "A4736",
+                "display": "Topical anesthetic, for dialysis (HCPCS, fallback prio 3)"
+              },
+              {
+                "system": "http://snomed.info/sct",
+                "code": "430193006",
+                "display": "Medication Reconciliation (procedure)"
+              }
             ]
           },
-          "subject": { "reference": "Patient/patient-1" },
-          "encounter": { "reference": "Encounter/enc-1" },
-          "performedPeriod": { "start": "2017-11-01T12:07:09+00:00", "end": "2017-11-01T12:22:09+00:00" }
+          "subject": {
+            "reference": "Patient/patient-1"
+          },
+          "encounter": {
+            "reference": "Encounter/enc-1"
+          },
+          "performedPeriod": {
+            "start": "2017-11-01T12:07:09+00:00",
+            "end": "2017-11-01T12:22:09+00:00"
+          }
         }
       ],
       "omop": {
@@ -153,14 +238,21 @@
     {
       "desc": "(c) Domain filter: SNOMED code whose 'Maps to' standard concept is domain Condition (not Procedure) → dropped → ZERO rows",
       "fhir": [
-        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1960-05-12" },
         {
           "resourceType": "Encounter",
           "id": "enc-1",
           "status": "finished",
-          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
-          "subject": { "reference": "Patient/patient-1" },
-          "period": { "start": "2017-11-01T12:07:09+00:00", "end": "2017-11-01T12:22:09+00:00" }
+          "class": {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+            "code": "AMB"
+          },
+          "subject": {
+            "reference": "Patient/patient-1"
+          },
+          "period": {
+            "start": "2017-11-01T12:07:09+00:00",
+            "end": "2017-11-01T12:22:09+00:00"
+          }
         },
         {
           "resourceType": "Procedure",
@@ -168,11 +260,24 @@
           "status": "completed",
           "code": {
             "text": "Diabetes mellitus (miscoded as a Procedure)",
-            "coding": [ { "system": "http://snomed.info/sct", "code": "73211009", "display": "Diabetes mellitus" } ]
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "73211009",
+                "display": "Diabetes mellitus"
+              }
+            ]
           },
-          "subject": { "reference": "Patient/patient-1" },
-          "encounter": { "reference": "Encounter/enc-1" },
-          "performedPeriod": { "start": "2017-11-01T12:07:09+00:00", "end": "2017-11-01T12:22:09+00:00" }
+          "subject": {
+            "reference": "Patient/patient-1"
+          },
+          "encounter": {
+            "reference": "Encounter/enc-1"
+          },
+          "performedPeriod": {
+            "start": "2017-11-01T12:07:09+00:00",
+            "end": "2017-11-01T12:22:09+00:00"
+          }
         }
       ],
       "omop": {}
@@ -180,14 +285,21 @@
     {
       "desc": "(d1) status='not-done' → row filtered by WHERE … NOT IN ('entered-in-error','not-done','unknown') → ZERO rows",
       "fhir": [
-        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1960-05-12" },
         {
           "resourceType": "Encounter",
           "id": "enc-1",
           "status": "finished",
-          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
-          "subject": { "reference": "Patient/patient-1" },
-          "period": { "start": "2017-11-01T12:07:09+00:00", "end": "2017-11-01T12:22:09+00:00" }
+          "class": {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+            "code": "AMB"
+          },
+          "subject": {
+            "reference": "Patient/patient-1"
+          },
+          "period": {
+            "start": "2017-11-01T12:07:09+00:00",
+            "end": "2017-11-01T12:22:09+00:00"
+          }
         },
         {
           "resourceType": "Procedure",
@@ -195,11 +307,24 @@
           "status": "not-done",
           "code": {
             "text": "Medication Reconciliation (procedure)",
-            "coding": [ { "system": "http://snomed.info/sct", "code": "430193006", "display": "Medication Reconciliation (procedure)" } ]
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "430193006",
+                "display": "Medication Reconciliation (procedure)"
+              }
+            ]
           },
-          "subject": { "reference": "Patient/patient-1" },
-          "encounter": { "reference": "Encounter/enc-1" },
-          "performedPeriod": { "start": "2017-11-01T12:07:09+00:00", "end": "2017-11-01T12:22:09+00:00" }
+          "subject": {
+            "reference": "Patient/patient-1"
+          },
+          "encounter": {
+            "reference": "Encounter/enc-1"
+          },
+          "performedPeriod": {
+            "start": "2017-11-01T12:07:09+00:00",
+            "end": "2017-11-01T12:22:09+00:00"
+          }
         }
       ],
       "omop": {}
@@ -207,14 +332,21 @@
     {
       "desc": "(d2) status='entered-in-error' → row filtered → ZERO rows",
       "fhir": [
-        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1960-05-12" },
         {
           "resourceType": "Encounter",
           "id": "enc-1",
           "status": "finished",
-          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
-          "subject": { "reference": "Patient/patient-1" },
-          "period": { "start": "2017-11-01T12:07:09+00:00", "end": "2017-11-01T12:22:09+00:00" }
+          "class": {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+            "code": "AMB"
+          },
+          "subject": {
+            "reference": "Patient/patient-1"
+          },
+          "period": {
+            "start": "2017-11-01T12:07:09+00:00",
+            "end": "2017-11-01T12:22:09+00:00"
+          }
         },
         {
           "resourceType": "Procedure",
@@ -222,11 +354,24 @@
           "status": "entered-in-error",
           "code": {
             "text": "Medication Reconciliation (procedure)",
-            "coding": [ { "system": "http://snomed.info/sct", "code": "430193006", "display": "Medication Reconciliation (procedure)" } ]
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "430193006",
+                "display": "Medication Reconciliation (procedure)"
+              }
+            ]
           },
-          "subject": { "reference": "Patient/patient-1" },
-          "encounter": { "reference": "Encounter/enc-1" },
-          "performedPeriod": { "start": "2017-11-01T12:07:09+00:00", "end": "2017-11-01T12:22:09+00:00" }
+          "subject": {
+            "reference": "Patient/patient-1"
+          },
+          "encounter": {
+            "reference": "Encounter/enc-1"
+          },
+          "performedPeriod": {
+            "start": "2017-11-01T12:07:09+00:00",
+            "end": "2017-11-01T12:22:09+00:00"
+          }
         }
       ],
       "omop": {}
@@ -234,14 +379,21 @@
     {
       "desc": "(e) UTC timezone normalization: performedDateTime with +05:00 offset early morning → AT TIME ZONE UTC rolls the wall-clock back 5h, crossing the calendar date (2017-11-02 → 2017-11-01)",
       "fhir": [
-        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1960-05-12" },
         {
           "resourceType": "Encounter",
           "id": "enc-1",
           "status": "finished",
-          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
-          "subject": { "reference": "Patient/patient-1" },
-          "period": { "start": "2017-11-02T03:30:00+05:00", "end": "2017-11-02T03:50:00+05:00" }
+          "class": {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+            "code": "AMB"
+          },
+          "subject": {
+            "reference": "Patient/patient-1"
+          },
+          "period": {
+            "start": "2017-11-02T03:30:00+05:00",
+            "end": "2017-11-02T03:50:00+05:00"
+          }
         },
         {
           "resourceType": "Procedure",
@@ -249,10 +401,20 @@
           "status": "completed",
           "code": {
             "text": "Medication Reconciliation (procedure)",
-            "coding": [ { "system": "http://snomed.info/sct", "code": "430193006", "display": "Medication Reconciliation (procedure)" } ]
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "430193006",
+                "display": "Medication Reconciliation (procedure)"
+              }
+            ]
           },
-          "subject": { "reference": "Patient/patient-1" },
-          "encounter": { "reference": "Encounter/enc-1" },
+          "subject": {
+            "reference": "Patient/patient-1"
+          },
+          "encounter": {
+            "reference": "Encounter/enc-1"
+          },
           "performedDateTime": "2017-11-02T03:30:00+05:00"
         }
       ],
@@ -277,14 +439,21 @@
     {
       "desc": "(f) lone HCPCS coding (no SNOMED) → fallback vocab actually WINS the DISTINCT ON: HCPCS A4736 resolves to standard Procedure 2614995, source_value = raw code 'A4736' (extracted from the retired Synthea-CSV oracle, which was SNOMED-only and never exercised a non-SNOMED winner)",
       "fhir": [
-        { "resourceType": "Patient", "id": "patient-1", "gender": "female", "birthDate": "1960-05-12" },
         {
           "resourceType": "Encounter",
           "id": "enc-1",
           "status": "finished",
-          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
-          "subject": { "reference": "Patient/patient-1" },
-          "period": { "start": "2017-11-01T12:07:09+00:00", "end": "2017-11-01T12:22:09+00:00" }
+          "class": {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+            "code": "AMB"
+          },
+          "subject": {
+            "reference": "Patient/patient-1"
+          },
+          "period": {
+            "start": "2017-11-01T12:07:09+00:00",
+            "end": "2017-11-01T12:22:09+00:00"
+          }
         },
         {
           "resourceType": "Procedure",
@@ -292,11 +461,24 @@
           "status": "completed",
           "code": {
             "text": "Topical anesthetic, for dialysis",
-            "coding": [ { "system": "https://www.cms.gov/Medicare/Coding/HCPCSReleaseCodeSets", "code": "A4736", "display": "Topical anesthetic, for dialysis" } ]
+            "coding": [
+              {
+                "system": "https://www.cms.gov/Medicare/Coding/HCPCSReleaseCodeSets",
+                "code": "A4736",
+                "display": "Topical anesthetic, for dialysis"
+              }
+            ]
           },
-          "subject": { "reference": "Patient/patient-1" },
-          "encounter": { "reference": "Encounter/enc-1" },
-          "performedPeriod": { "start": "2017-11-01T12:07:09+00:00", "end": "2017-11-01T12:22:09+00:00" }
+          "subject": {
+            "reference": "Patient/patient-1"
+          },
+          "encounter": {
+            "reference": "Encounter/enc-1"
+          },
+          "performedPeriod": {
+            "start": "2017-11-01T12:07:09+00:00",
+            "end": "2017-11-01T12:22:09+00:00"
+          }
         }
       ],
       "omop": {

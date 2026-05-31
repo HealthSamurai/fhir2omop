@@ -1,53 +1,97 @@
 {
   "title": "Observation.component[] fan-out",
   "notes": "Branch: how `Observation.component[]` fans out. The stage-1 view (`mapspec/views/Observation_component__measurement.view.json`) emits one staging row PER component, carrying the component's own `code.coding.first()` (system+code) and `value[x]`. Stage-2 resolves once in `mapspec/etl/_resolve_observation_component.sql`: each component code goes through `cm.fhir_system_to_omop_vocab` → `vocab.concept` (source) → `Maps to` → standard concept, and `std.domain_id` then ROUTES the component — `Measurement` rows go to `Observation_component__measurement.sql` (and only emit when `component_value_num IS NOT NULL`), `Observation` rows go to `Observation_component__observation.sql`.\n\nThe varying input dimension across variants is: (a) numeric components on a panel parent → `measurement`, vs (b) a coded (`valueCodeableConcept`) component → `observation`.\n\nKey shared facts:\n- The PANEL PARENT is always filtered out: the outer Observation (e.g. BP panel 85354-9) carries no own `value[x]`, so `_resolve_observation.sql`'s value-presence WHERE drops it from `cdm_ours_fhir.measurement`/`observation`. Its clinical content lives entirely in the components, fanned out here. Confirmed live: 0 rows for `measurement_source_value='85354-9'`.\n- `*_type_concept_id` = 32817 ('EHR') — constant in both stage-2 SQLs.\n- date/datetime derive from the PARENT Observation.effective (components inherit it). `::timestamp` keeps WALL-CLOCK (the `+NN:NN` offset is dropped, not converted to UTC).\n- `person_id` ← `subject.getReferenceKey()`, `visit_occurrence_id` ← `encounter.getReferenceKey()`, `provider_id` ← `performer.first()` (NULL when absent).\n- The surrogate PKs are NOT asserted (derived): measurement uses `stringToId(id || '/' || src_code || '|' || std_concept_id)`, observation uses a `/o/` infix so the two families never collide.\n- A component code whose source concept is itself standard self-maps via 'Maps to', so `*_concept_id` == `*_source_concept_id` (true for the BP LOINC codes and for 71802-3).",
+  "fixtures": [
+    {
+      "resourceType": "Patient",
+      "id": "patient-1",
+      "gender": "female",
+      "birthDate": "1980-01-01"
+    },
+    {
+      "resourceType": "Encounter",
+      "id": "enc-1",
+      "status": "finished",
+      "class": {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+        "code": "AMB"
+      },
+      "subject": {
+        "reference": "Patient/patient-1"
+      }
+    }
+  ],
   "cases": [
     {
       "desc": "(a) BP panel 85354-9 with systolic+diastolic numeric components → two measurement rows (one per component), panel parent filtered to 0 rows",
       "fhir": [
         {
-          "resourceType": "Patient",
-          "id": "patient-1",
-          "gender": "female",
-          "birthDate": "1980-01-01"
-        },
-        {
-          "resourceType": "Encounter",
-          "id": "enc-1",
-          "status": "finished",
-          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
-          "subject": { "reference": "Patient/patient-1" }
-        },
-        {
           "resourceType": "Observation",
           "id": "obs-1",
           "status": "final",
           "category": [
-            { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "vital-signs" } ] }
+            {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                  "code": "vital-signs"
+                }
+              ]
+            }
           ],
           "code": {
             "text": "Blood pressure panel with all children optional",
             "coding": [
-              { "system": "http://loinc.org", "code": "85354-9", "display": "Blood pressure panel with all children optional" }
+              {
+                "system": "http://loinc.org",
+                "code": "85354-9",
+                "display": "Blood pressure panel with all children optional"
+              }
             ]
           },
-          "subject": { "reference": "Patient/patient-1" },
-          "encounter": { "reference": "Encounter/enc-1" },
+          "subject": {
+            "reference": "Patient/patient-1"
+          },
+          "encounter": {
+            "reference": "Encounter/enc-1"
+          },
           "effectiveDateTime": "2025-06-25T11:58:43+01:00",
           "component": [
             {
               "code": {
                 "text": "Systolic Blood Pressure",
-                "coding": [ { "system": "http://loinc.org", "code": "8480-6", "display": "Systolic Blood Pressure" } ]
+                "coding": [
+                  {
+                    "system": "http://loinc.org",
+                    "code": "8480-6",
+                    "display": "Systolic Blood Pressure"
+                  }
+                ]
               },
-              "valueQuantity": { "value": 112, "unit": "mm[Hg]", "system": "http://unitsofmeasure.org", "code": "mm[Hg]" }
+              "valueQuantity": {
+                "value": 112,
+                "unit": "mm[Hg]",
+                "system": "http://unitsofmeasure.org",
+                "code": "mm[Hg]"
+              }
             },
             {
               "code": {
                 "text": "Diastolic Blood Pressure",
-                "coding": [ { "system": "http://loinc.org", "code": "8462-4", "display": "Diastolic Blood Pressure" } ]
+                "coding": [
+                  {
+                    "system": "http://loinc.org",
+                    "code": "8462-4",
+                    "display": "Diastolic Blood Pressure"
+                  }
+                ]
               },
-              "valueQuantity": { "value": 79, "unit": "mm[Hg]", "system": "http://unitsofmeasure.org", "code": "mm[Hg]" }
+              "valueQuantity": {
+                "value": 79,
+                "unit": "mm[Hg]",
+                "system": "http://unitsofmeasure.org",
+                "code": "mm[Hg]"
+              }
             }
           ]
         }
@@ -95,44 +139,56 @@
       "desc": "(b) component with valueCodeableConcept (PRAPARE-style survey answer) routing to the observation table → one observation row with value_as_concept_id",
       "fhir": [
         {
-          "resourceType": "Patient",
-          "id": "patient-1",
-          "gender": "female",
-          "birthDate": "1980-01-01"
-        },
-        {
-          "resourceType": "Encounter",
-          "id": "enc-1",
-          "status": "finished",
-          "class": { "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "AMB" },
-          "subject": { "reference": "Patient/patient-1" }
-        },
-        {
           "resourceType": "Observation",
           "id": "obs-1",
           "status": "final",
           "category": [
-            { "coding": [ { "system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "survey" } ] }
+            {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                  "code": "survey"
+                }
+              ]
+            }
           ],
           "code": {
             "text": "Protocol for Responding to and Assessing Patients Assets, Risks, and Experiences [PRAPARE]",
             "coding": [
-              { "system": "http://loinc.org", "code": "93025-5", "display": "Protocol for Responding to and Assessing Patients Assets, Risks, and Experiences [PRAPARE]" }
+              {
+                "system": "http://loinc.org",
+                "code": "93025-5",
+                "display": "Protocol for Responding to and Assessing Patients Assets, Risks, and Experiences [PRAPARE]"
+              }
             ]
           },
-          "subject": { "reference": "Patient/patient-1" },
-          "encounter": { "reference": "Encounter/enc-1" },
+          "subject": {
+            "reference": "Patient/patient-1"
+          },
+          "encounter": {
+            "reference": "Encounter/enc-1"
+          },
           "effectiveDateTime": "2025-01-01T01:03:18+00:00",
           "component": [
             {
               "code": {
                 "text": "Housing status",
-                "coding": [ { "system": "http://loinc.org", "code": "71802-3", "display": "Housing status" } ]
+                "coding": [
+                  {
+                    "system": "http://loinc.org",
+                    "code": "71802-3",
+                    "display": "Housing status"
+                  }
+                ]
               },
               "valueCodeableConcept": {
                 "text": "I have housing",
                 "coding": [
-                  { "system": "http://loinc.org", "code": "LA30189-7", "display": "I have housing" }
+                  {
+                    "system": "http://loinc.org",
+                    "code": "LA30189-7",
+                    "display": "I have housing"
+                  }
                 ]
               }
             }
