@@ -303,6 +303,70 @@
         }
       ],
       "omop": {}
+    },
+    {
+      "desc": "(f) SNOMED non-standard source concept (Allergy to substance 419199007 → src 4169307 non-standard) Maps-to a DIFFERENT standard concept (43530807 Allergic disposition): observation_concept_id = value_as_concept_id = std 43530807, but observation_source_concept_id = src 4169307 (the native non-standard concept) — the src != std branch the self-mapping variants (a/b/c) never exercise",
+      "fhir": [
+        {
+          "resourceType": "AllergyIntolerance",
+          "id": "ai-6",
+          "type": "allergy",
+          "category": [
+            "environment"
+          ],
+          "criticality": "low",
+          "clinicalStatus": {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical",
+                "code": "active"
+              }
+            ]
+          },
+          "verificationStatus": {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/allergyintolerance-verification",
+                "code": "confirmed"
+              }
+            ]
+          },
+          "code": {
+            "text": "Allergy to substance (finding)",
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "419199007",
+                "display": "Allergy to substance (finding)"
+              }
+            ]
+          },
+          "patient": {
+            "reference": "Patient/patient-1"
+          },
+          "recordedDate": "2000-08-07T17:49:44+01:00"
+        }
+      ],
+      "omop": {
+        "observation": [
+          {
+            "person_id": "ref:patient-1",
+            "observation_concept_id": 43530807,
+            "observation_concept_id__name": "Allergic disposition",
+            "observation_date": "2000-08-07",
+            "observation_datetime": "2000-08-07T17:49:44",
+            "observation_type_concept_id": 32817,
+            "observation_type_concept_id__name": "EHR",
+            "value_as_concept_id": 43530807,
+            "value_as_concept_id__name": "Allergic disposition",
+            "observation_source_value": "419199007",
+            "observation_source_concept_id": 4169307,
+            "observation_source_concept_id__name": "Allergy to substance",
+            "qualifier_source_value": "active",
+            "value_source_value": "Allergy to substance (finding)"
+          }
+        ]
+      }
     }
   ]
 }

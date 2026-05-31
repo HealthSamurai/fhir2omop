@@ -169,6 +169,91 @@
       }
     },
     {
+      "desc": "(a3) MedicationRequest status=stopped is KEPT (filter only drops entered-in-error/cancelled/draft/unknown) → drug_exposure row, RxNorm standard Drug, type 38000177, provider=requester, visit from encounter",
+      "fhir": [
+        {
+          "resourceType": "Patient",
+          "id": "patient-4",
+          "gender": "female",
+          "birthDate": "1948-07-19"
+        },
+        {
+          "resourceType": "Practitioner",
+          "id": "prac-3",
+          "name": [
+            {
+              "family": "Smith",
+              "given": [
+                "John"
+              ]
+            }
+          ]
+        },
+        {
+          "resourceType": "Encounter",
+          "id": "enc-3",
+          "status": "finished",
+          "class": {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+            "code": "AMB"
+          },
+          "subject": {
+            "reference": "Patient/patient-4"
+          },
+          "period": {
+            "start": "2014-08-22T11:00:00+00:00",
+            "end": "2014-08-22T12:00:00+00:00"
+          }
+        },
+        {
+          "resourceType": "MedicationRequest",
+          "id": "medreq-3",
+          "status": "stopped",
+          "intent": "order",
+          "subject": {
+            "reference": "Patient/patient-4"
+          },
+          "encounter": {
+            "reference": "Encounter/enc-3"
+          },
+          "requester": {
+            "reference": "Practitioner/prac-3"
+          },
+          "authoredOn": "2014-08-22T11:05:00+00:00",
+          "medicationCodeableConcept": {
+            "text": "60 ACTUAT Fluticasone propionate 0.25 MG/ACTUAT / salmeterol 0.05 MG/ACTUAT Dry Powder Inhaler",
+            "coding": [
+              {
+                "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                "code": "896209",
+                "display": "60 ACTUAT Fluticasone propionate 0.25 MG/ACTUAT / salmeterol 0.05 MG/ACTUAT Dry Powder Inhaler"
+              }
+            ]
+          }
+        }
+      ],
+      "omop": {
+        "drug_exposure": [
+          {
+            "person_id": "ref:patient-4",
+            "drug_concept_id": 40169281,
+            "drug_concept_id__name": "60 ACTUAT fluticasone propionate 0.25 MG/ACTUAT / salmeterol 0.05 MG/ACTUAT Dry Powder Inhaler",
+            "drug_exposure_start_date": "2014-08-22",
+            "drug_exposure_start_datetime": "2014-08-22T11:05:00",
+            "drug_exposure_end_date": "2014-08-22",
+            "drug_exposure_end_datetime": "2014-08-22T11:05:00",
+            "drug_type_concept_id": 38000177,
+            "drug_type_concept_id__name": "Prescription written",
+            "provider_id": "ref:prac-3",
+            "visit_occurrence_id": "ref:enc-3",
+            "drug_source_value": "896209",
+            "drug_source_concept_id": 40169281,
+            "drug_source_concept_id__name": "60 ACTUAT fluticasone propionate 0.25 MG/ACTUAT / salmeterol 0.05 MG/ACTUAT Dry Powder Inhaler"
+          }
+        ]
+      }
+    },
+    {
       "desc": "(e1) MedicationRequest status entered-in-error → filtered, zero rows",
       "fhir": [
         {

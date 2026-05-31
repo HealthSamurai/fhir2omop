@@ -50,6 +50,13 @@
           }
         ]
       }
+    },
+    {
+      "desc": "patient with NO visits → zero observation_period rows. Patient__observation_period uses an inner JOIN cdm_ours_fhir.visit_occurrence, so a person with no visit produces no period row (and no visit_occurrence row either). All 105 cohort patients have visits, so this is the structural negative branch the cohort never exercises.",
+      "fhir": [
+        { "resourceType": "Patient", "id": "patient-2", "gender": "female", "birthDate": "1980-02-02" }
+      ],
+      "omop": {}
     }
   ]
 }

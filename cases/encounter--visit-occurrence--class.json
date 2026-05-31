@@ -938,6 +938,70 @@
           }
         ]
       }
+    },
+    {
+      "desc": "(t) hospitalization.dischargeDisposition present (NUBC code '41') → discharged_to_source_value='41' (raw code copied verbatim), discharged_to_concept_id stays 0. Real cohort branch (11/6388 encounters carry a dischargeDisposition; codes 01/1/41). HH class so visit_concept_id 581476.",
+      "fhir": [
+        {
+          "resourceType": "Encounter",
+          "id": "enc-20",
+          "status": "finished",
+          "class": {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+            "code": "HH"
+          },
+          "subject": {
+            "reference": "Patient/patient-1"
+          },
+          "participant": [
+            {
+              "individual": {
+                "reference": "Practitioner/prac-1"
+              }
+            }
+          ],
+          "serviceProvider": {
+            "reference": "Organization/org-1"
+          },
+          "period": {
+            "start": "2016-03-22T13:00:00Z",
+            "end": "2016-03-22T14:30:00Z"
+          },
+          "hospitalization": {
+            "dischargeDisposition": {
+              "coding": [
+                {
+                  "system": "http://www.nubc.org/patient-discharge",
+                  "code": "41",
+                  "display": "Expired (i.e. died) in a medical facility"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "omop": {
+        "visit_occurrence": [
+          {
+            "person_id": "ref:patient-1",
+            "visit_concept_id": 581476,
+            "visit_concept_id__name": "Home Visit",
+            "visit_start_date": "2016-03-22",
+            "visit_start_datetime": "2016-03-22T13:00:00",
+            "visit_end_date": "2016-03-22",
+            "visit_end_datetime": "2016-03-22T14:30:00",
+            "visit_type_concept_id": 32827,
+            "visit_type_concept_id__name": "EHR encounter record",
+            "provider_id": "ref:prac-1",
+            "care_site_id": "ref:org-1",
+            "visit_source_value": "enc-20",
+            "visit_source_concept_id": 0,
+            "admitted_from_concept_id": 0,
+            "discharged_to_concept_id": 0,
+            "discharged_to_source_value": "41"
+          }
+        ]
+      }
     }
   ]
 }

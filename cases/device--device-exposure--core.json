@@ -210,6 +210,38 @@
         }
       ],
       "omop": {}
+    },
+    {
+      "desc": "status=active, SNOMED 705406009 Walker is a Device-domain but NON-STANDARD concept with NO 'Maps to' relationship at all -> the INNER JOIN src->concept_relationship('Maps to') yields zero rows -> device dropped. Distinct drop mechanism from device-5 (which DOES map, just to a non-Device domain). Grounded in real cohort device def18f52-cd46-902c-915d-15a937877e65.",
+      "fhir": [
+        {
+          "resourceType": "Device",
+          "id": "device-6",
+          "status": "active",
+          "patient": {
+            "reference": "urn:uuid:patient-6"
+          },
+          "type": {
+            "text": "Walker (physical object)",
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "705406009",
+                "display": "Walker (physical object)"
+              }
+            ]
+          },
+          "lotNumber": "4444",
+          "udiCarrier": [
+            {
+              "deviceIdentifier": "44444444444444"
+            }
+          ],
+          "manufactureDate": "2018-02-02T00:00:00+00:00",
+          "expirationDate": "2028-02-02T00:00:00+00:00"
+        }
+      ],
+      "omop": {}
     }
   ]
 }

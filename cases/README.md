@@ -69,7 +69,7 @@ Examples: `patient--person--race.json`, `observation--measurement--components.js
   **all** files. Merge order: global → file → variant (variant wins).
 - Use fixtures for pure FK anchors (the edge under test doesn't produce a row for
   them). See `encounter--visit-occurrence--class.json` (Patient + Practitioner +
-  Organization shared across all 19 variants).
+  Organization shared across all 20 variants).
 
 ### `fhir[]`
 - **Short logical ids** (`obs-1`, `cond-1`, `enc-1`) — never UUIDs. Because a
@@ -112,7 +112,7 @@ Examples: `patient--person--race.json`, `observation--measurement--components.js
 ## Running the cases
 
 ```sh
-bun script/run-cases.ts                 # run all (136 variants), assert against the real pipeline
+bun script/run-cases.ts                 # run all (149 variants), assert against the real pipeline
 bun script/run-cases.ts patient         # only files matching a substring
 bun script/run-cases.ts -v              # verbose: print stage-2 errors
 ```
@@ -151,7 +151,7 @@ bun script/run-cases-hermetic.ts           # prove the suite passes against ONLY
 ```
 
 `run-cases-hermetic.ts` loads the seed into a throwaway `vocab_seed` schema and
-runs every case with `RC_VOCAB=vocab_seed` (verified 136/136) — `cm.*` (built from
+runs every case with `RC_VOCAB=vocab_seed` (verified 149/149) — `cm.*` (built from
 `mapspec/profiles/*.cm.json`, the seed covers its `omop-source-vocabulary`
 lookups) is reused. In an Athena-free CI the same seed loads into a fresh
 Postgres `vocab` schema, `cm.*` is built from profiles, then `bun
@@ -166,30 +166,30 @@ script/run-cases.ts` — no 928MB bundle needed.
 3. **`location_id`** is `stringToId(line|city|state|zip)` (not a fhir-resource
    ref) — expressed with the `id:<token>` binding (see above).
 
-## Branches (23 files, 136 variants)
+## Branches (23 files, 149 variants)
 
 | File | Variants | Tables | Corner cases |
 |---|---|---|---|
 | patient--person--race | 9 | person | US Core OMB (White/Black/Asian/AIAN), omop-race priority, none→0, multi-ombCategory |
 | patient--person--ethnicity | 4 | person | Hispanic / Not / none→0 / omop-ethnicity priority |
 | patient--person--gender-birthsex | 6 | person | birthsex M/F, birthsex-over-gender, lowercase gender, unknown |
-| patient--location--address | 2 | person, location | address present (→ both tables) / absent (→ person only) |
+| patient--location--address | 3 | person, location | address present (→ both tables) / absent (→ person only) |
 | patient--death--deceased | 5 | death | deceasedDateTime present / absent (→ {}) / tz cast |
-| patient--observation-period--from-visits | 1 | observation_period, visit_occurrence | period derived from MIN(visit start)..MAX(visit end) |
+| patient--observation-period--from-visits | 2 | observation_period, visit_occurrence | period derived from MIN(visit start)..MAX(visit end) |
 | location--location--core | 3 | location | FHIR Location → OMOP location, address parts |
 | location--care-site--core | 5 | care_site | Location → care_site, place-of-service |
 | organization--care-site--core | 7 | care_site | Organization → care_site core mapping |
 | practitioner--provider--core | 5 | provider | Practitioner → provider, name/identifier |
 | practitionerrole--provider--enrichment | 1 | provider | baseline INSERT-only (UPDATE/enrichment path not isolable by the runner) |
-| encounter--visit-occurrence--class | 19 | visit_occurrence | class → visit_concept_id, participant/serviceProvider FKs, telehealth |
-| condition--condition-occurrence--core | 17 | condition_occurrence, measurement, observation, procedure_occurrence | category→type, status, refuted→{}, domain routing, multi-coding dedup |
-| observation--measurement--value | 8 | measurement | valueQuantity+unit, operator, referenceRange, status / panel-parent filters |
-| observation--measurement--components | 2 | measurement, observation | BP fan-out, panel parent filtered |
-| observation--observation--coded-value | 5 | observation | valueCodeableConcept→value_as_concept, valueString, interpretation |
-| allergyintolerance--observation--core | 5 | observation | substance-as-value, verificationStatus filter |
-| diagnosticreport--note--core | 8 | note, measurement, observation, procedure_occurrence | presentedForm / conclusion, code → measurement / observation / procedure routing |
-| procedure--procedure-occurrence--snomed | 8 | procedure_occurrence | SNOMED, vocab priority, domain filter, UTC tz, status filters |
-| device--device-exposure--core | 5 | device_exposure | status filter, SNOMED type, manufacture/expiration dates, UDI/lot |
+| encounter--visit-occurrence--class | 20 | visit_occurrence | class → visit_concept_id, participant/serviceProvider FKs, telehealth |
+| condition--condition-occurrence--core | 18 | condition_occurrence, measurement, observation, procedure_occurrence | category→type, status, refuted→{}, domain routing, multi-coding dedup |
+| observation--measurement--value | 10 | measurement | valueQuantity+unit, operator, referenceRange, status / panel-parent filters |
+| observation--measurement--components | 3 | measurement, observation | BP fan-out, panel parent filtered |
+| observation--observation--coded-value | 6 | observation | valueCodeableConcept→value_as_concept, valueString, interpretation |
+| allergyintolerance--observation--core | 6 | observation | substance-as-value, verificationStatus filter |
+| diagnosticreport--note--core | 9 | note, measurement, observation, procedure_occurrence | presentedForm / conclusion, code → measurement / observation / procedure routing |
+| procedure--procedure-occurrence--snomed | 9 | procedure_occurrence | SNOMED, vocab priority, domain filter, UTC tz, status filters |
+| device--device-exposure--core | 6 | device_exposure | status filter, SNOMED type, manufacture/expiration dates, UDI/lot |
 | immunization--drug-exposure--cvx | 4 | drug_exposure | CVX crosswalk, CVX no-crosswalk→drug_concept_id 0, not-done→{} |
-| medicationrequest--drug-exposure--rxnorm | 3 | drug_exposure | RxNorm active, status entered-in-error→{} |
+| medicationrequest--drug-exposure--rxnorm | 4 | drug_exposure | RxNorm active, status entered-in-error→{} |
 | medicationadministration--drug-exposure--rxnorm | 4 | drug_exposure | RxNorm/NDC/SNOMED cascade, administration |

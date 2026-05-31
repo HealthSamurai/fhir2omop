@@ -529,6 +529,128 @@
           }
         ]
       }
+    },
+    {
+      "desc": "(i) Measurement-domain LOINC carrying a CODED valueCodeableConcept whose ANSWER does NOT resolve (urine blood 5794-3 → std 3011397 Measurement; value SNOMED 167297006 has no 'Maps to' so the value LATERAL is empty → value_as_concept_id NULL) — value_as_number also NULL, but value_source_value still keeps the CCC text. The complement of (h): there the answer resolved (4198267), here it doesn't, isolating the value-LATERAL-misses branch. Grounded in real cdm_ours_fhir.measurement output (3011397 / value_as_concept_id NULL / value_source_value 'Urine blood test = negative (finding)' / source '5794-3').",
+      "fhir": [
+        {
+          "resourceType": "Observation",
+          "id": "obs-9",
+          "status": "final",
+          "category": [
+            {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                  "code": "laboratory",
+                  "display": "Laboratory"
+                }
+              ]
+            }
+          ],
+          "code": {
+            "text": "Hemoglobin [Presence] in Urine by Test strip",
+            "coding": [
+              {
+                "system": "http://loinc.org",
+                "code": "5794-3",
+                "display": "Hemoglobin [Presence] in Urine by Test strip"
+              }
+            ]
+          },
+          "subject": {
+            "reference": "Patient/patient-1"
+          },
+          "encounter": {
+            "reference": "Encounter/enc-1"
+          },
+          "effectiveDateTime": "2016-07-13T11:58:43+01:00",
+          "valueCodeableConcept": {
+            "text": "Urine blood test = negative (finding)",
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "167297006",
+                "display": "Urine blood test = negative (finding)"
+              }
+            ]
+          }
+        }
+      ],
+      "omop": {
+        "measurement": [
+          {
+            "person_id": "ref:patient-1",
+            "measurement_concept_id": 3011397,
+            "measurement_concept_id__name": "Hemoglobin [Presence] in Urine by Test strip",
+            "measurement_date": "2016-07-13",
+            "measurement_datetime": "2016-07-13T11:58:43",
+            "measurement_type_concept_id": 32817,
+            "measurement_type_concept_id__name": "EHR",
+            "visit_occurrence_id": "ref:enc-1",
+            "measurement_source_value": "5794-3",
+            "measurement_source_concept_id": 3011397,
+            "measurement_source_concept_id__name": "Hemoglobin [Presence] in Urine by Test strip",
+            "value_source_value": "Urine blood test = negative (finding)"
+          }
+        ]
+      }
+    },
+    {
+      "desc": "(j) Measurement-domain LOINC carrying only a valueString (85318-4 → std 36203113 Measurement; value 'less than 1.8'). The value-presence WHERE passes on value_string, so the row IS emitted, but the measurement schema has no value_as_string slot and valueString does not feed value_text → value_as_number / value_as_concept_id / value_source_value all NULL. Exercises the 'string on a measurement-domain code is effectively lost on the measurement side' branch. Grounded in real cdm_ours_fhir.measurement output (36203113 / all value cols NULL / source '85318-4').",
+      "fhir": [
+        {
+          "resourceType": "Observation",
+          "id": "obs-10",
+          "status": "final",
+          "category": [
+            {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                  "code": "laboratory",
+                  "display": "Laboratory"
+                }
+              ]
+            }
+          ],
+          "code": {
+            "text": "ERBB2 gene duplication [Presence] in Breast cancer specimen by FISH",
+            "coding": [
+              {
+                "system": "http://loinc.org",
+                "code": "85318-4",
+                "display": "ERBB2 gene duplication [Presence] in Breast cancer specimen by FISH"
+              }
+            ]
+          },
+          "subject": {
+            "reference": "Patient/patient-1"
+          },
+          "encounter": {
+            "reference": "Encounter/enc-1"
+          },
+          "effectiveDateTime": "2016-07-13T11:58:43+01:00",
+          "valueString": "less than 1.8"
+        }
+      ],
+      "omop": {
+        "measurement": [
+          {
+            "person_id": "ref:patient-1",
+            "measurement_concept_id": 36203113,
+            "measurement_concept_id__name": "ERBB2 gene duplication [Presence] in Breast cancer specimen by FISH",
+            "measurement_date": "2016-07-13",
+            "measurement_datetime": "2016-07-13T11:58:43",
+            "measurement_type_concept_id": 32817,
+            "measurement_type_concept_id__name": "EHR",
+            "visit_occurrence_id": "ref:enc-1",
+            "measurement_source_value": "85318-4",
+            "measurement_source_concept_id": 36203113,
+            "measurement_source_concept_id__name": "ERBB2 gene duplication [Presence] in Breast cancer specimen by FISH"
+          }
+        ]
+      }
     }
   ]
 }

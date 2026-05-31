@@ -346,6 +346,72 @@
           }
         ]
       }
+    },
+    {
+      "desc": "(f) valueCodeableConcept whose ANSWER code has NO 'Maps to' (cause-of-death 69453-9 → std 40771960 Observation; value SNOMED 94260004 → source concept 4311765, non-standard, no 'Maps to' row → value LATERAL empty) → value_as_concept_id NULL while value_source_value keeps the CCC text. Complement of (a)/(d) where the answer resolved — isolates the value-LATERAL-misses branch on the OBSERVATION side. Grounded in real cdm_ours_fhir.observation output (40771960 / value_as_concept_id NULL / value_source_value 'Secondary malignant neoplasm of colon' / source '69453-9').",
+      "fhir": [
+        {
+          "resourceType": "Observation",
+          "id": "obs-6",
+          "status": "final",
+          "category": [
+            {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                  "code": "survey",
+                  "display": "Survey"
+                }
+              ]
+            }
+          ],
+          "code": {
+            "text": "Cause of death [US Standard Certificate of Death]",
+            "coding": [
+              {
+                "system": "http://loinc.org",
+                "code": "69453-9",
+                "display": "Cause of death [US Standard Certificate of Death]"
+              }
+            ]
+          },
+          "subject": {
+            "reference": "Patient/patient-1"
+          },
+          "encounter": {
+            "reference": "Encounter/enc-1"
+          },
+          "effectiveDateTime": "2013-06-13T22:26:17+01:00",
+          "valueCodeableConcept": {
+            "text": "Secondary malignant neoplasm of colon",
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "94260004",
+                "display": "Secondary malignant neoplasm of colon"
+              }
+            ]
+          }
+        }
+      ],
+      "omop": {
+        "observation": [
+          {
+            "person_id": "ref:patient-1",
+            "observation_concept_id": 40771960,
+            "observation_concept_id__name": "Cause of death [US Standard Certificate of Death]",
+            "observation_date": "2013-06-13",
+            "observation_datetime": "2013-06-13T22:26:17",
+            "observation_type_concept_id": 32817,
+            "observation_type_concept_id__name": "EHR",
+            "visit_occurrence_id": "ref:enc-1",
+            "observation_source_value": "69453-9",
+            "observation_source_concept_id": 40771960,
+            "observation_source_concept_id__name": "Cause of death [US Standard Certificate of Death]",
+            "value_source_value": "Secondary malignant neoplasm of colon"
+          }
+        ]
+      }
     }
   ]
 }

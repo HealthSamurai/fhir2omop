@@ -674,6 +674,69 @@
           }
         ]
       }
+    },
+    {
+      "desc": "(i) presentedForm present but NO code.text (the dominant real Synthea note shape: two document LOINCs 34117-2 + 51847-2, both Note-domain so they route nowhere; no performer) → one note row with note_title NULL (left(NULL,250)), note_text base64-decoded, note_class from first LOINC (3030023), provider_id NULL; zero routing rows",
+      "fhir": [
+        {
+          "resourceType": "Patient",
+          "id": "patient-9",
+          "gender": "male",
+          "birthDate": "1990-02-14"
+        },
+        {
+          "resourceType": "DiagnosticReport",
+          "id": "dr-9",
+          "status": "final",
+          "code": {
+            "coding": [
+              {
+                "system": "http://loinc.org",
+                "code": "34117-2",
+                "display": "History and physical note"
+              },
+              {
+                "system": "http://loinc.org",
+                "code": "51847-2",
+                "display": "Evaluation + Plan note"
+              }
+            ]
+          },
+          "subject": {
+            "reference": "Patient/patient-9"
+          },
+          "encounter": {
+            "reference": "Encounter/enc-1"
+          },
+          "effectiveDateTime": "2019-07-09T12:01:40+01:00",
+          "presentedForm": [
+            {
+              "contentType": "text/plain; charset=utf-8",
+              "data": "Q2xpbmljYWwgbm90ZSBib2R5IHdpdGhvdXQgYSB0aXRsZS4="
+            }
+          ]
+        }
+      ],
+      "omop": {
+        "note": [
+          {
+            "person_id": "ref:patient-9",
+            "note_date": "2019-07-09",
+            "note_datetime": "2019-07-09T12:01:40",
+            "note_type_concept_id": 32817,
+            "note_type_concept_id__name": "EHR",
+            "note_class_concept_id": 3030023,
+            "note_class_concept_id__name": "History and physical note",
+            "note_text": "Clinical note body without a title.",
+            "encoding_concept_id": 32678,
+            "encoding_concept_id__name": "UTF-8",
+            "language_concept_id": 4180186,
+            "language_concept_id__name": "English language",
+            "visit_occurrence_id": "ref:enc-1",
+            "note_source_value": "34117-2"
+          }
+        ]
+      }
     }
   ]
 }

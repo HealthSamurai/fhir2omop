@@ -195,6 +195,124 @@
           }
         ]
       }
+    },
+    {
+      "desc": "long address → location_source_value truncated at 50 chars (left(concat_ws(', ', line,city,state,zip),50)); city/state/zip columns keep full verbatim values. Grounded in cohort row '133 Veum Frontage road Apt 91, Tewksbury, MA, 00000' (full comma-join is 51 chars → capped to 50, dropping the last zip digit). The zip column still stores the full '00000'.",
+      "fhir": [
+        {
+          "resourceType": "Patient",
+          "id": "patient-3",
+          "gender": "male",
+          "birthDate": "1992-01-25",
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+              "extension": [
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "2054-5",
+                    "display": "Black or African American"
+                  }
+                },
+                {
+                  "url": "text",
+                  "valueString": "Black or African American"
+                }
+              ]
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+              "extension": [
+                {
+                  "url": "ombCategory",
+                  "valueCoding": {
+                    "system": "urn:oid:2.16.840.1.113883.6.238",
+                    "code": "2186-5",
+                    "display": "Not Hispanic or Latino"
+                  }
+                },
+                {
+                  "url": "text",
+                  "valueString": "Not Hispanic or Latino"
+                }
+              ]
+            },
+            {
+              "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+              "valueCode": "M"
+            }
+          ],
+          "address": [
+            {
+              "line": [
+                "133 Veum Frontage road Apt 91"
+              ],
+              "city": "Tewksbury",
+              "state": "MA",
+              "postalCode": "00000",
+              "country": "US",
+              "extension": [
+                {
+                  "url": "http://hl7.org/fhir/StructureDefinition/geolocation",
+                  "extension": [
+                    {
+                      "url": "latitude",
+                      "valueDecimal": 42.65170450597443
+                    },
+                    {
+                      "url": "longitude",
+                      "valueDecimal": -71.18188610423435
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "omop": {
+        "person": [
+          {
+            "person_id": "ref:patient-3",
+            "gender_concept_id": 8507,
+            "gender_concept_id__name": "MALE",
+            "year_of_birth": 1992,
+            "month_of_birth": 1,
+            "day_of_birth": 25,
+            "birth_datetime": "1992-01-25T00:00:00",
+            "race_concept_id": 8516,
+            "race_concept_id__name": "Black or African American",
+            "ethnicity_concept_id": 38003564,
+            "ethnicity_concept_id__name": "Not Hispanic or Latino",
+            "location_id": "id:loc3",
+            "person_source_value": "patient-3",
+            "gender_source_value": "M",
+            "gender_source_concept_id": 8507,
+            "gender_source_concept_id__name": "MALE",
+            "race_source_value": "Black or African American",
+            "race_source_concept_id": 0,
+            "ethnicity_source_value": "Not Hispanic or Latino",
+            "ethnicity_source_concept_id": 0
+          }
+        ],
+        "location": [
+          {
+            "location_id": "id:loc3",
+            "address_1": "133 Veum Frontage road Apt 91",
+            "city": "Tewksbury",
+            "state": "MA",
+            "zip": "00000",
+            "location_source_value": "133 Veum Frontage road Apt 91, Tewksbury, MA, 0000",
+            "country_concept_id": 4330442,
+            "country_concept_id__name": "United States of America",
+            "country_source_value": "US",
+            "latitude": 42.65170450597443,
+            "longitude": -71.18188610423435
+          }
+        ]
+      }
     }
   ]
 }
