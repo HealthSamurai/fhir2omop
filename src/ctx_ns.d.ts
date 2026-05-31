@@ -21,17 +21,6 @@ declare global {
         etl_fhir: {
         runEdge: typeof import("./etl_fhir/runEdge").default;
         };
-        etl_synthea: {
-        createCdm: typeof import("./etl_synthea/createCdm").default;
-        createIndices: typeof import("./etl_synthea/createIndices").default;
-        createSyntheaTables: typeof import("./etl_synthea/createSyntheaTables").default;
-        loadAll: typeof import("./etl_synthea/loadAll").default;
-        loadPerson: typeof import("./etl_synthea/loadPerson").default;
-        loadSyntheaCsv: typeof import("./etl_synthea/loadSyntheaCsv").default;
-        render: typeof import("./etl_synthea/render").default;
-        runStep: typeof import("./etl_synthea/runStep").default;
-        translate: typeof import("./etl_synthea/translate").default;
-        };
         fhir: {
         connect: typeof import("./fhir/connect").default;
         ensureTable: typeof import("./fhir/ensureTable").default;
