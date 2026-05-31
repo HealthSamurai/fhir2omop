@@ -78,7 +78,7 @@ export default async function (ctx: Context, opts: { case: any }): Promise<strin
   </div>`;
         return ctx.fns.ui_components.collapsiblePanel(ctx, {
             open: false, tone, key: `case-${esc(file.slug)}-${i}`, class: "",
-            summary: `<div class="font-medium text-gray-900 leading-snug line-clamp-2"><span class="text-gray-400 text-xs font-mono mr-1.5">#${i + 1}</span>${esc(v.desc ?? `variant ${i + 1}`)}</div>`,
+            summary: `<div class="text-[13px] text-gray-800 leading-snug">${esc(v.desc ?? `variant ${i + 1}`)}</div>`,
             right: `${dot}${vFlow}`,
             body,
         });

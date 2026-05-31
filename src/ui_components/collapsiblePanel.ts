@@ -40,13 +40,16 @@ export default function (
     const keyAttr = opts.key ? ` data-k="${opts.key}"` : "";
     const bodyClass = opts.bodyClass ?? "p-4";
     const extra = opts.class ?? "mb-3";
+    // Background is always neutral gray (tone only colors the border) for
+    // readability; the title spans the full width and any `right` content (badges)
+    // sits on its own line below it, aligned under the title past the ▸ marker.
     const right = opts.right
-        ? `<div class="shrink-0 flex items-center flex-wrap justify-end gap-1.5">${opts.right}</div>`
+        ? `<div class="mt-1.5 ml-[18px] flex items-center flex-wrap gap-1.5">${opts.right}</div>`
         : "";
-    // The ▸/▾ marker rotates via the `open` state (group-open utilities on the marker).
+    // The ▸ marker rotates via the `open` state (group-open utility on the marker).
     return `<details${openAttr}${keyAttr} class="group not-prose border ${t.border} rounded-lg overflow-hidden ${extra}">
-  <summary class="flex items-start justify-between gap-3 px-4 py-2.5 cursor-pointer select-none ${t.bg} ${t.hover}">
-    <div class="min-w-0 flex-1 flex items-start gap-2">
+  <summary class="px-4 py-2.5 cursor-pointer select-none bg-gray-50 hover:bg-gray-100">
+    <div class="flex items-start gap-2">
       <span class="mt-0.5 text-gray-400 text-[10px] transition-transform group-open:rotate-90 shrink-0">▶</span>
       <div class="min-w-0 flex-1">${opts.summary}</div>
     </div>
