@@ -372,7 +372,7 @@ for (const f of files) {
         // ONE batch per file: each variant namespaced v{i}_ (fixtures cloned per
         // variant), loaded together, run through the pipeline in a single pass.
         const allFhir: any[] = [];
-        const meta = cases.map((v: any, i: number) => {
+        const meta: Array<{ i: number; prefix: string; omopByTable: Record<string, any[]>; resourceIds: string[] }> = cases.map((v: any, i: number) => {
             const prefix = `v${i}_`;
             const merged = mergeFhir(GLOBAL_FIXTURES, fileFixtures, v.fhir);
             allFhir.push(...merged.map((r) => prefixResource(r, prefix)));
@@ -412,7 +412,7 @@ for (const f of files) {
             const bindings = new Map<string, any>();
             for (const [table, expRows] of Object.entries(m.omopByTable)) {
                 const actual = actualBy[table] ?? [], used = usedBy[table] ?? [];
-                if (!actual.length && expRows.length) { vFail[m.i].push(`${table}: not produced (expected ${expRows.length})`); continue; }
+                if (!actual.length && expRows.length) { vFail[m.i]!.push(`${table}: not produced (expected ${expRows.length})`); continue; }
                 const pk = PK_BY_TABLE[table];
                 for (const exp of expRows) {
                     let found = -1, last: any = null, fp: Map<string, any> | undefined;
@@ -422,7 +422,7 @@ for (const f of files) {
                         if (r.ok) { found = j; fp = r.proposed; break; } else last = r;
                     }
                     if (found >= 0) { used[found] = true; if (fp) for (const [k, v] of fp) bindings.set(k, v); }
-                    else { const h = last ? ` (closest ${last.col}: got ${JSON.stringify(last.a)} want ${JSON.stringify(last.e)})` : ""; vFail[m.i].push(`${table}: no actual row matches expected${h}`); }
+                    else { const h = last ? ` (closest ${last.col}: got ${JSON.stringify(last.a)} want ${JSON.stringify(last.e)})` : ""; vFail[m.i]!.push(`${table}: no actual row matches expected${h}`); }
                 }
             }
         }
@@ -434,20 +434,20 @@ for (const f of files) {
                 if (used[j]) continue;
                 const row = actual[j];
                 const idVals = Object.entries(row).filter(([k]) => k.endsWith("_id")).map(([, v]) => v).filter((v) => v != null).map(String);
-                const owner = meta.find((m) => idVals.some((v) => owners[m.i].has(v)));
+                const owner = meta.find((m) => idVals.some((v) => owners[m.i]!.has(v)));
                 const msg = `${t}: unexpected row (concept ${row[`${t}_concept_id`] ?? "?"})`;
-                if (owner) vFail[owner.i].push(msg); else vFail[0].push(`${t}: unexpected row not attributable to a variant`);
+                if (owner) vFail[owner.i]!.push(msg); else vFail[0]!.push(`${t}: unexpected row not attributable to a variant`);
             }
         }
     } catch (e: any) {
-        for (let i = 0; i < cases.length; i++) vFail[i].push(`ERROR: ${e.message}`);
+        for (let i = 0; i < cases.length; i++) vFail[i]!.push(`ERROR: ${e.message}`);
     }
 
     for (let i = 0; i < cases.length; i++) {
-        const okv = vFail[i].length === 0;
-        results[slug].variants.push({ desc: cases[i].desc ?? `variant ${i + 1}`, pass: okv, failures: vFail[i] });
+        const okv = vFail[i]!.length === 0;
+        results[slug].variants.push({ desc: cases[i].desc ?? `variant ${i + 1}`, pass: okv, failures: vFail[i]! });
         if (okv) { pass++; console.log(`  ✓ [${i + 1}] ${cases[i].desc}`); }
-        else { fail++; failedCases.push(`${f} #${i + 1}`); console.log(`  ✗ [${i + 1}] ${cases[i].desc}`); for (const x of vFail[i]) console.log(`        ${x}`); }
+        else { fail++; failedCases.push(`${f} #${i + 1}`); console.log(`  ✗ [${i + 1}] ${cases[i].desc}`); for (const x of vFail[i]!) console.log(`        ${x}`); }
     }
 }
 
