@@ -53,11 +53,14 @@ export default async function (ctx: Context, opts: { case: any }): Promise<strin
             }).join('<div class="h-3"></div>');
         }
 
-        const vFlow = renderFlow(v.fhirTypes, v.omopTables);
         const res = v.result;
-        const dot = !res ? `<span class="px-1.5 py-0.5 rounded text-[11px] font-medium bg-gray-100 text-gray-400 shrink-0">not run</span>`
-            : res.pass ? `<span class="px-1.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800 shrink-0">✓ pass</span>`
-                : `<span class="px-1.5 py-0.5 rounded text-[11px] font-semibold bg-rose-100 text-rose-800 shrink-0">✗ fail</span>`;
+        // status as a compact mark pinned top-right (no per-case flow — that's
+        // the bold subgroup header now).
+        const corner = !res
+            ? `<span class="text-gray-300 text-base" title="not run">○</span>`
+            : res.pass
+                ? `<span class="text-emerald-600 text-base font-semibold" title="pass">✓</span>`
+                : `<span class="text-rose-600 text-base font-semibold" title="fail">✗</span>`;
         const failBlock = res && !res.pass && res.failures?.length
             ? `<div class="not-prose mb-3 border border-rose-200 bg-rose-50 rounded-lg p-3">
     <div class="text-xs font-semibold text-rose-800 mb-1">Assertion failures</div>
@@ -76,13 +79,39 @@ export default async function (ctx: Context, opts: { case: any }): Promise<strin
       ${omopHtml}
     </div>
   </div>`;
-        return ctx.fns.ui_components.collapsiblePanel(ctx, {
+        const html = ctx.fns.ui_components.collapsiblePanel(ctx, {
             open: false, tone, key: `case-${esc(file.slug)}-${i}`, class: "",
             summary: `<div class="text-[13px] text-gray-800 leading-snug">${esc(v.desc ?? `variant ${i + 1}`)}</div>`,
-            right: `${dot}${vFlow}`,
+            corner,
             body,
         });
+        return { tables: (v.omopTables ?? []) as string[], html };
     }));
+
+    // Group variants by the OMOP table(s) they target; the Resource → table flow
+    // becomes a bold subgroup header (shown only when a file fans out to >1
+    // target) instead of being repeated on every case.
+    const part0 = file.slug.split("--")[0] ?? "";
+    const primaryResource = (file.fhirTypes ?? []).find((t: string) => t.toLowerCase() === part0) ?? part0;
+    const groupKey = (tables: string[]) => tables.slice().sort().join(", ") || "∅";
+    const order: string[] = [];
+    const groups = new Map<string, { tables: string[]; items: string[] }>();
+    for (const b of variants) {
+        const k = groupKey(b.tables);
+        if (!groups.has(k)) { groups.set(k, { tables: b.tables, items: [] }); order.push(k); }
+        groups.get(k)!.items.push(b.html);
+    }
+    const multiGroup = groups.size > 1;
+    const variantsHtml = order.map((k) => {
+        const g = groups.get(k)!;
+        const tablesHtml = g.tables.length
+            ? g.tables.map((t) => `<span class="font-mono">${esc(t)}</span>`).join('<span class="text-gray-300 font-normal px-0.5">·</span>')
+            : '<span class="text-gray-400 font-normal italic">no rows</span>';
+        const header = multiGroup
+            ? `<div class="not-prose mt-5 mb-2 text-[13px] font-semibold text-gray-800 flex items-center flex-wrap gap-1.5"><span>${esc(primaryResource)}</span><span class="text-gray-400 font-normal">→</span>${tablesHtml}</div>`
+            : "";
+        return `${header}<div class="not-prose space-y-3">${g.items.join("")}</div>`;
+    }).join("");
 
     const notesPanel = notesHtml
         ? ctx.fns.ui_components.collapsiblePanel(ctx, {
@@ -110,7 +139,7 @@ export default async function (ctx: Context, opts: { case: any }): Promise<strin
 ${notesPanel}
 ${fixturesHtml}
 ${controls}
-<div class="not-prose space-y-4">${variants.join("")}</div>`;
+${variantsHtml}`;
 }
 
 // One expected OMOP row as a key/value card.

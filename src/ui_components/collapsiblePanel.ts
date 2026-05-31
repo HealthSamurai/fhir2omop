@@ -27,7 +27,8 @@ export default function (
     opts: {
         summary: string;
         body: string;
-        right?: string;
+        corner?: string; // small indicator pinned top-right, inline with the title
+        right?: string; // wider content on its own line below the title
         open?: boolean;
         tone?: keyof typeof TONES | string;
         key?: string;
@@ -52,6 +53,7 @@ export default function (
     <div class="flex items-start gap-2">
       <span class="mt-0.5 text-gray-400 text-[10px] transition-transform group-open:rotate-90 shrink-0">▶</span>
       <div class="min-w-0 flex-1">${opts.summary}</div>
+      ${opts.corner ? `<div class="shrink-0 leading-none">${opts.corner}</div>` : ""}
     </div>
     ${right}
   </summary>
