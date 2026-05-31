@@ -1,5 +1,5 @@
-// Render the /cases index: one card per branch file, showing the FHIR→OMOP
-// flow, tables touched, and how many variant cases it covers.
+// Render the /cases index as a simple list: one row per branch file —
+// title / slug, with a pass/fail check on the right. No cards.
 export default function (ctx: Context, opts: { cases: any[] }): string {
     const { cases } = opts;
 
@@ -8,21 +8,20 @@ export default function (ctx: Context, opts: { cases: any[] }): string {
 <p class="text-gray-500">No cases found in <code>cases/*.json</code>.</p>`;
     }
 
-    const borderFor = (s: string) => s === "pass" ? "border-emerald-300" : s === "fail" ? "border-rose-300" : "border-gray-200";
-    const cards = cases.map((c) => {
-        const flow = renderFlow(c.fhirTypes, c.omopTables);
-        const variants = `<span class="px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">${c.variantCount} variant${c.variantCount === 1 ? "" : "s"}</span>`;
-        const status = statusBadge(c);
-        const err = c.error ? `<div class="mt-1 text-xs text-rose-600">parse error: ${esc(c.error)}</div>` : "";
-        return `<a href="/cases/${enc(c.slug)}" hx-boost="true"
-   class="block no-underline border ${borderFor(c.status)} rounded-lg p-4 hover:shadow-sm transition">
-  <div class="flex items-start justify-between gap-2">
-    <div class="font-semibold text-gray-900 leading-snug">${esc(c.title)}</div>
-    <div class="flex items-center gap-1.5 shrink-0">${status}${variants}</div>
+    const check = (c: any): string => {
+        if (c.status === "pass") return `<span class="text-emerald-600 text-sm font-semibold whitespace-nowrap" title="pass">✓ ${c.passCount}/${c.ranCount}</span>`;
+        if (c.status === "fail") return `<span class="text-rose-600 text-sm font-semibold whitespace-nowrap" title="fail">✗ ${c.passCount}/${c.ranCount}</span>`;
+        return `<span class="text-gray-300 text-sm" title="not run">○</span>`;
+    };
+
+    const rows = cases.map((c) => {
+        const err = c.error ? `<span class="ml-2 text-[11px] text-rose-600">parse error</span>` : "";
+        return `<a href="/cases/${enc(c.slug)}" class="flex items-center justify-between gap-3 px-4 py-2 no-underline hover:bg-gray-50 border-t border-gray-100 first:border-t-0">
+  <div class="min-w-0 flex-1">
+    <div class="text-[13px] text-gray-800 leading-snug">${esc(c.title)}${err}</div>
+    <div class="font-mono text-[11px] text-gray-400 truncate">${esc(c.slug)}</div>
   </div>
-  <div class="mt-2">${flow}</div>
-  <div class="mt-2 font-mono text-[11px] text-gray-400">${esc(c.file)}</div>
-  ${err}
+  ${check(c)}
 </a>`;
     }).join("");
 
@@ -34,24 +33,8 @@ export default function (ctx: Context, opts: { cases: any[] }): string {
         ? `Not run yet — <code>bun script/run-cases.ts</code> to execute against the real pipeline.`
         : `Last run: <strong class="${totPass === totRan ? "text-emerald-700" : "text-rose-700"}">${totPass}/${totRan} green</strong>${cases[0]?.ranAt ? ` · ${esc(String(cases[0].ranAt).slice(0, 19).replace("T", " "))}` : ""}.`;
     return `<h1>Test cases</h1>
-<p class="text-gray-600 -mt-1">Golden FHIR&nbsp;→&nbsp;OMOP fixtures, organized by implementation branch. Each file is a feature (race, ethnicity, domain-routing, …) holding variant cases that cover its corner cases — grounded in real Synthea data + the verified output. <strong>${cases.length}</strong> branches, <strong>${totalVariants}</strong> variants. ${runLine}</p>
-<div class="not-prose grid gap-3 sm:grid-cols-2 mt-4">${cards}</div>`;
-}
-
-function statusBadge(c: any): string {
-    if (c.status === "pass") return `<span class="px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">✓ ${c.passCount}/${c.ranCount}</span>`;
-    if (c.status === "fail") return `<span class="px-2 py-0.5 rounded text-xs font-semibold bg-rose-100 text-rose-800">✗ ${c.passCount}/${c.ranCount}</span>`;
-    return `<span class="px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-400">not run</span>`;
-}
-
-function renderFlow(fhirTypes: string[], omopTables: string[]): string {
-    const fhir = (fhirTypes ?? []).map((t) =>
-        `<span class="px-1.5 py-0.5 rounded text-[11px] font-medium bg-sky-100 text-sky-800">${esc(t)}</span>`).join(" ");
-    const omop = (omopTables ?? []).length
-        ? omopTables.map((t) =>
-            `<span class="px-1.5 py-0.5 rounded text-[11px] font-mono bg-violet-100 text-violet-800">${esc(t)}</span>`).join(" ")
-        : `<span class="text-xs text-gray-400 italic">(no rows)</span>`;
-    return `<div class="flex items-center flex-wrap gap-1.5 text-xs">${fhir}<span class="text-gray-400">→</span>${omop}</div>`;
+<p class="text-gray-600 -mt-1">Golden FHIR&nbsp;→&nbsp;OMOP fixtures, organized by implementation branch. Each file is a feature (race, ethnicity, domain-routing, …) holding variant cases that cover its corner cases. <strong>${cases.length}</strong> branches, <strong>${totalVariants}</strong> variants. ${runLine}</p>
+<div class="not-prose mt-4 border border-gray-200 rounded-lg overflow-hidden">${rows}</div>`;
 }
 
 function esc(s: string) {
