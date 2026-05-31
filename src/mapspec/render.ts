@@ -329,29 +329,13 @@ async function renderEdge(ctx: Context, edge: Edge): Promise<string> {
 
     if (etlSql) parts.push(renderEtlSqlCard(etlSql, `${edge.fhir_resource}__${edge.omop_table}.sql`));
 
-    // Sample-rows card — lazy-loaded via htmx so the page renders instantly; the
-    // fragment endpoint (src/sample/$route_$resource_$table_GET.ts) returns the
-    // actual card. hx-disinherit so this lazy fragment replaces ITSELF (not the
-    // whole main content); hx-select="unset" so the raw fragment is used as-is.
-    // (The old cdm.* oracle diff / side-by-side cards were retired once the
-    // golden test cases under cases/ became the correctness gate.)
-    parts.push(`
-<div hx-get="/sample/${encodeURIComponent(edge.fhir_resource)}/${encodeURIComponent(edge.omop_table)}"
-     hx-trigger="load"
-     hx-target="this"
-     hx-swap="outerHTML"
-     hx-select="unset"
-     hx-select-oob="unset"
-     hx-disinherit="*"
-     class="mb-6 border border-slate-200 rounded-lg overflow-hidden">
-  <div class="flex items-center justify-between px-4 py-2 bg-slate-50 border-b border-slate-200">
-    <div class="flex items-center gap-2 text-xs">
-      <span class="text-[10px] uppercase tracking-wider text-slate-800 font-semibold">Sample rows</span>
-      <span class="text-[11px] text-slate-700 animate-pulse">loading…</span>
-    </div>
-    <span class="text-[10px] text-gray-500">deferred via htmx</span>
-  </div>
-</div>`);
+    // Golden test cases relevant to this edge — replaces the retired cdm.* oracle
+    // diff + the Synthea sample-rows ("examples") card. These are the correctness
+    // gate: self-contained, branch-by-branch, with pass/fail from the last
+    // `bun script/run-cases.ts` run. An edge with no covering case is flagged so
+    // the page doubles as a transform-coverage view.
+    const relCases = await ctx.fns.cases.forEdge(ctx, { resource: edge.fhir_resource, table: edge.omop_table });
+    parts.push(renderTestCasesCard(edge.fhir_resource, edge.omop_table, relCases));
 
     // Condition
     if (edge.condition) {
@@ -450,6 +434,47 @@ async function renderEdge(ctx: Context, edge: Edge): Promise<string> {
 
     parts.push(`</div>`);
     return parts.join("\n");
+}
+
+// Golden test cases relevant to this edge — links to /cases/<slug> with a
+// pass/fail badge from the last run. Empty state flags an uncovered edge.
+function renderTestCasesCard(resource: string, table: string, files: any[]): string {
+    const header = `<div class="flex items-center justify-between px-4 py-2 bg-emerald-50 border-b border-emerald-200">
+    <span class="text-[10px] uppercase tracking-wider text-emerald-800 font-semibold">Golden test cases</span>
+    <span class="text-[11px] text-emerald-700 font-mono">${esc(resource)} → ${esc(table)}</span>
+  </div>`;
+
+    if (!files.length) {
+        return `<div class="mb-6 border border-emerald-200 rounded-lg overflow-hidden">
+  ${header}
+  <div class="px-4 py-3 text-[13px] text-gray-500 italic">No golden case covers this edge yet — add one under <code class="not-italic">cases/</code> (see <code class="not-italic">cases/README.md</code>). The case suite is the correctness gate.</div>
+</div>`;
+    }
+
+    const totalVariants = files.reduce((n, f) => n + (f.variantCount ?? 0), 0);
+    const rows = files.map((f) => {
+        const badge = f.status === "pass"
+            ? `<span class="px-1.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800 shrink-0">✓ ${f.passCount}/${f.ranCount}</span>`
+            : f.status === "fail"
+                ? `<span class="px-1.5 py-0.5 rounded text-[11px] font-semibold bg-rose-100 text-rose-800 shrink-0">✗ ${f.passCount}/${f.ranCount}</span>`
+                : `<span class="px-1.5 py-0.5 rounded text-[11px] font-medium bg-gray-100 text-gray-400 shrink-0">not run</span>`;
+        return `<a href="/cases/${enc(f.slug)}" class="flex items-center justify-between gap-3 px-4 py-2 border-t border-gray-100 hover:bg-emerald-50/50">
+    <div class="min-w-0">
+      <div class="text-[13px] text-gray-900 font-medium truncate">${esc(f.title ?? f.slug)}</div>
+      <div class="font-mono text-[10px] text-gray-400 truncate">${esc(f.slug)}</div>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-[11px] text-gray-400">${f.variantCount} variant${f.variantCount === 1 ? "" : "s"}</span>
+      ${badge}
+    </div>
+  </a>`;
+    }).join("");
+
+    return `<div class="mb-6 border border-emerald-200 rounded-lg overflow-hidden">
+  ${header}
+  ${rows}
+  <div class="px-4 py-1.5 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-400">${files.length} file${files.length === 1 ? "" : "s"} · ${totalVariants} variant${totalVariants === 1 ? "" : "s"} assert this edge</div>
+</div>`;
 }
 
 async function renderProfileCard(ctx: Context, p: types.profiles.Profile): Promise<string> {

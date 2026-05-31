@@ -7,6 +7,7 @@ declare global {
         nearby: typeof import("../.hyper/_test_hashline_edit/nearby").default;
         };
         cases: {
+        forEdge: typeof import("./cases/forEdge").default;
         load: typeof import("./cases/load").default;
         renderDetail: typeof import("./cases/renderDetail").default;
         renderList: typeof import("./cases/renderList").default;
