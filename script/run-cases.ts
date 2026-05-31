@@ -55,6 +55,18 @@ const subSchemas = (body: string) => {
 };
 const resolveFiles = readdirSync("mapspec/etl").filter((f) => f.startsWith("_resolve_") && f.endsWith(".sql")).sort();
 
+// Shared fixtures: resources every variant implicitly gets, so a constant
+// Patient/Encounter/Org isn't repeated in each variant. cases/_fixtures.json
+// (global) + a file-level "fixtures":[...]; a variant's own fhir[] overrides a
+// fixture with the same resourceType/id. Merge order = global, file, variant.
+function mergeFhir(...lists: any[][]): any[] {
+    const byKey = new Map<string, any>();
+    for (const list of lists) for (const r of (list ?? [])) if (r?.resourceType && r?.id) byKey.set(`${r.resourceType}/${r.id}`, r);
+    return [...byKey.values()];
+}
+let GLOBAL_FIXTURES: any[] = [];
+try { GLOBAL_FIXTURES = JSON.parse(await Bun.file("cases/_fixtures.json").text()).fixtures ?? []; } catch { /* none */ }
+
 async function runScript(sqlText: string): Promise<void> {
     const proc = Bun.spawn(["psql", DSN, "-v", "ON_ERROR_STOP=1", "-q"], {
         stdin: new TextEncoder().encode(sqlText), stdout: "pipe", stderr: "pipe",
@@ -193,15 +205,21 @@ async function fetchRows(schema: string, table: string): Promise<any[]> {
 //                      like location_id = stringToId(address) that aren't a
 //                      referenceToId of any fhir resource). proposed binds are
 //                      committed by the caller only when the whole row matches.
-function rowMatches(exp: any, act: any, pk: string | undefined, refMap: Map<string, string>, bindings: Map<string, any>): { ok: boolean; col?: string; a?: any; e?: any; proposed?: Map<string, any> } {
+function rowMatches(exp: any, act: any, pk: string | undefined, refMap: Map<string, string>, bindings: Map<string, any>, prefix = ""): { ok: boolean; col?: string; a?: any; e?: any; proposed?: Map<string, any> } {
     const ec = clean(exp);
     const proposed = new Map<string, any>();
+    // batch mode prefixes resource ids (v{i}_); that prefix leaks into *_source_value
+    // columns (which copy the raw FHIR id), so strip a leading prefix from actual
+    // string values before comparing to the (unprefixed) expected.
+    const unp = (v: any) => (typeof v === "string" && prefix && v.startsWith(prefix) ? v.slice(prefix.length) : v);
     for (const col of Object.keys(act)) {
         if (col === pk && !(col in ec)) continue; // derived surrogate PK, not asserted
         if (col in ec) {
             let e = ec[col];
             if (typeof e === "string" && e.startsWith("ref:")) {
                 e = refMap.get(e.slice(4)) ?? "__UNRESOLVED__";
+                if (!valEq(act[col], e)) return { ok: false, col, a: act[col], e };
+                continue;
             } else if (typeof e === "string" && e.startsWith("id:")) {
                 const tok = e.slice(3);
                 const known = bindings.get(tok) ?? proposed.get(tok);
@@ -210,7 +228,7 @@ function rowMatches(exp: any, act: any, pk: string | undefined, refMap: Map<stri
                 else proposed.set(tok, act[col]);
                 continue;
             }
-            if (!valEq(act[col], e)) return { ok: false, col, a: act[col], e };
+            if (!valEq(unp(act[col]), e)) return { ok: false, col, a: act[col], e };
         } else if (act[col] !== null) {
             return { ok: false, col, a: act[col], e: null };
         }
@@ -218,49 +236,42 @@ function rowMatches(exp: any, act: any, pk: string | undefined, refMap: Map<stri
     return { ok: true, proposed };
 }
 
-async function assertVariant(variant: any): Promise<string[]> {
-    const expected: Record<string, any[]> = variant.omopByTable ?? {};
-    const failures: string[] = [];
-
-    // resolve all ref: ids once
-    const refIds = new Set<string>();
-    for (const rows of Object.values(expected)) for (const r of rows) for (const v of Object.values(r)) if (typeof v === "string" && v.startsWith("ref:")) refIds.add(v.slice(4));
-    const refMap = new Map<string, string>();
-    for (const id of refIds) refMap.set(id, await refToId(id));
-
-    const produced = variant.__produced as Set<string>;
-    const bindings = new Map<string, any>(); // id:<token> bindings, shared across tables in this variant
-
-    // expected tables: exact match
-    for (const [table, expRows] of Object.entries(expected)) {
-        let actual: any[];
-        try { actual = await fetchRows(T.cdm, table); }
-        catch { failures.push(`${table}: not produced (expected ${expRows.length})`); continue; }
-        const pk = PK_BY_TABLE[table];
-        const used = new Array(actual.length).fill(false);
-        for (const exp of expRows) {
-            let found = -1, last: any = null, foundProposed: Map<string, any> | undefined;
-            for (let i = 0; i < actual.length; i++) {
-                if (used[i]) continue;
-                const m = rowMatches(exp, actual[i], pk, refMap, bindings);
-                if (m.ok) { found = i; foundProposed = m.proposed; break; } else last = m;
+// Deep-clone a resource with all ids + Type/id references prefixed, so a whole
+// file's variants can be loaded together (each variant namespaced v{i}_) and
+// run through the pipeline in ONE pass without colliding.
+function prefixResource(r: any, p: string): any {
+    const clone = JSON.parse(JSON.stringify(r));
+    const walk = (o: any) => {
+        if (Array.isArray(o)) { o.forEach(walk); return; }
+        if (o && typeof o === "object") {
+            for (const [k, v] of Object.entries(o)) {
+                if (k === "reference" && typeof v === "string" && v.startsWith("urn:uuid:")) {
+                    o[k] = "urn:uuid:" + p + v.slice("urn:uuid:".length);
+                } else if (k === "reference" && typeof v === "string" && v.includes("/") && !v.startsWith("urn:")) {
+                    const i = v.indexOf("/");
+                    o[k] = v.slice(0, i + 1) + p + v.slice(i + 1);
+                } else walk(v);
             }
-            if (found >= 0 && foundProposed) for (const [k, v] of foundProposed) bindings.set(k, v);
-            if (found < 0) {
-                const hint = last ? ` (closest mismatch ${last.col}: got ${JSON.stringify(last.a)} want ${JSON.stringify(last.e)})` : "";
-                failures.push(`${table}: no actual row matches expected${hint}`);
-            } else used[found] = true;
         }
-        actual.forEach((r, i) => { if (!used[i]) failures.push(`${table}: unexpected extra row (concept ${r[`${table}_concept_id`] ?? r.observation_concept_id ?? "?"})`); });
-    }
+    };
+    walk(clone);
+    if (typeof clone.id === "string") clone.id = p + clone.id;
+    return clone;
+}
 
-    // unlisted produced tables must be empty
-    for (const t of produced) {
-        if (expected[t]) continue;
-        const n = await sql.unsafe(`SELECT count(*)::int AS n FROM ${T.cdm}.${t}`);
-        if (n[0].n > 0) failures.push(`${t}: ${n[0].n} unexpected rows (expected none)`);
-    }
-    return failures;
+const normalizeOmop = (omop: any): Record<string, any[]> =>
+    Array.isArray(omop)
+        ? omop.reduce((o: any, r: any) => { const { table, ...rest } = r; (o[table] ??= []).push(rest); return o; }, {})
+        : (omop ?? {});
+
+// Resolve many logical ids → referenceToId() in one round-trip.
+async function batchRefToId(ids: string[]): Promise<Map<string, string>> {
+    const m = new Map<string, string>();
+    if (!ids.length) return m;
+    const arr = ids.map((s) => `'${String(s).replaceAll("'", "''")}'`).join(",");
+    const rows = await sql.unsafe(`SELECT x, referenceToId(x)::text AS h FROM unnest(ARRAY[${arr}]::text[]) x`);
+    for (const r of rows) m.set(r.x, r.h);
+    return m;
 }
 
 // ── seed collection (DUMP_SEED=1) ────────────────────────────────────────────
@@ -292,8 +303,10 @@ async function seedFromCaseCodes(set: Set<string>) {
         if (typeof o.code === "string") codings.add(`${o.system ?? ""}|${o.code}`);
         for (const v of Object.values(o)) walk(v);
     };
-    for (const f of readdirSync("cases").filter((x) => x.endsWith(".json"))) {
+    GLOBAL_FIXTURES.forEach(walk);
+    for (const f of readdirSync("cases").filter((x) => x.endsWith(".json") && !x.startsWith("_"))) {
         const c = JSON.parse(await Bun.file(`cases/${f}`).text());
+        (c.fixtures ?? []).forEach(walk);
         for (const v of (c.cases ?? [c])) for (const r of (v.fhir ?? [])) walk(r);
     }
     for (const sc of codings) {
@@ -349,33 +362,92 @@ const results: Record<string, { variants: { desc: string; pass: boolean; failure
 for (const f of files) {
     const slug = f.replace(/\.json$/, "");
     const file = JSON.parse(await Bun.file(`cases/${f}`).text());
+    const fileFixtures = Array.isArray(file.fixtures) ? file.fixtures : [];
     const cases = Array.isArray(file.cases) ? file.cases : [{ desc: file.title, fhir: file.fhir, omop: file.omop }];
     results[slug] = { variants: [] };
     console.log(`\n${f}`);
+    const vFail: string[][] = cases.map(() => []); // failures per variant
+
+    try {
+        // ONE batch per file: each variant namespaced v{i}_ (fixtures cloned per
+        // variant), loaded together, run through the pipeline in a single pass.
+        const allFhir: any[] = [];
+        const meta = cases.map((v: any, i: number) => {
+            const prefix = `v${i}_`;
+            const merged = mergeFhir(GLOBAL_FIXTURES, fileFixtures, v.fhir);
+            allFhir.push(...merged.map((r) => prefixResource(r, prefix)));
+            return { i, prefix, omopByTable: normalizeOmop(v.omop), resourceIds: merged.map((r: any) => r.id).filter(Boolean) };
+        });
+
+        await resetSchemas();
+        const present = await loadFhir(allFhir);
+        const expectedTables = new Set<string>(meta.flatMap((m) => Object.keys(m.omopByTable)));
+        const produced = await runPipeline(present, slug, expectedTables);
+        if (process.env.DUMP_SEED) await collectConcepts(seedSet);
+
+        // resolve every prefixed ref: target + resource id in one round-trip
+        const ids = new Set<string>();
+        for (const m of meta) {
+            for (const id of m.resourceIds) ids.add(m.prefix + id);
+            for (const rows of Object.values(m.omopByTable)) for (const row of rows) for (const val of Object.values(row))
+                if (typeof val === "string" && val.startsWith("ref:")) ids.add(m.prefix + val.slice(4));
+        }
+        const idMap = await batchRefToId([...ids]);
+        const owners = meta.map((m) => new Set(m.resourceIds.map((id) => idMap.get(m.prefix + id)).filter(Boolean)));
+
+        // fetch each table's rows once; `used` is shared across variants so the
+        // file-level total is enforced (no row double-counted, none left over).
+        const tables = new Set<string>([...expectedTables, ...produced]);
+        const actualBy: Record<string, any[]> = {};
+        const usedBy: Record<string, boolean[]> = {};
+        for (const t of tables) {
+            try { actualBy[t] = await fetchRows(T.cdm, t); usedBy[t] = new Array(actualBy[t].length).fill(false); }
+            catch { actualBy[t] = []; usedBy[t] = []; }
+        }
+
+        for (const m of meta) {
+            const refMap = new Map<string, string>();
+            for (const rows of Object.values(m.omopByTable)) for (const row of rows) for (const val of Object.values(row))
+                if (typeof val === "string" && val.startsWith("ref:")) refMap.set(val.slice(4), idMap.get(m.prefix + val.slice(4)) ?? "__UNRESOLVED__");
+            const bindings = new Map<string, any>();
+            for (const [table, expRows] of Object.entries(m.omopByTable)) {
+                const actual = actualBy[table] ?? [], used = usedBy[table] ?? [];
+                if (!actual.length && expRows.length) { vFail[m.i].push(`${table}: not produced (expected ${expRows.length})`); continue; }
+                const pk = PK_BY_TABLE[table];
+                for (const exp of expRows) {
+                    let found = -1, last: any = null, fp: Map<string, any> | undefined;
+                    for (let j = 0; j < actual.length; j++) {
+                        if (used[j]) continue;
+                        const r = rowMatches(exp, actual[j], pk, refMap, bindings, m.prefix);
+                        if (r.ok) { found = j; fp = r.proposed; break; } else last = r;
+                    }
+                    if (found >= 0) { used[found] = true; if (fp) for (const [k, v] of fp) bindings.set(k, v); }
+                    else { const h = last ? ` (closest ${last.col}: got ${JSON.stringify(last.a)} want ${JSON.stringify(last.e)})` : ""; vFail[m.i].push(`${table}: no actual row matches expected${h}`); }
+                }
+            }
+        }
+
+        // leftover (unmatched) actual rows = unexpected → attribute to the owning variant
+        for (const t of tables) {
+            const actual = actualBy[t] ?? [], used = usedBy[t] ?? [];
+            for (let j = 0; j < actual.length; j++) {
+                if (used[j]) continue;
+                const row = actual[j];
+                const idVals = Object.entries(row).filter(([k]) => k.endsWith("_id")).map(([, v]) => v).filter((v) => v != null).map(String);
+                const owner = meta.find((m) => idVals.some((v) => owners[m.i].has(v)));
+                const msg = `${t}: unexpected row (concept ${row[`${t}_concept_id`] ?? "?"})`;
+                if (owner) vFail[owner.i].push(msg); else vFail[0].push(`${t}: unexpected row not attributable to a variant`);
+            }
+        }
+    } catch (e: any) {
+        for (let i = 0; i < cases.length; i++) vFail[i].push(`ERROR: ${e.message}`);
+    }
+
     for (let i = 0; i < cases.length; i++) {
-        const v = cases[i];
-        // normalize omop to {table:[rows]}
-        const omopByTable: Record<string, any[]> = Array.isArray(v.omop)
-            ? v.omop.reduce((o: any, r: any) => { const { table, ...rest } = r; (o[table] ??= []).push(rest); return o; }, {})
-            : (v.omop ?? {});
-        let vFailures: string[] = [];
-        try {
-            await resetSchemas();
-            const present = await loadFhir(v.fhir ?? []);
-            const produced = await runPipeline(present, slug, new Set(Object.keys(omopByTable)));
-            vFailures = await assertVariant({ omopByTable, __produced: produced });
-            if (process.env.DUMP_SEED) await collectConcepts(seedSet); // before next reset drops the schemas
-        } catch (e: any) {
-            vFailures = [`ERROR: ${e.message}`];
-        }
-        const okv = vFailures.length === 0;
-        results[slug].variants.push({ desc: v.desc ?? `variant ${i + 1}`, pass: okv, failures: vFailures });
-        if (okv) { pass++; console.log(`  ✓ [${i + 1}] ${v.desc}`); }
-        else {
-            fail++; failedCases.push(`${f} #${i + 1}`);
-            console.log(`  ✗ [${i + 1}] ${v.desc}`);
-            for (const x of vFailures) console.log(`        ${x}`);
-        }
+        const okv = vFail[i].length === 0;
+        results[slug].variants.push({ desc: cases[i].desc ?? `variant ${i + 1}`, pass: okv, failures: vFail[i] });
+        if (okv) { pass++; console.log(`  ✓ [${i + 1}] ${cases[i].desc}`); }
+        else { fail++; failedCases.push(`${f} #${i + 1}`); console.log(`  ✗ [${i + 1}] ${cases[i].desc}`); for (const x of vFail[i]) console.log(`        ${x}`); }
     }
 }
 

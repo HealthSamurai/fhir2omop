@@ -6,16 +6,26 @@ export default async function (ctx: Context, opts: { case: any }): Promise<strin
     const flow = renderFlow(file.fhirTypes, file.omopTables);
     const notesHtml = file.notes ? await ctx.fns.markdown.render(ctx, { source: file.notes }) : "";
 
-    const variants = await Promise.all((file.cases ?? []).map(async (v: any, i: number) => {
-        // FHIR input — one highlighted JSON block per resource.
-        const fhirCards = await Promise.all((v.fhir ?? []).map(async (r: any) => {
-            const head = `${r.resourceType ?? "?"}${r.id ? ` <span class="font-mono text-sky-700">#${esc(r.id)}</span>` : ""}`;
-            const hl = await ctx.fns.markdown.render(ctx, { source: "```yaml\n" + Bun.YAML.stringify(r, null, 2) + "\n```" });
-            return `<div class="border border-gray-200 rounded-lg overflow-hidden">
+    // One highlighted YAML card per FHIR resource (shared by fixtures + variants).
+    const fhirCard = async (r: any) => {
+        const head = `${r.resourceType ?? "?"}${r.id ? ` <span class="font-mono text-sky-700">#${esc(r.id)}</span>` : ""}`;
+        const hl = await ctx.fns.markdown.render(ctx, { source: "```yaml\n" + Bun.YAML.stringify(r, null, 2) + "\n```" });
+        return `<div class="border border-gray-200 rounded-lg overflow-hidden">
   <div class="px-3 py-1.5 bg-sky-50 border-b border-gray-200 text-xs font-semibold text-sky-900">${head}</div>
   <div class="px-1">${hl}</div>
 </div>`;
-        }));
+    };
+
+    const fixtures = file.fixtures ?? [];
+    const fixturesHtml = fixtures.length
+        ? `<details data-k="fixtures-${esc(file.slug)}" class="not-prose mb-4 border border-emerald-200 rounded-lg">
+  <summary class="px-3 py-2 text-xs font-semibold text-emerald-700 uppercase tracking-wider hover:bg-emerald-50">Shared fixtures (${fixtures.length}) — merged into every variant</summary>
+  <div class="p-3 grid sm:grid-cols-2 gap-3">${(await Promise.all(fixtures.map(fhirCard))).join("")}</div>
+</details>`
+        : "";
+
+    const variants = await Promise.all((file.cases ?? []).map(async (v: any, i: number) => {
+        const fhirCards = await Promise.all((v.fhir ?? []).map(fhirCard));
 
         // Expected OMOP — grouped by table.
         const tables = Object.keys(v.omopByTable ?? {});
@@ -64,8 +74,8 @@ export default async function (ctx: Context, opts: { case: any }): Promise<strin
   ${failBlock}
   <div class="not-prose grid lg:grid-cols-2 gap-5">
     <div>
-      <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">FHIR input</div>
-      <div class="space-y-3">${fhirCards.join("")}</div>
+      <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">FHIR input${fixtures.length ? ` <span class="text-emerald-600 normal-case">+ ${fixtures.length} shared fixture${fixtures.length === 1 ? "" : "s"}</span>` : ""}</div>
+      <div class="space-y-3">${fhirCards.join("") || '<div class="text-xs text-gray-400 italic px-1">(only shared fixtures)</div>'}</div>
     </div>
     <div>
       <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Expected OMOP</div>
@@ -83,6 +93,7 @@ ${notesHtml ? `<details data-k="notes-${esc(file.slug)}" class="not-prose mb-4 b
   <summary class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:bg-gray-50">Notes</summary>
   <div class="prose prose-sm max-w-none px-3 pb-3">${notesHtml}</div>
 </details>` : ""}
+${fixturesHtml}
 <p class="not-prose text-[11px] text-gray-400 mb-3">FK ids shown as <span class="font-mono">ref:&lt;logical-id&gt;</span>. Per row, columns not listed are asserted <span class="font-mono">NULL</span>; tables not listed are asserted empty.</p>
 <div class="not-prose space-y-4">${variants.join("")}</div>`;
 }

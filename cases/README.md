@@ -44,10 +44,12 @@ Examples: `patient--person--race.json`, `observation--measurement--components.js
 {
   "title": "Patient · race (US Core / OMB)",   // the branch / feature
   "notes": "shared context for the branch (markdown ok)",
+  "fixtures": [ /* OPTIONAL FHIR resources merged into EVERY variant — */
+               /* e.g. a constant Patient/Encounter/Org used as an FK anchor */ ],
   "cases": [                                    // variants covering corner cases
     {
       "desc": "OMB White 2106-3 → race_concept_id 8527; source_concept 0",
-      "fhir": [ /* self-contained resources */ ],
+      "fhir": [ /* only the resource(s) under test; fixtures are added in */ ],
       "omop": {                                 // OBJECT keyed by OMOP table
         "person":   [ { /* full expected row */ } ],
         "location": [ { /* a resource may produce rows in several tables */ } ]
@@ -58,6 +60,16 @@ Examples: `patient--person--race.json`, `observation--measurement--components.js
   ]
 }
 ```
+
+### `fixtures[]` (shared resources)
+- File-level `fixtures` are FHIR resources **merged into every variant's `fhir[]`**,
+  so a constant Patient/Encounter/Org isn't repeated in each variant. A variant's
+  own `fhir[]` overrides a fixture with the same `resourceType`/`id`.
+- A repo-global `cases/_fixtures.json` (`{ "fixtures": [...] }`) is merged into
+  **all** files. Merge order: global → file → variant (variant wins).
+- Use fixtures for pure FK anchors (the edge under test doesn't produce a row for
+  them). See `encounter--visit-occurrence--class.json` (Patient + Practitioner +
+  Organization shared across all 19 variants).
 
 ### `fhir[]`
 - **Short logical ids** (`patient-1`, `enc-1`, `obs-1`, `prac-1`) — never UUIDs.
@@ -100,14 +112,18 @@ bun script/run-cases.ts patient         # only files matching a substring
 bun script/run-cases.ts -v              # verbose: print stage-2 errors
 ```
 
-The runner (`script/run-cases.ts`) executes each variant's `fhir[]` through the
-**real Postgres pipeline** in isolated `t_fhir` / `t_staging` / `t_cdm` schemas
-(materialize view → `_resolve_*.sql` → stage-2, reusing `script/etl-plan.ts`),
-with full `vocab.*` + `cm.*` shared read-only, then asserts: per listed table
-the produced rows equal the expected set (unordered); every unlisted target
-table is empty; a row passes iff every listed column equals and every unlisted
-column is NULL; `ref:`→`referenceToId`, `id:` bindings consistent, the row's own
-surrogate PK and `__name` siblings ignored. Exit 1 on any failure.
+The runner (`script/run-cases.ts`) executes a whole file in **one pipeline pass**:
+each variant's resources (fixtures ⊕ `fhir[]`) are namespaced with a `v{i}_` id
+prefix and loaded together into isolated `t_fhir` / `t_staging` / `t_cdm` schemas,
+then the **real Postgres pipeline** runs once (materialize view → `_resolve_*.sql`
+→ stage-2, reusing `script/etl-plan.ts`) with full `vocab.*` + `cm.*` shared
+read-only. (One pass per file, not per variant — much faster.) It then asserts,
+per variant: per listed table the produced rows equal the expected set
+(unordered); every unlisted target table is empty (file-level — leftover rows are
+attributed to the owning variant); a row passes iff every listed column equals
+and every unlisted column is NULL; `ref:`→`referenceToId` (variant-prefixed), the
+`v{i}_` prefix is stripped from `*_source_value`, `id:` bindings consistent, the
+row's own surrogate PK and `__name` siblings ignored. Exit 1 on any failure.
 
 For resolve families (Condition / Observation / DiagnosticReport) all sibling
 edges run, so mis-routing to a table the case didn't list is caught. Non-resolve

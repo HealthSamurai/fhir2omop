@@ -66,13 +66,15 @@ export default async function (ctx: Context): Promise<any[]> {
             const status = ran.length === 0 ? "unrun"
                 : ran.every((c: any) => c.result.pass) ? "pass" : "fail";
             const passCount = ran.filter((c: any) => c.result.pass).length;
-            const fhirTypes = [...new Set(cases.flatMap((c: any) => c.fhirTypes))];
+            const fixtures = Array.isArray(raw.fixtures) ? raw.fixtures : [];
+            const fixtureTypes = [...new Set(fixtures.map((r: any) => r?.resourceType).filter(Boolean))];
+            const fhirTypes = [...new Set([...fixtureTypes, ...cases.flatMap((c: any) => c.fhirTypes)])];
             const omopTables = [...new Set(cases.flatMap((c: any) => c.omopTables))];
             out.push({
                 slug, file: f,
                 title: raw.title ?? slug,
                 notes: raw.notes ?? "",
-                cases, fhirTypes, omopTables,
+                fixtures, cases, fhirTypes, omopTables,
                 variantCount: cases.length,
                 status, passCount, ranCount: ran.length, ranAt,
             });
