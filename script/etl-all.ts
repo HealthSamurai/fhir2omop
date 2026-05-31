@@ -5,7 +5,7 @@
 //   3. materialize staging.* from mapspec/views/*.view.json
 //   4. run stage-2 ETLs in the right order (TRUNCATE-first vs APPEND)
 //
-// Run after `bun script/load-fhir.ts synthea/output/fhir`.
+// Run after `bun script/load-fhir.ts <dir-of-fhir-bundles>` has populated fhir.*.
 //
 //   bun script/etl-all.ts           # default: all edges
 //   bun script/etl-all.ts --only Patient__person,Condition__condition_occurrence

@@ -97,31 +97,27 @@ bun install
 bun src/load-fhir-core.ts
 
 # 4. Sanity checks
-ls mapspec/edges/    | wc -l    # 29 FHIR→OMOP edge maps
-ls mapspec/profiles/ | wc -l    # 28 profiles + 8 valuesets + 9 ConceptMaps (.cm.json) + system-aliases.json
-ls mapspec/views/    | wc -l    # 29 ViewDefinitions (Stage-1 flatteners)
-ls mapspec/etl/      | wc -l    # 24 stage-2 SQL ETLs + _functions.sql (+ 5 stub views for non-Synthea resources)
-ls mapspec/etl/      | wc -l    # Stage-2 SQL files + _functions.sql
+ls mapspec/edges/    | wc -l    # 33 FHIR→OMOP edge maps (29 implemented + 4 stub)
+ls mapspec/profiles/ | wc -l    # 28 profiles + 10 valuesets + 10 ConceptMaps (.cm.json) + 2 extension SDs + system-aliases.json
+ls mapspec/views/    | wc -l    # 26 ViewDefinitions (Stage-1 flatteners)
+ls mapspec/etl/*.sql | wc -l    # 33 stage-2 SQL + 4 _resolve_*.sql + _functions.sql
 
 # 5. Bring up Postgres + load Athena vocabularies (~6.4M concepts, ~75M ancestor rows)
 docker compose up -d                                      # Postgres 17 (ParadeDB) on :54392
 bun script/init-athena.ts                                 # Pulls bundle ZIP from GCS, loads vocab.*
 
-# 6. Generate Synthea dataset (100 living + ~5 deceased = ~105 patients, ~2 min)
-cd synthea
-curl -L -o synthea-with-dependencies.jar \
-  https://github.com/synthetichealth/synthea/releases/download/v3.2.0/synthea-with-dependencies.jar
-java -jar synthea-with-dependencies.jar -s 1779010226473 -c settings.conf -p 100
-cd ..
+# 6. Correctness gate — golden FHIR→OMOP test cases (see cases/README.md).
+#    Self-contained: runs hermetically against a committed vocab subset (no full
+#    Athena bundle needed). This is the gate; it needs no source FHIR dataset.
+bun script/run-cases.ts                                    # run cases/*.json against the real pipeline
 
-# 7. Run the FHIR→OMOP pipeline end-to-end (~30s on 100 patients)
+# 7. (Optional) Run the transform end-to-end on a FHIR cohort.
+#    Source-agnostic — point load-fhir.ts at ANY directory of FHIR R4 bundles
+#    (an EHR FHIR dump, a Synthea export, hand-authored fixtures).
 PGPASSWORD=athena psql -h localhost -p 54392 -U athena -d athena -v ON_ERROR_STOP=1 \
   -f mapspec/etl/_functions.sql                            # referenceToId()/stringToId() helpers
-bun script/load-fhir.ts synthea/output/fhir                # → fhir.* (105 patient rows + others)
+bun script/load-fhir.ts path/to/fhir-bundles/             # → fhir.* (raw jsonb staging)
 bun script/etl-all.ts                                      # cm.* → staging.* → cdm_ours_fhir.* (full pipeline)
-
-# Correctness gate — golden FHIR→OMOP test cases (see cases/README.md):
-bun script/run-cases.ts                                    # run cases/*.json against the real pipeline
 
 # 8. Start the UI/dev server (writes its port to .hyper/_runtime/port, default 3000)
 bun src/\$main.ts                                          # http://localhost:3000
@@ -227,58 +223,49 @@ licensed and not included in `CONCEPT.csv` — run `sh cpt.sh` inside
 `athena/bundle/` with a UMLS API key to hydrate them in place before loading,
 if you need them.
 
-### Synthea dataset (`synthea/`)
+### Source FHIR input (bring your own)
 
-Local Synthea generator — a single jar + settings file, no docker, no R-ETL
-build. Synthea is the **source FHIR dataset** for the pipeline.
+The transform is **source-agnostic**. Point `bun script/load-fhir.ts <dir>` at
+**any** directory of FHIR R4 Bundle `.json` files — a real EHR FHIR export,
+hand-authored fixtures, or a Synthea export — and it streams them into `fhir.*`.
+Nothing downstream (`etl-all.ts`, the stage-1 views, the stage-2 SQL) cares where
+the FHIR came from. There is **no bundled dataset and no generator in this repo**.
 
-> The former Synthea-CSV → OMOP **reference oracle** (`cdm.*`, built by the now-
-> deleted `script/load-cdm-reference.ts` + `script/load-cdm/*.sql`, with `/diff`
-> and `/compare` UI cards) has been **retired**. It was a parallel approximation
-> whose row-level diff was dominated by representation noise. The golden test
-> cases under `cases/` (run by `script/run-cases.ts` against the real pipeline)
-> are now the correctness gate — exact, branch-by-branch. See `cases/README.md`.
-
-```
-synthea/
-├── synthea-with-dependencies.jar   # gitignored — wget from synthetichealth/synthea v3.2.0 release
-├── settings.conf                   # exporter.fhir.use_us_core_ig = true
-├── output/                         # gitignored
-│   ├── csv/   patients.csv, encounters.csv, …  # Synthea CSV (oracle that consumed it is retired)
-│   └── fhir/  *.json (one bundle per patient + hospital + practitioner)  # → fhir.*
-└── generate.log
-```
-
-Generation (`-s` seed, `-p` living-patient count — Synthea overshoots by
-~5% with deceased replacements so `-p 100` produces ~105 total bundles):
-
-```sh
-java -jar synthea/synthea-with-dependencies.jar -s 1779010226473 \
-  -c synthea/settings.conf -p 100
-```
-
-US Core IG is **enabled** in `settings.conf` so Patient resources carry
-`us-core-race` / `us-core-ethnicity` / `us-core-birthsex` extensions that
-the stage-1 view extracts.
+> **Correctness lives in `cases/`, not in a cohort.** The golden test cases
+> (`cases/*.json`, run by `script/run-cases.ts`) are the gate — exact,
+> branch-by-branch, and **hermetic** (a committed vocab subset, no source dataset
+> and no full Athena bundle needed). New coverage is hand-authored there; see
+> `cases/README.md`. A full-cohort run (load-fhir → etl-all) is an **optional**
+> way to exercise the runtime on realistic volume / populate the sample-row UI —
+> not the correctness mechanism.
+>
+> History: this project was originally bootstrapped against a Synthea cohort
+> (`-s 1779010226473 -p 100`, ~105 patients, US Core IG on). Every branch that
+> cohort exercised was extracted into `cases/` and Synthea was then retired,
+> along with the earlier Synthea-CSV → `cdm.*` **reference oracle** (deleted
+> `script/load-cdm*`, `src/etl_synthea/`, `src/diff/`, `src/compare/`, the `/diff`
+> and `/compare` UI). Branches a cohort can't ground (the stub edges, error
+> paths, vocab corners) are now added directly as synthetic cases.
 
 Pipeline (FHIR → OMOP) + golden-case gate:
 
 ```
-[Synthea seed=1779010226473, 100 living patients (~105 total)]
+[any FHIR R4 bundle dir]
         │
-        └──→ synthea/output/fhir/   ──► bun script/load-fhir.ts  ──► fhir.*
-                                                                     │
-                                                                     ▼ stage-1 (SQL-on-FHIR)
-                                                                  staging.*
-                                                                     │
-                                                                     ▼ stage-2 SQL (JOIN cm.* + vocab.*)
-                                                                  cdm_ours_fhir.*
+        └──► bun script/load-fhir.ts <dir>   ──►  fhir.*
+                                                   │
+                                                   ▼ stage-1 (SQL-on-FHIR)
+                                                staging.*
+                                                   │
+                                                   ▼ stage-2 SQL (JOIN cm.* + vocab.*)
+                                                cdm_ours_fhir.*
 
-  Correctness gate: cases/*.json  ──► bun script/run-cases.ts ──► run each case's
-  fhir[] through the real pipeline in isolated schemas, assert the exact OMOP rows.
+  Correctness gate (self-contained): cases/*.json ──► bun script/run-cases.ts ──►
+  run each case's fhir[] through the real pipeline in isolated schemas, assert the
+  exact OMOP rows. No source dataset required.
 ```
 
-`Patient.id` (the Synthea UUID) → `cdm_ours_fhir.person.person_source_value`;
+`Patient.id` (the FHIR resource id) → `cdm_ours_fhir.person.person_source_value`;
 references hash to surrogate ids via `referenceToId()` = `hashtextextended(uuid, 0)::bigint`.
 
 ### Schemas in one DB
@@ -287,13 +274,13 @@ references hash to surrogate ids via `referenceToId()` = `hashtextextended(uuid,
 |---|---|---|---|
 | `vocab.*`           | Athena bundle | `bun script/init-athena.ts` | Standardized vocabularies — read-only |
 | `cm.*`              | `mapspec/profiles/*.cm.json` | `ctx.fns.conceptmap.materialize` | Source-code → OMOP concept_id lookup tables (one per ConceptMap) |
-| `fhir.*`            | `synthea/output/fhir/`       | `bun script/load-fhir.ts`       | Raw FHIR resources (jsonb staging) |
+| `fhir.*`            | any FHIR R4 bundle dir       | `bun script/load-fhir.ts`       | Raw FHIR resources (jsonb staging) |
 | `staging.*`         | `fhir.*` + view JSONs        | `ctx.fns.viewdef.materialize`   | Stage-1 FHIR-flat materializations (one per ViewDefinition) |
 | `cdm_ours_fhir.*`   | `staging.*` + `cm.*`         | `mapspec/etl/<R>__<T>.sql`      | Our FHIR→OMOP pipeline target (validated by `cases/` via `script/run-cases.ts`) |
 
 (The `cdm.*` reference-oracle schema was retired together with `script/load-cdm*`.)
 
-The FHIR↔OMOP join key is **always** the Synthea UUID:
+The FHIR↔OMOP join key is **always** the FHIR resource id:
 
 ```sql
 -- The bridge query: link every FHIR resource back to its OMOP row.
@@ -301,13 +288,6 @@ SELECT op.person_id, fp.id, fp.resource->>'gender'
 FROM fhir.patient fp
 JOIN cdm_ours_fhir.person op ON op.person_source_value = fp.id;
 ```
-
-### Server-side COPY via bind mount (vestigial)
-
-`docker-compose.yml` bind-mounts `./synthea/output:/synthea:ro` so Postgres can
-`COPY … FROM '/synthea/csv/...'` server-side. Its only consumer was the retired
-`script/load-cdm-reference.ts`; the mount is now unused (stage-1 materialization
-streams a /tmp CSV via client-side psql `\copy`, see `src/viewdef/materialize.ts`).
 
 ### Bun.SQL gotchas
 
@@ -336,9 +316,9 @@ resource jsonb NOT NULL)`. Tables are created on-demand by
 Load all bundles in a directory (concurrency=8 by default):
 
 ```sh
-bun script/load-fhir.ts synthea/output/fhir
-# → fhir.patient (105), fhir.encounter (~9k), fhir.observation (~74k), …
-# 107 files, ~112k rows in ~1.6s on 100 patients
+bun script/load-fhir.ts path/to/fhir-bundles/
+# → fhir.patient, fhir.encounter, fhir.observation, … (one table per resourceType)
+# e.g. a ~105-patient cohort = ~107 bundle files, ~112k rows in ~1.6s
 ```
 
 The loader is **idempotent** — re-running re-INSERTs via
@@ -712,13 +692,15 @@ mapspec/
 - `references[]` — edge-level reference implementations (with the same
   Reference shape used per-field).
 
-Status (May 2026): 29 edges across 21 FHIR resources → 16 OMOP tables.
-24 / 29 edges have wired stage-2 SQL (`mapspec/etl/<R>__<T>.sql`); the
-other 5 are stubs for resources Synthea doesn't emit (Coverage, Specimen,
-Medication, MedicationDispense, MedicationStatement). On a 100-patient
-Synthea cohort the full orchestrator (cm.* → staging.* → cdm_ours_fhir.*)
-finishes in ~30 seconds and populates 14 OMOP tables (~74k rows).
-`bun -e '...'` over the edge JSONs shows **136 / 439 fields** carry
+Status (May 2026): 33 edges across 20 FHIR resources → 16 OMOP tables.
+29 edges are `status: implemented` (wired stage-2 SQL in
+`mapspec/etl/<R>__<T>.sql`); 4 are `status: stub` (Coverage, Specimen,
+Medication, MedicationDispense) — they carry full stage-2 SQL too, but emit
+rows only when their source resource is present in `fhir.*`. (Medication is
+`WHERE FALSE` by design — a vocabulary resource, not a row producer.) On a
+~105-patient FHIR cohort the full orchestrator (cm.* → staging.* →
+cdm_ours_fhir.*) finishes in ~22 seconds and populates 14 OMOP tables (~98k
+rows). `bun -e '...'` over the edge JSONs shows **136 / 478 fields** carry
 per-field `sources[]`, totalling **327 source-groups** with concrete
 file/line refs. The rest are trivial mappings (constants, single-impl,
 source-value direct copies) — no fabrication, no sources beyond what

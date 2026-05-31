@@ -23,7 +23,7 @@ FHIR→OMOP projects, this one is:
   flattening raw `fhir.resources(jsonb)` into wide tables; Stage 2 is
   SQL views joining onto `vocab.concept` for concept lookup and Maps-to
   fan-out. Concept-id resolution is a JOIN, not a TS function.
-- **Spec-driven.** 29 edges × { mapping doc, edge JSON, profile,
+- **Spec-driven.** 33 edges × { mapping doc, edge JSON, profile,
   ViewDefinition, stage-2 SQL }. One source of truth in `mapspec/`;
   everything else (UI, runtime SQL) is generated or directly executed.
 
@@ -31,18 +31,19 @@ FHIR→OMOP projects, this one is:
 
 Alpha — but end-to-end. The mapping spec is complete for the 29 standard
 edges, Stage-1 (FHIR-flat) and Stage-2 (OMOP-shaped) both run, and a
-reference CSV pipeline gives you a row-level diff oracle for validation.
+self-contained golden test-case suite asserts the exact OMOP rows
+branch-by-branch (it replaced the earlier Synthea-CSV diff oracle, now retired).
 
 | Layer | State |
 |---|---|
-| Mapping spec (`mapspec/edges/`) — 29 FHIR↔OMOP edges with field-level docs and reference-impl citations | ✅ |
-| FHIR profiles (`mapspec/profiles/`) — gating StructureDefinitions + ConceptMaps (`*.cm.json`) | ✅ 28 profiles + 9 ConceptMaps |
-| ValueSets — one per OMOP domain, with example concepts and authoritative SQL expansion | ✅ 8 |
-| SQL-on-FHIR ViewDefinitions (`mapspec/views/`) — Stage 1 flatteners | ✅ 29 |
+| Mapping spec (`mapspec/edges/`) — FHIR↔OMOP edges with field-level docs and reference-impl citations | ✅ 33 edges (29 implemented + 4 stub) |
+| FHIR profiles (`mapspec/profiles/`) — gating StructureDefinitions + ConceptMaps (`*.cm.json`) | ✅ 28 profiles + 10 ConceptMaps |
+| ValueSets — one per OMOP domain, with example concepts and authoritative SQL expansion | ✅ 10 |
+| SQL-on-FHIR ViewDefinitions (`mapspec/views/`) — Stage 1 flatteners | ✅ 26 |
 | OMOP Athena vocabularies loaded into Postgres (`vocab.*`) | ✅ 6.4M concepts |
-| Stage 2 SQL ETLs (`mapspec/etl/`, OMOP-shaped, vocab joins via `cm.*`) | ✅ 24 / 29 edges (5 stubs: Coverage, Specimen, Medication, MedicationDispense, MedicationStatement — views present, no Synthea source data) |
-| Golden FHIR→OMOP test cases (`cases/`, run by `script/run-cases.ts`) — the correctness gate | ✅ 136 variants / 23 branches |
-| Hermetic case runner in CI (minimal vocab subset, no full Athena bundle) | ✅ GitHub Actions |
+| Stage 2 SQL ETLs (`mapspec/etl/`, OMOP-shaped, vocab joins via `cm.*`) | ✅ 29 implemented + 4 stub (Coverage, Specimen, Medication, MedicationDispense — SQL present, emit rows only when their source resource is loaded) |
+| Golden FHIR→OMOP test cases (`cases/`, run by `script/run-cases.ts`) — the correctness gate | ✅ 149 variants / 23 branches |
+| Hermetic case runner in CI (minimal vocab subset, no full Athena bundle, no source dataset) | ✅ GitHub Actions |
 | FHIR-instance validator (profile → SQL `WHERE`) | 🚧 design |
 
 Known gaps and remediation are tracked in [`mapspec/GAPS.md`](mapspec/GAPS.md).
@@ -65,13 +66,16 @@ docker compose up -d
 bun script/init-athena.ts   # ~5 min: gcloud cp + unzip + load
 psql -f script/init-vocab-indexes.sql "$ATHENA_DSN"   # ~30s; needed for sub-second stage-2
 
-# 5. Generate Synthea FHIR data + run the pipeline
-bun script/gen-synthea.ts --patients=100
-bun script/load-fhir.ts synthea/output/fhir            # Bundle → fhir.*   (raw)
-bun script/etl-all.ts                                  # fhir.* → cdm_ours_fhir.* (full pipeline, ~30s)
-bun script/run-cases.ts                                # golden cases → assert against the real pipeline
+# 5. Correctness gate — golden cases (self-contained; needs no source dataset)
+bun script/run-cases.ts                                # cases/*.json → assert exact OMOP rows
 
-# 6. Start the UI/dev server (http://localhost:3000)
+# 6. (Optional) Run the transform end-to-end on a FHIR cohort.
+#    Source-agnostic: point load-fhir at ANY dir of FHIR R4 bundles (EHR dump,
+#    a Synthea export, fixtures). No dataset is bundled with this repo.
+bun script/load-fhir.ts path/to/fhir-bundles/          # Bundle → fhir.*   (raw)
+bun script/etl-all.ts                                  # fhir.* → cdm_ours_fhir.* (full pipeline, ~22s)
+
+# 7. Start the UI/dev server (http://localhost:3000)
 bun src/$main.ts
 ```
 
@@ -88,10 +92,10 @@ Hot-reload after edits via REPL (`bun script/repl.ts 'await ctx.fns.repl.load(ct
 
 ```
 mapspec/
-  edges/        29 *.json — field-level mapping per FHIR-resource → OMOP-table edge
-  profiles/    StructureDefinitions (28) + ValueSets (8) + ConceptMaps (9 *.cm.json)
-  views/       29 SQL-on-FHIR ViewDefinitions — Stage-1 flatteners
-  etl/         29 *.sql — Stage-2 OMOP-shaped INSERT/UPDATE (24 wired, 5 stubs for non-Synthea sources)
+  edges/        33 *.json — field-level mapping per FHIR-resource → OMOP-table edge (29 implemented + 4 stub)
+  profiles/    StructureDefinitions (28) + ValueSets (10) + ConceptMaps (10 *.cm.json)
+  views/       26 SQL-on-FHIR ViewDefinitions — Stage-1 flatteners
+  etl/         33 *.sql — Stage-2 OMOP-shaped INSERT/UPDATE (+ 4 _resolve_*.sql + _functions.sql)
   resources/   Per-resource narrative markdown
   schema/      JSON schemas for edge.json files
   GAPS.md      Single inventory of known mapping gaps
@@ -100,8 +104,7 @@ script/
   init-athena.ts           Bootstrap Athena bundle from GCS into Postgres
   load-athena.ts           CSV-bundle → vocab.* loader
   init-vocab-indexes.sql   Performance-critical vocab indexes (Maps-to partial idx, etc.)
-  gen-synthea.ts           Synthea generator wrapper (FHIR Bundle from one seed)
-  load-fhir.ts             Synthea Bundle → fhir.* (raw FHIR storage)
+  load-fhir.ts             FHIR R4 bundles (any source) → fhir.* (raw FHIR storage)
   etl-all.ts               Full pipeline: cm.* → staging.* → cdm_ours_fhir.* (orchestrator)
   run-cases.ts             Run cases/*.json through the pipeline + assert (correctness gate)
   build-cm.ts              Materialize cm.* from profiles (used by the hermetic case runner)
@@ -127,7 +130,7 @@ streaming are on the roadmap. For mature ETLs in adjacent shape look at
 submodules.
 
 What you get here today:
-- A single canonical mapping for each of 29 edges with explicit field maps,
+- A single canonical mapping for each of 33 edges with explicit field maps,
   vocabulary requirements, edge cases, and citations to every major
   reference implementation.
 - FHIR profiles that codify the **convertibility gate** — useful even
@@ -137,8 +140,8 @@ What you get here today:
   SoF-conformant runtime (Aidbox, Pathling, dbt-sof).
 - Stage-2 SQL ETLs that resolve source codes through ConceptMap tables
   (`cm.*`) and pre-indexed `vocab.concept_relationship` Maps-to edges to
-  produce OMOP-shaped rows. Full 100-patient Synthea pipeline runs in
-  ~30 seconds end-to-end.
+  produce OMOP-shaped rows. The full transform runs on any FHIR R4 cohort
+  end-to-end (~22s on ~105 patients).
 - A golden test-case suite (`cases/`) that runs each case's FHIR through the
   real pipeline in isolated schemas and asserts the **exact** OMOP rows — the
   *correctness* gate, branch by branch (`bun script/run-cases.ts`; also runs

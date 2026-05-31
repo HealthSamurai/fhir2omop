@@ -133,13 +133,16 @@ to `gs://atomic-ehr-athena-vocab/bundles/`, run `bun script/init-athena.ts`.
 
 | Vocab | Blocks | FHIR system URL |
 |---|---|---|
-| **CVX** | `Immunization.vaccineCode` → `drug_concept_id` | `http://hl7.org/fhir/sid/cvx` |
 | **ICD10PCS** | Procedure source codes via Maps-to | `http://hl7.org/fhir/sid/icd-10-pcs` |
 | **CPT4** | Procedure source codes (needs `cpt.sh` + UMLS API key post-processor) | `http://www.ama-assn.org/go/cpt` |
 
-After loading, the corresponding `omop-procedure-codes` and Immunization
-profile become fully resolvable. Until then, `drug_source_concept_id` for
-CVX-coded Immunizations resolves to `0`.
+After loading, the corresponding `omop-procedure-codes` profile becomes fully
+resolvable.
+
+(CVX is now **loaded** — `vocab.concept` holds ~289 CVX concepts and
+`cases/immunization--drug-exposure--cvx.json` asserts a resolved
+`drug_concept_id` crosswalk. The CVX no-crosswalk → `0` path is still
+exercised as a corner case there.)
 
 ---
 
@@ -248,12 +251,15 @@ insufficient.
 
 ## 9. Timezone semantics per source CSV (ETL convention)
 
-Synthea writes timestamps with different precisions and zones depending
-on the CSV. The stage-2 ETLs must cast each in a way that matches the
-**source CSV's own semantics**, not a single project-wide rule. Mixing
-them silently breaks the cdm.* ↔ cdm_ours_fhir.* diff.
+Different FHIR resources carry datetimes with different precisions and zones.
+The stage-2 ETLs must cast each in a way that matches the **source element's own
+semantics**, not a single project-wide rule. Mixing them silently produces
+off-by-one dates — caught by the golden cases' datetime assertions
+(`cases/README.md` Gotchas #1). The table below maps the conventions to their
+provenance (these were originally derived from how the Synthea FHIR exporter
+renders each underlying CSV column):
 
-| Source CSV | Column shape | FHIR rendering | OMOP cast convention |
+| Source (Synthea CSV provenance) | Column shape | FHIR rendering | OMOP cast convention |
 |---|---|---|---|
 | `encounters.csv` | `START, STOP` — ISO-8601 with `Z` (UTC) | `Encounter.period.start/end` (local tz) | `(v.encounter_start::timestamptz AT TIME ZONE 'UTC')::date` — convert FHIR's local-tz back to the UTC the CSV stored. |
 | `procedures.csv` | `START, STOP` — UTC | `Procedure.performedDateTime` / `performedPeriod` (local tz) | Same UTC-rebase as Encounter. |
@@ -268,16 +274,15 @@ conversion away from UTC**, and the cast must undo that to recover the
 CSV's clock. If the CSV column is a bare date, treat the FHIR value as
 already in the user's clock and cast `::date` without rebasing.
 
-This is why `cdm.condition_occurrence.condition_start_date = '2024-04-09'`
-but `cdm_ours_fhir.condition_occurrence.condition_start_date =
-'2024-04-10'` when you forget — the FHIR resource has
-`onsetDateTime: 2024-04-09T22:00:00-04:00`, which is `2024-04-10T02:00Z`,
-and casting through `timestamptz AT TIME ZONE 'UTC'` then `::date` lands
-in the wrong day.
+This is why `condition_occurrence.condition_start_date` lands on `2024-04-09`
+vs `2024-04-10` depending on the cast — the FHIR resource has
+`onsetDateTime: 2024-04-09T22:00:00-04:00`, which is `2024-04-10T02:00Z`, so
+casting through `timestamptz AT TIME ZONE 'UTC'` then `::date` lands in the
+wrong day (Condition uses a naive `::date` precisely to avoid this).
 
-The convention is encoded across the per-edge stage-2 SQLs and tested
-via the side-by-side diff page; this section documents it so future
-edge authors don't reinvent or mismatch it.
+The convention is encoded across the per-edge stage-2 SQLs and pinned by the
+golden cases (each datetime assertion follows the edge's actual cast); this
+section documents it so future edge authors don't reinvent or mismatch it.
 
 ---
 
